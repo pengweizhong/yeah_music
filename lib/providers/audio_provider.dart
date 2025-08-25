@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/song.dart';
-import '../services/audio_service.dart';
+import '../services/music_service.dart';
 
-final audioServiceProvider = Provider((ref) => AudioService());
+final audioServiceProvider = Provider((ref) => MusicService());
 
 final songListProvider = StateProvider<List<Song>>((ref) => []);
 final currentIndexProvider = StateProvider<int>((ref) => -1);
 
 class AudioController {
-  final AudioService _service;
+  final MusicService _service;
 
   AudioController(this._service);
 

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../services/audio_service.dart';
+import '../../services/music_service.dart';
 
 class PlayerControls extends StatelessWidget {
-  final AudioService service;
+  final MusicService service;
 
   const PlayerControls({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
-    final player = service.player;
+    // final player = service.getAudioPlayer();
     final currentTitle =
         (service.currentIndex >= 0 &&
             service.currentIndex < service.songs.length)
@@ -21,10 +21,10 @@ class PlayerControls extends StatelessWidget {
         Text(currentTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
         // 进度条
         StreamBuilder<Duration>(
-          stream: player.positionStream,
+          stream: service.positionStream,
           builder: (context, snapshot) {
             final pos = snapshot.data ?? Duration.zero;
-            final dur = player.duration ?? Duration.zero;
+            final dur = service.duration ?? Duration.zero;
             return Slider(
               value: pos.inMilliseconds.toDouble().clamp(
                 0,
@@ -32,7 +32,7 @@ class PlayerControls extends StatelessWidget {
               ),
               max: dur.inMilliseconds.toDouble().clamp(0, double.infinity),
               onChanged: (v) {
-                player.seek(Duration(milliseconds: v.toInt()));
+                service.seek(Duration(milliseconds: v.toInt()));
               },
             );
           },
@@ -46,7 +46,7 @@ class PlayerControls extends StatelessWidget {
               onPressed: service.playPrev,
             ),
             StreamBuilder<bool>(
-              stream: player.playingStream,
+              stream: service.playingStream,
               builder: (context, snapshot) {
                 final playing = snapshot.data ?? false;
                 return IconButton(

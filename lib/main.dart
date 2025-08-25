@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/services/music_service.dart';
 
 import 'config/app_config.dart';
 import 'config/theme.dart';
@@ -16,7 +17,7 @@ class AppEntry extends StatelessWidget {
     return MaterialApp(
       title: AppConfig.appTitle,
       theme: AppTheme.lightTheme,
-      home: const MusicHomePage(),
+      home: MusicHomePage(service: MusicService()),
     );
   }
 }

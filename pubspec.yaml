@@ -16,6 +16,7 @@ dependencies:
   permission_handler: 12.0.1
   just_audio_background: 0.0.1-beta.17
   file_picker: 10.3.2  # 用来选择目录或文件
+  flutter_media_metadata: 1.0.0+1
 
 dev_dependencies:
   flutter_test:
