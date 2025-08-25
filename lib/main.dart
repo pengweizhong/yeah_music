@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'config/app_config.dart';
+import 'config/theme.dart';
 import 'ui/pages/home_page.dart';
 
 void main() {
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const AppEntry());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AppEntry extends StatelessWidget {
+  const AppEntry({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Yeah Music Player',
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blueGrey),
-      home: const HomePage(),
+      title: AppConfig.appTitle,
+      theme: AppTheme.lightTheme,
+      home: const MusicHomePage(),
     );
   }
 }
