@@ -8,7 +8,7 @@
 PRODUCT_NAME = yeah_music
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.pengwz.yeah.muisc.yeahMusic
+PRODUCT_BUNDLE_IDENTIFIER = com.pengwz.yeahMusic
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.pengwz.yeah.muisc. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.pengwz. All rights reserved.

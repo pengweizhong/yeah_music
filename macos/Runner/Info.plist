@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+    <key>CFBundleName</key>
+    <string>Yeah Music</string>
+    <key>CFBundleDisplayName</key>
+    <string>Yeah Music</string>
 </dict>
 </plist>

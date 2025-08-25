@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.pengwz.yeah.muisc" "\0"
+            VALUE "CompanyName", "com.pengwz" "\0"
             VALUE "FileDescription", "yeah_music" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "yeah_music" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.pengwz.yeah.muisc. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 com.pengwz. All rights reserved." "\0"
             VALUE "OriginalFilename", "yeah_music.exe" "\0"
             VALUE "ProductName", "yeah_music" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
