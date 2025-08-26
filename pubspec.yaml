@@ -12,11 +12,10 @@ dependencies:
   hooks_riverpod: 2.6.1
   just_audio: 0.10.4
   audio_session: 0.2.2
-  on_audio_query: 2.9.0
   permission_handler: 12.0.1
   just_audio_background: 0.0.1-beta.17
   file_picker: 10.3.2  # 用来选择目录或文件
-  flutter_media_metadata: 1.0.0+1
+  ffmpeg_kit_flutter_new: 3.2.0
 
 dev_dependencies:
   flutter_test:

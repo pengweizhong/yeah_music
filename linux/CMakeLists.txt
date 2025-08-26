@@ -126,3 +126,8 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+# Linux 桌面构建时，Flutter 会调用 clang++ 或 g++。
+# 默认启用了 -Werror，把所有警告都当错误处理。
+# 插件作者代码里有一些没用的局部变量，所以触发了 -Wunused-but-set-variable。
+# 强制忽略 unused-variable 警告
+add_compile_options(-Wno-error=unused-but-set-variable -Wno-error=unused-variable)
