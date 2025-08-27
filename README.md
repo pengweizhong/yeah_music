@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="/assets/icons/year_music.png" width="300" height="300"/>
+    <img src="yeah_music.png" width="300" height="300"/>
 </p>
 <div align="center">简洁、现代化的跨平台音乐播放器</div>
 

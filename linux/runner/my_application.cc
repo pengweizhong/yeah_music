@@ -28,7 +28,7 @@ static void my_application_activate(GApplication *application) {
             GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
     // 设置窗口图标
     gtk_window_set_icon_from_file(window,
-                                  "year_music.png",
+                                  "yeah_music.png",
                                   NULL);
 
     // Use a header bar when running in GNOME as this is the common style used

@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit_config.dart';
 import 'package:flutter/material.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:yeah_music/services/music_service.dart';
 
 import 'config/app_config.dart';
 import 'config/theme.dart';
 import 'ui/pages/home_page.dart';
-import 'package:tray_manager/tray_manager.dart';
 
-void main() async{
+void main() async {
   // 确保 Flutter 绑定初始化
   WidgetsFlutterBinding.ensureInitialized();
   // 打印当前运行的平台名称
@@ -20,9 +20,15 @@ void main() async{
     // 如果仍保留 ffmpeg_kit_flutter_new，初始化代码放这里
     // await initializeFFmpeg();
   }
-  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+  if (Platform.isMacOS || Platform.isLinux) {
     // 初始化托盘
-    await trayManager.setIcon('/assets/icons/output.png');
+    await trayManager.setIcon('./assets/icons/icon_32x32@2x.png');
+    // 添加托盘点击事件
+    trayManager.addListener(MyTrayListener());
+  }
+  if (Platform.isWindows) {
+    // 初始化托盘Ï
+    await trayManager.setIcon('./assets/icons/icon_16x16@2x.png');
     // 添加托盘点击事件
     trayManager.addListener(MyTrayListener());
   }
