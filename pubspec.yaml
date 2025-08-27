@@ -16,6 +16,7 @@ dependencies:
   just_audio_background: 0.0.1-beta.17
   file_picker: 10.3.2  # 用来选择目录或文件
   ffmpeg_kit_flutter_new: 3.2.0
+  tray_manager: 0.5.1 # 控制托盘图标
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +25,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets: # 注册资源
+    - assets/icons/
