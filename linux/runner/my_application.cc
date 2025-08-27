@@ -26,7 +26,7 @@ static void my_application_activate(GApplication *application) {
     MyApplication * self = MY_APPLICATION(application);
     GtkWindow *window =
             GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
-    // 设置窗口图标（路径可改成你自己的图标文件）
+    // 设置窗口图标
     gtk_window_set_icon_from_file(window,
                                   "year_music.png",
                                   NULL);
