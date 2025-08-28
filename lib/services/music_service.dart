@@ -19,6 +19,14 @@ class MusicService {
 
   Future<void> loadSongs(String folderPath) async {
     songs = await _repo.loadSongs(folderPath);
+    // 监听播放状态
+    _player.processingStateStream.listen((state) {
+      // log.d("当前歌曲播放状态: $state");
+      if (state == ProcessingState.completed) {
+        log.d("当前歌曲播放完成，自动播放下一曲");
+        playNext(); // 播放完自动下一曲
+      }
+    });
     currentIndex = -1;
   }
 
