@@ -14,7 +14,7 @@ void main() async {
   log.i('初始化应用运行环境');
   log.i('当前运行的平台：${PlatformUtils().getPlatformName()}');
   var init = AppInit();
-  init.initJustAudio();
+  init.initJustAudioKit();
   runApp(const AppEntry());
   log.i('应用启动成功');
 }
