@@ -11,12 +11,14 @@ dependencies:
   cupertino_icons: 1.0.8
   hooks_riverpod: 2.6.1
   just_audio: 0.10.4
+  just_audio_media_kit: 2.1.0 # liunx 需要加入这个插件才能支持 just_audio
   audio_session: 0.2.2
   permission_handler: 12.0.1
   just_audio_background: 0.0.1-beta.17
   file_picker: 10.3.2  # 用来选择目录或文件
   ffmpeg_kit_flutter_new: 3.2.0
   tray_manager: 0.5.1 # 控制托盘图标
+  logger: 2.6.1
 
 dev_dependencies:
   flutter_test:

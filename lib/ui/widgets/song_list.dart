@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/music_service.dart';
 
+@immutable
 class SongList extends StatefulWidget {
   MusicService service;
 
