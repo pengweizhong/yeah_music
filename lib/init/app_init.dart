@@ -23,7 +23,7 @@ class AppInit {
         >("setlocale")(6, "C".toNativeUtf8().cast()); // 6 = LC_NUMERIC
       } catch (_) {}
     }
-    log.d("初始化AudioPlayer");
+    log.d("初始化 just_audio_media_kit");
     //初始化AudioPlayer
     JustAudioMediaKit.ensureInitialized(
       linux: true,
@@ -34,7 +34,7 @@ class AppInit {
       // default: false - dependency: media_kit_libs_android_audio
       iOS: true,
       // default: false - dependency: media_kit_libs_ios_audio
-      macOS: true, // default: false - dependency: media_kit_libs_macos_audio
+      macOS: false, // default: false - dependency: media_kit_libs_macos_audio
     );
   }
 }
