@@ -11,12 +11,12 @@ import 'utils/platform_utils.dart';
 var log = Logger(printer: SimplePrinter());
 
 void main() async {
-  log.i('正在启动应用');
+  log.i('初始化应用运行环境');
   log.i('当前运行的平台：${PlatformUtils().getPlatformName()}');
   var init = AppInit();
   init.initJustAudio();
   runApp(const AppEntry());
-  log.i('应用完成');
+  log.i('应用启动成功');
 }
 
 class AppEntry extends StatelessWidget {

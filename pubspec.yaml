@@ -19,6 +19,7 @@ dependencies:
   ffmpeg_kit_flutter_new: 3.2.0
   tray_manager: 0.5.1 # 控制托盘图标
   logger: 2.6.1
+  ffi: 2.1.4
 
 dev_dependencies:
   flutter_test:
