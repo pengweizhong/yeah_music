@@ -1,42 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
+import '../../models/song.dart';
 import '../../services/music_service.dart';
+
+var log = Logger(printer: SimplePrinter());
 
 @immutable
 class SongList extends StatefulWidget {
   MusicService service;
 
-  SongList(this.service);
+  SongList(this.service, {super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return _SongListState(this.service);
+    return _SongListState();
   }
 }
 
 class _SongListState extends State<SongList> {
-  MusicService service;
-
-  _SongListState(this.service);
+  MusicService get service => widget.service;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView.builder(
-        itemCount: service.songs.length,
-        itemBuilder: (context, index) {
-          print(
-            "当前播放的歌曲下标：$index，歌曲：${service.songs[index].title}，当前歌曲定位下标：${service.currentIndex},总数量：${service.songs.length}",
-          );
-          final song = service.songs[index];
-          return ListTile(
-            leading: const Icon(Icons.music_note),
-            title: Text(song.title),
-            selected: index == service.currentIndex,
-            onTap: () => service.playSong(index).then((_) => setState(() {})),
-          );
-        },
-      ),
+    // 整个列表只监听一次 currentSong
+    return ValueListenableBuilder<Song?>(
+      valueListenable: service.currentSong,
+      builder: (context, current, _) {
+        return ListView.builder(
+          itemCount: service.songs.length,
+          itemBuilder: (context, index) {
+            final song = service.songs[index];
+            return ListTile(
+              leading: const Icon(Icons.music_note),
+              title: Text(song.title),
+              selected: current == song, // 根据 current 高亮
+              onTap: () {
+                final currentNow = service.currentSong.value; // 实时值
+                log.d(
+                  "点击播放歌曲，下标：$index, current: $current, currentNow：$currentNow, song: $song",
+                );
+                service.playSong(index); // 直接调用
+                // 不需要 setState，因为 ValueListenableBuilder 会自动 rebuild
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

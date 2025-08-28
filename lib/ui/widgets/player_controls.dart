@@ -28,7 +28,9 @@ class PlayerControls extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.skip_next),
-          onPressed: () => service.playNext(),
+          onPressed: () {
+            service.playNext();
+          },
         ),
       ],
     );

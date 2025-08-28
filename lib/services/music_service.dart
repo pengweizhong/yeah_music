@@ -1,11 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logger/logger.dart';
 
 import '../models/song.dart';
 import '../repositories/song_repository.dart';
 
+var log = Logger(printer: SimplePrinter());
+
 class MusicService {
   final _player = AudioPlayer();
   final SongRepository _repo = SongRepository();
+
+  // 当前播放歌曲的 ValueNotifier
+  final ValueNotifier<Song?> currentSong = ValueNotifier<Song?>(null);
 
   List<Song> songs = [];
   int currentIndex = -1;
@@ -15,26 +22,33 @@ class MusicService {
     currentIndex = -1;
   }
 
-  Song? get currentSong => (currentIndex >= 0 && currentIndex < songs.length)
-      ? songs[currentIndex]
-      : null;
-
   Future<void> playSong(int index) async {
-    if (index < 0 || index >= songs.length) return;
+    if (index < 0 || index >= songs.length) {
+      log.e("无效的音乐下标: $index");
+      return;
+    }
     final song = songs[index];
+    currentSong.value = song;
+    currentIndex = index;
+    log.d("播放歌曲: ${song.title}，音乐下标： $currentIndex");
     try {
       await _player.stop();
       await _player.setFilePath(song.path);
       await _player.play();
-      currentIndex = index;
     } catch (e) {
-      print("播放失败: $e");
+      log.e("播放失败: $e");
     }
   }
 
-  void playNext() => playSong((currentIndex + 1) % songs.length);
+  void playNext() {
+    currentIndex = (currentIndex + 1) % songs.length;
+    playSong(currentIndex);
+  }
 
-  void playPrev() => playSong((currentIndex - 1 + songs.length) % songs.length);
+  void playPrev() {
+    currentIndex = (currentIndex - 1) % songs.length;
+    playSong(currentIndex);
+  }
 
   void pause() => _player.pause();
 
@@ -57,5 +71,4 @@ class MusicService {
   void stop() {
     _player.stop();
   }
-
 }

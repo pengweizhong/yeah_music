@@ -1,11 +1,14 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 import '../../services/music_service.dart';
 import '../widgets/player_controls.dart';
 import '../widgets/song_list.dart';
 import '../widgets/song_slider.dart';
-import '../widgets/song_tile.dart';
+import '../widgets/song_title.dart';
+
+var log = Logger(printer: SimplePrinter());
 
 class MusicHomePage extends StatefulWidget {
   final MusicService service;
@@ -18,6 +21,17 @@ class MusicHomePage extends StatefulWidget {
 
 class _MusicHomePageState extends State<MusicHomePage> {
   MusicService get service => widget.service;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    // 自动请求焦点
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
 
   Future<void> pickFolder() async {
     final folderPath = await FilePicker.platform.getDirectoryPath();
@@ -29,19 +43,11 @@ class _MusicHomePageState extends State<MusicHomePage> {
   }
 
   @override
-  void dispose() {
-    service.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final currentTitle = service.currentSong?.title ?? "未播放";
-
     return Scaffold(
       backgroundColor: Colors.brown,
       appBar: AppBar(
-        title: const Text("歌曲"),
+        title: const Text("音乐播放器"),
         backgroundColor: Colors.blueGrey,
         actions: [
           IconButton(
@@ -54,12 +60,19 @@ class _MusicHomePageState extends State<MusicHomePage> {
       ),
       body: Column(
         children: [
-          SongList(service),
-          SongTitle(title: currentTitle),
+          // SongList(service),
+          Expanded(child: SongList(service)),
+          SongTitle(service: service),
           SongSlider(service: service),
           PlayerControls(service: service),
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    service.dispose();
+    super.dispose();
   }
 }
