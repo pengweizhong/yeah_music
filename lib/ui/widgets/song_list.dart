@@ -28,9 +28,9 @@ class _SongListState extends State<SongList> {
       valueListenable: service.currentSong,
       builder: (context, current, _) {
         return ListView.builder(
-          itemCount: service.songs.length,
+          itemCount: service.audioSources.length,
           itemBuilder: (context, index) {
-            final song = service.songs[index];
+            final song = service.audioSources[index].tag;
             return ListTile(
               leading: const Icon(Icons.music_note),
               title: Text(song.title),
@@ -38,7 +38,6 @@ class _SongListState extends State<SongList> {
               onTap: () {
                 log.d("点击播放歌曲，下标：$index, current: $current");
                 service.playSong(index); // 直接调用
-                // 不需要 setState，因为 ValueListenableBuilder 会自动 rebuild
               },
             );
           },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:yeah_music/models/song.dart';
 
+import '../../models/song.dart';
 import '../../services/music_service.dart';
 
 var log = Logger(printer: SimplePrinter());
