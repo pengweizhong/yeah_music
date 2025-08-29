@@ -36,10 +36,7 @@ class _SongListState extends State<SongList> {
               title: Text(song.title),
               selected: current == song, // 根据 current 高亮
               onTap: () {
-                final currentNow = service.currentSong.value; // 实时值
-                log.d(
-                  "点击播放歌曲，下标：$index, current: $current, currentNow：$currentNow, song: $song",
-                );
+                log.d("点击播放歌曲，下标：$index, current: $current");
                 service.playSong(index); // 直接调用
                 // 不需要 setState，因为 ValueListenableBuilder 会自动 rebuild
               },
