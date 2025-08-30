@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 
 import '../../services/music_service.dart';
 import '../widgets/player_controls.dart';
+import '../widgets/song_cover.dart';
 import '../widgets/song_list.dart';
 import '../widgets/song_slider.dart';
 import '../widgets/song_title.dart';
@@ -60,10 +61,40 @@ class _MusicHomePageState extends State<MusicHomePage> {
       ),
       body: Column(
         children: [
+          // 上半部分：歌曲列表
           Expanded(child: SongList(service)),
-          SongTitle(service: service),
-          SongSlider(service: service),
-          PlayerControls(service: service),
+
+          // 下半部分：封面 + 控件
+          Container(
+            color: Colors.grey, // 背景色
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch, // 让封面高度跟右侧一致
+                children: [
+                  // 左侧封面
+                  Container(
+                    width: 150, // 宽度固定，可根据需求调整
+                    margin: const EdgeInsets.all(8),
+                    child: SongCover(
+                      valueNotifierSong: service.valueNotifierSong,
+                    ),
+                  ),
+
+                  // 右侧控件
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SongTitle(service: service),
+                        SongSlider(service: service),
+                        PlayerControls(service: service),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -14,7 +14,7 @@ class SongTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Song?>(
-      valueListenable: service.currentSong,
+      valueListenable: service.valueNotifierSong,
       builder: (context, song, _) {
         final title = song?.title ?? "暂无歌曲";
         return Padding(

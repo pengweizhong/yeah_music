@@ -14,7 +14,7 @@ class MusicService {
   final SongRepository _repo = SongRepository();
 
   // 当前播放歌曲的 ValueNotifier
-  final ValueNotifier<Song?> currentSong = ValueNotifier<Song?>(null);
+  final ValueNotifier<Song?> valueNotifierSong = ValueNotifier<Song?>(null);
 
   List<UriAudioSource> audioSources = [];
   int currentIndex = -1;
@@ -44,11 +44,11 @@ class MusicService {
     _player.sequenceStateStream.listen((sequenceState) {
       final current = sequenceState.currentSource;
       final index = sequenceState.currentIndex;
-      if (index != null && current?.tag != currentSong.value) {
+      if (index != null && current?.tag != valueNotifierSong.value) {
         log.d(
-          "更新当前播放歌曲，${(current?.tag as Song).title}, 上一首：${currentSong.value?.title}",
+          "更新当前播放歌曲，${(current?.tag as Song).title}, 上一首：${valueNotifierSong.value?.title}",
         );
-        currentSong.value = audioSources[index].tag;
+        valueNotifierSong.value = audioSources[index].tag;
       }
     });
   }
@@ -59,9 +59,9 @@ class MusicService {
       return;
     }
 
-    currentSong.value = audioSources[index].tag;
+    valueNotifierSong.value = audioSources[index].tag;
     currentIndex = index;
-    log.d("播放歌曲: ${currentSong.value}，音乐下标： $currentIndex");
+    log.d("播放歌曲: ${valueNotifierSong.value}，音乐下标： $currentIndex");
     try {
       await stop();
       await seek(Duration.zero, index: index);

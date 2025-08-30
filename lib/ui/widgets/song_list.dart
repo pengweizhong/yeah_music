@@ -25,7 +25,7 @@ class _SongListState extends State<SongList> {
   Widget build(BuildContext context) {
     // 整个列表只监听一次 currentSong
     return ValueListenableBuilder<Song?>(
-      valueListenable: service.currentSong,
+      valueListenable: service.valueNotifierSong,
       builder: (context, current, _) {
         return ListView.builder(
           itemCount: service.audioSources.length,
@@ -36,7 +36,7 @@ class _SongListState extends State<SongList> {
               title: Text(song.title),
               selected: current == song, // 根据 current 高亮
               onTap: () {
-                log.d("点击播放歌曲，下标：$index, current: $current");
+                log.d("点击播放歌曲，下标：$index, current: ${(current as Song).title}");
                 service.playSong(index); // 直接调用
               },
             );
