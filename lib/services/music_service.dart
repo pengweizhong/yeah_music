@@ -61,7 +61,7 @@ class MusicService {
 
     valueNotifierSong.value = audioSources[index].tag;
     currentIndex = index;
-    log.d("播放歌曲: ${valueNotifierSong.value}，音乐下标： $currentIndex");
+    log.d("播放歌曲: ${valueNotifierSong.value?.title}，音乐下标： $currentIndex");
     try {
       await stop();
       await seek(Duration.zero, index: index);

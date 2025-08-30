@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:yeah_music/config/app_config.dart';
 
 import '../../services/music_service.dart';
+import '../widgets/lyric_view.dart';
 import '../widgets/player_controls.dart';
 import '../widgets/song_cover.dart';
 import '../widgets/song_list.dart';
@@ -24,6 +25,7 @@ class MusicHomePage extends StatefulWidget {
 class _MusicHomePageState extends State<MusicHomePage> {
   MusicService get service => widget.service;
   late final FocusNode _focusNode;
+  bool _showLyrics = false;
 
   @override
   void initState() {
@@ -62,8 +64,12 @@ class _MusicHomePageState extends State<MusicHomePage> {
       ),
       body: Column(
         children: [
-          // 上半部分：歌曲列表
-          Expanded(child: SongList(service)),
+          // 上半部分：歌曲列表 or 歌词
+          Expanded(
+            child: _showLyrics
+                ? LyricView(valueNotifierSong: service.valueNotifierSong)
+                : SongList(service),
+          ),
 
           // 下半部分：封面 + 控件
           Container(
@@ -73,12 +79,19 @@ class _MusicHomePageState extends State<MusicHomePage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch, // 让封面高度跟右侧一致
                 children: [
-                  // 左侧封面
-                  Container(
-                    width: AppConfig.bottomCoverHeight,
-                    margin: const EdgeInsets.all(8),
-                    child: SongCover(
-                      valueNotifierSong: service.valueNotifierSong,
+                  // 左侧封面，包 GestureDetector
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showLyrics = !_showLyrics; //  切换显示状态
+                      });
+                    },
+                    child: Container(
+                      width: AppConfig.bottomCoverHeight,
+                      margin: const EdgeInsets.all(8),
+                      child: SongCover(
+                        valueNotifierSong: service.valueNotifierSong,
+                      ),
                     ),
                   ),
 

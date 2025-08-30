@@ -73,7 +73,7 @@ class Song {
         'totalDisc: $totalDisc, '
         'lyrics: $lyrics, '
         'bitrate: $bitrate, '
-        'sampleRate: $sampleRate'
+        'sampleRate: $sampleRate, '
         'picturesSize: ${pictures?.length}'
         '}';
   }
