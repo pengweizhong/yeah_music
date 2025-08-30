@@ -98,7 +98,7 @@ class _LyricsViewState extends State<LyricsView> {
                 line.text,
                 style: TextStyle(
                   color: isCurrent ? Colors.blue : Colors.white,
-                  fontSize: 16,
+                  fontSize: isCurrent ? 19 : 16,
                   fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
