@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:yeah_music/utils/song_uitls.dart';
 
 import '../../models/lyric.dart';
 import '../../models/song.dart';
@@ -70,8 +71,11 @@ class _LyricsViewState extends State<LyricsView> {
     return ValueListenableBuilder<Song?>(
       valueListenable: widget.valueNotifierSong,
       builder: (context, song, _) {
-        log.d("刷新歌词");
-        lyricsLines = parseLrc(widget.valueNotifierSong.value?.lyrics);
+        //如果歌曲发生了变化，才会刷新歌词
+        log.d("------ 刷新歌词 ------");
+        lyricsLines = SongUtils.parseLyrics(
+          widget.valueNotifierSong.value?.lyrics,
+        );
         if (lyricsLines.isEmpty) {
           return const Center(
             child: Text(

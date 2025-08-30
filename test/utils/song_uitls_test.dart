@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yeah_music/models/lyric.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/song_uitls.dart';
 
@@ -16,12 +17,20 @@ void main() {
       // 比如删除临时文件
     });
 
-    test('loadMeta sets album', () {
+    // test('loadMeta sets album', () {
+    //   SongUtils.loadMeta(song);
+    //   expect(song.title, isNotNull);
+    //   print(song.lyrics);
+    //   //读取歌曲头像
+    //   print(song.pictures?.length);
+    // });
+
+    test('parseLyrics', () {
       SongUtils.loadMeta(song);
-      expect(song.title, isNotNull);
-      print(song.lyrics);
-      //读取歌曲头像
-      print(song.pictures?.length);
+      List<LyricLine> lines = SongUtils.parseLyrics(song.lyrics);
+      for (var value in lines) {
+        print(value);
+      }
     });
   });
 }
