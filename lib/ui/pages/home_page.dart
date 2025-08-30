@@ -67,7 +67,10 @@ class _MusicHomePageState extends State<MusicHomePage> {
           // 上半部分：歌曲列表 or 歌词
           Expanded(
             child: _showLyrics
-                ? LyricsView(valueNotifierSong: service.valueNotifierSong)
+                ? LyricsView(
+                    valueNotifierSong: service.valueNotifierSong,
+                    valueNotifierDuration: service.valueNotifierDuration,
+                  )
                 : SongList(service),
           ),
 

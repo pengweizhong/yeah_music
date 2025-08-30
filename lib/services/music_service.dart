@@ -16,6 +16,11 @@ class MusicService {
   // 当前播放歌曲的 ValueNotifier
   final ValueNotifier<Song?> valueNotifierSong = ValueNotifier<Song?>(null);
 
+  // 当前播放进度的 ValueNotifier
+  final ValueNotifier<Duration> valueNotifierDuration = ValueNotifier(
+    Duration.zero,
+  );
+
   List<UriAudioSource> audioSources = [];
   int currentIndex = -1;
 
@@ -25,7 +30,7 @@ class MusicService {
     await _player.setAudioSources(
       audioSources,
       initialIndex: 0,
-      initialPosition: Duration.zero,
+      initialPosition: valueNotifierDuration.value,
       shuffleOrder: DefaultShuffleOrder(), // 可选：自定义洗牌
     );
     await setLoopMode(LoopMode.all);
@@ -48,8 +53,13 @@ class MusicService {
         log.d(
           "更新当前播放歌曲，${(current?.tag as Song).title}, 上一首：${valueNotifierSong.value?.title}",
         );
+        valueNotifierDuration.value = Duration.zero;
         valueNotifierSong.value = audioSources[index].tag;
       }
+    });
+    _player.positionStream.listen((pos) {
+      log.d("更新播放进度：pos：$pos");
+      valueNotifierDuration.value = pos;
     });
   }
 
@@ -58,7 +68,7 @@ class MusicService {
       log.e("无效的音乐下标: $index");
       return;
     }
-
+    valueNotifierDuration.value = Duration.zero;
     valueNotifierSong.value = audioSources[index].tag;
     currentIndex = index;
     log.d("播放歌曲: ${valueNotifierSong.value?.title}，音乐下标： $currentIndex");

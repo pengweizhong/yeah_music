@@ -8,8 +8,12 @@ var log = Logger(printer: SimplePrinter());
 
 class LyricsView extends StatefulWidget {
   final ValueNotifier<Song?> valueNotifierSong; //歌曲
-
-  const LyricsView({super.key, required this.valueNotifierSong});
+  final ValueNotifier<Duration> valueNotifierDuration; //播放进度
+  const LyricsView({
+    super.key,
+    required this.valueNotifierSong,
+    required this.valueNotifierDuration,
+  });
 
   @override
   State<LyricsView> createState() => _LyricsViewState();
@@ -17,22 +21,18 @@ class LyricsView extends StatefulWidget {
 
 class _LyricsViewState extends State<LyricsView> {
   final ScrollController _scrollController = ScrollController();
-  final ValueNotifier<Duration> currentPosition = ValueNotifier(
-    Duration.zero,
-  ); // 播放进度
   late List<LyricLine> lyricsLines = []; //歌曲文件
   int _currentLine = 0;
 
   @override
   void initState() {
     super.initState();
-    currentPosition.addListener(_updateCurrentLine);
+    widget.valueNotifierDuration.addListener(_updateCurrentLine);
   }
 
   void _updateCurrentLine() {
-    final pos = currentPosition.value.inMilliseconds;
+    final pos = widget.valueNotifierDuration.value.inMilliseconds;
     int newIndex = 0;
-
     for (int i = 0; i < lyricsLines.length; i++) {
       if (lyricsLines[i].time.inMilliseconds <= pos) {
         newIndex = i;
@@ -60,7 +60,7 @@ class _LyricsViewState extends State<LyricsView> {
 
   @override
   void dispose() {
-    currentPosition.removeListener(_updateCurrentLine);
+    widget.valueNotifierDuration.removeListener(_updateCurrentLine);
     _scrollController.dispose();
     super.dispose();
   }
