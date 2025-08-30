@@ -60,7 +60,6 @@ class _MusicHomePageState extends State<MusicHomePage> {
       ),
       body: Column(
         children: [
-          // SongList(service),
           Expanded(child: SongList(service)),
           SongTitle(service: service),
           SongSlider(service: service),

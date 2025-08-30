@@ -45,7 +45,9 @@ class MusicService {
       final current = sequenceState.currentSource;
       final index = sequenceState.currentIndex;
       if (index != null && current?.tag != currentSong.value) {
-        log.d("更新当前播放歌曲，${current?.tag}, 上一首：${currentSong.value}");
+        log.d(
+          "更新当前播放歌曲，${(current?.tag as Song).title}, 上一首：${currentSong.value?.title}",
+        );
         currentSong.value = audioSources[index].tag;
       }
     });
@@ -56,6 +58,7 @@ class MusicService {
       log.e("无效的音乐下标: $index");
       return;
     }
+
     currentSong.value = audioSources[index].tag;
     currentIndex = index;
     log.d("播放歌曲: ${currentSong.value}，音乐下标： $currentIndex");
