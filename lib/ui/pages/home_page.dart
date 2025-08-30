@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:yeah_music/config/app_config.dart';
 
 import '../../services/music_service.dart';
 import '../widgets/player_controls.dart';
@@ -66,6 +67,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
 
           // 下半部分：封面 + 控件
           Container(
+            height: AppConfig.bottomHeight,
             color: Colors.grey, // 背景色
             child: IntrinsicHeight(
               child: Row(
@@ -73,7 +75,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
                 children: [
                   // 左侧封面
                   Container(
-                    width: 150, // 宽度固定，可根据需求调整
+                    width: AppConfig.bottomCoverHeight,
                     margin: const EdgeInsets.all(8),
                     child: SongCover(
                       valueNotifierSong: service.valueNotifierSong,
@@ -83,9 +85,12 @@ class _MusicHomePageState extends State<MusicHomePage> {
                   // 右侧控件
                   Expanded(
                     child: Column(
+                      // 高度只包裹子控件，Column 高度 = 子控件总高度
                       mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SongTitle(service: service),
+                        Flexible(child: SongTitle(service: service)),
+                        // SongTitle(service: service),
                         SongSlider(service: service),
                         PlayerControls(service: service),
                       ],
