@@ -1,75 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:logger/logger.dart';
 
+import '../../models/lyric.dart';
 import '../../models/song.dart';
 
-class LyricView extends StatelessWidget {
-  final ValueNotifier<Song?> valueNotifierSong;
+var log = Logger(printer: SimplePrinter());
 
-  const LyricView({super.key, required this.valueNotifierSong});
+class LyricsView extends StatefulWidget {
+  final ValueNotifier<Song?> valueNotifierSong; //歌曲
+
+  const LyricsView({super.key, required this.valueNotifierSong});
+
+  @override
+  State<LyricsView> createState() => _LyricsViewState();
+}
+
+class _LyricsViewState extends State<LyricsView> {
+  final ScrollController _scrollController = ScrollController();
+  final ValueNotifier<Duration> currentPosition = ValueNotifier(
+    Duration.zero,
+  ); // 播放进度
+  late List<LyricLine> lyricsLines = []; //歌曲文件
+  int _currentLine = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    currentPosition.addListener(_updateCurrentLine);
+  }
+
+  void _updateCurrentLine() {
+    final pos = currentPosition.value.inMilliseconds;
+    int newIndex = 0;
+
+    for (int i = 0; i < lyricsLines.length; i++) {
+      if (lyricsLines[i].time.inMilliseconds <= pos) {
+        newIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    if (_currentLine != newIndex) {
+      _currentLine = newIndex;
+      _scrollToCurrentLine();
+      setState(() {});
+    }
+  }
+
+  void _scrollToCurrentLine() {
+    final itemHeight = 40.0; // 每行高度，可以根据实际调整
+    final targetOffset = (_currentLine * itemHeight) - 100; // 让当前行稍微居中
+    _scrollController.animateTo(
+      targetOffset.clamp(0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    currentPosition.removeListener(_updateCurrentLine);
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Song?>(
-      valueListenable: valueNotifierSong,
+      valueListenable: widget.valueNotifierSong,
       builder: (context, song, _) {
-        return buildLyrics();
-      },
-    );
-  }
-
-  Widget buildLyrics() {
-    String lyrics = valueNotifierSong.value?.lyrics ?? "暂无歌词";
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: SelectableText(
-        lyrics,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
-        cursorColor: Colors.blue,
-        showCursor: true,
-        contextMenuBuilder: (context, editableTextState) {
-          // 把默认的按钮项拿出来
-          final defaultItems = editableTextState.contextMenuButtonItems.map((
-            item,
-          ) {
-            if (item.type.name.toLowerCase() == 'copy') {
-              // 把英文 Copy 改成 复制
-              return ContextMenuButtonItem(
-                label: '复制',
-                onPressed: item.onPressed,
-              );
-            }
-            return item;
-          }).toList();
-          return AdaptiveTextSelectionToolbar.buttonItems(
-            anchors: editableTextState.contextMenuAnchors,
-            buttonItems: <ContextMenuButtonItem>[
-              // ...editableTextState.contextMenuButtonItems,
-              //加入已经变更的
-              ...defaultItems,
-              ContextMenuButtonItem(
-                label: '复制整首歌词',
-                onPressed: () async {
-                  try {
-                    await Clipboard.setData(ClipboardData(text: lyrics));
-                    // 等待确认复制完成再关闭菜单
-                    if (Navigator.canPop(context)) Navigator.of(context).pop();
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(const SnackBar(content: Text('歌词已复制到剪贴板')));
-                  } catch (e, st) {
-                    debugPrint('复制出错: $e\n$st');
-                    if (Navigator.canPop(context)) Navigator.of(context).pop();
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(const SnackBar(content: Text('复制失败')));
-                  }
-                },
-              ),
-            ],
+        log.d("刷新歌词");
+        lyricsLines = parseLrc(widget.valueNotifierSong.value?.lyrics);
+        if (lyricsLines.isEmpty) {
+          return const Center(
+            child: Text(
+              "暂无歌词",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
           );
-        },
-      ),
+        }
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          itemCount: lyricsLines.length,
+          itemBuilder: (context, index) {
+            final line = lyricsLines[index];
+            final isCurrent = index == _currentLine;
+            return Container(
+              height: 40,
+              alignment: Alignment.center,
+              child: Text(
+                line.text,
+                style: TextStyle(
+                  color: isCurrent ? Colors.blue : Colors.white,
+                  fontSize: 16,
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
