@@ -58,7 +58,7 @@ class MusicService {
       }
     });
     _player.positionStream.listen((pos) {
-      log.d("更新播放进度：pos：$pos");
+      log.t("更新播放进度：pos：$pos");
       valueNotifierDuration.value = pos;
     });
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/services/music_service.dart';
@@ -15,6 +16,7 @@ void main() async {
   log.i('当前运行的平台：${PlatformUtils().getPlatformName()}');
   var init = AppInit();
   init.initJustAudioKit();
+  await init.initHive();
   runApp(const AppEntry());
   log.i('应用启动成功');
 }

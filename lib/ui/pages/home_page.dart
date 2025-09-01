@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:yeah_music/config/app_config.dart';
 
@@ -26,6 +27,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
   MusicService get service => widget.service;
   late final FocusNode _focusNode;
   bool _showLyrics = false;
+  late final Box settingsBox;
 
   @override
   void initState() {
@@ -35,6 +37,12 @@ class _MusicHomePageState extends State<MusicHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
+    settingsBox = Hive.box('settings');
+    // 加载上次保存的文件夹
+    final lastFolder = settingsBox.get('lastFolder') as String?;
+    if (lastFolder != null) {
+      service.loadSongs(lastFolder);
+    }
   }
 
   Future<void> pickFolder() async {
@@ -42,6 +50,8 @@ class _MusicHomePageState extends State<MusicHomePage> {
     // final folderPath = "/Users/rocky/Music/yeah_music";
     if (folderPath != null) {
       await service.loadSongs(folderPath);
+      // 保存到 Hive
+      await settingsBox.put('lastFolder', folderPath);
       setState(() {});
     }
   }
