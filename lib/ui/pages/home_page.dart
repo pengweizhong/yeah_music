@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:yeah_music/config/app_config.dart';
 
+import '../../services/bookmark_service.dart';
 import '../../services/music_service.dart';
 import '../widgets/lyric_view.dart';
 import '../widgets/player_controls.dart';
@@ -36,18 +39,34 @@ class _MusicHomePageState extends State<MusicHomePage> {
     // 自动请求焦点
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
+      _restoreAndLoadSongs();
     });
     settingsBox = Hive.box('settings');
-    // 加载上次保存的文件夹
-    final lastFolder = settingsBox.get('lastFolder') as String?;
-    if (lastFolder != null) {
-      service.loadSongs(lastFolder);
+  }
+
+  /// 加载上次保存的文件夹
+  Future<void> _restoreAndLoadSongs() async {
+    String? restoredPath;
+    if (Platform.isMacOS) {
+      // 恢复之前的书签
+      restoredPath = await BookmarkService.restoreBookmark();
+    } else {
+      restoredPath = settingsBox.get('lastFolder') as String?;
+    }
+    log.d("上次打开的文件夹：$restoredPath");
+    if (restoredPath != null) {
+      await service.loadSongs(restoredPath);
     }
   }
 
   Future<void> pickFolder() async {
-    final folderPath = await FilePicker.platform.getDirectoryPath();
-    // final folderPath = "/Users/rocky/Music/yeah_music";
+    final folderPath;
+    if (Platform.isMacOS) {
+      // 让用户选择目录，并在 Swift 侧保存书签
+      folderPath = await BookmarkService.pickDirectory();
+    } else {
+      folderPath = await FilePicker.platform.getDirectoryPath();
+    }
     if (folderPath != null) {
       await service.loadSongs(folderPath);
       // 保存到 Hive
