@@ -105,8 +105,8 @@ class _MusicHomePageState extends State<MusicHomePage> {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Flexible(child: SongTitle(service: service)),
-                        // SongTitle(service: service),
+                        // Flexible(child: SongTitle(service: service)),
+                        SongTitle(service: service),
                         SongSlider(service: service),
                         PlayerControls(service: service),
                       ],

@@ -12,7 +12,13 @@ var log = Logger(printer: SimplePrinter());
 
 class SongUtils {
   static void loadMeta(Song song) {
-    final metadata = readMetadata(File(song.path), getImage: true);
+    final metadata;
+    try {
+      metadata = readMetadata(File(song.path), getImage: true);
+    } catch (e) {
+      log.e("读取歌曲元信息失败：文件：${song.path}");
+      return;
+    }
     String filename = song.path.split("/").last;
     String title = decodeString(metadata.title ?? filename);
     log.d("加载歌曲元信息: $title，原始文件名称: $filename");
