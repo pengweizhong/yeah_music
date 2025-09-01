@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 
 import '../../models/song.dart';
@@ -10,7 +11,12 @@ var log = Logger(printer: SimplePrinter());
 class SongList extends StatefulWidget {
   MusicService service;
 
-  SongList(this.service, {super.key});
+  //当前播放的音乐列表
+  List<UriAudioSource> currentPlaylist;
+
+  SongList(this.service, {Key? key, List<UriAudioSource>? currentPlaylist})
+    : currentPlaylist = currentPlaylist ?? [],
+      super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -21,6 +27,8 @@ class SongList extends StatefulWidget {
 class _SongListState extends State<SongList> {
   MusicService get service => widget.service;
 
+  List<UriAudioSource> get currentPlaylist => widget.currentPlaylist;
+
   @override
   Widget build(BuildContext context) {
     // 整个列表只监听一次 currentSong
@@ -28,9 +36,9 @@ class _SongListState extends State<SongList> {
       valueListenable: service.valueNotifierSong,
       builder: (context, current, _) {
         return ListView.builder(
-          itemCount: service.audioSources.length,
+          itemCount: currentPlaylist.length,
           itemBuilder: (context, index) {
-            final song = service.audioSources[index].tag;
+            final song = currentPlaylist[index].tag;
             return ListTile(
               leading: const Icon(Icons.music_note),
               title: Text(song.title),

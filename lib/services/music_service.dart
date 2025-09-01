@@ -23,17 +23,25 @@ class MusicService {
 
   List<UriAudioSource> audioSources = [];
   int currentIndex = -1;
+  late List<UriAudioSource> playlist;
 
-  Future<void> loadSongs(String folderPath) async {
-    audioSources = await _repo.loadAudioSources(folderPath);
+  /// 刷新播放清单
+  Future<void> flushPlaylist(List<UriAudioSource> playlist) async {
+    log.d("刷新播放列表，长度：${playlist.length}");
+    await stop();
+    this.playlist = playlist;
     // Load the playlist
     await _player.setAudioSources(
-      audioSources,
+      playlist,
       initialIndex: 0,
       initialPosition: valueNotifierDuration.value,
       shuffleOrder: DefaultShuffleOrder(), // 可选：自定义洗牌
     );
     await setLoopMode(LoopMode.all);
+  }
+
+  Future<void> loadSongs(String folderPath) async {
+    audioSources = await _repo.loadAudioSources(folderPath);
     // 监听播放状态
     //顺序播放（LoopMode.off） → 监听 completed，手动调用 playNext()
     // 列表循环（LoopMode.all） → 播放器自己会循环，不需要手动调用 playNext()
@@ -54,22 +62,22 @@ class MusicService {
           "更新当前播放歌曲，${(current?.tag as Song).title}, 上一首：${valueNotifierSong.value?.title}",
         );
         valueNotifierDuration.value = Duration.zero;
-        valueNotifierSong.value = audioSources[index].tag;
+        valueNotifierSong.value = playlist[index].tag;
       }
     });
     _player.positionStream.listen((pos) {
-      log.t("更新播放进度：pos：$pos");
+      // log.t("更新播放进度：pos：$pos");
       valueNotifierDuration.value = pos;
     });
   }
 
   Future<void> playSong(int index) async {
-    if (index < 0 || index >= audioSources.length) {
+    if (index < 0 || index >= playlist.length) {
       log.e("无效的音乐下标: $index");
       return;
     }
     valueNotifierDuration.value = Duration.zero;
-    valueNotifierSong.value = audioSources[index].tag;
+    valueNotifierSong.value = playlist[index].tag;
     currentIndex = index;
     log.d("播放歌曲: ${valueNotifierSong.value?.title}，音乐下标： $currentIndex");
     try {
@@ -82,12 +90,12 @@ class MusicService {
   }
 
   void playNext() {
-    currentIndex = (currentIndex + 1) % audioSources.length;
+    currentIndex = (currentIndex + 1) % playlist.length;
     playSong(currentIndex);
   }
 
   void playPrev() {
-    currentIndex = (currentIndex - 1) % audioSources.length;
+    currentIndex = (currentIndex - 1) % playlist.length;
     playSong(currentIndex);
   }
 

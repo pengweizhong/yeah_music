@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:yeah_music/config/app_config.dart';
 
@@ -31,6 +32,8 @@ class _MusicHomePageState extends State<MusicHomePage> {
   late final FocusNode _focusNode;
   bool _showLyrics = false;
   late final Box settingsBox;
+  String _searchQuery = "";
+  String _sortOrder = "original"; // 默认按名称升序
 
   @override
   void initState() {
@@ -56,6 +59,8 @@ class _MusicHomePageState extends State<MusicHomePage> {
     log.d("上次打开的文件夹：$restoredPath");
     if (restoredPath != null) {
       await service.loadSongs(restoredPath);
+      await service.flushPlaylist(service.audioSources);
+      setState(() {});
     }
   }
 
@@ -69,6 +74,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
     }
     if (folderPath != null) {
       await service.loadSongs(folderPath);
+      await service.flushPlaylist(service.audioSources);
       // 保存到 Hive
       await settingsBox.put('lastFolder', folderPath);
       setState(() {});
@@ -77,6 +83,8 @@ class _MusicHomePageState extends State<MusicHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final playlistOverride = _getFilteredSongs();
+    log.d("1111111111当前播放列表长度：${playlistOverride.length}");
     return Scaffold(
       backgroundColor: Colors.brown,
       appBar: AppBar(
@@ -90,6 +98,63 @@ class _MusicHomePageState extends State<MusicHomePage> {
             color: Colors.green,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                // 搜索框
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: "搜索歌曲...",
+                      prefixIcon: Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.blueGrey,
+                      contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      log.d("用户输入的搜索关键词：$val");
+                      setState(() {
+                        log.d("用户输入的搜索关键词：$val");
+                        _searchQuery = val;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // 排序菜单
+                DropdownButton<String>(
+                  value: _sortOrder,
+                  items: const [
+                    DropdownMenuItem(value: "original", child: Text("默认")),
+                    DropdownMenuItem(value: "nameAsc", child: Text("名称 ↑")),
+                    DropdownMenuItem(value: "nameDesc", child: Text("名称 ↓")),
+                    DropdownMenuItem(value: "durationAsc", child: Text("时长 ↑")),
+                    DropdownMenuItem(
+                      value: "durationDesc",
+                      child: Text("时长 ↓"),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      log.d("用户选择的排序方式：$val");
+                      setState(() {
+                        log.d("用户选择的排序方式：$val");
+                        _sortOrder = val;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -100,7 +165,7 @@ class _MusicHomePageState extends State<MusicHomePage> {
                     valueNotifierSong: service.valueNotifierSong,
                     valueNotifierDuration: service.valueNotifierDuration,
                   )
-                : SongList(service),
+                : SongList(service, currentPlaylist: playlistOverride),
           ),
 
           // 下半部分：封面 + 控件
@@ -109,7 +174,8 @@ class _MusicHomePageState extends State<MusicHomePage> {
             color: Colors.grey, // 背景色
             child: IntrinsicHeight(
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch, // 让封面高度跟右侧一致
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                // 让封面高度跟右侧一致
                 children: [
                   // 左侧封面，包 GestureDetector
                   GestureDetector(
@@ -148,6 +214,41 @@ class _MusicHomePageState extends State<MusicHomePage> {
         ],
       ),
     );
+  }
+
+  // 过滤 + 排序逻辑
+  List<UriAudioSource> _getFilteredSongs() {
+    var songs = service.audioSources;
+    if (_searchQuery == "" && _sortOrder == "original") {
+      return songs; // 不做排序，返回原列表副本
+    }
+    if (_searchQuery.isNotEmpty) {
+      songs = songs
+          .where(
+            (s) =>
+                s.tag.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+          )
+          .toList();
+    }
+    switch (_sortOrder) {
+      case "original":
+        break;
+      case "nameAsc":
+        songs.sort((a, b) => a.tag.title.compareTo(b.tag.title));
+        break;
+      case "nameDesc":
+        songs.sort((a, b) => b.tag.title.compareTo(a.tag.title));
+        break;
+      case "durationAsc":
+        songs.sort((a, b) => a.tag.duration.compareTo(b.tag.duration));
+        break;
+      case "durationDesc":
+        songs.sort((a, b) => b.tag.duration.compareTo(a.tag.duration));
+        break;
+    }
+    log.d("_getFilteredSongs 筛选后的播放列表长度：${songs.length}");
+    Future.wait([service.flushPlaylist(songs)]);
+    return songs;
   }
 
   @override
