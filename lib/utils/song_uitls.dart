@@ -11,11 +11,12 @@ import '../models/lyric.dart';
 var log = Logger(printer: SimplePrinter());
 
 class SongUtils {
-  static void loadMeta(Song song) {
+  static Future<void> loadMeta(Song song) async {
     final metadata;
     String filename = song.path.split("/").last;
+    File file = File(song.path);
     try {
-      metadata = readMetadata(File(song.path), getImage: true);
+      metadata = readMetadata(file, getImage: true);
     } catch (e) {
       song.title = filename;
       log.e("读取歌曲元信息失败：文件：${song.path}");
@@ -34,6 +35,15 @@ class SongUtils {
     song.sampleRate = metadata.sampleRate;
     song.bitrate = metadata.bitrate;
     song.pictures = metadata.pictures;
+    await loadFileStat(song);
+  }
+
+  static Future<void> loadFileStat(Song song) async {
+    File file = File(song.path);
+    // 获取文件状态信息
+    final stat = await file.stat();
+    song.createDateTime = stat.changed;
+    song.updateDateTime = stat.modified;
   }
 
   ///尝试解码字符串，优先使用 UTF-8，如果失败则使用 GBK

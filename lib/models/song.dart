@@ -1,4 +1,3 @@
-
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 
 class Song {
@@ -54,6 +53,12 @@ class Song {
   /// 歌曲中包含的图片
   List<Picture>? pictures;
 
+  ///歌曲创建时间
+  DateTime? createDateTime;
+
+  ///歌曲更新时间
+  DateTime? updateDateTime;
+
   Song(this.path);
 
   @override
@@ -74,6 +79,8 @@ class Song {
         'lyrics: $lyrics, '
         'bitrate: $bitrate, '
         'sampleRate: $sampleRate, '
+        'createDateTime: $createDateTime, '
+        'updateDateTime: $updateDateTime, '
         'picturesSize: ${pictures?.length}'
         '}';
   }

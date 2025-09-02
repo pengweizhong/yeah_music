@@ -140,6 +140,14 @@ class _MusicHomePageState extends State<MusicHomePage> {
                       value: "durationDesc",
                       child: Text("时长 ↓"),
                     ),
+                    DropdownMenuItem(
+                      value: "createDateTimeAsc",
+                      child: Text("创建时间 ↑"),
+                    ),
+                    DropdownMenuItem(
+                      value: "createDateTimeDesc",
+                      child: Text("创建时间 ↓"),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) {
@@ -240,10 +248,16 @@ class _MusicHomePageState extends State<MusicHomePage> {
         songs.sort((a, b) => b.tag.title.compareTo(a.tag.title));
         break;
       case "durationAsc":
-        songs.sort((a, b) => sortByDuration(a, b));
+        songs.sort((a, b) => sortByValue(a.tag.duration, b.tag.duration));
         break;
       case "durationDesc":
-        songs.sort((a, b) => sortByDuration(b, a));
+        songs.sort((a, b) => sortByValue(b.tag.duration, a.tag.duration));
+        break;
+      case "createDateTimeAsc":
+        songs.sort((a, b) => sortByValue(a.tag.duration, b.tag.duration));
+        break;
+      case "createDateTimeDesc":
+        songs.sort((a, b) => sortByValue(b.tag.duration, a.tag.duration));
         break;
     }
     log.d("_getFilteredSongs 筛选后的播放列表长度：${songs.length}");
@@ -251,13 +265,13 @@ class _MusicHomePageState extends State<MusicHomePage> {
     return songs;
   }
 
-  int sortByDuration(UriAudioSource a, UriAudioSource b) {
-    final ad = a.tag.duration;
-    final bd = b.tag.duration;
-    if (ad == null && bd == null) return 0;
-    if (ad == null) return 1; // null 放后面
-    if (bd == null) return -1;
-    return ad.compareTo(bd);
+  int sortByValue(a, b) {
+    // final ad = a.tag.duration;
+    // final bd = b.tag.duration;
+    if (a == null && b == null) return 0;
+    if (a == null) return 1; // null 放后面
+    if (b == null) return -1;
+    return a.compareTo(b);
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/song_uitls.dart';
 
 void main() {
-  String path = "test/resources/花澤香菜 - 恋愛サーキュレーション.flac";
+  String path = "/home/rocky/OneDrive/音乐/Music/Shakira,Freshlyground - Waka Waka (This Time for Africa).mp3";
 
   group('SongUtils', () {
     late Song song;
@@ -25,12 +25,16 @@ void main() {
     //   print(song.pictures?.length);
     // });
 
-    test('parseLyrics', () {
-      SongUtils.loadMeta(song);
-      List<LyricLine> lines = SongUtils.parseLyrics(song.lyrics);
-      for (var value in lines) {
-        print(value);
-      }
+    test('parseLyrics', () async {
+     await SongUtils.loadMeta(song);
+      // List<LyricLine> lines = SongUtils.parseLyrics(song.lyrics);
+      // for (var value in lines) {
+      //   print(value);
+      // }
+      print(song);
     });
+    // test('loadFileStat', () async {
+    //   SongUtils.loadFileStat(song);
+    // });
   });
 }
