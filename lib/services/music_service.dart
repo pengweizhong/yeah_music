@@ -22,7 +22,7 @@ class MusicService {
   );
 
   List<UriAudioSource> audioSources = [];
-  int currentIndex = -1;
+
   late List<UriAudioSource> playlist;
 
   /// 刷新播放清单
@@ -78,7 +78,6 @@ class MusicService {
     }
     valueNotifierDuration.value = Duration.zero;
     valueNotifierSong.value = playlist[index].tag;
-    currentIndex = index;
     log.d("播放歌曲: ${valueNotifierSong.value?.title}，音乐下标： $currentIndex");
     try {
       await stop();
@@ -90,13 +89,11 @@ class MusicService {
   }
 
   void playNext() {
-    currentIndex = (currentIndex + 1) % playlist.length;
-    playSong(currentIndex);
+    playSong((currentIndex! + 1) % playlist.length);
   }
 
   void playPrev() {
-    currentIndex = (currentIndex - 1) % playlist.length;
-    playSong(currentIndex);
+    playSong((currentIndex! - 1) % playlist.length);
   }
 
   ///开始播放
@@ -132,4 +129,6 @@ class MusicService {
   Stream<Duration> get positionStream => _player.positionStream;
 
   Duration? get duration => _player.duration;
+
+  int? get currentIndex => _player.currentIndex;
 }
