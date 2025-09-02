@@ -240,15 +240,24 @@ class _MusicHomePageState extends State<MusicHomePage> {
         songs.sort((a, b) => b.tag.title.compareTo(a.tag.title));
         break;
       case "durationAsc":
-        songs.sort((a, b) => a.tag.duration.compareTo(b.tag.duration));
+        songs.sort((a, b) => sortByDuration(a, b));
         break;
       case "durationDesc":
-        songs.sort((a, b) => b.tag.duration.compareTo(a.tag.duration));
+        songs.sort((a, b) => sortByDuration(b, a));
         break;
     }
     log.d("_getFilteredSongs 筛选后的播放列表长度：${songs.length}");
     Future.wait([service.flushPlaylist(songs)]);
     return songs;
+  }
+
+  int sortByDuration(UriAudioSource a, UriAudioSource b) {
+    final ad = a.tag.duration;
+    final bd = b.tag.duration;
+    if (ad == null && bd == null) return 0;
+    if (ad == null) return 1; // null 放后面
+    if (bd == null) return -1;
+    return ad.compareTo(bd);
   }
 
   @override
