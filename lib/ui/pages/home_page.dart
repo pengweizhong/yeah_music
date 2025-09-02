@@ -254,10 +254,10 @@ class _MusicHomePageState extends State<MusicHomePage> {
         songs.sort((a, b) => sortByValue(b.tag.duration, a.tag.duration));
         break;
       case "createDateTimeAsc":
-        songs.sort((a, b) => sortByValue(a.tag.duration, b.tag.duration));
+        songs.sort((a, b) => sortByValue(a.tag.createDateTime, b.tag.createDateTime));
         break;
       case "createDateTimeDesc":
-        songs.sort((a, b) => sortByValue(b.tag.duration, a.tag.duration));
+        songs.sort((a, b) => sortByValue(b.tag.createDateTime, a.tag.createDateTime));
         break;
     }
     log.d("_getFilteredSongs 筛选后的播放列表长度：${songs.length}");
