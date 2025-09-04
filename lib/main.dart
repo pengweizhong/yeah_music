@@ -1,36 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
-import 'package:yeah_music/init/app_init.dart';
-import 'package:yeah_music/services/music_service.dart';
-
-import 'config/app_config.dart';
-import 'config/theme.dart';
-import 'ui/pages/home_page.dart';
-import 'utils/platform_utils.dart';
 
 var log = Logger(printer: SimplePrinter());
 
-void main() async {
-  log.i('初始化应用运行环境');
-  log.i('当前运行的平台：${PlatformUtils().getPlatformName()}');
-  var init = AppInit();
-  init.initJustAudioKit();
-  await init.initHive();
-  runApp(const AppEntry());
+void main() {
   log.i('应用启动成功');
+  runApp(const YeahMusicApp());
 }
 
-class AppEntry extends StatelessWidget {
-  const AppEntry({super.key});
+class YeahMusicApp extends StatelessWidget {
+  const YeahMusicApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false, // 关闭右上角 Debug 横幅
-      title: AppConfig.appTitle,
-      theme: AppTheme.lightTheme,
-      home: MusicHomePage(service: MusicService()),
-    );
+    return MaterialApp();
   }
 }
