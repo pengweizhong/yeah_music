@@ -16,7 +16,7 @@ class _ThemeSettingsState extends State<MusicThemeSettings> {
     return Scaffold(
       appBar: AppBar(title: Text("主题设置")),
       body: Container(
-        //装饰切换
+        //装饰
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.secondary,
           borderRadius: BorderRadius.circular(12),

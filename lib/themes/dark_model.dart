@@ -19,10 +19,10 @@ ThemeData darkTheme = ThemeData(
     surface: Colors.grey.shade800,
 
     /// 次要颜色（辅助色，一般用于按钮、悬浮按钮、强调元素）
-    secondary: Color.from(alpha: 255, red: 50, green: 50, blue: 50),
+    secondary: Colors.grey.shade600,
 
     /// 反向主色调（用于深色区域的对比色，例如状态栏、底部导航栏）
-    inversePrimary: Colors.grey.shade300,
+    inversePrimary: Colors.grey.shade500,
   ),
   scaffoldBackgroundColor: Colors.grey.shade800,
   // 页面整体背景
@@ -31,6 +31,6 @@ ThemeData darkTheme = ThemeData(
   iconTheme: const IconThemeData(color: Colors.grey),
   // 图标颜色
   textTheme: const TextTheme(
-    bodyMedium: TextStyle(color: Colors.grey), // 正文文字
+    bodyMedium: TextStyle(color: Colors.black45), // 正文文字
   ),
 );
