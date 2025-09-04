@@ -3,8 +3,8 @@ import 'package:yeah_music/themes/dark_model.dart';
 import 'package:yeah_music/themes/light_model.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  //默认是白天模式
-  ThemeData _themeData = lightTheme;
+  //默认模式
+  ThemeData _themeData = darkTheme;
 
   ThemeData get themeData => _themeData;
 
