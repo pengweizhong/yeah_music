@@ -1,20 +1,56 @@
 import 'package:flutter/material.dart';
 
-/// 定义全局主题配置
+/// 白天模式主题配置（Light Theme）
 ThemeData lightTheme = ThemeData(
-  // 设置颜色方案（浅色主题）
+  brightness: Brightness.light,
+  // 明确白天模式
+
+  // 设置颜色方案
   colorScheme: ColorScheme.light(
-    /// 主色调（应用的核心颜色，比如 AppBar、按钮）
-    primary: Colors.grey.shade500,
+    /// 主色调：AppBar、按钮等
+    primary: Colors.blue.shade700,
 
-    /// 主要用于文本、图标、分隔线等绘制在表面上的颜色
-    /// 一般应用在背景或卡片表面上方的文字/图标
-    onSurface: Colors.grey.shade300,
+    /// 前景色：文字、图标
+    onSurface: Colors.grey.shade900,
+    // 在 surface 上显示的文字/图标
 
-    /// 次要颜色（辅助色，一般用于按钮、悬浮按钮、强调元素）
-    secondary: Colors.grey.shade200,
+    /// 组件表面背景色：Scaffold、Card、Dialog
+    surface: Colors.grey.shade50,
+    // 白色偏灰，更柔和
 
-    /// 反向主色调（用于深色区域的对比色，例如状态栏、底部导航栏）
-    inversePrimary: Colors.grey.shade900,
+    /// 次要颜色：辅助元素、按钮、强调色
+    secondary: Colors.blue.shade200,
+
+    /// 反向主色调：深色区域对比色
+    inversePrimary: Colors.blue.shade800,
+  ),
+
+  // Scaffold 背景色
+  scaffoldBackgroundColor: Colors.grey.shade50,
+
+  // 卡片、Dialog 背景色
+  cardColor: Colors.white,
+
+  // 文字主题
+  textTheme: const TextTheme(
+    bodyMedium: TextStyle(color: Colors.black87), // 正文文字
+    bodyLarge: TextStyle(color: Colors.black87),
+    bodySmall: TextStyle(color: Colors.black87),
+    titleMedium: TextStyle(color: Colors.black87),
+  ),
+
+  // 图标颜色
+  iconTheme: const IconThemeData(color: Colors.black87),
+
+  // AppBar 主题
+  appBarTheme: AppBarTheme(
+    backgroundColor: Colors.blue.shade700,
+    foregroundColor: Colors.white, // 文字、图标颜色
+    elevation: 1,
+  ),
+
+  // 按钮主题
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade700, foregroundColor: Colors.white),
   ),
 );

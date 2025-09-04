@@ -4,7 +4,7 @@ import 'package:yeah_music/themes/light_model.dart';
 
 class ThemeProvider extends ChangeNotifier {
   //默认模式
-  ThemeData _themeData = darkTheme;
+  ThemeData _themeData = lightTheme;
 
   ThemeData get themeData => _themeData;
 
