@@ -82,7 +82,7 @@ packages:
     source: hosted
     version: "1.4.0"
   charset:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: charset
       sha256: "27802032a581e01ac565904ece8c8962564b1070690794f0072f6865958ce8b9"
@@ -153,6 +153,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.7.11"
+  disk_space_2:
+    dependency: "direct main"
+    description:
+      name: disk_space_2
+      sha256: b9c2ed499075066b8bb7fc9becf39838db0b7e698db6cd90017adf769f954de0
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.10"
   fake_async:
     dependency: transitive
     description:

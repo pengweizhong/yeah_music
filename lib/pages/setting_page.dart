@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/compments/disk_space.dart';
 import 'package:yeah_music/pages/setting/music_theme_settings.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
@@ -8,7 +9,7 @@ class SettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("设置")),
+      appBar: AppBar(title: Text("音乐源")),
       body: ListView(
         children: [
           // 设置项分组
@@ -19,6 +20,12 @@ class SettingPage extends StatelessWidget {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => MusicThemeSettings()));
             },
+          ),
+          ExpansionTile(
+            title: Text("系统信息"),
+            subtitle: Text("资源使用情况"),
+            leading: Icon(Icons.system_security_update_good_outlined),
+            children: [DiskSpaceView()],
           ),
           ListTile(
             title: Text("关于"),

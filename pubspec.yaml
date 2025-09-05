@@ -24,6 +24,8 @@ dependencies:
   hive: 2.2.3 # 结构化存储，比 shared_preferences 更灵活
   hive_flutter: 1.1.0 # Flutter 专用的封装层
   provider: ^6.1.5+1 # 状态管理包
+  charset: ^2.0.1 # 字符集
+  disk_space_2: ^1.0.10 # 获取磁盘信息
 
 dev_dependencies:
   flutter_test:
