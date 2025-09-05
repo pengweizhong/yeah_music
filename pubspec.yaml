@@ -34,7 +34,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/icon_512x512@2x.png" # 生成图标命令：flutter pub run flutter_launcher_icons:main
+  image_path: "assets/icons/yeah_music.png" # 生成图标命令：flutter pub run flutter_launcher_icons:main
 
 flutter:
   uses-material-design: true
