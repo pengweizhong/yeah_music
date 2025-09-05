@@ -28,4 +28,22 @@ class ApplicationUtils {
       },
     );
   }
+
+  ///自定义提示框
+  static void alertDialog(BuildContext context, String title, String closeTips, List<Widget> children) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // 内容自适应，不撑满屏幕
+            crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
+            children: children, //弹出内容
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(closeTips))],
+        );
+      },
+    );
+  }
 }

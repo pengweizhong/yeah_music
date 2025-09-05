@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/pages/setting_page.dart';
 
-import '../repositories/floder_repository.dart';
+import '../pages/setting/folder_page_setting.dart';
 import '../utils/application_utils.dart';
 
 class MenuDrawer extends StatefulWidget {
@@ -59,9 +59,9 @@ class _MenuDrawerState extends State<MenuDrawer> {
                   //关闭当前页面 / 弹窗
                   Navigator.pop(context);
                   //导航到新的页面
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => FolderRepository()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => FolderPageSettings()));
                   //这种方式不保留当前页面栈 替换当前页面
-                  // MaterialPageRoute(builder: (context) => ThemeSettings()),
+                  // MaterialPageRoute(builder: (context) => FolderPageSettings());
                 },
               ),
             ),

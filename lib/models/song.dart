@@ -1,11 +1,17 @@
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:hive/hive.dart';
 
-class Song {
+part "song.g.dart";
+
+@HiveType(typeId: 1)
+class Song extends HiveObject {
   ///文件路径
-  final String path;
+  @HiveField(0)
+  String path;
 
   /// 曲目标题, 如果为空，则用文件名替代
-  late String title;
+  @HiveField(1)
+  String? title;
 
   /// 专辑名称
   String? album;
@@ -24,6 +30,7 @@ class Song {
   /// 曲目中包含但不被视为主唱的艺术家
   /// 例如，在“Dr. Dre - Still D.R.E. ft. Snoop Dogg”中，Snoop Dogg 是
   /// 表演者
+  @HiveField(2)
   final List<String> performers = [];
 
   /// 专辑中曲目的顺序
@@ -51,12 +58,15 @@ class Song {
   int? sampleRate;
 
   /// 歌曲中包含的图片
+  // @HiveField(3)
   List<Picture>? pictures;
 
   ///歌曲创建时间
+  @HiveField(4)
   DateTime? createDateTime;
 
   ///歌曲更新时间
+  @HiveField(5)
   DateTime? updateDateTime;
 
   Song(this.path);

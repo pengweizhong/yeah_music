@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
 
+import 'compments/folder_provider.dart';
+import 'models/folder.dart';
+import 'models/song.dart';
+
 //SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
 var log = Logger(printer: SimplePrinter());
 
-void main() {
+void main() async {
   log.i('应用启动成功');
+  await Hive.initFlutter();
+  //Hive Adapter 注册（main.dart）
+  Hive.registerAdapter(FolderAdapter());
+  Hive.registerAdapter(SongAdapter());
   runApp(
-    ChangeNotifierProvider(
-      //把 ThemeProvider 注入到整个应用，后续所有子 Widget 都可以访问到它
-      create: (context) => ThemeProvider(),
-      //应用主 Widget
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => FolderProvider()..init()),
+      ],
       child: YeahMusicApp(),
     ),
   );
