@@ -36,6 +36,7 @@ class FolderPageSettings extends StatelessWidget {
                   icon: Icon(Icons.info_outline_rounded),
                   onPressed: () {
                     showModalBottomSheet(
+                      isScrollControlled: true, // 允许全屏滚动
                       context: context,
                       builder: (context) {
                         return Container(
@@ -49,8 +50,12 @@ class FolderPageSettings extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text("文件夹别名：${folder.name}"),
-                              Text("文件夹路径：${folder.path}", softWrap: true, maxLines: null),
+                              SizedBox(height: 4),
+                              Text("文件夹路径："),
+                              SelectableText(folder.path, maxLines: null, showCursor: true),
+                              SizedBox(height: 4),
                               Text("歌曲数量：${folder.songPaths?.length ?? '未知'}"),
+                              SizedBox(height: 4),
                               Text(
                                 "加入时间：${folder.createdAt != null ? DateFormat('yyyy-MM-dd HH:mm:ss').format(folder.createdAt!) : '未知'}",
                               ),

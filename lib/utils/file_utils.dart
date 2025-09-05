@@ -89,4 +89,20 @@ class FileUtils {
   //   }
   //   return lines;
   // }
+
+  // /// 打开文件夹
+  // static Future<void> openFolder(String folderPath) async {
+  //   if (Platform.isWindows) {
+  //     // Windows
+  //     await Process.run('explorer', [folderPath]);
+  //   } else if (Platform.isMacOS) {
+  //     // macOS
+  //     await Process.run('open', [folderPath]);
+  //   } else if (Platform.isLinux) {
+  //     // Linux
+  //     await Process.run('xdg-open', [folderPath]);
+  //   } else {
+  //     throw UnsupportedError('This platform is not supported');
+  //   }
+  // }
 }
