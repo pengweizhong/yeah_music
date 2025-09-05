@@ -14,7 +14,7 @@ class ApplicationUtils {
             children: const [
               Text("当前版本：v1.0.0"),
               SizedBox(height: 8), // 间距
-              Text("作者：PengWeizhong"),
+              Text("作者：PengWeiZhong"),
               SizedBox(height: 8),
               Text("仓库地址："),
               // 可以复制文本
