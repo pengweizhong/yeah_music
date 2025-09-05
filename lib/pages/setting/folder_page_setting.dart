@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
@@ -31,6 +32,35 @@ class FolderPageSettings extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  icon: Icon(Icons.info_outline_rounded),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return Container(
+                          height: 300,
+                          // width: 200,
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            //左对齐
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            //主轴方向仅占用子组件需要的最小空间
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text("文件夹别名：${folder.name}"),
+                              Text("文件夹路径：${folder.path}", softWrap: true, maxLines: null),
+                              Text("歌曲数量：${folder.songPaths?.length ?? '未知'}"),
+                              Text(
+                                "加入时间：${folder.createdAt != null ? DateFormat('yyyy-MM-dd HH:mm:ss').format(folder.createdAt!) : '未知'}",
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
                 IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
