@@ -45,7 +45,7 @@ class FolderProvider extends ChangeNotifier {
     f.name = folderName;
     f.createdAt = DateTime.now();
     await HiveUtils.add(_box!, f);
-    flushSongToFolder(f, false);
+    await flushSongToFolder(f, false);
     notifyListeners();
     return f;
   }

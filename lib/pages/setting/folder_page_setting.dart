@@ -101,6 +101,7 @@ class FolderPageSettings extends StatelessWidget {
                   tooltip: "重新加载歌曲",
                   onPressed: () {
                     folderProvider.flushSongToFolder(folder, true);
+                    context.read<PlayListProvider>().flushPlaylist(folder);
                   },
                 ),
                 IconButton(
