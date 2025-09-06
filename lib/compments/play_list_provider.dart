@@ -1,13 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:yeah_music/models/song.dart';
 
 import '../models/folder.dart';
 import 'folder_provider.dart';
 
+var log = Logger(printer: SimplePrinter());
+
 class PlayListProvider extends ChangeNotifier {
   final List<Song> playList = [];
+  bool _initialized = false;
 
-  void addPlayList(List<Song> playList, FolderProvider folderProvider) {
+  bool get initialized => _initialized;
+
+  /// 从 FolderProvider 加载歌曲
+  Future<void> init(FolderProvider folderProvider) async {
+    //若本身已经被初始化
+    if (_initialized) {
+      return;
+    }
+    // 等待 FolderProvider 初始化
+    if (!folderProvider.initialized) {
+      await folderProvider.init();
+    }
+    // 遍历所有文件夹
+    _addPlayList(folderProvider);
+    _initialized = true;
+    notifyListeners();
+  }
+
+  void _addPlayList(FolderProvider folderProvider) {
     //所有的文件夹
     List<Folder> folders = folderProvider.folders;
     for (var value in folders) {
@@ -17,6 +39,5 @@ class PlayListProvider extends ChangeNotifier {
       }
       playList.addAll(value.songList as Iterable<Song>);
     }
-
   }
 }

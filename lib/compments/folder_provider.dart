@@ -25,6 +25,9 @@ class FolderProvider extends ChangeNotifier {
 
   /// 初始化 Hive Box
   Future<void> init() async {
+    if (_initialized) {
+      return;
+    }
     _box = await HiveUtils.openBox(Constant.hiveFolderBox);
     _initialized = true;
     notifyListeners();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/models/song.dart';
 
@@ -6,14 +7,28 @@ import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/folder.dart';
 
+var log = Logger(printer: SimplePrinter());
+
+@immutable
 class PlayListPage extends StatefulWidget {
-  const PlayListPage({super.key});
+  const PlayListPage({super.key}); // 这里可以保持 immutable
 
   @override
   State<PlayListPage> createState() => _PlayListProviderState();
 }
 
 class _PlayListProviderState extends State<PlayListPage> {
+  @override
+  void initState() {
+    super.initState();
+    final folderProvider = context.read<FolderProvider>();
+    final playListProvider = context.read<PlayListProvider>();
+    if (!playListProvider.initialized) {
+      log.d("初始化全部歌单列表");
+      playListProvider.init(folderProvider);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     PlayListProvider playListProvider = context.watch<PlayListProvider>();
