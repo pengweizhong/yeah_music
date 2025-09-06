@@ -37,9 +37,10 @@ class _PlayListProviderState extends State<PlayListPage> {
       body: ListView.builder(
         itemCount: playListProvider.playList.length,
         itemBuilder: (context, index) {
+         Song song =  playListProvider.playList[index];
           return ListTile(
             leading: Icon(Icons.music_note),
-            title: Text(playListProvider.playList[index].title ?? "未知音乐"),
+            title: Text(song.title ?? "未知音乐"),
           );
         },
       ),

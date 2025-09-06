@@ -44,8 +44,8 @@ class FolderProvider extends ChangeNotifier {
     final f = Folder(folder);
     f.name = folderName;
     f.createdAt = DateTime.now();
+    await flushSongToFolder(f, false, save: false);
     await HiveUtils.add(_box!, f);
-    await flushSongToFolder(f, false);
     notifyListeners();
     return f;
   }
@@ -64,7 +64,7 @@ class FolderProvider extends ChangeNotifier {
   }
 
   /// 添加歌曲到文件夹
-  Future<void> flushSongToFolder(Folder folder, bool listen) async {
+  Future<void> flushSongToFolder(Folder folder, bool listen, {bool save = true}) async {
     String folderPath = folder.path;
     if (Platform.isMacOS) {
       await BookmarkService.restoreBookmark(folderPath);
@@ -86,7 +86,9 @@ class FolderProvider extends ChangeNotifier {
       songlist.add(song);
     }
     folder.songList = songlist;
-    await folder.save();
+    if (save) {
+      await folder.save();
+    }
     if (listen) {
       notifyListeners();
     }
