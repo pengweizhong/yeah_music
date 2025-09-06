@@ -61,4 +61,8 @@ class HiveUtils {
       await Hive.box(boxName).close();
     }
   }
+
+  static Future<void> add<T>(Box<T> box, T value) async {
+    await box.add(value);
+  }
 }

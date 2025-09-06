@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/config/app_config.dart';
 
 class ApplicationUtils {
   ///弹出软件的“关于信息”
@@ -20,7 +21,7 @@ class ApplicationUtils {
               // 可以复制文本
               SelectableText("https://github.com/pengweizhong/yeah_music", style: TextStyle(color: Colors.blue)),
               SizedBox(height: 8),
-              Text("许可证：©2025 pengweizhong. GPL-3.0 license"),
+              Text("许可证：${AppConfig.copyright}"),
             ],
           ),
           actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("关闭"))],

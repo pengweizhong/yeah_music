@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
 
@@ -18,6 +19,7 @@ void main() async {
   //Hive Adapter 注册（main.dart）
   Hive.registerAdapter(FolderAdapter());
   Hive.registerAdapter(SongAdapter());
+  // clearCache();
   runApp(
     MultiProvider(
       providers: [
@@ -27,6 +29,11 @@ void main() async {
       child: YeahMusicApp(),
     ),
   );
+}
+
+void clearCache() {
+  Hive.deleteBoxFromDisk(Constant.hiveRootPath);
+  Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
 }
 
 class YeahMusicApp extends StatelessWidget {

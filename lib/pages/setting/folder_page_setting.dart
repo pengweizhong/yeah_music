@@ -1,12 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
 import '../../compments/folder_provider.dart';
 import '../../models/folder.dart';
+import '../../utils/date_utils.dart';
 
 var log = Logger(printer: SimplePrinter());
 
@@ -28,7 +28,7 @@ class FolderPageSettings extends StatelessWidget {
           final folder = folderProvider.folders[index];
           return ListTile(
             title: Text(folder.name ?? "未知"),
-            subtitle: Text("${folder.songPaths?.length} 首歌"),
+            subtitle: Text("${folder.songList?.length} 首歌"),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -40,6 +40,7 @@ class FolderPageSettings extends StatelessWidget {
                       context: context,
                       builder: (context) {
                         return Container(
+                          width: double.infinity, // 横向撑满
                           height: 300,
                           // width: 200,
                           padding: EdgeInsets.all(16),
@@ -49,15 +50,39 @@ class FolderPageSettings extends StatelessWidget {
                             //主轴方向仅占用子组件需要的最小空间
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text("文件夹别名：${folder.name}"),
-                              SizedBox(height: 4),
-                              Text("文件夹路径："),
-                              SelectableText(folder.path, maxLines: null, showCursor: true),
-                              SizedBox(height: 4),
-                              Text("歌曲数量：${folder.songPaths?.length ?? '未知'}"),
-                              SizedBox(height: 4),
-                              Text(
-                                "加入时间：${folder.createdAt != null ? DateFormat('yyyy-MM-dd HH:mm:ss').format(folder.createdAt!) : '未知'}",
+                              Row(
+                                children: [
+                                  Text("文件夹别名：", style: TextStyle(fontWeight: FontWeight.w900)),
+                                  Text("${folder.name}"),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Text("文件夹路径：", style: TextStyle(fontWeight: FontWeight.w900)),
+                                  Flexible(
+                                    child: SelectableText(
+                                      folder.path,
+                                      maxLines: null,
+                                      showCursor: true,
+                                      textAlign: TextAlign.start,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Text("歌曲数量：", style: TextStyle(fontWeight: FontWeight.w900)),
+                                  Text("${folder.songList?.length}"),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Text("加入时间：", style: TextStyle(fontWeight: FontWeight.w900)),
+                                  Text(LocalDateUtils.formatDateTime(folder.createdAt, 'yyyy-MM-dd HH:mm:ss')),
+                                ],
                               ),
                             ],
                           ),

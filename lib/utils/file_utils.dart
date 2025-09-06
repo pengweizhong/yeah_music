@@ -10,7 +10,7 @@ import '../models/song.dart';
 var log = Logger(printer: SimplePrinter());
 
 class FileUtils {
-  static Future<void> loadMeta(Song song) async {
+  static Future<void> loadSongMeta(Song song) async {
     final metadata;
     String filename = song.path.split("/").last;
     File file = File(song.path);
