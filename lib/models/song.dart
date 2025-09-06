@@ -14,9 +14,11 @@ class Song extends HiveObject {
   String? title;
 
   /// 专辑名称
+  @HiveField(2)
   String? album;
 
   /// 专辑/曲目发行年份
+  @HiveField(3)
   DateTime? year;
 
   /// 曲目语言
@@ -25,12 +27,13 @@ class Song extends HiveObject {
   /// 曲目主唱
   /// 对于古典音乐，则是作曲家
   /// 对于流行音乐，通常是乐队或歌手
+  @HiveField(4)
   String? artist;
 
   /// 曲目中包含但不被视为主唱的艺术家
   /// 例如，在“Dr. Dre - Still D.R.E. ft. Snoop Dogg”中，Snoop Dogg 是
   /// 表演者
-  @HiveField(2)
+  @HiveField(5)
   final List<String> performers = [];
 
   /// 专辑中曲目的顺序
@@ -49,6 +52,7 @@ class Song extends HiveObject {
   int? totalDisc;
 
   /// 曲目的歌词。可以是普通文本或歌词。
+  @HiveField(6)
   String? lyrics;
 
   /// 比特率
@@ -58,15 +62,15 @@ class Song extends HiveObject {
   int? sampleRate;
 
   /// 歌曲中包含的图片
-  // @HiveField(3)
+  @HiveField(7)
   List<Picture>? pictures;
 
   ///歌曲创建时间
-  @HiveField(4)
+  @HiveField(8)
   DateTime? createDateTime;
 
   ///歌曲更新时间
-  @HiveField(5)
+  @HiveField(9)
   DateTime? updateDateTime;
 
   Song(this.path);

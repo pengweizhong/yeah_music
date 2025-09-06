@@ -41,7 +41,7 @@ class _MenuPageState extends State<MenuPage> {
                 title: Text("歌曲列表"),
                 leading: Icon(Icons.list),
                 onTap: () {
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => PlayListPage()));
                 },
               ),
@@ -54,7 +54,7 @@ class _MenuPageState extends State<MenuPage> {
                 leading: Icon(Icons.folder_copy_outlined),
                 onTap: () {
                   //关闭当前页面 / 弹窗
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                   //导航到新的页面
                   Navigator.push(context, MaterialPageRoute(builder: (context) => StoragePlayListPage()));
                   //这种方式不保留当前页面栈 替换当前页面
@@ -70,7 +70,7 @@ class _MenuPageState extends State<MenuPage> {
                 leading: Icon(Icons.source),
                 onTap: () {
                   //关闭当前页面 / 弹窗
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                   //导航到新的页面
                   Navigator.push(context, MaterialPageRoute(builder: (context) => FolderPageSettings()));
                   //这种方式不保留当前页面栈 替换当前页面
@@ -86,7 +86,7 @@ class _MenuPageState extends State<MenuPage> {
                 leading: Icon(Icons.settings),
                 onTap: () {
                   //关闭当前页面 / 弹窗
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                   //导航到新的页面
                   Navigator.push(context, MaterialPageRoute(builder: (context) => SettingPage()));
                   //这种方式不保留当前页面栈 替换当前页面

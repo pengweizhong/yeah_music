@@ -37,10 +37,27 @@ class _PlayListProviderState extends State<PlayListPage> {
       body: ListView.builder(
         itemCount: playListProvider.playList.length,
         itemBuilder: (context, index) {
-         Song song =  playListProvider.playList[index];
+          Song song = playListProvider.playList[index];
           return ListTile(
-            leading: Icon(Icons.music_note),
+            leading: Container(
+              width: 48, // 固定大小
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white, // 背景填充白色
+                borderRadius: BorderRadius.circular(4), // 圆角
+              ),
+              child: song.pictures == null || song.pictures!.isEmpty
+                  ? const Icon(Icons.music_note, size: 32, color: Colors.grey)
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: FittedBox(
+                        fit: BoxFit.cover, // 图片等比裁剪填满
+                        child: Image.memory(song.pictures!.first.bytes),
+                      ),
+                    ),
+            ),
             title: Text(song.title ?? "未知音乐"),
+            subtitle: Text(song.artist ?? ''),
           );
         },
       ),

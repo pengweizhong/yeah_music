@@ -34,6 +34,7 @@ void main() async {
 }
 
 void clearCache() {
+  log.i("清除缓存");
   Hive.deleteBoxFromDisk(Constant.hiveRootPath);
   Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
 }
