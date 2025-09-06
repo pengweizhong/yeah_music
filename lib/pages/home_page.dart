@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../compments/menu_drawer.dart';
+import 'package:yeah_music/pages/menu_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,8 +15,9 @@ class _HomePageState extends State<HomePage> {
       extendBody: true,
       extendBodyBehindAppBar: false,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: Text("播放列表")),
-      drawer: MenuDrawer(),
+      appBar: AppBar(title: Text("主页")),
+      drawer: MenuPage(),
+      body: Center(child: Text("这里暂时什么也不做")),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
 
 import 'compments/folder_provider.dart';
+import 'compments/play_list_provider.dart';
 import 'models/folder.dart';
 import 'models/song.dart';
 
@@ -24,6 +25,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => PlayListProvider()),
         ChangeNotifierProvider(create: (_) => FolderProvider()..init()),
       ],
       child: YeahMusicApp(),

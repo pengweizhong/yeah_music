@@ -19,7 +19,7 @@ class FolderPageSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final folderProvider = context.watch<FolderProvider>();
-    log.d("文件夹资源是否已经初始化？${folderProvider.initialized}");
+    // log.d("文件夹资源是否已经初始化？${folderProvider.initialized}");
     if (!folderProvider.initialized) {
       return Center(child: CircularProgressIndicator());
     }

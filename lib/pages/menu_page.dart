@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/setting_page.dart';
+import 'package:yeah_music/pages/storage_playlist_page.dart';
 
 import '../pages/setting/folder_page_setting.dart';
 import '../utils/application_utils.dart';
 
-class MenuDrawer extends StatefulWidget {
-  const MenuDrawer({super.key});
+class MenuPage extends StatefulWidget {
+  const MenuPage({super.key});
 
   @override
-  State<MenuDrawer> createState() => _MenuDrawerState();
+  State<MenuPage> createState() => _MenuPageState();
 }
 
-class _MenuDrawerState extends State<MenuDrawer> {
+class _MenuPageState extends State<MenuPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -33,17 +34,29 @@ class _MenuDrawerState extends State<MenuDrawer> {
               padding: EdgeInsetsGeometry.only(left: 90, right: 90, top: 20),
               child: ListTile(title: Text("主页"), leading: Icon(Icons.home), onTap: () => Navigator.pop(context)),
             ),
+            //歌曲列表
+            Padding(
+              padding: EdgeInsetsGeometry.only(left: 90, right: 70, top: 5),
+              child: ListTile(
+                title: Text("歌曲列表"),
+                leading: Icon(Icons.list),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => PlayListPage()));
+                },
+              ),
+            ),
             //歌单
             Padding(
               padding: EdgeInsetsGeometry.only(left: 90, right: 80, top: 5),
               child: ListTile(
                 title: Text("歌单"),
-                leading: Icon(Icons.featured_play_list_outlined),
+                leading: Icon(Icons.folder_copy_outlined),
                 onTap: () {
                   //关闭当前页面 / 弹窗
                   Navigator.pop(context);
                   //导航到新的页面
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => PlayListProvider()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => StoragePlayListPage()));
                   //这种方式不保留当前页面栈 替换当前页面
                   // MaterialPageRoute(builder: (context) => ThemeSettings()),
                 },
