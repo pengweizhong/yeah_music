@@ -41,7 +41,17 @@ class AppDelegate: FlutterAppDelegate {
         if panel.runModal() == .OK, let url = panel.url {
             do {
                 let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
-                UserDefaults.standard.set(bookmark, forKey: "musicDirBookmark")
+
+                // 读取已有书签
+                var bookmarks = UserDefaults.standard.array(forKey: "musicDirBookmarks") as? [[String: Any]] ?? []
+
+                let item: [String: Any] = [
+                    "path": url.path, // 可识别标识
+                    "bookmark": bookmark
+                ]
+                bookmarks.append(item)
+                UserDefaults.standard.set(bookmarks, forKey: "musicDirBookmarks")
+
                 result(url.path)
             } catch {
                 result(FlutterError(code: "BOOKMARK_ERROR", message: "保存书签失败", details: error.localizedDescription))
@@ -51,26 +61,37 @@ class AppDelegate: FlutterAppDelegate {
         }
     }
 
-    private func restoreBookmark(result: @escaping FlutterResult) {
-        guard let data = UserDefaults.standard.data(forKey: "musicDirBookmark") else {
-            result(nil)
+    // 如果传入 targetPath，只会恢复匹配的书签。
+    // 如果不传，返回所有路径。
+    private func restoreBookmark(result: @escaping FlutterResult, targetPath: String? = nil) {
+        guard let items = UserDefaults.standard.array(forKey: "musicDirBookmarks") as? [[String: Any]] else {
+            result([])
             return
         }
 
-        var isStale = false
-        do {
-            let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
-            if isStale {
-                result(nil)
-                return
+        var restoredPaths: [String] = []
+
+        for item in items {
+            guard let data = item["bookmark"] as? Data,
+                  let path = item["path"] as? String else { continue }
+
+            if let target = targetPath, target != path { continue }
+
+            var isStale = false
+            do {
+                let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
+                if isStale { continue }
+                if url.startAccessingSecurityScopedResource() {
+                    restoredPaths.append(path)
+                }
+            } catch {
+                continue
             }
-            if url.startAccessingSecurityScopedResource() {
-                result(url.path)
-            } else {
-                result(nil)
-            }
-        } catch {
-            result(nil)
         }
+
+        result(restoredPaths) // 总是返回数组
     }
+
+
+
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
+import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
@@ -61,11 +62,19 @@ class FolderProvider extends ChangeNotifier {
 
   /// 添加歌曲到文件夹
   Future<void> flushSongToFolder(Folder folder, bool listen) async {
-    // folder.songPaths.add(songPath);
+    String folderPath = folder.path;
+    if (Platform.isMacOS) {
+      await BookmarkService.restoreBookmark(folderPath);
+    }
     //加载歌曲
-    final dir = Directory(folder.path);
+    final dir = Directory(folderPath);
     // 筛选支持的音频文件格式
-    final songFiles = dir.listSync().where((f) => AppConfig.supportedFormats.any((format) => f.path.endsWith(format)));
+    // 获取当前目录及子目录下所有文件
+    final songFiles = dir
+        .listSync(recursive: true)
+        .where((f) => f is File && AppConfig.supportedFormats.any((format) => f.path.endsWith(format)))
+        .cast<File>()
+        .toList();
     log.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
     List<Song> songlist = [];
     for (var value in songFiles) {

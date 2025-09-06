@@ -31,7 +31,7 @@ class ApplicationUtils {
   }
 
   ///自定义提示框
-  static void alertDialog(BuildContext context, String title, String closeTips, List<Widget> children) {
+  static void alertDialog(BuildContext context, String title, List<Widget> children, List<TextButton> textButtons) {
     showDialog(
       context: context,
       builder: (context) {
@@ -42,7 +42,7 @@ class ApplicationUtils {
             crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
             children: children, //弹出内容
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(closeTips))],
+          actions: textButtons,
         );
       },
     );

@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
+import '../../compments/bookmark_service.dart';
 import '../../compments/folder_provider.dart';
 import '../../models/folder.dart';
 import '../../utils/date_utils.dart';
@@ -34,6 +37,7 @@ class FolderPageSettings extends StatelessWidget {
               children: [
                 IconButton(
                   icon: Icon(Icons.info_outline_rounded),
+                  tooltip: "目录信息",
                   onPressed: () {
                     showModalBottomSheet(
                       isScrollControlled: true, // 允许全屏滚动
@@ -92,15 +96,35 @@ class FolderPageSettings extends StatelessWidget {
                   },
                 ),
                 IconButton(
+                  icon: Icon(Icons.refresh_outlined),
+                  tooltip: "重新加载歌曲",
+                  onPressed: () {
+                    folderProvider.flushSongToFolder(folder, true);
+                  },
+                ),
+                IconButton(
                   icon: Icon(Icons.edit),
+                  tooltip: "编辑",
                   onPressed: () {
                     _showRenameDialog(context, folder, folderProvider);
                   },
                 ),
                 IconButton(
                   icon: Icon(Icons.delete),
+                  tooltip: "移除目录",
                   onPressed: () {
-                    folderProvider.deleteFolder(folder);
+                    ApplicationUtils.alertDialog(
+                      context,
+                      "确认移除？",
+                      [Text("是否移除目录：${folder.name}")],
+                      [
+                        TextButton(
+                          onPressed: () => {folderProvider.deleteFolder(folder), Navigator.pop(context)},
+                          child: const Text("确认", style: TextStyle(color: Colors.red)),
+                        ),
+                        TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+                      ],
+                    );
                   },
                 ),
               ],
@@ -119,12 +143,22 @@ class FolderPageSettings extends StatelessWidget {
 
   void _showAddFolderDialog(BuildContext context, FolderProvider provider) async {
     // 打开系统文件夹选择器
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    String? selectedDirectory;
+    if (Platform.isMacOS) {
+      selectedDirectory = await BookmarkService.pickDirectory();
+    } else {
+      selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    }
     if (selectedDirectory != null) {
       // 这里可以从路径自动获取文件夹名称，也可以自己输入名称
       bool isSuccess = await provider.addFolder(selectedDirectory);
       if (!isSuccess) {
-        ApplicationUtils.alertDialog(context, "提示", "我知道了", [Text("添加了重复的文件夹：$selectedDirectory")]);
+        ApplicationUtils.alertDialog(
+          context,
+          "提示",
+          [Text("添加了重复的文件夹：$selectedDirectory")],
+          [TextButton(onPressed: () => Navigator.pop(context), child: const Text("我知道了"))],
+        );
       }
     }
   }

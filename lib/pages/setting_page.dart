@@ -9,7 +9,7 @@ class SettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("音乐源")),
+      appBar: AppBar(title: Text("设置")),
       body: ListView(
         children: [
           // 设置项分组
