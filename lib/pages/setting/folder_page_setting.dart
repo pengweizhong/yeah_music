@@ -8,6 +8,7 @@ import 'package:yeah_music/utils/application_utils.dart';
 
 import '../../compments/bookmark_service.dart';
 import '../../compments/folder_provider.dart';
+import '../../compments/play_list_provider.dart';
 import '../../models/folder.dart';
 import '../../utils/date_utils.dart';
 
@@ -119,7 +120,12 @@ class FolderPageSettings extends StatelessWidget {
                       [Text("是否移除目录：${folder.name}")],
                       [
                         TextButton(
-                          onPressed: () => {folderProvider.deleteFolder(folder), Navigator.pop(context)},
+                          onPressed: () => {
+                            //通知歌单更新
+                            context.read<PlayListProvider>().flushRemovePlaylist(folder),
+                            folderProvider.deleteFolder(folder),
+                            Navigator.pop(context),
+                          },
                           child: const Text("确认", style: TextStyle(color: Colors.red)),
                         ),
                         TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
@@ -151,14 +157,18 @@ class FolderPageSettings extends StatelessWidget {
     }
     if (selectedDirectory != null) {
       // 这里可以从路径自动获取文件夹名称，也可以自己输入名称
-      bool isSuccess = await provider.addFolder(selectedDirectory);
-      if (!isSuccess) {
+      Folder? addFolder = await provider.addFolder(selectedDirectory);
+      if (addFolder == null) {
         ApplicationUtils.alertDialog(
           context,
           "提示",
           [Text("添加了重复的文件夹：$selectedDirectory")],
           [TextButton(onPressed: () => Navigator.pop(context), child: const Text("我知道了"))],
         );
+      } else {
+        //通知歌单更新
+        final playListProvider = context.read<PlayListProvider>();
+        playListProvider.flushAddPlaylist(addFolder);
       }
     }
   }

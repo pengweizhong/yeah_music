@@ -40,4 +40,30 @@ class PlayListProvider extends ChangeNotifier {
       playList.addAll(value.songList as Iterable<Song>);
     }
   }
+
+  void flushAddPlaylist(Folder folder) {
+    List<Song>? addSongs = folder.songList;
+    if (addSongs == null || addSongs.isEmpty) {
+      return;
+    }
+    for (var value in addSongs) {
+      if (!playList.contains(value)) {
+        playList.add(value);
+      }
+    }
+    notifyListeners();
+  }
+
+  void flushRemovePlaylist(Folder folder) {
+    List<Song>? removeSongs = folder.songList;
+    if (removeSongs == null || removeSongs.isEmpty) {
+      return;
+    }
+    for (var value in removeSongs) {
+      if (playList.contains(value)) {
+        playList.remove(value);
+      }
+    }
+    notifyListeners();
+  }
 }

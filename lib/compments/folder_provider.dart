@@ -33,12 +33,12 @@ class FolderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 添加文件夹 ,添加成功就返回true
-  Future<bool> addFolder(String folder) async {
+  /// 添加文件夹 ,添加成功就返回Folder
+  Future<Folder?> addFolder(String folder) async {
     //检验文件夹是否已经存在
     if (await existFolder(_box!, folder)) {
       log.d("用户添加了重复的文件夹：$folder");
-      return false;
+      return null;
     }
     String folderName = folder.split('/').last;
     final f = Folder(folder);
@@ -47,7 +47,7 @@ class FolderProvider extends ChangeNotifier {
     await HiveUtils.add(_box!, f);
     flushSongToFolder(f, false);
     notifyListeners();
-    return true;
+    return f;
   }
 
   /// 删除文件夹
