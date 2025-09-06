@@ -58,6 +58,7 @@ class _PlayListProviderState extends State<PlayListPage> {
             ),
             title: Text(song.title ?? "未知音乐"),
             subtitle: Text(song.artist ?? ''),
+            onTap: () => navToSongPage(index, playListProvider),
           );
         },
       ),
@@ -74,5 +75,10 @@ class _PlayListProviderState extends State<PlayListPage> {
       }
       playList.addAll(value.songList as Iterable<Song>);
     }
+  }
+
+  void navToSongPage(int index, PlayListProvider playListProvider) {
+    //TODO
+    // Navigator.push(context, )
   }
 }
