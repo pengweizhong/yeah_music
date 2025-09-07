@@ -15,15 +15,30 @@ class AppDelegate: FlutterAppDelegate {
 
     override func applicationDidFinishLaunching(_ notification: Notification) {
         let controller = mainFlutterWindow?.contentViewController as! FlutterViewController
-        let channel = FlutterMethodChannel(name: channelName, binaryMessenger: controller.engine.binaryMessenger)
 
-        channel.setMethodCallHandler { (call, result) in
+        // bookmark channel
+        let bookmarkChannel = FlutterMethodChannel(name: channelName,
+                                                   binaryMessenger: controller.engine.binaryMessenger)
+
+        bookmarkChannel.setMethodCallHandler { (call, result) in
             switch call.method {
             case "pickDirectory":
                 self.pickDirectory(result: result)
             case "restoreBookmark":
                 self.restoreBookmark(result: result)
             default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+
+        // disk space channel
+        let diskSpaceChannel = FlutterMethodChannel(name: "disk_space",
+                                                    binaryMessenger: controller.engine.binaryMessenger)
+
+        diskSpaceChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
+            if call.method == "getDiskSpace" {
+                self.getDiskSpace(result: result)
+            } else {
                 result(FlutterMethodNotImplemented)
             }
         }
@@ -40,13 +55,14 @@ class AppDelegate: FlutterAppDelegate {
 
         if panel.runModal() == .OK, let url = panel.url {
             do {
-                let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+                let bookmark = try url.bookmarkData(options: .withSecurityScope,
+                                                    includingResourceValuesForKeys: nil,
+                                                    relativeTo: nil)
 
-                // 读取已有书签
                 var bookmarks = UserDefaults.standard.array(forKey: "musicDirBookmarks") as? [[String: Any]] ?? []
 
                 let item: [String: Any] = [
-                    "path": url.path, // 可识别标识
+                    "path": url.path,
                     "bookmark": bookmark
                 ]
                 bookmarks.append(item)
@@ -54,15 +70,15 @@ class AppDelegate: FlutterAppDelegate {
 
                 result(url.path)
             } catch {
-                result(FlutterError(code: "BOOKMARK_ERROR", message: "保存书签失败", details: error.localizedDescription))
+                result(FlutterError(code: "BOOKMARK_ERROR",
+                                    message: "保存书签失败",
+                                    details: error.localizedDescription))
             }
         } else {
             result(nil)
         }
     }
 
-    // 如果传入 targetPath，只会恢复匹配的书签。
-    // 如果不传，返回所有路径。
     private func restoreBookmark(result: @escaping FlutterResult, targetPath: String? = nil) {
         guard let items = UserDefaults.standard.array(forKey: "musicDirBookmarks") as? [[String: Any]] else {
             result([])
@@ -73,14 +89,25 @@ class AppDelegate: FlutterAppDelegate {
 
         for item in items {
             guard let data = item["bookmark"] as? Data,
-                  let path = item["path"] as? String else { continue }
+                  let path = item["path"] as? String
+            else {
+                continue
+            }
 
-            if let target = targetPath, target != path { continue }
+            if let target = targetPath, target != path {
+                continue
+            }
 
             var isStale = false
             do {
-                let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
-                if isStale { continue }
+                let url = try URL(resolvingBookmarkData: data,
+                                  options: .withSecurityScope,
+                                  relativeTo: nil,
+                                  bookmarkDataIsStale: &isStale)
+                if isStale {
+                    continue
+                }
+
                 if url.startAccessingSecurityScopedResource() {
                     restoredPaths.append(path)
                 }
@@ -89,9 +116,27 @@ class AppDelegate: FlutterAppDelegate {
             }
         }
 
-        result(restoredPaths) // 总是返回数组
+        result(restoredPaths)
     }
 
-
-
+    private func getDiskSpace(result: FlutterResult) {
+        do {
+            let attrs = try FileManager.default.attributesOfFileSystem(forPath: "/")
+            if let total = attrs[.systemSize] as? NSNumber,
+               let free = attrs[.systemFreeSize] as? NSNumber {
+                result([
+                           "total": total.int64Value,
+                           "free": free.int64Value
+                       ])
+            } else {
+                result(FlutterError(code: "UNAVAILABLE",
+                                    message: "Disk space info not available",
+                                    details: nil))
+            }
+        } catch {
+            result(FlutterError(code: "ERROR",
+                                message: "Failed to get disk space: \(error.localizedDescription)",
+                                details: nil))
+        }
+    }
 }

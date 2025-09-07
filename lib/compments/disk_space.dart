@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:disk_space_2/disk_space_2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+const MethodChannel _channel = MethodChannel('disk_space');
 
 class DiskSpaceView extends StatefulWidget {
   const DiskSpaceView({super.key});
@@ -23,16 +28,23 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
   }
 
   Future<void> _loadDiskInfo() async {
-    double? total = await DiskSpace.getTotalDiskSpace;
-    double? free = await DiskSpace.getFreeDiskSpace;
-    double? used = total != null && free != null ? total - free : null;
-    _platformVersion = await _diskSpacePlugin.getPlatformVersion();
+    if (Platform.isMacOS) {
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('getDiskSpace');
+      _total = (result?["total"] as int).toDouble() / (1000 * 1000);
+      _free = (result?["free"] as int).toDouble() / (1000 * 1000);
+      _platformVersion = "macOS";
+    } else {
+      _total = await DiskSpace.getTotalDiskSpace;
+      _free = await DiskSpace.getFreeDiskSpace;
+      _platformVersion = await _diskSpacePlugin.getPlatformVersion();
+    }
+    _used = _total != null && _free != null ? _total! - _free! : null;
 
     if (mounted) {
       setState(() {
-        _total = total;
-        _free = free;
-        _used = used;
+        _total;
+        _free;
+        _used;
       });
     }
   }
