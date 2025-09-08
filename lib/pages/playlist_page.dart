@@ -1,9 +1,8 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/pages/song_page.dart';
 
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
@@ -48,7 +47,7 @@ class _PlayListProviderState extends State<PlayListPage> {
                 color: Colors.white, // 背景填充白色
                 borderRadius: BorderRadius.circular(4), // 圆角
               ),
-              child: song.imageBytes==null
+              child: song.imageBytes == null
                   ? const Icon(Icons.music_note, size: 32, color: Colors.grey)
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(4),
@@ -59,7 +58,7 @@ class _PlayListProviderState extends State<PlayListPage> {
                     ),
             ),
             title: Text(song.title ?? "未知音乐"),
-            subtitle: Text(song.artist ?? ''),
+            subtitle: Text(showSecondTitle(song), style: TextStyle(color: Colors.grey.shade600)),
             onTap: () => navToSongPage(index, playListProvider),
           );
         },
@@ -80,7 +79,16 @@ class _PlayListProviderState extends State<PlayListPage> {
   }
 
   void navToSongPage(int index, PlayListProvider playListProvider) {
-    //TODO
-    // Navigator.push(context, )
+    Navigator.push(context, MaterialPageRoute(builder: (context) => SongPage(index: index)));
+  }
+
+  String showSecondTitle(Song song) {
+    if (song.title == null) {
+      return song.album ?? "";
+    }
+    if (song.album == null) {
+      return song.title!;
+    }
+    return "${song.title} - ${song.album}";
   }
 }
