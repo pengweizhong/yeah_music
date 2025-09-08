@@ -47,12 +47,161 @@ class SongPage extends StatelessWidget {
                   ),
                 ],
               ),
-              //放置歌曲封面图
-              SizedBox(height: 15),
+
+              // SizedBox(height: 20),
               Container(
-                width: 280,
-                height: 280,
-                child: NeuBox(child: Image(image: ApplicationUtils.getImageCoverProvider(song, size: 512))),
+                padding: EdgeInsets.only(left: 15, right: 15, top: 15, bottom: 15),
+                child: NeuBox(
+                  padding: EdgeInsets.only(left: 25, right: 25, top: 10),
+                  // width: 280,
+                  child: Column(
+                    children: [
+                      //放置歌曲封面图
+                      SizedBox(
+                        // height: 777,
+                        // width: 280,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: Image(image: ApplicationUtils.getImageCoverProvider(song, size: 512)),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      //显示歌手和专辑
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            // 占满剩余空间
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
+                              children: [
+                                Container(padding: EdgeInsets.only(left: 10), child: Text(song.album ?? "")),
+                                Container(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Text(song.artist ?? "", style: TextStyle(color: Colors.grey.shade600)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          //添加喜爱标识
+                          Icon(Icons.favorite, color: Colors.red),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.only(top: 10, left: 20, right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    //时间标识
+                    Text("0:00"),
+                    Icon(Icons.reset_tv_sharp),
+                    Text("5:20"),
+                  ],
+                ),
+              ),
+
+              Row(
+                children: [
+                  //添加时间播放条
+                  Padding(
+                    padding: EdgeInsets.only(left: 0, right: 0),
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(thumbShape: RoundSliderThumbShape(enabledThumbRadius: 0)),
+                      child: Slider(
+                        value: 50,
+                        min: 0,
+                        max: 100,
+                        activeColor: Colors.green,
+                        onChanged: (value) {
+                          //TODO
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              Container(
+                padding: EdgeInsets.only(top: 10, left: 20, right: 20),
+                child: Row(
+                  children: [
+                    //上一曲、播放暂停、下一曲
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.skip_previous)),
+                      ),
+                    ),
+                    SizedBox(width: 30),
+                    Expanded(
+                      flex: 2,
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.play_arrow)),
+                      ),
+                    ),
+                    SizedBox(width: 30),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.skip_next)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              //随机播放、循环播放、定时关闭、歌曲信息
+              Container(
+                padding: EdgeInsets.only(top: 20, left: 20, right: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.shuffle)),
+                      ),
+                    ),
+                    SizedBox(width: 30),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.repeat)),
+                      ),
+                    ),
+                    SizedBox(width: 30),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.timer)),
+                      ),
+                    ),
+                    SizedBox(width: 30),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          //TODO
+                        },
+                        child: NeuBox(child: Icon(Icons.more_horiz)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
