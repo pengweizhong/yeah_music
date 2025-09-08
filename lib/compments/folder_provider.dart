@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
@@ -68,11 +69,17 @@ class FolderProvider extends ChangeNotifier {
     String folderPath = folder.path;
     if (Platform.isMacOS) {
       await BookmarkService.restoreBookmark(folderPath);
+    } else if (Platform.isAndroid) {
+      // 筛选支持的音频文件格式
+      // 获取当前目录及子目录下所有文件
+      if (await Permission.audio.request().isGranted) {
+        log.d("Android 存储权限已获取");
+      } else {
+        log.d("Android 存储权限被拒绝");
+      }
     }
     //加载歌曲
     final dir = Directory(folderPath);
-    // 筛选支持的音频文件格式
-    // 获取当前目录及子目录下所有文件
     final songFiles = dir
         .listSync(recursive: true)
         .where((f) => f is File && AppConfig.supportedFormats.any((format) => f.path.endsWith(format)))
