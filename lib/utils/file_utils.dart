@@ -34,6 +34,9 @@ class FileUtils {
     song.sampleRate = metadata.sampleRate;
     song.bitrate = metadata.bitrate;
     song.pictures = metadata.pictures;
+    if (song.pictures != null && song.pictures!.isNotEmpty) {
+      song.imageBytes = song.pictures![0].bytes;
+    }
     await loadFileStat(song);
   }
 

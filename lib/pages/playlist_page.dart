@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
@@ -46,13 +48,13 @@ class _PlayListProviderState extends State<PlayListPage> {
                 color: Colors.white, // 背景填充白色
                 borderRadius: BorderRadius.circular(4), // 圆角
               ),
-              child: song.pictures == null || song.pictures!.isEmpty
+              child: song.imageBytes==null
                   ? const Icon(Icons.music_note, size: 32, color: Colors.grey)
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: FittedBox(
                         fit: BoxFit.cover, // 图片等比裁剪填满
-                        child: Image.memory(song.pictures!.first.bytes),
+                        child: Image.memory(song.imageBytes!),
                       ),
                     ),
             ),

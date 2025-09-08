@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:hive/hive.dart';
 
@@ -62,8 +64,12 @@ class Song extends HiveObject {
   int? sampleRate;
 
   /// 歌曲中包含的图片
-  @HiveField(7)
+  // @HiveField(7)
   List<Picture>? pictures;
+
+  ///hive 中只存储第一个图片，用作列表展示,数据源自 pictures 的第一个元素
+  @HiveField(7)
+  Uint8List? imageBytes;
 
   ///歌曲创建时间
   @HiveField(8)
