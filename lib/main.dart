@@ -20,7 +20,7 @@ void main() async {
   //Hive Adapter 注册（main.dart）
   Hive.registerAdapter(FolderAdapter());
   Hive.registerAdapter(SongAdapter());
-  clearCache();
+  // clearCache();
   runApp(
     MultiProvider(
       providers: [

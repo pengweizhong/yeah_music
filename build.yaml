@@ -1,0 +1,8 @@
+targets:
+  $default:
+    sources:
+      exclude:
+        - test/**
+        - lib/compments/**
+      include:
+        - lib/models/**

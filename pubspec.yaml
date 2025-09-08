@@ -35,8 +35,8 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: 6.0.0
   flutter_launcher_icons: ^0.14.4 # 图标生成
-  build_runner: ^2.0.6 #  生成 Hive TypeAdapter： flutter packages pub run build_runner build   或者 dart run build_runner build --delete-conflicting-outputs
-  hive_generator: ^1.1.0
+  build_runner: ^2.4.12 #  生成 Hive TypeAdapter： flutter packages pub run build_runner build   或者 dart run build_runner build --delete-conflicting-outputs
+  hive_generator: ^2.0.1
 
 flutter_icons:
   android: true
