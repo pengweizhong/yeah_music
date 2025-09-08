@@ -7,6 +7,7 @@ import 'package:yeah_music/pages/song_page.dart';
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/folder.dart';
+import '../utils/application_utils.dart';
 
 var log = Logger(printer: SimplePrinter());
 
@@ -40,22 +41,16 @@ class _PlayListProviderState extends State<PlayListPage> {
         itemBuilder: (context, index) {
           Song song = playListProvider.playList[index];
           return ListTile(
-            leading: Container(
-              width: 48, // 固定大小
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white, // 背景填充白色
-                borderRadius: BorderRadius.circular(4), // 圆角
+            leading: ClipRRect(
+              child: Container(
+                width: 48, // 固定大小
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white, // 背景填充白色
+                  borderRadius: BorderRadius.circular(10), // 圆角
+                ),
+                child: Image(fit: BoxFit.cover, image: ApplicationUtils.getImageCoverProvider(song)),
               ),
-              child: song.imageBytes == null
-                  ? const Icon(Icons.music_note, size: 32, color: Colors.grey)
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: FittedBox(
-                        fit: BoxFit.cover, // 图片等比裁剪填满
-                        child: Image.memory(song.imageBytes!),
-                      ),
-                    ),
             ),
             title: Text(song.title ?? "未知音乐"),
             subtitle: Text(showSecondTitle(song), style: TextStyle(color: Colors.grey.shade600)),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:yeah_music/config/app_config.dart';
 
+import '../models/song.dart';
+
 class ApplicationUtils {
   ///弹出软件的“关于信息”
   static void showAboutDialog(BuildContext context) {
@@ -46,5 +48,19 @@ class ApplicationUtils {
         );
       },
     );
+  }
+
+  //获取歌曲封面图
+  static ImageProvider getImageCoverProvider(Song song, {double size = 32}) {
+    if (song.imageBytes == null) {
+      if (size < 20) {
+        return AssetImage("assets/icons/icon_16x16@2x.png");
+      }
+      if (size < 40) {
+        return AssetImage("assets/icons/icon_32x32@2x.png");
+      }
+      return AssetImage("assets/icons/icon_512x512@2x.png");
+    }
+    return MemoryImage(song.imageBytes!);
   }
 }
