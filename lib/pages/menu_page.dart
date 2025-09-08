@@ -4,7 +4,6 @@ import 'package:yeah_music/pages/setting_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
 
 import '../pages/setting/folder_page_setting.dart';
-import '../utils/application_utils.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -19,7 +18,7 @@ class _MenuPageState extends State<MenuPage> {
     return SafeArea(
       child: Drawer(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        child: Column(
+        child: ListView(
           //这里放一个Music的Logo
           children: [
             Container(
@@ -95,16 +94,16 @@ class _MenuPageState extends State<MenuPage> {
               ),
             ),
             //关于
-            Padding(
-              padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 5),
-              child: ListTile(
-                title: Text("关于"),
-                leading: Icon(Icons.music_note),
-                onTap: () {
-                  ApplicationUtils.showAboutDialog(context);
-                },
-              ),
-            ),
+            // Padding(
+            //   padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 5),
+            //   child: ListTile(
+            //     title: Text("关于"),
+            //     leading: Icon(Icons.music_note),
+            //     onTap: () {
+            //       ApplicationUtils.showAboutDialog(context);
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
