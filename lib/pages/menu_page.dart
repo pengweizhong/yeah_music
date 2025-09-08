@@ -31,12 +31,12 @@ class _MenuPageState extends State<MenuPage> {
 
             //主页
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 90, right: 90, top: 20),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 20),
               child: ListTile(title: Text("主页"), leading: Icon(Icons.home), onTap: () => Navigator.pop(context)),
             ),
             //歌曲列表
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 90, right: 70, top: 5),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 70, top: 5),
               child: ListTile(
                 title: Text("歌曲列表"),
                 leading: Icon(Icons.list),
@@ -48,7 +48,7 @@ class _MenuPageState extends State<MenuPage> {
             ),
             //歌单
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 90, right: 80, top: 5),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 5),
               child: ListTile(
                 title: Text("歌单"),
                 leading: Icon(Icons.folder_copy_outlined),
@@ -64,7 +64,7 @@ class _MenuPageState extends State<MenuPage> {
             ),
             //音乐源
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 90, right: 80, top: 5),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 5),
               child: ListTile(
                 title: Text("音乐源"),
                 leading: Icon(Icons.source),
@@ -80,7 +80,7 @@ class _MenuPageState extends State<MenuPage> {
             ),
             //设置
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 90, right: 90, top: 5),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 5),
               child: ListTile(
                 title: Text("设置"),
                 leading: Icon(Icons.settings),
@@ -96,7 +96,7 @@ class _MenuPageState extends State<MenuPage> {
             ),
             //关于
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 90, right: 90, top: 5),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 80, top: 5),
               child: ListTile(
                 title: Text("关于"),
                 leading: Icon(Icons.music_note),
