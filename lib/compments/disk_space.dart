@@ -1,10 +1,6 @@
-import 'dart:io';
-
-import 'package:disk_space_2/disk_space_2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-const MethodChannel _channel = MethodChannel('disk_space');
+import 'package:yeah_music/models/system_info.dart';
+import 'package:yeah_music/utils/system_utils.dart';
 
 class DiskSpaceView extends StatefulWidget {
   const DiskSpaceView({super.key});
@@ -14,12 +10,7 @@ class DiskSpaceView extends StatefulWidget {
 }
 
 class _DiskSpaceViewState extends State<DiskSpaceView> {
-  double? _total;
-  double? _free;
-  double? _used;
-  String? _platformVersion;
-
-  final _diskSpacePlugin = DiskSpace();
+  SystemInfo? systemInfo;
 
   @override
   void initState() {
@@ -28,30 +19,17 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
   }
 
   Future<void> _loadDiskInfo() async {
-    if (Platform.isMacOS) {
-      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('getDiskSpace');
-      _total = (result?["total"] as int).toDouble() / (1000 * 1000);
-      _free = (result?["free"] as int).toDouble() / (1000 * 1000);
-      _platformVersion = "macOS";
-    } else {
-      _total = await DiskSpace.getTotalDiskSpace;
-      _free = await DiskSpace.getFreeDiskSpace;
-      _platformVersion = await _diskSpacePlugin.getPlatformVersion();
-    }
-    _used = _total != null && _free != null ? _total! - _free! : null;
-
+    systemInfo = await SystemUtils.getSystemInfo();
     if (mounted) {
       setState(() {
-        _total;
-        _free;
-        _used;
+        systemInfo;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_total == null || _free == null) {
+    if (systemInfo == null || systemInfo?.total == null || systemInfo?.free == null) {
       return const Padding(
         padding: EdgeInsets.all(16),
         child: Center(child: CircularProgressIndicator()),
@@ -61,30 +39,33 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(leading: Icon(Icons.adb), title: Text("运行平台"), subtitle: Text(_platformVersion ?? 'Unknown')),
+        ListTile(
+          leading: Icon(Icons.adb),
+          title: Text("运行平台"),
+          subtitle: Text(systemInfo?.platformName ?? 'Unknown'),
+        ),
         ListTile(
           leading: Icon(Icons.sd_storage),
           title: Text("总空间"),
-          subtitle: Text(formatCapacityDescription(_total)),
+          subtitle: Text(
+            SystemUtils.formatCapacityDescription(systemInfo?.total),
+          ),
         ),
-        ListTile(leading: Icon(Icons.storage), title: Text("已使用"), subtitle: Text(formatCapacityDescription(_used))),
-        ListTile(leading: Icon(Icons.memory), title: Text("剩余空间"), subtitle: Text(formatCapacityDescription(_free))),
+        ListTile(
+          leading: Icon(Icons.storage),
+          title: Text("已使用"),
+          subtitle: Text(
+            SystemUtils.formatCapacityDescription(systemInfo?.used),
+          ),
+        ),
+        ListTile(
+          leading: Icon(Icons.memory),
+          title: Text("剩余空间"),
+          subtitle: Text(
+            SystemUtils.formatCapacityDescription(systemInfo?.free),
+          ),
+        ),
       ],
     );
-  }
-
-  /// 将容量（MB 为单位）格式化为可读字符串
-  String formatCapacityDescription(double? value) {
-    if (value == null) {
-      return "-- MB";
-    }
-
-    if (value < 1000) {
-      return "${value.toStringAsFixed(2)} MB"; // 保留两位小数
-    } else {
-      // 转换为 GB
-      double gb = value / 1000;
-      return "${gb.toStringAsFixed(2)} GB";
-    }
   }
 }
