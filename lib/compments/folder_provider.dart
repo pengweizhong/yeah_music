@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
@@ -72,10 +73,15 @@ class FolderProvider extends ChangeNotifier {
     } else if (Platform.isAndroid) {
       // 筛选支持的音频文件格式
       // 获取当前目录及子目录下所有文件
-      if (await Permission.audio.request().isGranted) {
-        log.d("Android 存储权限已获取");
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      int sdkInt = androidInfo.version.sdkInt;
+      if (sdkInt >= 33) {
+        // Android 13+
+        await [Permission.audio, Permission.photos, Permission.videos].request();
       } else {
-        log.d("Android 存储权限被拒绝");
+        // Android 12 及以下
+        await Permission.storage.request().isGranted;
       }
     }
     //加载歌曲
