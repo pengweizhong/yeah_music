@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/neu_box.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
 import '../models/song.dart';
 
 class SongPage extends StatelessWidget {
   int index;
+  MusicService musicService = MusicService();
 
   SongPage({super.key, required this.index});
 
@@ -151,7 +153,7 @@ class SongPage extends StatelessWidget {
                               flex: 2,
                               child: GestureDetector(
                                 onTap: () {
-                                  //TODO
+                                  musicService.playSong(song);
                                 },
                                 child: NeuBox(child: Icon(Icons.play_arrow)),
                               ),

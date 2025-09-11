@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
-import 'package:yeah_music/models/constants.dart';
+import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
 
 import 'compments/folder_provider.dart';
 import 'compments/play_list_provider.dart';
-import 'models/folder.dart';
-import 'models/song.dart';
 
 //SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
 var log = Logger(printer: SimplePrinter());
 
 void main() async {
-  log.i('应用启动成功');
-  await Hive.initFlutter();
-  //Hive Adapter 注册（main.dart）
-  Hive.registerAdapter(FolderAdapter());
-  Hive.registerAdapter(SongAdapter());
-  // clearCache();
+  log.i('应用正在启动。。。');
+  AppInit appInit = AppInit();
+  appInit.initJustAudioKit();
+  appInit.initHive();
   runApp(
     MultiProvider(
       providers: [
@@ -31,12 +26,7 @@ void main() async {
       child: YeahMusicApp(),
     ),
   );
-}
-
-void clearCache() {
-  log.i("清除缓存");
-  Hive.deleteBoxFromDisk(Constant.hiveRootPath);
-  Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
+  log.i('应用启动成功！');
 }
 
 class YeahMusicApp extends StatelessWidget {

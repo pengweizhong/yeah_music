@@ -35,7 +35,7 @@ class _MenuPageState extends State<MenuPage> {
             ),
             //歌曲列表
             Padding(
-              padding: EdgeInsetsGeometry.only(left: 80, right: 70, top: 5),
+              padding: EdgeInsetsGeometry.only(left: 80, right: 65, top: 5),
               child: ListTile(
                 title: Text("歌曲列表"),
                 leading: Icon(Icons.list),
