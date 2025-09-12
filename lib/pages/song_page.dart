@@ -7,18 +7,25 @@ import 'package:yeah_music/utils/application_utils.dart';
 
 import '../models/song.dart';
 
-class SongPage extends StatelessWidget {
+class SongPage extends StatefulWidget {
   int index;
   MusicService musicService = MusicService();
 
   SongPage({super.key, required this.index});
 
   @override
+  State<StatefulWidget> createState() {
+    return _SongPageState();
+  }
+}
+
+class _SongPageState extends State<SongPage> {
+  @override
   Widget build(BuildContext context) {
     return Consumer<PlayListProvider>(
       builder: (context, playListProvider, childWidget) {
         //拿到当前播放的歌曲
-        Song song = playListProvider.playList[index];
+        Song song = playListProvider.playList[widget.index];
         return SafeArea(
           child: Scaffold(
             // appBar: AppBar(title: Text("音乐播放页面")),
@@ -153,9 +160,16 @@ class SongPage extends StatelessWidget {
                               flex: 2,
                               child: GestureDetector(
                                 onTap: () {
-                                  musicService.playSong(song);
+                                  if(MusicService.isPlaying){
+                                    widget.musicService.stop();
+                                  }else{
+                                    widget.musicService.playSong(song);
+                                  }
+                                  setState(() {});
                                 },
-                                child: NeuBox(child: Icon(Icons.play_arrow)),
+                                child: NeuBox(
+                                  child: MusicService.isPlaying ? Icon(Icons.stop) : Icon(Icons.play_arrow),
+                                ),
                               ),
                             ),
                             SizedBox(width: 30),

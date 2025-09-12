@@ -6,7 +6,9 @@ import '../models/song.dart';
 var log = Logger(printer: SimplePrinter());
 
 class MusicService {
-  final _player = AudioPlayer();
+  //播放器成为全局单例
+  static final _player = AudioPlayer();
+  static bool isPlaying = false;
 
   Future<void> playSong(Song song) async {
     log.d("播放歌曲: ${song.title}");
@@ -30,6 +32,7 @@ class MusicService {
 
   ///开始播放
   Future<void> play() async {
+    isPlaying = true;
     return _player.play();
   }
 
@@ -53,6 +56,7 @@ class MusicService {
 
   ///暂停播放
   Future<void> stop() async {
+    isPlaying = false;
     return _player.stop();
   }
 
