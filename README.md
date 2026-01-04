@@ -21,4 +21,10 @@
 - iOS
 - Windows / macOS / Linux（桌面端）
 
-更多功能正在开发中，敬请期待！
+更多功能正在开发中，敬请期待！  
+
+> 初版(先实现功能)。。。
+
+![img.png](img.png)  
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
