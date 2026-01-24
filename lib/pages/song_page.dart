@@ -155,6 +155,7 @@ class _SongPageState extends State<SongPage> {
       ..showTranslations = _settings.showTranslations
       ..originalFontSize = _settings.originalFontSize
       ..translationFontSize = _settings.translationFontSize
+      ..lyricLineSpacing = _settings.lyricLineSpacing
       ..activeOriginalColor = _settings.activeOriginalColor
       ..activeTranslationColor = _settings.activeTranslationColor
       ..playedOriginalColor = _settings.playedOriginalColor
@@ -551,6 +552,10 @@ class _SongPageState extends State<SongPage> {
                     }),
                     sliderRow('翻译字号', _settings.translationFontSize, 10, 22, (v) {
                       _settings.translationFontSize = v;
+                      _saveSettings();
+                    }),
+                    sliderRow('歌词行间距', _settings.lyricLineSpacing, 4, 32, (v) {
+                      _settings.lyricLineSpacing = v;
                       _saveSettings();
                     }),
                     const Divider(),
@@ -1015,7 +1020,7 @@ class _SongPageState extends State<SongPage> {
                             final isShowingSingleLine = displayMode >= 0 && displayMode < line.lines.length;
 
                             return Padding(
-                              padding: EdgeInsets.symmetric(vertical: line.isActive ? 16 : 12),
+                              padding: EdgeInsets.symmetric(vertical: _settings.lyricLineSpacing / 2),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: ts == null ? null : () async {

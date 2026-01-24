@@ -57,11 +57,30 @@ class YeahMusicApp extends StatelessWidget {
       // 设置应用的首页
       home: HomePage(),
       // 动态主题 - 使用深色主题避免白色闪光
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData(
+        brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
         canvasColor: Colors.black,
         cardColor: Colors.black,
         dialogBackgroundColor: Colors.black87,
+        // 不设置 fontFamily，使用系统默认字体
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(fontFamily: null),
+          displayMedium: TextStyle(fontFamily: null),
+          displaySmall: TextStyle(fontFamily: null),
+          headlineLarge: TextStyle(fontFamily: null),
+          headlineMedium: TextStyle(fontFamily: null),
+          headlineSmall: TextStyle(fontFamily: null),
+          titleLarge: TextStyle(fontFamily: null),
+          titleMedium: TextStyle(fontFamily: null),
+          titleSmall: TextStyle(fontFamily: null),
+          bodyLarge: TextStyle(fontFamily: null),
+          bodyMedium: TextStyle(fontFamily: null),
+          bodySmall: TextStyle(fontFamily: null),
+          labelLarge: TextStyle(fontFamily: null),
+          labelMedium: TextStyle(fontFamily: null),
+          labelSmall: TextStyle(fontFamily: null),
+        ),
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
@@ -69,11 +88,30 @@ class YeahMusicApp extends StatelessWidget {
           },
         ),
       ),
-      darkTheme: ThemeData.dark().copyWith(
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
         canvasColor: Colors.black,
         cardColor: Colors.black,
         dialogBackgroundColor: Colors.black87,
+        // 不设置 fontFamily，使用系统默认字体
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(fontFamily: null),
+          displayMedium: TextStyle(fontFamily: null),
+          displaySmall: TextStyle(fontFamily: null),
+          headlineLarge: TextStyle(fontFamily: null),
+          headlineMedium: TextStyle(fontFamily: null),
+          headlineSmall: TextStyle(fontFamily: null),
+          titleLarge: TextStyle(fontFamily: null),
+          titleMedium: TextStyle(fontFamily: null),
+          titleSmall: TextStyle(fontFamily: null),
+          bodyLarge: TextStyle(fontFamily: null),
+          bodyMedium: TextStyle(fontFamily: null),
+          bodySmall: TextStyle(fontFamily: null),
+          labelLarge: TextStyle(fontFamily: null),
+          labelMedium: TextStyle(fontFamily: null),
+          labelSmall: TextStyle(fontFamily: null),
+        ),
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
