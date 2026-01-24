@@ -10,7 +10,6 @@ import 'package:yeah_music/themes/theme_provider.dart';
 import 'compments/folder_provider.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
-import 'compments/theme_config_provider.dart';
 
 //SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
 var log = Logger(printer: SimplePrinter());
@@ -63,24 +62,7 @@ class YeahMusicApp extends StatelessWidget {
         canvasColor: Colors.black,
         cardColor: Colors.black,
         dialogBackgroundColor: Colors.black87,
-        // 不设置 fontFamily，使用系统默认字体
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: null),
-          displayMedium: TextStyle(fontFamily: null),
-          displaySmall: TextStyle(fontFamily: null),
-          headlineLarge: TextStyle(fontFamily: null),
-          headlineMedium: TextStyle(fontFamily: null),
-          headlineSmall: TextStyle(fontFamily: null),
-          titleLarge: TextStyle(fontFamily: null),
-          titleMedium: TextStyle(fontFamily: null),
-          titleSmall: TextStyle(fontFamily: null),
-          bodyLarge: TextStyle(fontFamily: null),
-          bodyMedium: TextStyle(fontFamily: null),
-          bodySmall: TextStyle(fontFamily: null),
-          labelLarge: TextStyle(fontFamily: null),
-          labelMedium: TextStyle(fontFamily: null),
-          labelSmall: TextStyle(fontFamily: null),
-        ),
+        // 完全不设置 textTheme 和 fontFamily，让 Flutter 使用系统默认字体
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
@@ -94,24 +76,7 @@ class YeahMusicApp extends StatelessWidget {
         canvasColor: Colors.black,
         cardColor: Colors.black,
         dialogBackgroundColor: Colors.black87,
-        // 不设置 fontFamily，使用系统默认字体
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: null),
-          displayMedium: TextStyle(fontFamily: null),
-          displaySmall: TextStyle(fontFamily: null),
-          headlineLarge: TextStyle(fontFamily: null),
-          headlineMedium: TextStyle(fontFamily: null),
-          headlineSmall: TextStyle(fontFamily: null),
-          titleLarge: TextStyle(fontFamily: null),
-          titleMedium: TextStyle(fontFamily: null),
-          titleSmall: TextStyle(fontFamily: null),
-          bodyLarge: TextStyle(fontFamily: null),
-          bodyMedium: TextStyle(fontFamily: null),
-          bodySmall: TextStyle(fontFamily: null),
-          labelLarge: TextStyle(fontFamily: null),
-          labelMedium: TextStyle(fontFamily: null),
-          labelSmall: TextStyle(fontFamily: null),
-        ),
+        // 完全不设置 textTheme 和 fontFamily，让 Flutter 使用系统默认字体
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),

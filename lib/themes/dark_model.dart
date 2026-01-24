@@ -30,7 +30,5 @@ ThemeData darkTheme = ThemeData(
   // 对话框背景
   iconTheme: const IconThemeData(color: Colors.grey),
   // 图标颜色
-  textTheme: const TextTheme(
-    bodyMedium: TextStyle(color: Colors.black45), // 正文文字
-  ),
+  // 不设置 textTheme，使用系统默认字体
 );

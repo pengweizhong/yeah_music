@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yeah_music/compments/animated_gradient_background.dart';
 import 'package:yeah_music/compments/disk_space.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
-import 'package:yeah_music/pages/setting/music_theme_settings.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
@@ -42,24 +40,13 @@ class SettingPage extends StatelessWidget {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const ThemeSettingPage()));
                   },
                 ),
-                ListTile(
-                  title: const Text("音乐主题", style: TextStyle(color: Colors.white)),
-                  subtitle: Text(
-                    "颜色、字体、夜间模式",
-                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
-                  ),
-                  leading: const Icon(Icons.title, color: Colors.white),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => MusicThemeSettings()));
-                  },
-                ),
             ExpansionTile(
               title: const Text("系统信息", style: TextStyle(color: Colors.white)),
               subtitle: Text(
-                "资源使用情况",
+                "设备信息、存储空间",
                 style: TextStyle(color: Colors.white.withOpacity(0.6)),
               ),
-              leading: const Icon(Icons.system_security_update_good_outlined, color: Colors.white),
+              leading: const Icon(Icons.info_outline, color: Colors.white),
               iconColor: Colors.white,
               collapsedIconColor: Colors.white,
               children: [DiskSpaceView()],
@@ -67,10 +54,10 @@ class SettingPage extends StatelessWidget {
             ListTile(
               title: const Text("关于", style: TextStyle(color: Colors.white)),
               subtitle: Text(
-                "应用信息、版本、作者等",
+                "应用信息、版本、开源协议",
                 style: TextStyle(color: Colors.white.withOpacity(0.6)),
               ),
-              leading: const Icon(Icons.info, color: Colors.white),
+              leading: const Icon(Icons.favorite, color: Colors.white),
               onTap: () {
                 ApplicationUtils.showAboutDialog(context);
               },

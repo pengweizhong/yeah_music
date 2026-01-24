@@ -31,13 +31,7 @@ ThemeData lightTheme = ThemeData(
   // 卡片、Dialog 背景色
   cardColor: Colors.white,
 
-  // 文字主题
-  textTheme: const TextTheme(
-    bodyMedium: TextStyle(color: Colors.black87), // 正文文字
-    bodyLarge: TextStyle(color: Colors.black87),
-    bodySmall: TextStyle(color: Colors.black87),
-    titleMedium: TextStyle(color: Colors.black87),
-  ),
+  // 不设置 textTheme，使用系统默认字体
 
   // 图标颜色
   iconTheme: const IconThemeData(color: Colors.black87),
