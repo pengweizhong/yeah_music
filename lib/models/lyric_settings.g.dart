@@ -27,13 +27,14 @@ class LyricSettingsAdapter extends TypeAdapter<LyricSettings> {
       ..playedTranslationColor = fields[7] as int
       ..upcomingOriginalColor = fields[8] as int
       ..upcomingTranslationColor = fields[9] as int
-      ..lyricDisplayModeList = (fields[10] as List).cast<String>();
+      ..lyricDisplayModeList = (fields[10] as List).cast<String>()
+      ..lyricLineSpacing = fields[11] as double;
   }
 
   @override
   void write(BinaryWriter writer, LyricSettings obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.showOriginal)
       ..writeByte(1)
@@ -55,7 +56,9 @@ class LyricSettingsAdapter extends TypeAdapter<LyricSettings> {
       ..writeByte(9)
       ..write(obj.upcomingTranslationColor)
       ..writeByte(10)
-      ..write(obj.lyricDisplayModeList);
+      ..write(obj.lyricDisplayModeList)
+      ..writeByte(11)
+      ..write(obj.lyricLineSpacing);
   }
 
   @override

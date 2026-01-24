@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/init/app_init.dart';
@@ -7,12 +9,26 @@ import 'package:yeah_music/themes/theme_provider.dart';
 
 import 'compments/folder_provider.dart';
 import 'compments/play_list_provider.dart';
+import 'compments/theme_config_provider.dart';
+import 'compments/theme_config_provider.dart';
 
 //SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
 var log = Logger(printer: SimplePrinter());
 
 void main() async {
   log.i('应用正在启动。。。');
+  
+  // 确保Flutter绑定初始化
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // 设置系统UI样式，避免白色闪光
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.black,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+  
   AppInit appInit = AppInit();
   appInit.initJustAudioKit();
   appInit.initHive();
@@ -22,6 +38,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => PlayListProvider()),
         ChangeNotifierProvider(create: (_) => FolderProvider()..init()),
+        ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),
       ],
       child: YeahMusicApp(),
     ),
@@ -39,8 +56,33 @@ class YeahMusicApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       // 设置应用的首页
       home: HomePage(),
-      // 动态主题
-      theme: Provider.of<ThemeProvider>(context).themeData,
+      // 动态主题 - 使用深色主题避免白色闪光
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.black,
+        canvasColor: Colors.black,
+        cardColor: Colors.black,
+        dialogBackgroundColor: Colors.black87,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      ),
+      darkTheme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.black,
+        canvasColor: Colors.black,
+        cardColor: Colors.black,
+        dialogBackgroundColor: Colors.black87,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      ),
+      themeMode: ThemeMode.dark,
     );
   }
 }
+

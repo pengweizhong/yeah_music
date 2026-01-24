@@ -38,6 +38,9 @@ class LyricSettings extends HiveObject {
   @HiveField(10)
   List<String> lyricDisplayModeList = []; // stored as "key:value" strings
 
+  @HiveField(11)
+  double lyricLineSpacing = 12.0; // 歌词行间距
+
   LyricSettings();
 
   // Helper methods to convert between Map and List

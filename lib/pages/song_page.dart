@@ -59,6 +59,11 @@ class _SongPageState extends State<SongPage> {
   Timer? _shutdownTimer;
   bool _isTimerActive = false;
 
+  // 手动滚动控制
+  bool _isManualScrolling = false;
+  Timer? _scrollTimer;
+
+
   @override
   void initState() {
     super.initState();
@@ -179,6 +184,8 @@ class _SongPageState extends State<SongPage> {
     _scrollController.dispose();
     _pageController.dispose();
     _shutdownTimer?.cancel();
+    _scrollTimer?.cancel();
+    _scrollTimer?.cancel();
     // 延迟保存设置，避免在dispose时访问已关闭的box
     Future.microtask(() => _saveSettings());
     super.dispose();
@@ -316,7 +323,10 @@ class _SongPageState extends State<SongPage> {
     }
   }
 
-  void _scrollToCurrentLyric(int index) {
+  void _scrollToCurrentLyric(int index, {bool force = false}) {
+    // 如果正在手动滚动且不是强制滚动，则不自动滚动
+    if (_isManualScrolling && !force) return;
+    
     if (index < 0 || index >= _lyricKeys.length) return;
     final ctx = _lyricKeys[index].currentContext;
     if (ctx == null) return;
@@ -328,6 +338,29 @@ class _SongPageState extends State<SongPage> {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
+  }
+
+  // 定位到当前播放行
+  void _scrollToCurrentPlayingLyric() {
+    if (_currentLyricIndex >= 0 && _currentLyricIndex < _lyricKeys.length) {
+      _isManualScrolling = false; // 重置手动滚动标志
+      _scrollToCurrentLyric(_currentLyricIndex, force: true);
+    }
+  }
+
+  // 监听用户手动滚动
+  void _onUserScroll() {
+    _isManualScrolling = true;
+    // 取消之前的定时器
+    _scrollTimer?.cancel();
+    // 5秒后恢复自动滚动
+    _scrollTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isManualScrolling = false;
+        });
+      }
+    });
   }
 
   void _showPlayListSheet(BuildContext context, PlayListProvider playListProvider) {
@@ -784,7 +817,9 @@ class _SongPageState extends State<SongPage> {
         // 延迟一下再滚动，确保歌词索引已更新
         await Future.delayed(const Duration(milliseconds: 100));
         if (mounted && _currentLyricIndex >= 0 && _currentLyricIndex < _lyricKeys.length) {
-          _scrollToCurrentLyric(_currentLyricIndex);
+          // 强制滚动到当前歌词位置
+          _isManualScrolling = false;
+          _scrollToCurrentLyric(_currentLyricIndex, force: true);
         }
       }
     } catch (e) {
@@ -912,9 +947,18 @@ class _SongPageState extends State<SongPage> {
                                 ],
                               ),
                             )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              physics: const ClampingScrollPhysics(), // 使用ClampingScrollPhysics，允许PageView处理水平滑动
+                          : Stack(
+                              children: [
+                                NotificationListener<ScrollNotification>(
+                                  onNotification: (notification) {
+                                    if (notification is UserScrollNotification) {
+                                      _onUserScroll();
+                                    }
+                                    return false;
+                                  },
+                                  child: ListView.builder(
+                                    controller: _scrollController,
+                                    physics: const ClampingScrollPhysics(), // 使用ClampingScrollPhysics，允许PageView处理水平滑动
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                               itemCount: _lyrics.length,
                               itemBuilder: (context, index) {
@@ -1038,6 +1082,21 @@ class _SongPageState extends State<SongPage> {
                             );
                           },
                         ),
+                                ),
+                                // 定位按钮
+                                if (_isManualScrolling && _currentLyricIndex >= 0)
+                                  Positioned(
+                                    right: 16,
+                                    bottom: 16,
+                                    child: FloatingActionButton(
+                                      mini: true,
+                                      onPressed: _scrollToCurrentPlayingLyric,
+                                      child: const Icon(Icons.my_location, size: 20),
+                                      tooltip: '定位到当前歌词',
+                                    ),
+                                  ),
+                              ],
+                            ),
                     ],
                   ),
                 ),
@@ -1095,16 +1154,16 @@ class _SongPageState extends State<SongPage> {
                                 milliseconds: ((value.clamp(0.0, 1.0)) * _totalDuration.inMilliseconds).toInt(),
                               );
                               await _seekTo(newPosition);
-                              // 确保歌词位置同步更新
-                              _currentPosition = newPosition;
-                              _updateCurrentLyric(newPosition);
-                              // 确保滚动同步
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (mounted) {
-                                  _updateCurrentLyric(newPosition);
-                                  setState(() {});
+                              // 确保歌词位置同步更新并强制滚动
+                              if (mounted) {
+                                _currentPosition = newPosition;
+                                _updateCurrentLyric(newPosition);
+                                _isManualScrolling = false;
+                                if (_currentLyricIndex >= 0 && _currentLyricIndex < _lyricKeys.length) {
+                                  _scrollToCurrentLyric(_currentLyricIndex, force: true);
                                 }
-                              });
+                                setState(() {});
+                              }
                             } else {
                               _isSeeking = false;
                               setState(() {});
@@ -1196,7 +1255,6 @@ class _SongPageState extends State<SongPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.translate),

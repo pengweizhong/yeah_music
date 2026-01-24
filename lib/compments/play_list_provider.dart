@@ -42,8 +42,21 @@ class PlayListProvider extends ChangeNotifier {
   /// 随机播放时的当前随机列表
   List<int>? _shuffledIndices;
 
-  /// 把所有文件夹里的歌曲合并成一个大列表
-  List<Song> get playList => folderPlaylistMap.values.expand((list) => list).toList();
+  /// 缓存的播放列表
+  List<Song>? _cachedPlayList;
+
+  /// 把所有文件夹里的歌曲合并成一个大列表（使用缓存优化性能）
+  List<Song> get playList {
+    if (_cachedPlayList == null) {
+      _cachedPlayList = folderPlaylistMap.values.expand((list) => list).toList();
+    }
+    return _cachedPlayList!;
+  }
+
+  /// 清除播放列表缓存
+  void _clearPlayListCache() {
+    _cachedPlayList = null;
+  }
 
   Song? get currentSong {
     final list = playList;
@@ -52,7 +65,7 @@ class PlayListProvider extends ChangeNotifier {
     return list[idx];
   }
 
-  /// 从 FolderProvider 加载歌曲
+  /// 从 FolderProvider 加载歌曲（优化版本，支持大量歌曲）
   Future<void> init(FolderProvider folderProvider) async {
     //若本身已经被初始化
     if (_initialized) {
@@ -62,8 +75,8 @@ class PlayListProvider extends ChangeNotifier {
     if (!folderProvider.initialized) {
       await folderProvider.init();
     }
-    // 遍历所有文件夹
-    _addPlayList(folderProvider);
+    // 遍历所有文件夹（使用异步方式，避免阻塞UI）
+    await _addPlayListAsync(folderProvider);
     _initialized = true;
     // 保障 currentIndex 合法
     final list = playList;
@@ -73,6 +86,20 @@ class PlayListProvider extends ChangeNotifier {
       _currentIndex = 0;
     }
     notifyListeners();
+  }
+
+  /// 异步添加播放列表
+  Future<void> _addPlayListAsync(FolderProvider folderProvider) async {
+    //所有的文件夹
+    List<Folder> folders = folderProvider.folders;
+    
+    for (var value in folders) {
+      log.d("添加了目录：${value.name}，共${value.songList?.length}首歌曲");
+      putFolder(value);
+      
+      // 每添加一个文件夹后，让出控制权，避免阻塞UI
+      await Future.delayed(Duration.zero);
+    }
   }
 
   void _addPlayList(FolderProvider folderProvider) {
@@ -89,6 +116,7 @@ class PlayListProvider extends ChangeNotifier {
 
   void putFolder(Folder folder) {
     folderPlaylistMap.putIfAbsent(folder.path, () => folder.songList ?? []);
+    _clearPlayListCache(); // 清除缓存
   }
 
   ///新增
@@ -98,6 +126,7 @@ class PlayListProvider extends ChangeNotifier {
     //   return;
     // }
     putFolder(folder);
+    _clearPlayListCache(); // 清除缓存
     // for (var value in addSongs) {
     //   if (!playList.contains(value)) {
     //     playList.add(value);
@@ -118,6 +147,7 @@ class PlayListProvider extends ChangeNotifier {
     //   }
     // }
     folderPlaylistMap.remove(folder.path);
+    _clearPlayListCache(); // 清除缓存
     notifyListeners();
   }
 
@@ -139,6 +169,7 @@ class PlayListProvider extends ChangeNotifier {
     //感觉应该可以无脑更新   不用这么麻烦
     folderPlaylistMap.remove(folder.path);
     putFolder(folder);
+    _clearPlayListCache(); // 清除缓存
     final list = playList;
     if (list.isEmpty) {
       _currentIndex = 0;

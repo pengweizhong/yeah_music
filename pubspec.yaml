@@ -30,6 +30,9 @@ dependencies:
   intl: ^0.20.2 # 提供国际化和本地化设施，包括消息翻译、复数和性别、日期/数字格式和解析以及双向文本。
 #  url_launcher: ^6.3.2 # 用于启动 URL 的 Flutter 插件
   device_info_plus: ^11.5.0 # 获取设备信息
+  palette_generator: ^0.3.3+4 # 从图片提取颜色调色板
+  shared_preferences: ^2.3.5 # 本地存储
+  image_picker: ^1.1.2 # 图片选择器
 
 dev_dependencies:
   flutter_test:

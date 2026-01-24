@@ -35,7 +35,7 @@ class FolderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 添加文件夹 ,添加成功就返回Folder
+  /// 添加文件夹 ,添加成功就返回Folder（优化版本，支持大量歌曲）
   Future<Folder?> addFolder(String folder) async {
     //检验文件夹是否已经存在
     if (await existFolder(_box!, folder)) {
@@ -46,10 +46,17 @@ class FolderProvider extends ChangeNotifier {
     final f = Folder(folder);
     f.name = folderName;
     f.createdAt = DateTime.now();
-    await flushSongToFolder(f, false, save: false);
-    await HiveUtils.add(_box!, f);
-    notifyListeners();
-    return f;
+    
+    try {
+      await flushSongToFolder(f, false, save: false);
+      await HiveUtils.add(_box!, f);
+      notifyListeners();
+      return f;
+    } catch (e) {
+      log.e("添加文件夹失败：$folder，错误：$e");
+      // 如果添加失败，不保存到数据库
+      rethrow;
+    }
   }
 
   /// 删除文件夹
@@ -65,7 +72,7 @@ class FolderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 添加歌曲到文件夹
+  /// 添加歌曲到文件夹（优化版本，支持大量歌曲）
   Future<void> flushSongToFolder(Folder folder, bool listen, {bool save = true}) async {
     String folderPath = folder.path;
     if (Platform.isMacOS) {
@@ -105,23 +112,29 @@ class FolderProvider extends ChangeNotifier {
         return;
       }
       
-      final songFiles = dir
-          .listSync(recursive: true)
-          .where((f) => f is File && AppConfig.supportedFormats.any((format) => f.path.endsWith(format)))
-          .cast<File>()
-          .toList();
+      // 使用异步方式列出文件，避免阻塞UI
+      final songFiles = await _listAudioFilesAsync(dir);
       log.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
+      
+      // 批量处理歌曲，避免一次性加载过多导致内存溢出
       List<Song> songlist = [];
-      for (var value in songFiles) {
-        try {
-          Song song = new Song(value.path);
-          FileUtils.loadSongMeta(song);
-          songlist.add(song);
-        } catch (e) {
-          log.w("加载歌曲元数据失败：${value.path}，错误：$e");
-          // 即使元数据加载失败，也添加到列表（使用文件名作为标题）
-        }
+      const batchSize = 50; // 每批处理50首歌曲
+      
+      for (int i = 0; i < songFiles.length; i += batchSize) {
+        final end = (i + batchSize < songFiles.length) ? i + batchSize : songFiles.length;
+        final batch = songFiles.sublist(i, end);
+        
+        // 批量加载元数据
+        final batchSongs = await _loadSongBatch(batch);
+        songlist.addAll(batchSongs);
+        
+        // 每处理一批后，让出控制权，避免阻塞UI
+        await Future.delayed(Duration.zero);
+        
+        // 可选：每批处理后通知进度（如果需要显示进度条）
+        log.d("已加载 ${songlist.length}/${songFiles.length} 首歌曲");
       }
+      
       folder.songList = songlist;
       if (save) {
         await folder.save();
@@ -143,6 +156,56 @@ class FolderProvider extends ChangeNotifier {
       }
       rethrow; // 重新抛出异常，让调用者知道出错了
     }
+  }
+
+  /// 异步列出音频文件
+  Future<List<File>> _listAudioFilesAsync(Directory dir) async {
+    final List<File> audioFiles = [];
+    
+    try {
+      await for (final entity in dir.list(recursive: true)) {
+        if (entity is File) {
+          final path = entity.path;
+          if (AppConfig.supportedFormats.any((format) => path.endsWith(format))) {
+            audioFiles.add(entity);
+          }
+        }
+        
+        // 每处理100个文件，让出控制权
+        if (audioFiles.length % 100 == 0) {
+          await Future.delayed(Duration.zero);
+        }
+      }
+    } catch (e) {
+      log.e("列出文件时出错：$e");
+    }
+    
+    return audioFiles;
+  }
+
+  /// 批量加载歌曲元数据
+  Future<List<Song>> _loadSongBatch(List<File> files) async {
+    final List<Song> songs = [];
+    
+    for (var file in files) {
+      try {
+        Song song = Song(file.path);
+        FileUtils.loadSongMeta(song);
+        songs.add(song);
+      } catch (e) {
+        log.w("加载歌曲元数据失败：${file.path}，错误：$e");
+        // 即使元数据加载失败，也添加基本信息
+        try {
+          Song song = Song(file.path);
+          song.title = file.path.split('/').last.replaceAll(RegExp(r'\.\w+$'), '');
+          songs.add(song);
+        } catch (_) {
+          // 完全失败，跳过这首歌
+        }
+      }
+    }
+    
+    return songs;
   }
 
   ///文件夹是否已经存在

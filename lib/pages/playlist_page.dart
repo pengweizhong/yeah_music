@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/mini_player.dart';
+import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/song_page.dart';
 
@@ -37,30 +39,53 @@ class _PlayListProviderState extends State<PlayListPage> {
   @override
   Widget build(BuildContext context) {
     PlayListProvider playListProvider = context.watch<PlayListProvider>();
-    return Scaffold(
-      appBar: AppBar(title: Text("歌曲列表")),
-      body: ListView.builder(
-        itemCount: playListProvider.playList.length,
-        itemBuilder: (context, index) {
-          Song song = playListProvider.playList[index];
-          return ListTile(
-            leading: ClipRRect(
-              child: Container(
-                width: 48, // 固定大小
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white, // 背景填充白色
-                  borderRadius: BorderRadius.circular(10), // 圆角
-                ),
-                child: Image(fit: BoxFit.cover, image: ApplicationUtils.getImageCoverProvider(song)),
-              ),
+    return Consumer<ThemeConfigProvider>(
+      builder: (context, themeConfig, child) {
+        return Container(
+          decoration: themeConfig.getBackgroundDecoration(),
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              title: const Text("歌曲列表", style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
             ),
-            title: Text(song.title ?? "未知音乐"),
-            subtitle: Text(showSecondTitle(song), style: TextStyle(color: Colors.grey.shade600)),
-            onTap: () => navToSongPage(index, playListProvider),
-          );
-        },
-      ),
+            body: ListView.builder(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight),
+              itemCount: playListProvider.playList.length,
+              itemBuilder: (context, index) {
+                Song song = playListProvider.playList[index];
+                return ListTile(
+                  leading: ClipRRect(
+                    child: Container(
+                      width: 48, // 固定大小
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white, // 背景填充白色
+                        borderRadius: BorderRadius.circular(10), // 圆角
+                      ),
+                      child: Image(fit: BoxFit.cover, image: ApplicationUtils.getImageCoverProvider(song)),
+                    ),
+                  ),
+                  title: Text(
+                    song.title ?? "未知音乐",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    showSecondTitle(song),
+                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                  ),
+                  onTap: () => navToSongPage(index, playListProvider),
+                );
+              },
+            ),
+            bottomNavigationBar: const MiniPlayer(),
+          ),
+        );
+      },
     );
   }
 
