@@ -7,6 +7,8 @@ import 'package:logger/logger.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/utils/hive_utils.dart';
+import 'package:yeah_music/models/constants.dart';
 
 import '../models/folder.dart';
 import 'folder_provider.dart';
@@ -78,6 +80,10 @@ class PlayListProvider extends ChangeNotifier {
     // 遍历所有文件夹（使用异步方式，避免阻塞UI）
     await _addPlayListAsync(folderProvider);
     _initialized = true;
+    
+    // 加载上次播放的歌曲索引
+    await _loadLastPlayedIndex();
+    
     // 保障 currentIndex 合法
     final list = playList;
     if (list.isEmpty) {
@@ -86,6 +92,31 @@ class PlayListProvider extends ChangeNotifier {
       _currentIndex = 0;
     }
     notifyListeners();
+  }
+
+  /// 加载上次播放的歌曲索引
+  Future<void> _loadLastPlayedIndex() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final savedIndex = box.get('last_played_index', defaultValue: 0) as int?;
+      if (savedIndex != null && savedIndex >= 0) {
+        _currentIndex = savedIndex;
+        log.d("加载上次播放的歌曲索引: $_currentIndex");
+      }
+    } catch (e) {
+      log.e("加载上次播放索引失败: $e");
+    }
+  }
+
+  /// 保存当前播放的歌曲索引
+  Future<void> _saveCurrentIndex() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put('last_played_index', _currentIndex);
+      log.d("保存当前播放索引: $_currentIndex");
+    } catch (e) {
+      log.e("保存播放索引失败: $e");
+    }
   }
 
   /// 异步添加播放列表
@@ -196,6 +227,8 @@ class PlayListProvider extends ChangeNotifier {
     _currentIndex = index.clamp(0, list.length - 1);
     notifyListeners();
     await MusicService().playSong(list[_currentIndex]);
+    // 保存当前播放索引
+    await _saveCurrentIndex();
   }
 
   /// 设置播放模式
