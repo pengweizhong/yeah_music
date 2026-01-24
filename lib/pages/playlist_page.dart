@@ -23,12 +23,15 @@ class _PlayListProviderState extends State<PlayListPage> {
   @override
   void initState() {
     super.initState();
-    final folderProvider = context.read<FolderProvider>();
-    final playListProvider = context.read<PlayListProvider>();
-    if (!playListProvider.initialized) {
-      log.d("初始化全部歌单列表");
-      playListProvider.init(folderProvider);
-    }
+    // 使用postFrameCallback避免在build期间调用setState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final folderProvider = context.read<FolderProvider>();
+      final playListProvider = context.read<PlayListProvider>();
+      if (!playListProvider.initialized) {
+        log.d("初始化全部歌单列表");
+        playListProvider.init(folderProvider);
+      }
+    });
   }
 
   @override

@@ -69,7 +69,16 @@ class FolderProvider extends ChangeNotifier {
   Future<void> flushSongToFolder(Folder folder, bool listen, {bool save = true}) async {
     String folderPath = folder.path;
     if (Platform.isMacOS) {
-      await BookmarkService.restoreBookmark(folderPath);
+      // macOS需要先恢复权限，如果失败则记录错误
+      try {
+        final restored = await BookmarkService.restoreBookmark(folderPath);
+        if (restored == null) {
+          log.w("无法恢复macOS权限，路径：$folderPath");
+          // 即使权限恢复失败，也尝试访问，可能会触发系统权限请求
+        }
+      } catch (e) {
+        log.e("恢复macOS权限时出错：$e");
+      }
     } else if (Platform.isAndroid) {
       // 筛选支持的音频文件格式
       // 获取当前目录及子目录下所有文件
@@ -85,25 +94,54 @@ class FolderProvider extends ChangeNotifier {
       }
     }
     //加载歌曲
-    final dir = Directory(folderPath);
-    final songFiles = dir
-        .listSync(recursive: true)
-        .where((f) => f is File && AppConfig.supportedFormats.any((format) => f.path.endsWith(format)))
-        .cast<File>()
-        .toList();
-    log.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
-    List<Song> songlist = [];
-    for (var value in songFiles) {
-      Song song = new Song(value.path);
-      FileUtils.loadSongMeta(song);
-      songlist.add(song);
-    }
-    folder.songList = songlist;
-    if (save) {
-      await folder.save();
-    }
-    if (listen) {
-      notifyListeners();
+    try {
+      final dir = Directory(folderPath);
+      // 先检查目录是否存在和可访问
+      if (!await dir.exists()) {
+        log.e("文件夹不存在：$folderPath");
+        folder.songList = [];
+        if (save) await folder.save();
+        if (listen) notifyListeners();
+        return;
+      }
+      
+      final songFiles = dir
+          .listSync(recursive: true)
+          .where((f) => f is File && AppConfig.supportedFormats.any((format) => f.path.endsWith(format)))
+          .cast<File>()
+          .toList();
+      log.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
+      List<Song> songlist = [];
+      for (var value in songFiles) {
+        try {
+          Song song = new Song(value.path);
+          FileUtils.loadSongMeta(song);
+          songlist.add(song);
+        } catch (e) {
+          log.w("加载歌曲元数据失败：${value.path}，错误：$e");
+          // 即使元数据加载失败，也添加到列表（使用文件名作为标题）
+        }
+      }
+      folder.songList = songlist;
+      if (save) {
+        await folder.save();
+      }
+      if (listen) {
+        notifyListeners();
+      }
+    } catch (e) {
+      log.e("访问文件夹时出错：$folderPath，错误：$e");
+      // 权限错误时，清空歌曲列表，避免显示错误数据
+      folder.songList = [];
+      if (save) {
+        try {
+          await folder.save();
+        } catch (_) {}
+      }
+      if (listen) {
+        notifyListeners();
+      }
+      rethrow; // 重新抛出异常，让调用者知道出错了
     }
   }
 

@@ -1,8 +1,12 @@
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/services/music_service.dart';
 
 import '../models/folder.dart';
 import 'folder_provider.dart';
@@ -17,8 +21,36 @@ class PlayListProvider extends ChangeNotifier {
 
   bool get initialized => _initialized;
 
+  /// 当前播放索引（以 playList 为基准）
+  int _currentIndex = 0;
+
+  int get currentIndex => _currentIndex;
+
+  /// 播放模式
+  PlaybackMode _playbackMode = PlaybackMode.sequential;
+
+  PlaybackMode get playbackMode => _playbackMode;
+
+  /// 定时关闭时长（分钟）
+  int _timerDuration = 30;
+
+  int get timerDuration => _timerDuration;
+
+  /// 随机播放时的已播放列表
+  List<int> _shuffledPlayedIndices = [];
+
+  /// 随机播放时的当前随机列表
+  List<int>? _shuffledIndices;
+
   /// 把所有文件夹里的歌曲合并成一个大列表
   List<Song> get playList => folderPlaylistMap.values.expand((list) => list).toList();
+
+  Song? get currentSong {
+    final list = playList;
+    if (list.isEmpty) return null;
+    final idx = _currentIndex.clamp(0, list.length - 1);
+    return list[idx];
+  }
 
   /// 从 FolderProvider 加载歌曲
   Future<void> init(FolderProvider folderProvider) async {
@@ -33,6 +65,13 @@ class PlayListProvider extends ChangeNotifier {
     // 遍历所有文件夹
     _addPlayList(folderProvider);
     _initialized = true;
+    // 保障 currentIndex 合法
+    final list = playList;
+    if (list.isEmpty) {
+      _currentIndex = 0;
+    } else if (_currentIndex >= list.length) {
+      _currentIndex = 0;
+    }
     notifyListeners();
   }
 
@@ -100,6 +139,145 @@ class PlayListProvider extends ChangeNotifier {
     //感觉应该可以无脑更新   不用这么麻烦
     folderPlaylistMap.remove(folder.path);
     putFolder(folder);
+    final list = playList;
+    if (list.isEmpty) {
+      _currentIndex = 0;
+    } else if (_currentIndex >= list.length) {
+      _currentIndex = 0;
+    }
     notifyListeners();
+  }
+
+  /// 设置当前播放索引（不自动播放）
+  void setCurrentIndex(int index) {
+    final list = playList;
+    if (list.isEmpty) return;
+    final next = index.clamp(0, list.length - 1);
+    if (next == _currentIndex) return;
+    _currentIndex = next;
+    notifyListeners();
+  }
+
+  /// 播放指定索引
+  Future<void> playAt(int index) async {
+    final list = playList;
+    if (list.isEmpty) return;
+    _currentIndex = index.clamp(0, list.length - 1);
+    notifyListeners();
+    await MusicService().playSong(list[_currentIndex]);
+  }
+
+  /// 设置播放模式
+  void setPlaybackMode(PlaybackMode mode) {
+    _playbackMode = mode;
+    _shuffledIndices = null; // 重置随机列表
+    _shuffledPlayedIndices = [];
+    
+    // 设置播放器的循环模式
+    if (mode == PlaybackMode.singleLoop) {
+      MusicService().setLoopMode(LoopMode.one);
+    } else {
+      MusicService().setLoopMode(LoopMode.off);
+    }
+    
+    notifyListeners();
+  }
+
+  /// 设置定时关闭时长
+  void setTimerDuration(int minutes) {
+    _timerDuration = minutes;
+    notifyListeners();
+  }
+
+  /// 下一首
+  Future<void> playNext() async {
+    final list = playList;
+    if (list.isEmpty) return;
+
+    int next;
+    switch (_playbackMode) {
+      case PlaybackMode.sequential:
+        next = (_currentIndex + 1) % list.length;
+        break;
+      case PlaybackMode.shuffle:
+        next = _getNextShuffledIndex(list.length);
+        break;
+      case PlaybackMode.singleLoop:
+        next = _currentIndex; // 单曲循环，播放同一首
+        break;
+      case PlaybackMode.playOnce:
+        // 仅播放一次，不自动播放下一首
+        return;
+      case PlaybackMode.timerShutdown:
+        next = (_currentIndex + 1) % list.length;
+        break;
+    }
+    await playAt(next);
+  }
+
+  /// 上一首
+  Future<void> playPrev() async {
+    final list = playList;
+    if (list.isEmpty) return;
+
+    int prev;
+    switch (_playbackMode) {
+      case PlaybackMode.sequential:
+        prev = (_currentIndex - 1 + list.length) % list.length;
+        break;
+      case PlaybackMode.shuffle:
+        // 随机模式下，上一首也是随机的
+        prev = _getPrevShuffledIndex(list.length);
+        break;
+      case PlaybackMode.singleLoop:
+        prev = _currentIndex; // 单曲循环
+        break;
+      case PlaybackMode.playOnce:
+        prev = (_currentIndex - 1 + list.length) % list.length;
+        break;
+      case PlaybackMode.timerShutdown:
+        prev = (_currentIndex - 1 + list.length) % list.length;
+        break;
+    }
+    await playAt(prev);
+  }
+
+  /// 获取下一个随机索引
+  int _getNextShuffledIndex(int listLength) {
+    if (_shuffledIndices == null || _shuffledIndices!.isEmpty) {
+      // 生成新的随机列表
+      _shuffledIndices = List.generate(listLength, (i) => i)..shuffle();
+      _shuffledPlayedIndices = [];
+    }
+
+    // 如果所有歌曲都播放过了，重新洗牌
+    if (_shuffledPlayedIndices.length >= listLength) {
+      _shuffledIndices = List.generate(listLength, (i) => i)..shuffle();
+      _shuffledPlayedIndices = [];
+    }
+
+    // 找到下一个未播放的索引
+    for (final idx in _shuffledIndices!) {
+      if (!_shuffledPlayedIndices.contains(idx)) {
+        _shuffledPlayedIndices.add(idx);
+        return idx;
+      }
+    }
+
+    // 如果找不到（理论上不会发生），返回第一个
+    return 0;
+  }
+
+  /// 获取上一个随机索引（简单实现：从已播放列表取最后一个）
+  int _getPrevShuffledIndex(int listLength) {
+    if (_shuffledPlayedIndices.isEmpty) {
+      return (_currentIndex - 1 + listLength) % listLength;
+    }
+    // 移除当前索引，返回上一个
+    if (_shuffledPlayedIndices.length > 1) {
+      _shuffledPlayedIndices.removeLast();
+      return _shuffledPlayedIndices.last;
+    }
+    return 0;
   }
 }

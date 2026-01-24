@@ -13,7 +13,24 @@ class HiveUtils {
     if (!Hive.isBoxOpen(name)) {
       return await Hive.openBox<T>(name);
     } else {
-      return Hive.box<T>(name);
+      // 如果box已经打开，尝试获取
+      try {
+        final box = Hive.box(name);
+        // 检查类型是否匹配
+        if (box is Box<T>) {
+          return box as Box<T>;
+        } else {
+          // 类型不匹配，关闭后重新打开
+          await box.close();
+          return await Hive.openBox<T>(name);
+        }
+      } catch (e) {
+        // 类型不匹配，关闭后重新打开
+        try {
+          await Hive.box(name).close();
+        } catch (_) {}
+        return await Hive.openBox<T>(name);
+      }
     }
   }
 

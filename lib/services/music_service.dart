@@ -32,15 +32,21 @@ class MusicService {
 
   ///开始播放
   Future<void> play() async {
-    isPlaying = true;
-    return _player.play();
+    await _player.play();
+    isPlaying = _player.playing;
   }
 
   ///暂停播放
-  Future<void> pause() async => _player.pause();
+  Future<void> pause() async {
+    await _player.pause();
+    isPlaying = false;
+  }
 
   ///恢复播放
-  Future<void> resume() async => play();
+  Future<void> resume() async {
+    await _player.play();
+    isPlaying = _player.playing;
+  }
 
   ///设置音乐列表播放模式
   Future<void> setLoopMode(LoopMode mode) async => _player.setLoopMode(mode);
@@ -60,11 +66,20 @@ class MusicService {
     return _player.stop();
   }
 
-  Stream<bool> get playingStream => _player.playingStream;
+  static Stream<bool> get playingStream {
+    return _player.playingStream.map((playing) {
+      isPlaying = playing;
+      return playing;
+    });
+  }
 
-  Stream<Duration> get positionStream => _player.positionStream;
+  static Stream<Duration> get positionStream => _player.positionStream;
 
-  Duration? get duration => _player.duration;
+  static Stream<Duration?> get durationStream => _player.durationStream;
 
-  int? get currentIndex => _player.currentIndex;
+  static Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+
+  static Duration? get duration => _player.duration;
+
+  static int? get currentIndex => _player.currentIndex;
 }

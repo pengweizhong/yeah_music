@@ -10,6 +10,7 @@ import 'package:logger/logger.dart';
 import '../models/constants.dart';
 import '../models/folder.dart';
 import '../models/song.dart';
+import '../models/lyric_settings.dart';
 
 var log = Logger(printer: SimplePrinter());
 
@@ -50,11 +51,48 @@ class AppInit {
     log.d("Hive Init.");
     WidgetsFlutterBinding.ensureInitialized();
     await Hive.initFlutter();
-    await Hive.openBox('settings');
-    //Hive Adapter 注册（main.dart）
+    
+    // 必须先注册适配器，再打开 box
     Hive.registerAdapter(FolderAdapter());
     Hive.registerAdapter(SongAdapter());
-    // _clearCache();
+    Hive.registerAdapter(LyricSettingsAdapter());
+    
+    // 打开 box，如果遇到未知 typeId 错误，则删除并重新创建
+    try {
+      await Hive.openBox('settings');
+    } catch (e) {
+      log.w("打开 settings box 失败，尝试删除并重新创建: $e");
+      try {
+        await Hive.deleteBoxFromDisk('settings');
+        await Hive.openBox('settings');
+      } catch (_) {
+        // 忽略删除失败的错误
+      }
+    }
+    
+    try {
+      await Hive.openBox(Constant.hiveRootPath);
+    } catch (e) {
+      log.w("打开 ${Constant.hiveRootPath} box 失败，尝试删除并重新创建: $e");
+      try {
+        await Hive.deleteBoxFromDisk(Constant.hiveRootPath);
+        await Hive.openBox(Constant.hiveRootPath);
+      } catch (_) {
+        // 忽略删除失败的错误
+      }
+    }
+    
+    try {
+      await Hive.openBox(Constant.hiveFolderBox);
+    } catch (e) {
+      log.w("打开 ${Constant.hiveFolderBox} box 失败，尝试删除并重新创建: $e");
+      try {
+        await Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
+        await Hive.openBox(Constant.hiveFolderBox);
+      } catch (_) {
+        // 忽略删除失败的错误
+      }
+    }
   }
 
   void _clearCache() {

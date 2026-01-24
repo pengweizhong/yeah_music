@@ -64,34 +64,7 @@ class FileUtils {
     }
   }
 
-  // ///解析歌词文本  可以切换语言模式
-  // static List<LyricLine> parseLyrics(String? rawLyrics, {int switchLanguageIndex = 0}) {
-  //   final lines = <LyricLine>[];
-  //   if (rawLyrics == null) {
-  //     return lines;
-  //   }
-  //   final regex = RegExp(r'\[(\d+):(\d+\.\d+)\](.*)');
-  //   // String preTimeStr = '';
-  //   // int count = 0;
-  //   for (final line in rawLyrics.split('\n')) {
-  //     final match = regex.firstMatch(line);
-  //     if (match != null) {
-  //       final min = int.parse(match.group(1)!);
-  //       final sec = double.parse(match.group(2)!);
-  //       // String nowTimeStr = min.toString() + "-" + sec.toString();
-  //       // if (preTimeStr.isEmpty) {
-  //       //   preTimeStr = nowTimeStr;
-  //       // } else if (preTimeStr == nowTimeStr) {
-  //       //   count++;
-  //       // } else {
-  //       //   count = 0;
-  //       // }
-  //       final text = match.group(3)!;
-  //       lines.add(LyricLine(Duration(minutes: min, milliseconds: (sec * 1000).toInt()), text));
-  //     }
-  //   }
-  //   return lines;
-  // }
+  // 歌词解析请使用 `lib/utils/lyrics_utils.dart`（支持同一时间戳多行/多语言）
 
   // /// 打开文件夹
   // static Future<void> openFolder(String folderPath) async {
