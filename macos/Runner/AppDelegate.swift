@@ -25,7 +25,8 @@ class AppDelegate: FlutterAppDelegate {
             case "pickDirectory":
                 self.pickDirectory(result: result)
             case "restoreBookmark":
-                self.restoreBookmark(result: result)
+                let path = call.arguments as? String
+                self.restoreBookmark(result: result, targetPath: path)
             default:
                 result(FlutterMethodNotImplemented)
             }

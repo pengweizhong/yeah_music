@@ -35,6 +35,14 @@ class FolderProvider extends ChangeNotifier {
     }
     _box = await HiveUtils.openBox<Folder>(Constant.hiveFolderBox);
     _initialized = true;
+    if (Platform.isMacOS) {
+      try {
+        await BookmarkService.restoreAllBookmarks();
+        log.d('macOS: 已恢复音乐目录安全作用域书签');
+      } catch (e) {
+        log.w('macOS 恢复书签失败（可尝试在「音乐源」中刷新）: $e');
+      }
+    }
     notifyListeners();
   }
 

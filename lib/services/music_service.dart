@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:yeah_music/compments/bookmark_service.dart';
 
 import '../models/song.dart';
 
@@ -27,7 +29,7 @@ class MusicService {
 
   Future<void> _playSongBody(Song song) async {
     log.d("播放歌曲: ${song.title}");
-    for (var attempt = 0; attempt < 2; attempt++) {
+    for (var attempt = 0; attempt < 3; attempt++) {
       try {
         await _player.stop();
         // 给平台层从 completed/idle 收尾再换源，降低并发中断
@@ -44,6 +46,18 @@ class MusicService {
         final msg = e.toString();
         if (attempt == 0 && msg.contains('interrupted')) {
           log.d("换源被中断，重试一次: $e");
+          continue;
+        }
+        // macOS 安全作用域未恢复时常见 257 / permission
+        if (attempt < 2 &&
+            Platform.isMacOS &&
+            (msg.contains('257') ||
+                msg.contains('permission') ||
+                msg.contains('Permission'))) {
+          log.d('macOS: 尝试恢复安全作用域书签后重试播放');
+          try {
+            await BookmarkService.restoreAllBookmarks();
+          } catch (_) {}
           continue;
         }
         log.e("播放失败: $e");
