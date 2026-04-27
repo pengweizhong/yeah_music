@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show pi, sin;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
+import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 
 var log = Logger(printer: SimplePrinter());
 
@@ -440,59 +442,26 @@ class _SongPageState extends State<SongPage> {
     BuildContext context,
     PlayListProvider playListProvider,
   ) {
+    final surface = Theme.of(context).colorScheme.surface;
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (_) {
-        final list = playListProvider.playList;
+      isScrollControlled: true,
+      backgroundColor: surface,
+      builder: (sheetContext) {
+        final h = MediaQuery.sizeOf(sheetContext).height * 0.56;
         return SafeArea(
-          child: ListView.separated(
-            itemCount: list.length,
-            separatorBuilder: (_, __) =>
-                Divider(height: 1, color: Colors.grey.shade800),
-            itemBuilder: (context, index) {
-              final s = list[index];
-              final isCurrent = index == playListProvider.currentIndex;
-              return ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Image(
-                      fit: BoxFit.cover,
-                      image: ApplicationUtils.getImageCoverProvider(s),
-                    ),
-                  ),
-                ),
-                title: Text(
-                  s.title ?? '未知标题',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-                subtitle: Text(
-                  s.artist ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-                trailing: isCurrent ? const Icon(Icons.equalizer) : null,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await playListProvider.playAt(index);
-                  _initLyrics();
-                  _updateDuration();
-                },
-              );
-            },
+          child: SizedBox(
+            height: h,
+            child: _PlaybackQueueSheet(
+              provider: playListProvider,
+              onPick: (index) async {
+                Navigator.pop(sheetContext);
+                await playListProvider.playAt(index);
+                _initLyrics();
+                _updateDuration();
+              },
+            ),
           ),
         );
       },
@@ -1599,6 +1568,15 @@ class _SongPageState extends State<SongPage> {
                         tooltip: _isTimerActive ? '取消定时关闭' : '定时关闭',
                       ),
                       IconButton(
+                        icon: const Icon(Icons.playlist_add),
+                        onPressed: () {
+                          final song = playListProvider.currentSong;
+                          if (song == null) return;
+                          showAddToUserPlaylistsSheet(context, song);
+                        },
+                        tooltip: '加入歌单',
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.playlist_play),
                         onPressed: () {
                           _showPlayListSheet(context, playListProvider);
@@ -1611,6 +1589,206 @@ class _SongPageState extends State<SongPage> {
                 SizedBox(height: MediaQuery.of(context).padding.bottom),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 播放队列底部表单：定位当前曲目、高亮当前行、动态播放指示器
+class _PlaybackQueueSheet extends StatefulWidget {
+  const _PlaybackQueueSheet({
+    required this.provider,
+    required this.onPick,
+  });
+
+  final PlayListProvider provider;
+  final Future<void> Function(int index) onPick;
+
+  @override
+  State<_PlaybackQueueSheet> createState() => _PlaybackQueueSheetState();
+}
+
+class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
+  final GlobalKey _playingRowKey = GlobalKey();
+  late int _lastHeardIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastHeardIndex = widget.provider.currentIndex;
+    widget.provider.addListener(_onProviderChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollCurrentIntoView(animated: false));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollCurrentIntoView(animated: false));
+  }
+
+  @override
+  void dispose() {
+    widget.provider.removeListener(_onProviderChanged);
+    super.dispose();
+  }
+
+  void _onProviderChanged() {
+    if (!mounted) return;
+    final idx = widget.provider.currentIndex;
+    final indexMoved = idx != _lastHeardIndex;
+    _lastHeardIndex = idx;
+    setState(() {});
+    if (indexMoved) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollCurrentIntoView(animated: true));
+    }
+  }
+
+  void _scrollCurrentIntoView({required bool animated}) {
+    final ctx = _playingRowKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.22,
+      duration: animated ? const Duration(milliseconds: 320) : Duration.zero,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = widget.provider;
+    final list = provider.playList;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
+    if (list.isEmpty) {
+      return Center(
+        child: Text('暂无曲目', style: TextStyle(color: theme.hintColor)),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+          child: Text(
+            '播放队列',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.only(bottom: 12),
+            itemCount: list.length,
+            separatorBuilder: (_, _) =>
+                Divider(height: 1, color: Colors.grey.shade800),
+            itemBuilder: (context, index) {
+              final s = list[index];
+              final isCurrent = index == provider.currentIndex;
+              return ListTile(
+                key: isCurrent ? _playingRowKey : ValueKey<String>('${index}_${s.path}'),
+                selected: isCurrent,
+                selectedTileColor: primary.withValues(alpha: 0.12),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Image(
+                      fit: BoxFit.cover,
+                      image: ApplicationUtils.getImageCoverProvider(s),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  s.title ?? '未知标题',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
+                    color: isCurrent ? primary : null,
+                  ),
+                ),
+                subtitle: Text(
+                  s.artist ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isCurrent
+                        ? primary.withValues(alpha: 0.75)
+                        : Colors.grey.shade600,
+                  ),
+                ),
+                trailing: isCurrent
+                    ? _PlayingBarsIndicator(color: primary)
+                    : null,
+                onTap: () => widget.onPick(index),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 随节拍起伏的条形播放指示器
+class _PlayingBarsIndicator extends StatefulWidget {
+  const _PlayingBarsIndicator({required this.color});
+
+  final Color color;
+
+  @override
+  State<_PlayingBarsIndicator> createState() => _PlayingBarsIndicatorState();
+}
+
+class _PlayingBarsIndicatorState extends State<_PlayingBarsIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 480),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = _controller.value * 2 * pi;
+        const barCount = 4;
+        return SizedBox(
+          width: 22,
+          height: 22,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(barCount, (i) {
+              final wave = sin(t + i * 0.85);
+              final h = 4.0 + 12.0 * ((wave + 1) / 2);
+              return Container(
+                width: 3,
+                height: h,
+                margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              );
+            }),
           ),
         );
       },

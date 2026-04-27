@@ -12,6 +12,7 @@ import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/folder.dart';
 import '../utils/application_utils.dart';
+import '../widgets/add_to_user_playlists_sheet.dart';
 
 var log = Logger(printer: SimplePrinter());
 
@@ -45,13 +46,14 @@ class _PlayListProviderState extends State<PlayListPage> {
     _loadSortSettings();
     
     // 使用postFrameCallback避免在build期间调用setState
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final folderProvider = context.read<FolderProvider>();
       final playListProvider = context.read<PlayListProvider>();
       if (!playListProvider.initialized) {
         log.d("初始化全部歌单列表");
-        playListProvider.init(folderProvider);
+        await playListProvider.init(folderProvider);
       }
+      playListProvider.clearPlaybackQueueOverride();
     });
   }
 
@@ -322,6 +324,11 @@ class _PlayListProviderState extends State<PlayListPage> {
                                 showSecondTitle(song),
                                 style: TextStyle(color: Colors.white.withOpacity(0.6)),
                               ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.playlist_add, color: Colors.white70),
+                                tooltip: '加入歌单',
+                                onPressed: () => showAddToUserPlaylistsSheet(context, song),
+                              ),
                               onTap: () => navToSongPage(originalIndex, playListProvider),
                             );
                           },
@@ -470,6 +477,11 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
           subtitle: Text(
             song.artist ?? song.album ?? '',
             style: TextStyle(color: Colors.grey.shade600),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.playlist_add),
+            tooltip: '加入歌单',
+            onPressed: () => showAddToUserPlaylistsSheet(context, song),
           ),
           onTap: () {
             close(context, song);

@@ -10,6 +10,7 @@ import 'package:yeah_music/themes/theme_provider.dart';
 import 'compments/folder_provider.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
+import 'compments/user_playlist_provider.dart';
 
 //SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
 var log = Logger(printer: SimplePrinter());
@@ -36,6 +37,13 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => PlayListProvider()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final p = UserPlaylistProvider();
+            p.init();
+            return p;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => FolderProvider()..init()),
         ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),
       ],

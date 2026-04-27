@@ -62,7 +62,10 @@ class _MenuPageState extends State<MenuPage> {
                   title: const Text("歌单", style: TextStyle(color: Colors.white)),
                   leading: const Icon(Icons.folder_copy_outlined, color: Colors.white),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => StoragePlayListPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const StoragePlayListPage()),
+                    );
                   },
                 ),
               ),

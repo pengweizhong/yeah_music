@@ -44,11 +44,18 @@ class PlayListProvider extends ChangeNotifier {
   /// 随机播放时的当前随机列表
   List<int>? _shuffledIndices;
 
-  /// 缓存的播放列表
+  /// 缓存的播放列表（仅曲库合并结果）
   List<Song>? _cachedPlayList;
 
-  /// 把所有文件夹里的歌曲合并成一个大列表（使用缓存优化性能）
+  /// 临时播放队列（例如用户歌单），非空时 [playList] 使用该列表而非曲库合并
+  List<Song>? _playbackQueueOverride;
+
+  bool get hasPlaybackQueueOverride => _playbackQueueOverride != null;
+
+  /// 把所有文件夹里的歌曲合并成一个大列表（使用缓存优化性能），
+  /// 若已设置 [_playbackQueueOverride] 则返回覆盖队列。
   List<Song> get playList {
+    if (_playbackQueueOverride != null) return _playbackQueueOverride!;
     if (_cachedPlayList == null) {
       _cachedPlayList = folderPlaylistMap.values.expand((list) => list).toList();
     }
@@ -58,6 +65,44 @@ class PlayListProvider extends ChangeNotifier {
   /// 清除播放列表缓存
   void _clearPlayListCache() {
     _cachedPlayList = null;
+  }
+
+  /// 将播放队列设为 [songs]（顺序与列表一致），并从 [index] 开始播放。
+  Future<void> setPlaybackQueueAndPlay(List<Song> songs, int index) async {
+    if (songs.isEmpty) return;
+    _playbackQueueOverride = List<Song>.from(songs);
+    _currentIndex = index.clamp(0, songs.length - 1);
+    _shuffledIndices = null;
+    _shuffledPlayedIndices = [];
+    notifyListeners();
+    await MusicService().playSong(_playbackQueueOverride![_currentIndex]);
+  }
+
+  /// 恢复为曲库合并队列；可选按当前播放曲目的路径在全库中定位索引。
+  void clearPlaybackQueueOverride({bool relocateCurrentSong = true}) {
+    if (_playbackQueueOverride == null) return;
+    final path = relocateCurrentSong ? currentSong?.path : null;
+    _playbackQueueOverride = null;
+    _clearPlayListCache();
+    final lib = folderPlaylistMap.values.expand((l) => l).toList();
+    _cachedPlayList = lib;
+    if (path != null) {
+      final i = lib.indexWhere((s) => s.path == path);
+      if (i >= 0) {
+        _currentIndex = i;
+      } else if (lib.isEmpty) {
+        _currentIndex = 0;
+      } else {
+        _currentIndex = 0;
+      }
+    } else if (lib.isEmpty) {
+      _currentIndex = 0;
+    } else {
+      _currentIndex = _currentIndex.clamp(0, lib.length - 1);
+    }
+    _shuffledIndices = null;
+    _shuffledPlayedIndices = [];
+    notifyListeners();
   }
 
   Song? get currentSong {
@@ -201,11 +246,13 @@ class PlayListProvider extends ChangeNotifier {
     folderPlaylistMap.remove(folder.path);
     putFolder(folder);
     _clearPlayListCache(); // 清除缓存
-    final list = playList;
-    if (list.isEmpty) {
-      _currentIndex = 0;
-    } else if (_currentIndex >= list.length) {
-      _currentIndex = 0;
+    if (_playbackQueueOverride == null) {
+      final list = folderPlaylistMap.values.expand((l) => l).toList();
+      if (list.isEmpty) {
+        _currentIndex = 0;
+      } else if (_currentIndex >= list.length) {
+        _currentIndex = 0;
+      }
     }
     notifyListeners();
   }
@@ -227,8 +274,9 @@ class PlayListProvider extends ChangeNotifier {
     _currentIndex = index.clamp(0, list.length - 1);
     notifyListeners();
     await MusicService().playSong(list[_currentIndex]);
-    // 保存当前播放索引
-    await _saveCurrentIndex();
+    if (_playbackQueueOverride == null) {
+      await _saveCurrentIndex();
+    }
   }
 
   /// 设置播放模式
