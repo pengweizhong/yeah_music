@@ -104,6 +104,13 @@ class MiniPlayer extends StatelessWidget {
                             ],
                           ),
                         ),
+                        // 上一曲按钮
+                        IconButton(
+                          icon: const Icon(Icons.skip_previous, size: 24),
+                          onPressed: () async {
+                            await playListProvider.playPrev();
+                          },
+                        ),
                         // 播放/暂停按钮
                         IconButton(
                           icon: Icon(
