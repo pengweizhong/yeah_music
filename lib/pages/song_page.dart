@@ -875,19 +875,56 @@ class _SongPageState extends State<SongPage> {
     });
   }
 
-  // 获取播放模式图标
+  /// 多行歌词：当前行按钮图标（-1=全部，0..=仅第 N 行）
+  IconData _lyricLineDisplayModeIcon() {
+    if (_globalDisplayMode < 0) return Icons.lyrics_rounded;
+    switch (_globalDisplayMode) {
+      case 0:
+        return Icons.filter_1_rounded;
+      case 1:
+        return Icons.filter_2_rounded;
+      case 2:
+        return Icons.filter_3_rounded;
+      case 3:
+        return Icons.filter_4_rounded;
+      case 4:
+        return Icons.filter_5_rounded;
+      case 5:
+        return Icons.filter_6_rounded;
+      case 6:
+        return Icons.filter_7_rounded;
+      case 7:
+        return Icons.filter_8_rounded;
+      case 8:
+        return Icons.filter_9_rounded;
+      default:
+        return Icons.view_column_rounded;
+    }
+  }
+
+  String _lyricLineDisplayModeTooltip() {
+    if (_lyrics.isEmpty) {
+      return '切换显示模式';
+    }
+    if (_globalDisplayMode < 0) {
+      return '多行歌词：全部行（点击为单行）';
+    }
+    return '多行歌词：仅第 ${_globalDisplayMode + 1} 行（继续点击切换）';
+  }
+
+  // 获取播放模式图标（圆角系，与底栏/模式列表一致）
   IconData _getPlaybackModeIcon(PlaybackMode mode) {
     switch (mode) {
       case PlaybackMode.sequential:
-        return Icons.playlist_play;
+        return Icons.queue_music_rounded;
       case PlaybackMode.shuffle:
-        return Icons.shuffle;
+        return Icons.shuffle_rounded;
       case PlaybackMode.singleLoop:
-        return Icons.repeat_one;
+        return Icons.repeat_one_rounded;
       case PlaybackMode.playOnce:
-        return Icons.play_arrow;
+        return Icons.play_arrow_rounded;
       case PlaybackMode.timerShutdown:
-        return Icons.timer;
+        return Icons.timer_rounded;
     }
   }
 
@@ -1756,24 +1793,20 @@ class _SongPageState extends State<SongPage> {
                               }
                             },
                             child: Container(
-                              width: 72,
-                              height: 72,
+                              width: 64,
+                              height: 64,
+                              alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Theme.of(context).colorScheme.primary,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary.withOpacity(0.3),
-                                    blurRadius: 12,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
+                                color: Colors.white.withValues(alpha: 0.12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.38),
+                                  width: 1.25,
+                                ),
                               ),
                               child: Icon(
                                 isPlayingNow ? Icons.pause : Icons.play_arrow,
-                                size: 36,
+                                size: 34,
                                 color: Colors.white,
                               ),
                             ),
@@ -1796,36 +1829,29 @@ class _SongPageState extends State<SongPage> {
                   ),
                 ),
 
-                // 底部功能按钮
+                // 底栏无背景，悬停/按压见 [_SongToolIcon] 高亮
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.translate),
-                        color: Colors.white,
+                      _SongToolIcon(
+                        icon: Icons.translate_rounded,
                         onPressed: _showLyricStyleSheet,
                         tooltip: '歌词样式',
                       ),
-                      // 显示模式切换按钮（替代长按）
-                      IconButton(
-                        icon: const Icon(Icons.view_agenda),
-                        color: Colors.white,
+                      _SongToolIcon(
+                        icon: _lyricLineDisplayModeIcon(),
+                        iconColor: _globalDisplayMode < 0
+                            ? null
+                            : Theme.of(context).colorScheme.primary,
                         onPressed: _toggleDisplayMode,
-                        tooltip: '切换显示模式',
+                        tooltip: _lyricLineDisplayModeTooltip(),
                       ),
-                      // 播放模式按钮
                       Consumer<PlayListProvider>(
                         builder: (context, provider, _) {
-                          return IconButton(
-                            icon: Icon(
-                              _getPlaybackModeIcon(provider.playbackMode),
-                            ),
-                            color: Colors.white,
+                          return _SongToolIcon(
+                            icon: _getPlaybackModeIcon(provider.playbackMode),
                             onPressed: () {
                               _showPlaybackModeSheet(context, provider);
                             },
@@ -1833,16 +1859,13 @@ class _SongPageState extends State<SongPage> {
                           );
                         },
                       ),
-                      // 定时关闭按钮
-                      IconButton(
-                        icon: Icon(
-                          playListProvider.isSleepTimerActive
-                              ? Icons.timer_off
-                              : Icons.timer,
-                        ),
-                        color: playListProvider.isSleepTimerActive
+                      _SongToolIcon(
+                        icon: playListProvider.isSleepTimerActive
+                            ? Icons.timer_off_rounded
+                            : Icons.timer_rounded,
+                        iconColor: playListProvider.isSleepTimerActive
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white,
+                            : null,
                         onPressed: () {
                           _showTimerSheet(context, playListProvider);
                         },
@@ -1850,23 +1873,14 @@ class _SongPageState extends State<SongPage> {
                             ? '取消定时关闭'
                             : '定时关闭',
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.playlist_add),
-                        color: Colors.white,
+                      _SongToolIcon(
+                        icon: Icons.library_add_rounded,
                         onPressed: () {
                           final song = playListProvider.currentSong;
                           if (song == null) return;
                           showAddToUserPlaylistsSheet(context, song);
                         },
                         tooltip: '加入歌单',
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.playlist_play),
-                        color: Colors.white,
-                        onPressed: () {
-                          _showPlayListSheet(context, playListProvider);
-                        },
-                        tooltip: '播放列表',
                       ),
                     ],
                   ),
@@ -1878,6 +1892,58 @@ class _SongPageState extends State<SongPage> {
         ),
         );
       },
+    );
+  }
+}
+
+/// 播放页底栏图标：无容器背景，仅悬停/按压/聚焦时高亮
+class _SongToolIcon extends StatelessWidget {
+  const _SongToolIcon({
+    required this.icon,
+    required this.onPressed,
+    required this.tooltip,
+    this.iconColor,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final String tooltip;
+  final Color? iconColor;
+
+  static const double _kIcon = 25;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Center(
+        child: IconButton(
+          onPressed: onPressed,
+          tooltip: tooltip,
+          icon: Icon(icon, size: _kIcon),
+          style: ButtonStyle(
+            padding: const WidgetStatePropertyAll(EdgeInsets.all(8)),
+            minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            iconColor: WidgetStatePropertyAll(iconColor ?? Colors.white),
+            iconSize: const WidgetStatePropertyAll(_kIcon),
+            backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+            overlayColor: WidgetStateProperty.resolveWith(
+              (Set<WidgetState> states) {
+                if (states.contains(WidgetState.hovered)) {
+                  return Colors.white.withValues(alpha: 0.10);
+                }
+                if (states.contains(WidgetState.pressed) ||
+                    states.contains(WidgetState.focused)) {
+                  return Colors.white.withValues(alpha: 0.16);
+                }
+                return null;
+              },
+            ),
+            shape: const WidgetStatePropertyAll(CircleBorder()),
+            visualDensity: VisualDensity.comfortable,
+          ),
+        ),
+      ),
     );
   }
 }
