@@ -69,12 +69,12 @@ class ApplicationUtils {
             _buildInfoRow(
               Icons.code,
               '仓库',
-              'github.com/pengweizhong/yeah_music',
+              'https://github.com/pengweizhong/yeah_music',
             ),
             const SizedBox(height: 12),
             _buildInfoRow(Icons.gavel, '许可证', 'GPL-3.0'),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.copyright, '版权', '©2025 pengweizhong'),
+            _buildInfoRow(Icons.copyright, '版权', '©2026 PengWeiZhong'),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
