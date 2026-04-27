@@ -71,7 +71,7 @@ class ScrollLocateToCurrentActionButton extends StatelessWidget {
   }
 }
 
-/// 列表/歌词在「用户手动滑走」后显示右下角定位按钮，5 秒无用户滚动后自动隐藏
+/// 列表/歌词在「用户手动滑走」后显示右下角定位按钮，2 秒无用户滚动后自动隐藏
 /// 逻辑一致。歌词页使用 [onManualScroll] + [isManual] 与播放页 [SongPage] 的跟唱/暂停
 /// 跟读共享状态；各歌曲列表使用内置定时器，仅需 [onLocate] 与 [canLocate]。
 class ScrollToCurrentLocateLayer extends StatefulWidget {
@@ -149,7 +149,7 @@ class _ScrollToCurrentLocateLayerState extends State<ScrollToCurrentLocateLayer>
         _internalManual = true;
       }
       _timer?.cancel();
-      _timer = Timer(const Duration(seconds: 5), () {
+      _timer = Timer(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() => _internalManual = false);
         } else {

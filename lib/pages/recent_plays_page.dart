@@ -4,7 +4,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
-import 'package:yeah_music/pages/song_page.dart';
+import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/navigation/app_route_observer.dart';
@@ -221,19 +221,18 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                                   isCurrent: isCurrent,
                                   onTap: () async {
                                     if (idx < 0) return;
+                                    if (isCurrent) {
+                                      await toggleCurrentRowPlayback(
+                                        playList,
+                                      );
+                                      return;
+                                    }
                                     playList.clearPlaybackQueueOverride();
                                     if (!context.mounted) return;
                                     await playList.playAt(
                                       idx,
-                                      listSession: PlaybackSessionSurface.recentList,
-                                    );
-                                    if (!context.mounted) return;
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SongPage(index: idx, initialPage: 0),
-                                      ),
+                                      listSession:
+                                          PlaybackSessionSurface.recentList,
                                     );
                                   },
                                 ),

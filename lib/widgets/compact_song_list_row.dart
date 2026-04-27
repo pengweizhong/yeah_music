@@ -81,7 +81,7 @@ class CompactSongListRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isCurrent) PlayingBarsIndicator(color: primary),
+                if (isCurrent) ListRowPlayingIndicator(color: primary),
                 if (isCurrent && showAddToPlaylist) const SizedBox(width: 2),
                 if (showAddToPlaylist)
                   IconButton(

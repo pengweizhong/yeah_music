@@ -1,6 +1,7 @@
 import 'dart:math' show pi, sin;
 
 import 'package:flutter/material.dart';
+import 'package:yeah_music/services/music_service.dart';
 
 /// 与播放页队列行尾一致：随节拍上下起伏的竖条
 class PlayingBarsIndicator extends StatefulWidget {
@@ -59,6 +60,27 @@ class _PlayingBarsIndicatorState extends State<PlayingBarsIndicator>
             }),
           ),
         );
+      },
+    );
+  }
+}
+
+/// 曲库/歌单等列表行用：仅在实际播放中显示动态条，暂停时不占位出“在播”提示
+class ListRowPlayingIndicator extends StatelessWidget {
+  const ListRowPlayingIndicator({super.key, required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: MusicService.playingStream,
+      initialData: MusicService.isPlaying,
+      builder: (context, snap) {
+        if (snap.data != true) {
+          return const SizedBox(width: 22, height: 22);
+        }
+        return PlayingBarsIndicator(color: color);
       },
     );
   }

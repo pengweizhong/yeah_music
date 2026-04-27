@@ -20,18 +20,8 @@ import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
+import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
-
-/// 与首页「继续播放」卡片一致：正在播则暂停，否则恢复；idle/completed 时走 [playAt]。
-Future<void> _toggleHomeRowPlayback(PlayListProvider play) async {
-  if (MusicService.isPlaying) {
-    await MusicService().pause();
-  } else if (!MusicService.canUseResumeToPlay) {
-    await play.playAt(play.currentIndex);
-  } else {
-    MusicService().resume();
-  }
-}
 
 /// 应用主页
 class HomePage extends StatefulWidget {
@@ -639,7 +629,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                       isCurrent: isCurrent,
                       onTap: () async {
                         if (isCurrent) {
-                          await _toggleHomeRowPlayback(widget.play);
+                          await toggleCurrentRowPlayback(widget.play);
                           return;
                         }
                         await widget.play.setPlaybackQueueAndPlay(
@@ -715,7 +705,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                         isCurrent: isCurrent,
                         onTap: () async {
                           if (isCurrent) {
-                            await _toggleHomeRowPlayback(widget.play);
+                            await toggleCurrentRowPlayback(widget.play);
                             return;
                           }
                           final q = widget.mostPlayedItems

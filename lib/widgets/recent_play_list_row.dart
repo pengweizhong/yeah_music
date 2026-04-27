@@ -114,11 +114,8 @@ class _RecentPlayTrailingIcon extends StatelessWidget {
             size: 26,
           );
         }
-        return Icon(
-          Icons.pause_rounded,
-          color: Colors.white.withValues(alpha: 0.6),
-          size: 26,
-        );
+        // 暂停时不展示“播放中”态，与曲库行一致
+        return const SizedBox(width: 26, height: 26);
       },
     );
   }

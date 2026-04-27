@@ -11,8 +11,8 @@ import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/navigation/app_route_observer.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
-import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
+import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
@@ -510,6 +510,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                         onTap: () async {
                                           final playListProv = context
                                               .read<PlayListProvider>();
+                                          if (isRowCurrent) {
+                                            await toggleCurrentRowPlayback(
+                                              playListProv,
+                                            );
+                                            return;
+                                          }
                                           await playListProv
                                               .setPlaybackQueueAndPlay(
                                                 orderedSongs,
@@ -518,14 +524,6 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                                     .userPlaylist,
                                                 userPlaylistId: pl.id,
                                               );
-                                          if (!context.mounted) return;
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  SongPage(index: index),
-                                            ),
-                                          );
                                         },
                                       ),
                                     );

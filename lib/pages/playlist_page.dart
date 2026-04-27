@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
-import 'package:yeah_music/pages/song_page.dart';
+import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/playback_session_surface.dart';
@@ -327,10 +327,27 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                       title: song.title ?? '未知音乐',
                                       subtitle: showSecondTitle(song),
                                       isCurrent: isRowCurrent,
-                                      onTap: () => navToSongPage(
-                                        originalIndex,
-                                        playListProvider,
-                                      ),
+                                      onTap: () async {
+                                        if (isRowCurrent) {
+                                          await toggleCurrentRowPlayback(
+                                            playListProvider,
+                                          );
+                                          return;
+                                        }
+                                        playListProvider
+                                            .setPlaybackListSessionForLibrary();
+                                        if (playListProvider
+                                            .hasPlaybackQueueOverride) {
+                                          await playListProvider
+                                              .playAt(originalIndex);
+                                        } else {
+                                          await playListProvider.playAt(
+                                            originalIndex,
+                                            listSession: PlaybackSessionSurface
+                                                .library,
+                                          );
+                                        }
+                                      },
                                     );
                                   },
                                 ),
@@ -358,14 +375,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       }
       playList.addAll(value.songList as Iterable<Song>);
     }
-  }
-
-  void navToSongPage(int index, PlayListProvider playListProvider) {
-    playListProvider.setPlaybackListSessionForLibrary();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SongPage(index: index)),
-    );
   }
 
   String showSecondTitle(Song song) {
@@ -538,6 +547,10 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                 isCurrent: isRowCurrent,
                 onTap: () async {
                   close(context, song);
+                  if (isRowCurrent) {
+                    await toggleCurrentRowPlayback(p);
+                    return;
+                  }
                   if (playbackContextQueue != null) {
                     final q = playbackContextQueue!;
                     final idx = q.indexWhere((s) => s.path == song.path);
@@ -548,26 +561,16 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                       session: PlaybackSessionSurface.userPlaylist,
                       userPlaylistId: userPlaylistIdForContext,
                     );
-                    if (!context.mounted) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SongPage(index: idx),
-                      ),
-                    );
-                  } else {
-                    final originalIndex = pathToMainIndex[song.path] ?? -1;
-                    if (originalIndex < 0) return;
-                    if (!context.mounted) return;
-                    p.setPlaybackListSessionForLibrary();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SongPage(index: originalIndex),
-                      ),
-                    );
+                    return;
                   }
+                  final originalIndex = pathToMainIndex[song.path] ?? -1;
+                  if (originalIndex < 0) return;
+                  if (!context.mounted) return;
+                  p.setPlaybackListSessionForLibrary();
+                  await p.playAt(
+                    originalIndex,
+                    listSession: PlaybackSessionSurface.library,
+                  );
                 },
               );
             },
