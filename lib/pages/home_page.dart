@@ -6,15 +6,18 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/constants.dart';
+import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
+import 'package:yeah_music/pages/quick_entry_settings_page.dart';
 import 'package:yeah_music/pages/recent_plays_page.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
+import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
 
@@ -31,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   List<String> _recentPaths = [];
   bool _recentReady = false;
   PlayListProvider? _play;
+  QuickEntryConfig _quickEntry = QuickEntryConfig.defaultConfig();
 
   @override
   void initState() {
@@ -67,6 +71,29 @@ class _HomePageState extends State<HomePage> {
     }
     if (!mounted) return;
     await _loadRecentPaths();
+    await _loadQuickEntryConfig();
+  }
+
+  Future<void> _loadQuickEntryConfig() async {
+    final c = await SettingsService.loadQuickEntryConfig();
+    if (!mounted) return;
+    setState(() {
+      _quickEntry = c ?? QuickEntryConfig.defaultConfig();
+    });
+  }
+
+  void _goQuickEntrySettings() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => QuickEntrySettingsPage(
+          initial: QuickEntryConfig(
+            order: List<String>.from(_quickEntry.order),
+            hidden: Set<String>.from(_quickEntry.hidden),
+          ),
+        ),
+      ),
+    ).then((_) => _loadQuickEntryConfig());
   }
 
   Future<void> _loadRecentPaths() async {
@@ -190,6 +217,7 @@ class _HomePageState extends State<HomePage> {
                   backgroundColor: Colors.black54,
                   onRefresh: _loadRecentPaths,
                   child: _HomeScrollBody(
+                    quickEntry: _quickEntry,
                     safeBottom: MediaQuery.paddingOf(context).bottom + 8,
                     greeting: _greeting(),
                     play: play,
@@ -200,6 +228,7 @@ class _HomePageState extends State<HomePage> {
                     onOpenSearch: () => _goLibrary(openSearch: true),
                     onOpenStorage: _goStoragePlaylists,
                     onOpenRecent: _goRecentPlays,
+                    onManageQuickEntry: _goQuickEntrySettings,
                     onOpenSongIndex: (i) => _openSongForIndex(i),
                     onOpenUserPlaylist: _goUserPlaylist,
                     songSubtitle: _songSecondaryLine,
@@ -231,6 +260,7 @@ class _HomePageState extends State<HomePage> {
 
 class _HomeScrollBody extends StatelessWidget {
   const _HomeScrollBody({
+    required this.quickEntry,
     required this.safeBottom,
     required this.greeting,
     required this.play,
@@ -241,11 +271,13 @@ class _HomeScrollBody extends StatelessWidget {
     required this.onOpenSearch,
     required this.onOpenStorage,
     required this.onOpenRecent,
+    required this.onManageQuickEntry,
     required this.onOpenSongIndex,
     required this.onOpenUserPlaylist,
     required this.songSubtitle,
   });
 
+  final QuickEntryConfig quickEntry;
   final double safeBottom;
   final String greeting;
   final PlayListProvider play;
@@ -256,6 +288,7 @@ class _HomeScrollBody extends StatelessWidget {
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenStorage;
   final VoidCallback onOpenRecent;
+  final VoidCallback onManageQuickEntry;
   final Future<void> Function(int index) onOpenSongIndex;
   final void Function(String playlistId) onOpenUserPlaylist;
   final String Function(Song) songSubtitle;
@@ -264,6 +297,66 @@ class _HomeScrollBody extends StatelessWidget {
   static const _gapL = 24.0;
   static const _gapM = 16.0;
   static const _gapS = 12.0;
+
+  Widget _buildQuickEntryRow() {
+    final ids = quickEntry.visibleInOrder;
+    if (ids.isEmpty) {
+      return Text(
+        '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等',
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.45),
+          fontSize: 14,
+          height: 1.35,
+        ),
+      );
+    }
+    final entries = <_QuickItem>[];
+    for (final id in ids) {
+      switch (id) {
+        case QuickEntryConfig.idLibrary:
+          entries.add(
+            _QuickItem(
+              '本地曲库',
+              Icons.library_music_rounded,
+              const Color(0xFF4FC3F7),
+              onOpenLibrary,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idPlaylists:
+          entries.add(
+            _QuickItem(
+              '我的歌单',
+              Icons.playlist_play_rounded,
+              const Color(0xFF81C784),
+              onOpenStorage,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idRecent:
+          entries.add(
+            _QuickItem(
+              '最近播放',
+              Icons.history_rounded,
+              const Color(0xFFFFB74D),
+              onOpenRecent,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idDiscover:
+          entries.add(
+            _QuickItem(
+              '发现',
+              Icons.explore_rounded,
+              const Color(0xFFE57373),
+              onOpenSearch,
+            ),
+          );
+          break;
+      }
+    }
+    return _QuickEntryRow(entries: entries);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +393,7 @@ class _HomeScrollBody extends StatelessWidget {
             child: _SectionTitle(
               title: '快捷入口',
               actionLabel: '管理',
-              onAction: onOpenStorage,
+              onAction: onManageQuickEntry,
             ),
           ),
         ),
@@ -308,34 +401,7 @@ class _HomeScrollBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _QuickEntryRow(
-              entries: [
-                _QuickItem(
-                  '本地曲库',
-                  Icons.library_music_rounded,
-                  const Color(0xFF4FC3F7),
-                  onOpenLibrary,
-                ),
-                _QuickItem(
-                  '我的歌单',
-                  Icons.playlist_play_rounded,
-                  const Color(0xFF81C784),
-                  onOpenStorage,
-                ),
-                _QuickItem(
-                  '最近播放',
-                  Icons.history_rounded,
-                  const Color(0xFFFFB74D),
-                  onOpenRecent,
-                ),
-                _QuickItem(
-                  '发现',
-                  Icons.explore_rounded,
-                  const Color(0xFFE57373),
-                  () => onOpenSearch(),
-                ),
-              ],
-            ),
+            child: _buildQuickEntryRow(),
           ),
         ),
         SliverToBoxAdapter(
@@ -534,6 +600,9 @@ class _ContinuePlayLive extends StatelessWidget {
           onToggle: () async {
             if (MusicService.isPlaying) {
               await MusicService().pause();
+            } else if (!MusicService.canUseResumeToPlay) {
+              // 冷启动为 idle 或播完后 completed 时 resume 不发声，用当前索引重新 [playSong]
+              await play.playAt(play.currentIndex);
             } else {
               MusicService().resume();
             }

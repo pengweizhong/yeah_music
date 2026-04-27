@@ -103,10 +103,23 @@ class MusicService {
     isPlaying = false;
   }
 
-  ///恢复播放
+  ///恢复播放（需已有音源；冷启动后从未 [setAudioSource] 时 [resume] 无效果，应改 [playSong]）
   void resume() {
     _player.play();
     isPlaying = _player.playing;
+  }
+
+  /// 当前是否适合直接 [resume]（已有音源且可继续）。为 idle/completed 时应走 [playSong]。
+  static bool get canUseResumeToPlay {
+    switch (_player.processingState) {
+      case ProcessingState.ready:
+      case ProcessingState.buffering:
+      case ProcessingState.loading:
+        return true;
+      case ProcessingState.idle:
+      case ProcessingState.completed:
+        return false;
+    }
   }
 
   ///设置音乐列表播放模式

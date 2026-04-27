@@ -1,12 +1,15 @@
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
+import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class SettingsService {
   static const String _lyricSettingsKey = 'lyric_settings';
   static const String _playbackModeKey = 'playback_mode';
   static const String _timerDurationKey = 'timer_duration';
+  static const String _quickEntryOrderKey = 'quick_entry_order';
+  static const String _quickEntryHiddenKey = 'quick_entry_hidden';
 
   /// 保存歌词设置
   static Future<void> saveLyricSettings(LyricSettings settings) async {
@@ -82,6 +85,34 @@ class SettingsService {
       return box.get(_timerDurationKey, defaultValue: 30) as int? ?? 30;
     } catch (e) {
       return 30;
+    }
+  }
+
+  static Future<QuickEntryConfig?> loadQuickEntryConfig() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final orderRaw = box.get(_quickEntryOrderKey) as List<dynamic>?;
+      final hiddenRaw = box.get(_quickEntryHiddenKey) as List<dynamic>?;
+      return QuickEntryConfig.fromStorage(orderRaw, hiddenRaw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> saveQuickEntryConfig(QuickEntryConfig c) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      c.normalizeInPlace();
+      await box.put(_quickEntryOrderKey, c.order);
+      await box.put(_quickEntryHiddenKey, c.hidden.toList());
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        c.normalizeInPlace();
+        await box.put(_quickEntryOrderKey, c.order);
+        await box.put(_quickEntryHiddenKey, c.hidden.toList());
+      } catch (_) {}
     }
   }
 }
