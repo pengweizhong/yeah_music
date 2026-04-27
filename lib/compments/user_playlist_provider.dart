@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
@@ -44,9 +46,79 @@ List<String> _uniquePathsInOrder(List<String> paths) {
   final seen = <String>{};
   final out = <String>[];
   for (final p in paths) {
-    if (seen.add(p)) out.add(p);
+    final t = p.trim();
+    if (t.isEmpty) continue;
+    if (seen.add(t)) out.add(t);
   }
   return out;
+}
+
+/// 先保留 [existing] 顺序，再追加 [incoming] 中尚未出现的路径（导入合并用）
+List<String> _mergePathsExistingFirst(List<String> existing, List<String> incoming) {
+  final seen = <String>{};
+  final out = <String>[];
+  for (final p in existing) {
+    final t = p.trim();
+    if (t.isEmpty) continue;
+    if (seen.add(t)) out.add(t);
+  }
+  for (final p in incoming) {
+    final t = p.trim();
+    if (t.isEmpty) continue;
+    if (seen.add(t)) out.add(t);
+  }
+  return out;
+}
+
+/// 导入文件中若多条记录 id 相同则合并路径
+List<UserPlaylist> _coalesceImportedPlaylists(List<UserPlaylist> items) {
+  final map = <String, UserPlaylist>{};
+  for (final p in items) {
+    var id = p.id.trim();
+    if (id.isEmpty) {
+      id = DateTime.now().microsecondsSinceEpoch.toString();
+    }
+    final existing = map[id];
+    if (existing == null) {
+      map[id] = UserPlaylist(
+        id: id,
+        name: p.name,
+        createdAt: p.createdAt,
+        songPaths: List<String>.from(p.songPaths),
+      );
+    } else {
+      final merged = _mergePathsExistingFirst(existing.songPaths, p.songPaths);
+      map[id] = UserPlaylist(
+        id: id,
+        name: existing.name,
+        createdAt: existing.createdAt,
+        songPaths: merged,
+      );
+    }
+  }
+  return map.values.toList();
+}
+
+const String userPlaylistExportFormatId = 'yeah_music_user_playlists';
+const int userPlaylistExportVersion = 1;
+
+/// 解析导出的 JSON 字符串，失败抛出 [FormatException]
+Map<String, dynamic> parseUserPlaylistExportJson(String jsonStr) {
+  final decoded = jsonDecode(jsonStr);
+  if (decoded is! Map) {
+    throw const FormatException('JSON 根须为对象');
+  }
+  final m = Map<String, dynamic>.from(decoded);
+  if (m['format'] != userPlaylistExportFormatId) {
+    throw const FormatException('不是 Yeah Music 歌单备份（format 不匹配）');
+  }
+  if (m['version'] != userPlaylistExportVersion) {
+    throw FormatException('不支持的备份版本: ${m['version']}');
+  }
+  if (m['playlists'] is! List) {
+    throw const FormatException('缺少 playlists 数组');
+  }
+  return m;
 }
 
 class UserPlaylistProvider extends ChangeNotifier {
@@ -160,5 +232,65 @@ class UserPlaylistProvider extends ChangeNotifier {
   Future<void> _save() async {
     final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
     await box.put(_storageKey, _playlists.map((playlist) => playlist.toMap()).toList());
+  }
+
+  /// 导出用 JSON 对象（歌曲仅以完整文件路径标识，同名/不同音质为不同路径）
+  Map<String, dynamic> buildExportMap() {
+    return {
+      'format': userPlaylistExportFormatId,
+      'version': userPlaylistExportVersion,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
+      'playlists': _playlists.map((e) => e.toMap()).toList(),
+    };
+  }
+
+  /// [replaceAll] 为 true：清空本地歌单后导入；为 false：按歌单 id 合并路径（无则新建）
+  Future<void> applyImportedDocument(Map<String, dynamic> doc, {required bool replaceAll}) async {
+    final rawList = doc['playlists'] as List<dynamic>;
+    final parsed = <UserPlaylist>[];
+    for (final e in rawList) {
+      if (e is! Map) continue;
+      try {
+        parsed.add(UserPlaylist.fromMap(Map<dynamic, dynamic>.from(e)));
+      } catch (_) {}
+    }
+    final imported = _coalesceImportedPlaylists(parsed);
+
+    if (replaceAll) {
+      _playlists
+        ..clear()
+        ..addAll(
+          imported.map(
+            (p) => UserPlaylist(
+              id: p.id,
+              name: p.name,
+              createdAt: p.createdAt,
+              songPaths: _uniquePathsInOrder(p.songPaths),
+            ),
+          ),
+        );
+    } else {
+      for (final imp in imported) {
+        final existing = _playlistById(imp.id);
+        if (existing != null) {
+          final merged = _mergePathsExistingFirst(existing.songPaths, imp.songPaths);
+          existing.songPaths
+            ..clear()
+            ..addAll(merged);
+        } else {
+          _playlists.add(
+            UserPlaylist(
+              id: imp.id,
+              name: imp.name,
+              createdAt: imp.createdAt,
+              songPaths: _uniquePathsInOrder(imp.songPaths),
+            ),
+          );
+        }
+      }
+    }
+    await _save();
+    notifyListeners();
   }
 }
