@@ -3,7 +3,6 @@ import 'dart:math' show pi, sin;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -41,8 +40,10 @@ class _SongPageState extends State<SongPage> {
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
-  StreamSubscription? _playerStateSubscription;
   final ScrollController _scrollController = ScrollController();
+
+  /// 与当前已加载歌词对应的曲目路径（用于后台/列表自动切歌后刷新歌词 UI）
+  String? _lyricsBoundSongPath;
 
   // 歌词显示配置（从设置加载）
   late LyricSettings _settings;
@@ -202,7 +203,6 @@ class _SongPageState extends State<SongPage> {
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _durationSubscription?.cancel();
-    _playerStateSubscription?.cancel();
     _scrollController.dispose();
     _pageController.dispose();
     _shutdownTimer?.cancel();
@@ -304,37 +304,7 @@ class _SongPageState extends State<SongPage> {
         });
       }
     });
-
-    // 监听播放完成，自动播放下一首
-    _playerStateSubscription = MusicService.playerStateStream.listen((state) {
-      if (!mounted) return;
-      // 当播放完成时（processingState == completed）
-      if (state.processingState == ProcessingState.completed) {
-        if (_isJumpingPosition) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          final playListProvider = Provider.of<PlayListProvider>(
-            context,
-            listen: false,
-          );
-          // 根据播放模式决定是否自动播放下一首
-          if (playListProvider.playbackMode == PlaybackMode.singleLoop) {
-            // 单曲循环：重新播放当前歌曲（使用播放器的seek回到开头）
-            MusicService().seek(Duration.zero);
-            MusicService().play();
-          } else if (playListProvider.playbackMode != PlaybackMode.playOnce) {
-            // 顺序播放、随机播放、定时关闭：播放下一首
-            playListProvider.playNext().then((_) {
-              if (mounted) {
-                _initLyrics();
-                _updateDuration();
-              }
-            });
-          }
-          // playOnce 模式不自动播放下一首
-        });
-      }
-    });
+    // 自动切歌由 PlayListProvider 全局订阅 completion，避免离开本页后无法连播
   }
 
   void _updateCurrentLyric(Duration position) {
@@ -989,10 +959,14 @@ class _SongPageState extends State<SongPage> {
         // 使用StreamBuilder来监听播放状态，确保按钮状态正确
         final effectivePos = _effectivePosition();
 
-        // 如果歌曲切换，重新加载歌词
-        if (_lyrics.isEmpty && song.lyrics != null && song.lyrics!.isNotEmpty) {
+        final sp = song.path;
+        if (sp != _lyricsBoundSongPath) {
+          _lyricsBoundSongPath = sp;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _initLyrics();
+            if (mounted) {
+              _initLyrics();
+              _updateDuration();
+            }
           });
         }
 

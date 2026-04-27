@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
@@ -20,6 +21,8 @@ class PlayListProvider extends ChangeNotifier {
   LinkedHashMap<String, List<Song>> folderPlaylistMap = LinkedHashMap();
 
   bool _initialized = false;
+
+  StreamSubscription<PlayerState>? _playerCompletionSubscription;
 
   bool get initialized => _initialized;
 
@@ -136,7 +139,34 @@ class PlayListProvider extends ChangeNotifier {
     } else if (_currentIndex >= list.length) {
       _currentIndex = 0;
     }
+    _attachPlaybackCompletionListener();
     notifyListeners();
+  }
+
+  /// 播放结束切下一首 / 单曲循环；挂在 Provider 上，避免仅 SongPage 订阅时在退出页面后失效
+  void _attachPlaybackCompletionListener() {
+    _playerCompletionSubscription?.cancel();
+    _playerCompletionSubscription = MusicService.playerStateStream.listen((state) {
+      if (state.processingState != ProcessingState.completed) return;
+      // 同一次 completion 的同步回调里立刻换源会触发 just_audio Loading interrupted，延后到本事件后执行
+      Future.microtask(() {
+        if (_playbackMode == PlaybackMode.singleLoop) {
+          MusicService().seek(Duration.zero);
+          MusicService().play();
+          return;
+        }
+        if (_playbackMode == PlaybackMode.playOnce) {
+          return;
+        }
+        playNext();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _playerCompletionSubscription?.cancel();
+    super.dispose();
   }
 
   /// 加载上次播放的歌曲索引

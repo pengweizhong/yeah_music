@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 
@@ -10,15 +12,43 @@ class MusicService {
   static final _player = AudioPlayer();
   static bool isPlaying = false;
 
-  Future<void> playSong(Song song) async {
+  /// 串行换源，避免自然播放结束瞬间立刻 setAudioSource 触发「Loading interrupted」
+  static Future<void> _playChain = Future.value();
+
+  Future<void> playSong(Song song) {
+    final f = _playChain
+        .catchError((Object? e) {
+      log.d('playSong 前序(可忽略): $e');
+    })
+        .then((_) => _playSongBody(song));
+    _playChain = f;
+    return f;
+  }
+
+  Future<void> _playSongBody(Song song) async {
     log.d("播放歌曲: ${song.title}");
-    try {
-      await stop();
-      await _player.setAudioSource(_buildAudioSource(song));
-      await _player.seek(Duration.zero);
-      play();
-    } catch (e) {
-      log.e("播放失败: $e");
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await _player.stop();
+        // 给平台层从 completed/idle 收尾再换源，降低并发中断
+        if (attempt == 0) {
+          await Future<void>.delayed(const Duration(milliseconds: 32));
+        } else {
+          await Future<void>.delayed(const Duration(milliseconds: 64));
+        }
+        await _player.setAudioSource(_buildAudioSource(song));
+        await _player.seek(Duration.zero);
+        play();
+        return;
+      } catch (e) {
+        final msg = e.toString();
+        if (attempt == 0 && msg.contains('interrupted')) {
+          log.d("换源被中断，重试一次: $e");
+          continue;
+        }
+        log.e("播放失败: $e");
+        return;
+      }
     }
   }
 
