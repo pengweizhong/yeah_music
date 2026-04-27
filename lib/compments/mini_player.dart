@@ -54,7 +54,8 @@ class MiniPlayer extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => SongPage(
                           index: playListProvider.currentIndex,
-                          initialPage: savedPage.clamp(0, 1),
+                          // 与 [SongPage]、[last_song_page] 一致：0 封面 / 1 全屏歌词 / 2 分屏
+                          initialPage: savedPage.clamp(0, 2),
                         ),
                       ),
                     );
