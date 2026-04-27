@@ -10,6 +10,7 @@ import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
+import 'package:path/path.dart' as p;
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/models/constants.dart';
 
@@ -17,6 +18,13 @@ import '../models/folder.dart';
 import 'folder_provider.dart';
 
 var log = Logger(printer: SimplePrinter());
+
+/// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
+String _libraryPathKey(String path) {
+  final t = path.trim();
+  if (t.isEmpty) return '';
+  return p.normalize(t).replaceAll(r'\', '/').toLowerCase();
+}
 
 class PlayListProvider extends ChangeNotifier {
   //key是用户选择的根目录
@@ -60,6 +68,10 @@ class PlayListProvider extends ChangeNotifier {
   /// 临时播放队列（例如用户歌单），非空时 [playList] 使用该列表而非曲库合并
   List<Song>? _playbackQueueOverride;
 
+  /// 当前一次「临时队列」会话内，是否写入最近列表 / 是否增加播放次数（由 [setPlaybackQueueAndPlay] 设定，曲库直播为默认都记）
+  bool _statsRecordRecent = true;
+  bool _statsBumpPlayCount = true;
+
   bool get hasPlaybackQueueOverride => _playbackQueueOverride != null;
 
   /// 本地已扫描目录的合并曲库（不受 [_playbackQueueOverride] 影响）
@@ -87,16 +99,40 @@ class PlayListProvider extends ChangeNotifier {
   }) {
     if (!_initialized) return [];
     if (maxSongs != null && maxSongs <= 0) return [];
-    final byPath = <String, Song>{};
+    final byKey = <String, Song>{};
     for (final s in libraryMergedSongs) {
-      byPath[s.path] = s;
+      byKey[_libraryPathKey(s.path)] = s;
     }
     final out = <Song>[];
     for (final path in paths) {
-      final s = byPath[path];
+      final s = byKey[_libraryPathKey(path)];
       if (s != null) {
         out.add(s);
         if (maxSongs != null && out.length >= maxSongs) break;
+      }
+    }
+    return out;
+  }
+
+  /// 将按播放次数排序的 path+count 转为曲库内 [Song]，保持顺序，跳过已不在库内的路径（供「最多播放」等）
+  List<({Song song, int playCount})> resolveTopPlayedFromPathCounts(
+    List<({String path, int count})> entries, {
+    int? maxSongs,
+  }) {
+    if (!_initialized) return [];
+    if (maxSongs != null && maxSongs <= 0) return [];
+    final byKey = <String, Song>{};
+    for (final s in libraryMergedSongs) {
+      byKey[_libraryPathKey(s.path)] = s;
+    }
+    final out = <({Song song, int playCount})>[];
+    for (final e in entries) {
+      final s = byKey[_libraryPathKey(e.path)];
+      if (s != null) {
+        out.add((song: s, playCount: e.count));
+        if (maxSongs != null && out.length >= maxSongs) {
+          break;
+        }
       }
     }
     return out;
@@ -118,8 +154,17 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   /// 将播放队列设为 [songs]（顺序与列表一致），并从 [index] 开始播放。
-  Future<void> setPlaybackQueueAndPlay(List<Song> songs, int index) async {
+  ///
+  /// [recordRecent] / [bumpPlayCount] 控制 [RecentPlayService.recordPath] 行为，并在切歌 [playAt] 时沿用，直至 [clearPlaybackQueueOverride]。
+  Future<void> setPlaybackQueueAndPlay(
+    List<Song> songs,
+    int index, {
+    bool recordRecent = true,
+    bool bumpPlayCount = true,
+  }) async {
     if (songs.isEmpty) return;
+    _statsRecordRecent = recordRecent;
+    _statsBumpPlayCount = bumpPlayCount;
     _playbackQueueOverride = List<Song>.from(songs);
     _currentIndex = index.clamp(0, songs.length - 1);
     _shuffledIndices = null;
@@ -127,7 +172,11 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
     final song = _playbackQueueOverride![_currentIndex];
     await MusicService().playSong(song);
-    await RecentPlayService.recordPath(song.path);
+    await RecentPlayService.recordPath(
+      song.path,
+      updateRecentList: recordRecent,
+      bumpPlayCount: bumpPlayCount,
+    );
     notifyListeners();
   }
 
@@ -136,6 +185,8 @@ class PlayListProvider extends ChangeNotifier {
     if (_playbackQueueOverride == null) return;
     final path = relocateCurrentSong ? currentSong?.path : null;
     _playbackQueueOverride = null;
+    _statsRecordRecent = true;
+    _statsBumpPlayCount = true;
     _clearPlayListCache();
     final lib = folderPlaylistMap.values.expand((l) => l).toList();
     _cachedPlayList = lib;
@@ -364,7 +415,11 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
     final playing = list[_currentIndex];
     await MusicService().playSong(playing);
-    await RecentPlayService.recordPath(playing.path);
+    await RecentPlayService.recordPath(
+      playing.path,
+      updateRecentList: _statsRecordRecent,
+      bumpPlayCount: _statsBumpPlayCount,
+    );
     if (_playbackQueueOverride == null) {
       await _saveCurrentIndex();
     }

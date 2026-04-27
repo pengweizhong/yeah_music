@@ -122,18 +122,23 @@ class MiniPlayer extends StatelessWidget {
                             await playListProvider.playPrev();
                           },
                         ),
-                        // 播放/暂停按钮
+                        // 播放/暂停按钮（与继续播放卡一致：冷启动/播完后 idle 时 resume 无声，应 [playAt] 换源）
                         IconButton(
                           icon: Icon(
                             isPlaying ? Icons.pause : Icons.play_arrow,
                             size: 28,
                             color: Colors.white,
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             if (isPlaying) {
-                              MusicService().pause();
+                              await MusicService().pause();
                             } else {
-                              MusicService().resume();
+                              if (!MusicService.canUseResumeToPlay) {
+                                await playListProvider
+                                    .playAt(playListProvider.currentIndex);
+                              } else {
+                                MusicService().resume();
+                              }
                             }
                           },
                         ),

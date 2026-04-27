@@ -6,20 +6,17 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
-import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/quick_entry_settings_page.dart';
 import 'package:yeah_music/pages/recent_plays_page.dart';
-import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
-import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
 
 /// 应用主页
@@ -33,6 +30,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<String> _recentPaths = [];
+  List<({String path, int count})> _mostPlayedRaw = [];
   bool _recentReady = false;
   PlayListProvider? _play;
   QuickEntryConfig _quickEntry = QuickEntryConfig.defaultConfig();
@@ -100,9 +98,11 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadRecentPaths() async {
     // 多取一些路径，避免前几条在「临时歌单队列」中无法解析时整区空白
     final p = await RecentPlayService.getPaths(limit: 50);
+    final top = await RecentPlayService.getTopByPlayCount(limit: 40);
     if (!mounted) return;
     setState(() {
       _recentPaths = p;
+      _mostPlayedRaw = top;
       _recentReady = true;
     });
   }
@@ -113,23 +113,6 @@ class _HomePageState extends State<HomePage> {
     if (h < 12) return '早上好';
     if (h < 18) return '下午好';
     return '晚上好';
-  }
-
-  Future<void> _openSongForIndex(int index) async {
-    if (!context.mounted) return;
-    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-    final saved =
-        box.get('last_song_page', defaultValue: 0) as int? ?? 0;
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (c) => SongPage(
-          index: index,
-          initialPage: saved.clamp(0, 1),
-        ),
-      ),
-    );
   }
 
   void _goLibrary({bool openSearch = false}) {
@@ -212,6 +195,10 @@ class _HomePageState extends State<HomePage> {
                   _recentPaths,
                   maxSongs: 8,
                 );
+                final mostPlayedItems = play.resolveTopPlayedFromPathCounts(
+                  _mostPlayedRaw,
+                  maxSongs: 8,
+                );
                 final showMini = play.initialized &&
                     play.currentSong != null &&
                     play.playList.isNotEmpty;
@@ -228,13 +215,14 @@ class _HomePageState extends State<HomePage> {
                     play: play,
                     user: user,
                     recentSongs: recentSongs,
+                    mostPlayedItems: mostPlayedItems,
+                    mostPlayedRaw: _mostPlayedRaw,
                     showRecentList: _recentReady,
                     onOpenLibrary: () => _goLibrary(),
                     onOpenSearch: () => _goLibrary(openSearch: true),
                     onOpenStorage: _goStoragePlaylists,
                     onOpenRecent: _goRecentPlays,
                     onManageQuickEntry: _goQuickEntrySettings,
-                    onOpenSongIndex: (i) => _openSongForIndex(i),
                     onOpenUserPlaylist: _goUserPlaylist,
                     songSubtitle: _songSecondaryLine,
                   ),
@@ -271,13 +259,14 @@ class _HomeScrollBody extends StatefulWidget {
     required this.play,
     required this.user,
     required this.recentSongs,
+    required this.mostPlayedItems,
+    required this.mostPlayedRaw,
     required this.showRecentList,
     required this.onOpenLibrary,
     required this.onOpenSearch,
     required this.onOpenStorage,
     required this.onOpenRecent,
     required this.onManageQuickEntry,
-    required this.onOpenSongIndex,
     required this.onOpenUserPlaylist,
     required this.songSubtitle,
   });
@@ -288,13 +277,14 @@ class _HomeScrollBody extends StatefulWidget {
   final PlayListProvider play;
   final UserPlaylistProvider user;
   final List<Song> recentSongs;
+  final List<({Song song, int playCount})> mostPlayedItems;
+  final List<({String path, int count})> mostPlayedRaw;
   final bool showRecentList;
   final VoidCallback onOpenLibrary;
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenStorage;
   final VoidCallback onOpenRecent;
   final VoidCallback onManageQuickEntry;
-  final Future<void> Function(int index) onOpenSongIndex;
   final void Function(String playlistId) onOpenUserPlaylist;
   final String Function(Song) songSubtitle;
 
@@ -309,10 +299,14 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
   static const _gapS = 12.0;
 
   late final ScrollController _scrollController;
-  /// [SliverLayoutBuilder] 测得的「最近播放」吸顶条在内容中的起点（与 [ScrollController.offset] 同坐标系）
+  /// [SliverLayoutBuilder] 测得的吸顶分节条在内容中的起点（「最近」一栏）
   double? _recentPlaysSectionStartScroll;
-  double _lastPrecedingLogged = -1.0;
-  bool? _lastFrosted;
+  /// 滚过此 offset 后，吸顶条从「最近」切换为「最多」（= [SliverLayoutBuilder] 在「最多」**流式**分节标题前测得的 `precedingScrollExtent`）
+  double? _mostPlayedBarSwitchAt;
+  double _lastRecentPrecedingLogged = -1.0;
+  double _lastMostPlayedSectionPreceding = -1.0;
+  /// 与 [ScrollController] 同步，在短暂无 [hasClients] 的帧中仍用上次 offset 判断吸顶，避免上滑时状态卡在「最多」
+  double _lastScrollOffset = 0.0;
 
   @override
   void initState() {
@@ -330,20 +324,17 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
 
   void _onScrollFrosted() {
     if (!mounted) return;
-    if (!_scrollController.hasClients) return;
-    final start = _recentPlaysSectionStartScroll;
-    if (start == null) return;
-    final next = _scrollController.offset + 0.1 >= start;
-    if (next == _lastFrosted) return;
-    _lastFrosted = next;
+    if (_scrollController.hasClients) {
+      _lastScrollOffset = _scrollController.offset;
+    }
     setState(() {});
   }
 
   void _onRecentSectionLayoutStart(double precedingScrollExtent) {
-    if (precedingScrollExtent == _lastPrecedingLogged) {
+    if (precedingScrollExtent == _lastRecentPrecedingLogged) {
       return;
     }
-    _lastPrecedingLogged = precedingScrollExtent;
+    _lastRecentPrecedingLogged = precedingScrollExtent;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_recentPlaysSectionStartScroll == precedingScrollExtent) {
@@ -351,7 +342,22 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
       }
       setState(() {
         _recentPlaysSectionStartScroll = precedingScrollExtent;
-        _lastFrosted = null;
+      });
+    });
+  }
+
+  void _onMostPlayedSectionStartLayout(double precedingToSection) {
+    if (precedingToSection == _lastMostPlayedSectionPreceding) {
+      return;
+    }
+    _lastMostPlayedSectionPreceding = precedingToSection;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_mostPlayedBarSwitchAt == precedingToSection) {
+        return;
+      }
+      setState(() {
+        _mostPlayedBarSwitchAt = precedingToSection;
       });
     });
   }
@@ -416,21 +422,47 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
     return _QuickEntryRow(entries: entries);
   }
 
-  bool _computeRecentFrosted() {
-    final s = _recentPlaysSectionStartScroll;
-    if (s == null) {
+  /// 单一吸顶条：显示「最近」时叠在列表上为毛玻璃；切到「最多」后同逻辑以「最多」分节为界
+  bool _computePlaybackSectionsFrosted() {
+    final o = _scrollController.hasClients
+        ? _scrollController.offset
+        : _lastScrollOffset;
+    final sr = _recentPlaysSectionStartScroll;
+    if (sr == null) {
       return false;
     }
-    if (!_scrollController.hasClients) {
-      return false;
+    final sm = _mostPlayedBarSwitchAt;
+    if (sm == null) {
+      return o + 0.1 >= sr;
     }
-    return _scrollController.offset + 0.1 >= s;
+    if (o + 0.1 < sm) {
+      return o + 0.1 >= sr;
+    }
+    return o + 0.1 >= sm;
+  }
+
+  @override
+  void didUpdateWidget(covariant _HomeScrollBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.play.initialized || !widget.showRecentList) {
+      if (oldWidget.play.initialized != widget.play.initialized ||
+          oldWidget.showRecentList != widget.showRecentList) {
+        _mostPlayedBarSwitchAt = null;
+        _lastMostPlayedSectionPreceding = -1.0;
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomPad = widget.safeBottom + 20.0;
-    final useFrostedRecent = _computeRecentFrosted();
+    if (_scrollController.hasClients) {
+      _lastScrollOffset = _scrollController.offset;
+    }
+    final o = _lastScrollOffset;
+    final sm = _mostPlayedBarSwitchAt;
+    final showMostInBar = sm != null && o + 0.1 >= sm;
+    final useFrostedMerged = _computePlaybackSectionsFrosted();
     return CustomScrollView(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(
@@ -504,10 +536,11 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         ),
         SliverPersistentHeader(
           pinned: true,
-          delegate: _RecentPlaysHeaderDelegate(
+          delegate: _RecentAndMostPinnedHeaderDelegate(
             onOpenRecent: widget.onOpenRecent,
             horizontalPadding: _hPad,
-            useFrosted: useFrostedRecent,
+            showMost: showMostInBar,
+            useFrosted: useFrostedMerged,
           ),
         ),
         if (!widget.play.initialized)
@@ -563,18 +596,19 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                   final song = widget.recentSongs[i];
                   final isCurrent = widget.play.currentSong?.path == song.path;
                   return Padding(
+                    key: ValueKey<String>('home_recent_${song.path}'),
                     padding: const EdgeInsets.only(bottom: 6),
                     child: RecentPlayListRow(
                       song: song,
                       subtitle: widget.songSubtitle(song),
                       isCurrent: isCurrent,
                       onTap: () async {
-                        final idx = widget.play.indexInLibraryByPath(song.path);
-                        if (idx < 0) return;
-                        widget.play.clearPlaybackQueueOverride();
-                        await widget.play.playAt(idx);
-                        if (!context.mounted) return;
-                        await widget.onOpenSongIndex(idx);
+                        await widget.play.setPlaybackQueueAndPlay(
+                          List<Song>.from(widget.recentSongs),
+                          i,
+                          recordRecent: false,
+                          bumpPlayCount: true,
+                        );
                       },
                     ),
                   );
@@ -583,6 +617,81 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               ),
             ),
           ),
+        if (widget.play.initialized && widget.showRecentList) ...[
+          SliverToBoxAdapter(child: SizedBox(height: _gapL)),
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              _onMostPlayedSectionStartLayout(
+                constraints.precedingScrollExtent,
+              );
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            },
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+              child: const _SectionTitle(title: '最多播放'),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapS)),
+          if (widget.mostPlayedItems.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+                child: Text(
+                  widget.mostPlayedRaw.isNotEmpty
+                      ? '已有播放次数记录，但路径与当前曲库不一致（重命名/移动后请重扫音乐目录，再播几次会恢复）'
+                      : '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) {
+                    final item = widget.mostPlayedItems[i];
+                    final song = item.song;
+                    final c = item.playCount;
+                    final isCurrent =
+                        widget.play.currentSong?.path == song.path;
+                    final base = widget.songSubtitle(song);
+                    final subtitle = base.isEmpty
+                        ? '已播放 $c 次'
+                        : '$base · 已播放 $c 次';
+                    return Padding(
+                      key: ValueKey<String>(
+                        'home_most_${song.path}_$c',
+                      ),
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: RecentPlayListRow(
+                        song: song,
+                        subtitle: subtitle,
+                        isCurrent: isCurrent,
+                        onTap: () async {
+                          final q = widget.mostPlayedItems
+                              .map((e) => e.song)
+                              .toList();
+                          await widget.play.setPlaybackQueueAndPlay(
+                            q,
+                            i,
+                            recordRecent: true,
+                            bumpPlayCount: false,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  childCount: widget.mostPlayedItems.length,
+                ),
+              ),
+            ),
+        ],
         SliverToBoxAdapter(child: SizedBox(height: bottomPad)),
       ],
     );
@@ -600,17 +709,18 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
   }
 }
 
-/// 让「最近播放」标题在向下滚动时吸附在 [CustomScrollView] 顶部，类似表头冻结。
-/// 毛玻璃用 [SliverLayoutBuilder] + [ScrollController] 标定的分节位置驱动（[overlapsContent] 在单独吸顶时不可靠）。
-class _RecentPlaysHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _RecentPlaysHeaderDelegate({
+/// 吸顶分节条：在「最近 / 最多」间切换（同一高度），滚过「最多」列表上沿前吸顶 50 的位置后由 [showMost] 显示「最多播放」，**不再**叠两条吸顶栏。
+class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _RecentAndMostPinnedHeaderDelegate({
     required this.onOpenRecent,
     required this.horizontalPadding,
+    required this.showMost,
     required this.useFrosted,
   });
 
   final VoidCallback onOpenRecent;
   final double horizontalPadding;
+  final bool showMost;
   final bool useFrosted;
 
   static const double _h = 50;
@@ -631,11 +741,13 @@ class _RecentPlaysHeaderDelegate extends SliverPersistentHeaderDelegate {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: EdgeInsets.fromLTRB(horizontalPadding, 0, 8, 0),
-        child: _SectionTitle(
-          title: '最近播放',
-          actionLabel: '全部',
-          onAction: onOpenRecent,
-        ),
+        child: showMost
+            ? const _SectionTitle(title: '最多播放')
+            : _SectionTitle(
+                title: '最近播放',
+                actionLabel: '全部',
+                onAction: onOpenRecent,
+              ),
       ),
     );
     if (useFrosted) {
@@ -648,9 +760,12 @@ class _RecentPlaysHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant _RecentPlaysHeaderDelegate oldDelegate) {
+  bool shouldRebuild(
+    covariant _RecentAndMostPinnedHeaderDelegate oldDelegate,
+  ) {
     return oldDelegate.onOpenRecent != onOpenRecent ||
         oldDelegate.horizontalPadding != horizontalPadding ||
+        oldDelegate.showMost != showMost ||
         oldDelegate.useFrosted != useFrosted;
   }
 }
@@ -952,12 +1067,12 @@ class _SearchPill extends StatelessWidget {
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({
     required this.title,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionLabel,
+    this.onAction,
   });
   final String title;
-  final String actionLabel;
-  final VoidCallback onAction;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -985,22 +1100,23 @@ class _SectionTitle extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        TextButton(
-          onPressed: onAction,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            actionLabel,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.45),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+        if (actionLabel != null && onAction != null)
+          TextButton(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              actionLabel!,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-        ),
       ],
     );
   }
