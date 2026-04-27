@@ -205,6 +205,7 @@ class _SongPageState extends State<SongPage> {
       ..originalFontSize = _settings.originalFontSize
       ..translationFontSize = _settings.translationFontSize
       ..lyricLineSpacing = _settings.lyricLineSpacing
+      ..lyricTextAlignIndex = _settings.lyricTextAlignIndex
       ..activeOriginalColor = _settings.activeOriginalColor
       ..activeTranslationColor = _settings.activeTranslationColor
       ..playedOriginalColor = _settings.playedOriginalColor
@@ -588,7 +589,13 @@ class _SongPageState extends State<SongPage> {
 
   // 监听用户手动滚动
   void _onUserScroll() {
-    _isManualScrolling = true;
+    if (mounted) {
+      setState(() {
+        _isManualScrolling = true;
+      });
+    } else {
+      _isManualScrolling = true;
+    }
     // 取消之前的定时器
     _scrollTimer?.cancel();
     // 5秒后恢复自动滚动
@@ -842,6 +849,50 @@ class _SongPageState extends State<SongPage> {
                       _settings.lyricLineSpacing = v;
                       _saveSettings();
                     }),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            '歌词位置',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SegmentedButton<int>(
+                            segments: const [
+                              ButtonSegment<int>(
+                                value: 0,
+                                label: Text('靠左'),
+                                icon: Icon(Icons.format_align_left, size: 18),
+                              ),
+                              ButtonSegment<int>(
+                                value: 1,
+                                label: Text('居中'),
+                                icon: Icon(Icons.format_align_center, size: 18),
+                              ),
+                              ButtonSegment<int>(
+                                value: 2,
+                                label: Text('靠右'),
+                                icon: Icon(Icons.format_align_right, size: 18),
+                              ),
+                            ],
+                            showSelectedIcon: false,
+                            selected: {_settings.lyricTextAlignIndex},
+                            onSelectionChanged: (Set<int> next) {
+                              _settings.lyricTextAlignIndex = next.first;
+                              setModalState(() {});
+                              setState(() {});
+                              _saveSettings();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                     const Divider(),
                     const Padding(
                       padding: EdgeInsets.all(16),
@@ -1447,6 +1498,8 @@ class _SongPageState extends State<SongPage> {
             horizontal: 8,
           ),
           child: Column(
+            // 占满行宽，否则 [Text.textAlign] 在窄于父级的宽度上无效
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (int i = 0; i < linesToShow.length; i++)
                 Padding(
@@ -1474,28 +1527,31 @@ class _SongPageState extends State<SongPage> {
                             ? _settings.upcomingOriginalColor
                             : _settings.upcomingTranslationColor,
                       );
-                      return AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 160),
-                        style: TextStyle(
-                          fontSize: shouldHighlight && isOriginalLine
-                              ? _settings.originalFontSize + 2
-                              : (isOriginalLine
-                                  ? _settings.originalFontSize
-                                  : _settings.translationFontSize),
-                          fontWeight: shouldHighlight
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                          color: shouldHighlight
-                              ? activeColor
-                              : (played
-                                  ? playedColor
-                                  : upcomingColor),
-                          height: 1.35,
-                          letterSpacing: 0.2,
-                        ),
-                        child: Text(
-                          linesToShow[i],
-                          textAlign: TextAlign.center,
+                      return SizedBox(
+                        width: double.infinity,
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 160),
+                          style: TextStyle(
+                            fontSize: shouldHighlight && isOriginalLine
+                                ? _settings.originalFontSize + 2
+                                : (isOriginalLine
+                                    ? _settings.originalFontSize
+                                    : _settings.translationFontSize),
+                            fontWeight: shouldHighlight
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: shouldHighlight
+                                ? activeColor
+                                : (played
+                                    ? playedColor
+                                    : upcomingColor),
+                            height: 1.35,
+                            letterSpacing: 0.2,
+                          ),
+                          child: Text(
+                            linesToShow[i],
+                            textAlign: _settings.lyricTextAlign,
+                          ),
                         ),
                       );
                     },
@@ -1525,21 +1581,32 @@ class _SongPageState extends State<SongPage> {
             }
             return false;
           },
-          child: ListView.builder(
-            controller: controller,
-            physics: const ClampingScrollPhysics(),
-            padding: listPadding,
-            itemCount: _lyrics.length,
-            itemBuilder: (context, index) {
-              final key = keys.length == _lyrics.length
-                  ? keys[index]
-                  : null;
-              return _lyricListItem(
-                index,
-                effectivePos,
-                key,
-              );
-            },
+          child: ScrollConfiguration(
+            // 不显示歌词列表滚动条（自动跟唱与手动滚动均不显示，避免桌面端条常显/闪动）
+            behavior: const MaterialScrollBehavior().copyWith(
+              scrollbars: false,
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.trackpad,
+              },
+            ),
+            child: ListView.builder(
+              controller: controller,
+              physics: const ClampingScrollPhysics(),
+              padding: listPadding,
+              itemCount: _lyrics.length,
+              itemBuilder: (context, index) {
+                final key = keys.length == _lyrics.length
+                    ? keys[index]
+                    : null;
+                return _lyricListItem(
+                  index,
+                  effectivePos,
+                  key,
+                );
+              },
+            ),
           ),
         ),
         if (_isManualScrolling &&

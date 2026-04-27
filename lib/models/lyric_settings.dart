@@ -1,3 +1,4 @@
+import 'package:flutter/painting.dart' show TextAlign;
 import 'package:hive/hive.dart';
 
 part 'lyric_settings.g.dart';
@@ -41,7 +42,23 @@ class LyricSettings extends HiveObject {
   @HiveField(11)
   double lyricLineSpacing = 12.0; // 歌词行间距
 
+  /// 0=靠左, 1=居中, 2=靠右（与 [lyricTextAlign] 一致）
+  @HiveField(12)
+  int lyricTextAlignIndex = 1;
+
   LyricSettings();
+
+  /// 歌词行文字对齐
+  TextAlign get lyricTextAlign {
+    switch (lyricTextAlignIndex) {
+      case 0:
+        return TextAlign.left;
+      case 2:
+        return TextAlign.right;
+      default:
+        return TextAlign.center;
+    }
+  }
 
   // Helper methods to convert between Map and List
   Map<int, int> get lyricDisplayMode {
