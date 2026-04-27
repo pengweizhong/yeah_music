@@ -14,12 +14,43 @@ class MusicService {
     log.d("播放歌曲: ${song.title}");
     try {
       await stop();
-      await seek(Duration.zero);
-      _player.setAudioSource(AudioSource.uri(Uri.file(song.path), tag: song));
-      await play();
+      await _player.setAudioSource(_buildAudioSource(song));
+      await _player.seek(Duration.zero);
+      play();
     } catch (e) {
       log.e("播放失败: $e");
     }
+  }
+
+  AudioSource _buildAudioSource(Song song) {
+    final uri = Uri.file(song.path);
+    final path = song.path.toLowerCase();
+    if (path.endsWith('.mp3')) {
+      return ProgressiveAudioSource(
+        uri,
+        tag: song,
+        options: const ProgressiveAudioSourceOptions(
+          androidExtractorOptions: AndroidExtractorOptions(
+            constantBitrateSeekingEnabled: true,
+            constantBitrateSeekingAlwaysEnabled: true,
+            mp3Flags: AndroidExtractorOptions.flagMp3EnableIndexSeeking,
+          ),
+          darwinAssetOptions: DarwinAssetOptions(
+            preferPreciseDurationAndTiming: true,
+          ),
+        ),
+      );
+    }
+
+    return ProgressiveAudioSource(
+      uri,
+      tag: song,
+      options: const ProgressiveAudioSourceOptions(
+        darwinAssetOptions: DarwinAssetOptions(
+          preferPreciseDurationAndTiming: true,
+        ),
+      ),
+    );
   }
 
   void playNext() {
@@ -31,8 +62,8 @@ class MusicService {
   }
 
   ///开始播放
-  Future<void> play() async {
-    await _player.play();
+  void play() {
+    _player.play();
     isPlaying = _player.playing;
   }
 
@@ -43,8 +74,8 @@ class MusicService {
   }
 
   ///恢复播放
-  Future<void> resume() async {
-    await _player.play();
+  void resume() {
+    _player.play();
     isPlaying = _player.playing;
   }
 
