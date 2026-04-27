@@ -8,10 +8,15 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
+import '../models/playback_session_surface.dart';
 import '../models/folder.dart';
+import '../navigation/app_route_observer.dart';
+import '../utils/scroll_list_to_current_song.dart';
 import '../utils/song_list_sort.dart';
+import '../utils/song_path_utils.dart';
 import '../widgets/compact_song_list_row.dart';
 import '../widgets/scroll_aware_list_frame.dart';
+import '../widgets/scroll_to_current_locate_layer.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
 
 var log = Logger(printer: SimplePrinter());
@@ -27,7 +32,14 @@ class PlayListPage extends StatefulWidget {
   State<PlayListPage> createState() => _PlayListProviderState();
 }
 
-class _PlayListProviderState extends State<PlayListPage> {
+class _PlayListProviderState extends State<PlayListPage> with RouteAware {
+  final ScrollController _listScrollController = ScrollController();
+  bool _routeObserverSubscribed = false;
+  /// 已按该规范化路径自动滚过屏；仅在一次 [scheduleScrollListToCurrentSong] 的 [onScrollApplied] 中写入。
+  String? _lastAutoScrollPathNorm;
+  /// 防 build 在首次未挂接时重复排队；在 [onScrollApplied]/[onScrollFailed] 中清除
+  bool _autoscrollInFlight = false;
+
   SongListSortType _sortType = SongListSortType.name;
   bool _isAscending = true;
 
@@ -51,6 +63,49 @@ class _PlayListProviderState extends State<PlayListPage> {
     _memoSortAsc = _isAscending;
     _memoSorted = _getFilteredAndSortedSongs(source);
     return _memoSorted;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_routeObserverSubscribed) {
+      final route = ModalRoute.of(context);
+      if (route is PageRoute) {
+        appRouteObserver.subscribe(this, route);
+        _routeObserverSubscribed = true;
+      }
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+    final pl = context.read<PlayListProvider>();
+    final list = pl.playList;
+    if (list.isEmpty) return;
+    // 不依赖 [Selector] 一定重建：用当前排序现算一份，与列表展示一致
+    final songs = _sortedForPlayList(list);
+    if (songs.isEmpty) return;
+    if (_autoscrollInFlight) return;
+    _autoscrollInFlight = true;
+    scheduleScrollListToCurrentSong(
+      context: context,
+      controller: _listScrollController,
+      songs: songs,
+      itemExtent: 80,
+      playList: pl,
+      onScrollApplied: (p) {
+        if (!mounted) return;
+        setState(() {
+          _lastAutoScrollPathNorm = p;
+          _autoscrollInFlight = false;
+        });
+      },
+      onScrollFailed: () {
+        if (!mounted) return;
+        setState(() => _autoscrollInFlight = false);
+      },
+    );
   }
 
   @override
@@ -110,6 +165,10 @@ class _PlayListProviderState extends State<PlayListPage> {
 
   @override
   void dispose() {
+    if (_routeObserverSubscribed) {
+      appRouteObserver.unsubscribe(this);
+    }
+    _listScrollController.dispose();
     super.dispose();
   }
 
@@ -126,6 +185,8 @@ class _PlayListProviderState extends State<PlayListPage> {
         setState(() {
           _sortType = type;
           _isAscending = ascending;
+          _lastAutoScrollPathNorm = null;
+          _autoscrollInFlight = false;
         });
         _saveSortSettings();
       },
@@ -134,12 +195,38 @@ class _PlayListProviderState extends State<PlayListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<PlayListProvider, List<Song>>(
-      selector: (_, p) => p.playList,
-      shouldRebuild: (a, b) => !identical(a, b) || a.length != b.length,
-      builder: (context, playList, _) {
-        final playListProvider = context.read<PlayListProvider>();
+    return Consumer<PlayListProvider>(
+      builder: (context, playListProvider, _) {
+        final playList = playListProvider.playList;
         _filteredSongs = _sortedForPlayList(playList);
+        final current = playListProvider.currentSong;
+        if (current == null) {
+          _lastAutoScrollPathNorm = null;
+          _autoscrollInFlight = false;
+        } else if (_filteredSongs.isNotEmpty) {
+          final n = normSongPath(current.path);
+          if (n != _lastAutoScrollPathNorm && !_autoscrollInFlight) {
+            _autoscrollInFlight = true;
+            scheduleScrollListToCurrentSong(
+              context: context,
+              controller: _listScrollController,
+              songs: _filteredSongs,
+              itemExtent: 80,
+              playList: playListProvider,
+              onScrollApplied: (p) {
+                if (!mounted) return;
+                setState(() {
+                  _lastAutoScrollPathNorm = p;
+                  _autoscrollInFlight = false;
+                });
+              },
+              onScrollFailed: () {
+                if (!mounted) return;
+                setState(() => _autoscrollInFlight = false);
+              },
+            );
+          }
+        }
         final pathToIndex = <String, int>{
           for (var i = 0; i < playList.length; i++) playList[i].path: i,
         };
@@ -212,27 +299,40 @@ class _PlayListProviderState extends State<PlayListPage> {
                                 ],
                               ),
                             )
-                          : ScrollAwareListFrame(
-                              child: ListView.builder(
-                                itemExtent: 80,
-                                cacheExtent: 280,
-                                padding: const EdgeInsets.only(bottom: 100),
-                                itemCount: _filteredSongs.length,
-                                itemBuilder: (context, index) {
-                                  final song = _filteredSongs[index];
-                                  final originalIndex =
-                                      pathToIndex[song.path] ?? 0;
-                                  return CompactSongListRow(
-                                    key: ValueKey<String>(song.path),
-                                    song: song,
-                                    title: song.title ?? '未知音乐',
-                                    subtitle: showSecondTitle(song),
-                                    onTap: () => navToSongPage(
-                                      originalIndex,
-                                      playListProvider,
-                                    ),
-                                  );
-                                },
+                          : SongListScrollToCurrentLocate(
+                              controller: _listScrollController,
+                              songs: _filteredSongs,
+                              itemExtent: 80,
+                              playList: playListProvider,
+                              child: ScrollAwareListFrame(
+                                child: ListView.builder(
+                                  controller: _listScrollController,
+                                  itemExtent: 80,
+                                  cacheExtent: 280,
+                                  padding: const EdgeInsets.only(bottom: 100),
+                                  itemCount: _filteredSongs.length,
+                                  itemBuilder: (context, index) {
+                                    final song = _filteredSongs[index];
+                                    final originalIndex =
+                                        pathToIndex[song.path] ?? 0;
+                                    final isRowCurrent = current != null &&
+                                        songPathsEqual(
+                                          song.path,
+                                          current.path,
+                                        );
+                                    return CompactSongListRow(
+                                      key: ValueKey<String>(song.path),
+                                      song: song,
+                                      title: song.title ?? '未知音乐',
+                                      subtitle: showSecondTitle(song),
+                                      isCurrent: isRowCurrent,
+                                      onTap: () => navToSongPage(
+                                        originalIndex,
+                                        playListProvider,
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                     ),
@@ -260,6 +360,7 @@ class _PlayListProviderState extends State<PlayListPage> {
   }
 
   void navToSongPage(int index, PlayListProvider playListProvider) {
+    playListProvider.setPlaybackListSessionForLibrary();
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SongPage(index: index)),
@@ -283,10 +384,14 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   final PlayListProvider playListProvider;
   final List<Song>? playbackContextQueue;
 
+  /// 当 [playbackContextQueue] 为用户歌单时传入，用于 [PlaybackSessionSurface.userPlaylist]
+  final String? userPlaylistIdForContext;
+
   SongSearchDelegate(
     this.allSongs,
     this.playListProvider, {
     this.playbackContextQueue,
+    this.userPlaylistIdForContext,
   }) : super(
          searchFieldStyle: const TextStyle(
            color: Colors.white,
@@ -384,11 +489,6 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       return title.contains(q) || artist.contains(q) || fileName.contains(q);
     }).toList();
 
-    final pl = playListProvider.playList;
-    final pathToMainIndex = <String, int>{
-      for (var i = 0; i < pl.length; i++) pl[i].path: i,
-    };
-
     if (results.isEmpty) {
       return Center(
         child: Column(
@@ -412,44 +512,65 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       );
     }
 
-    return ScrollAwareListFrame(
-      child: ListView.builder(
-        itemExtent: 80,
-        itemCount: results.length,
-        itemBuilder: (context, index) {
-          final song = results[index];
-          return CompactSongListRow(
-            key: ValueKey('search_${song.path}'),
-            song: song,
-            title: song.title ?? '未知音乐',
-            subtitle: song.artist ?? song.album ?? '',
-            onTap: () async {
-              close(context, song);
-              if (playbackContextQueue != null) {
-                final q = playbackContextQueue!;
-                final idx = q.indexWhere((s) => s.path == song.path);
-                if (idx < 0) return;
-                await playListProvider.setPlaybackQueueAndPlay(q, idx);
-                if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SongPage(index: idx)),
-                );
-              } else {
-                final originalIndex = pathToMainIndex[song.path] ?? -1;
-                if (originalIndex < 0) return;
-                if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SongPage(index: originalIndex),
-                  ),
-                );
-              }
+    return Consumer<PlayListProvider>(
+      builder: (context, p, _) {
+        final mainList = p.playList;
+        final pathToMainIndex = <String, int>{
+          for (var i = 0; i < mainList.length; i++) mainList[i].path: i,
+        };
+        final current = p.currentSong;
+        return ScrollAwareListFrame(
+          child: ListView.builder(
+            itemExtent: 80,
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final song = results[index];
+              final isRowCurrent = current != null &&
+                  songPathsEqual(song.path, current.path);
+              return CompactSongListRow(
+                key: ValueKey('search_${song.path}'),
+                song: song,
+                title: song.title ?? '未知音乐',
+                subtitle: song.artist ?? song.album ?? '',
+                isCurrent: isRowCurrent,
+                onTap: () async {
+                  close(context, song);
+                  if (playbackContextQueue != null) {
+                    final q = playbackContextQueue!;
+                    final idx = q.indexWhere((s) => s.path == song.path);
+                    if (idx < 0) return;
+                    await p.setPlaybackQueueAndPlay(
+                      q,
+                      idx,
+                      session: PlaybackSessionSurface.userPlaylist,
+                      userPlaylistId: userPlaylistIdForContext,
+                    );
+                    if (!context.mounted) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SongPage(index: idx),
+                      ),
+                    );
+                  } else {
+                    final originalIndex = pathToMainIndex[song.path] ?? -1;
+                    if (originalIndex < 0) return;
+                    if (!context.mounted) return;
+                    p.setPlaybackListSessionForLibrary();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SongPage(index: originalIndex),
+                      ),
+                    );
+                  }
+                },
+              );
             },
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

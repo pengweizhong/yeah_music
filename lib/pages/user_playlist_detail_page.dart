@@ -7,11 +7,16 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/navigation/app_route_observer.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/song_page.dart';
+import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
+import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
@@ -25,7 +30,14 @@ class UserPlaylistDetailPage extends StatefulWidget {
   State<UserPlaylistDetailPage> createState() => _UserPlaylistDetailPageState();
 }
 
-class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
+class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
+    with RouteAware {
+  final ScrollController _listScrollController = ScrollController();
+  bool _routeObserverSubscribed = false;
+  String? _lastAutoScrollPathNorm;
+  bool _autoscrollInFlight = false;
+  List<Song> _lastOrderedSongs = const [];
+
   SongListSortType _sortType = SongListSortType.name;
   bool _isAscending = true;
 
@@ -34,9 +46,57 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
   List<Song>? _memoOrderedSongs;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_routeObserverSubscribed) {
+      final route = ModalRoute.of(context);
+      if (route is PageRoute) {
+        appRouteObserver.subscribe(this, route);
+        _routeObserverSubscribed = true;
+      }
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+    final p = context.read<PlayListProvider>();
+    if (_lastOrderedSongs.isEmpty) return;
+    if (_autoscrollInFlight) return;
+    _autoscrollInFlight = true;
+    scheduleScrollListToCurrentSong(
+      context: context,
+      controller: _listScrollController,
+      songs: _lastOrderedSongs,
+      itemExtent: 80,
+      playList: p,
+      onScrollApplied: (path) {
+        if (!mounted) return;
+        setState(() {
+          _lastAutoScrollPathNorm = path;
+          _autoscrollInFlight = false;
+        });
+      },
+      onScrollFailed: () {
+        if (!mounted) return;
+        setState(() => _autoscrollInFlight = false);
+      },
+    );
+  }
+
+  @override
   void initState() {
     super.initState();
     _loadSort();
+  }
+
+  @override
+  void dispose() {
+    if (_routeObserverSubscribed) {
+      appRouteObserver.unsubscribe(this);
+    }
+    _listScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSort() async {
@@ -60,10 +120,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
       sortType: _sortType,
       isAscending: _isAscending,
       includeAddedToPlaylistOption: true,
-      onApply: (type, ascending) {
+        onApply: (type, ascending) {
         setState(() {
           _sortType = type;
           _isAscending = ascending;
+          _lastAutoScrollPathNorm = null;
+          _autoscrollInFlight = false;
         });
         _saveSort();
       },
@@ -293,6 +355,36 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
           _memoOrderedSongs = orderedSongs;
         }
 
+        _lastOrderedSongs = orderedSongs;
+        final current = playList.currentSong;
+        if (current == null) {
+          _lastAutoScrollPathNorm = null;
+          _autoscrollInFlight = false;
+        } else if (orderedSongs.isNotEmpty) {
+          final n = normSongPath(current.path);
+          if (n != _lastAutoScrollPathNorm && !_autoscrollInFlight) {
+            _autoscrollInFlight = true;
+            scheduleScrollListToCurrentSong(
+              context: context,
+              controller: _listScrollController,
+              songs: orderedSongs,
+              itemExtent: 80,
+              playList: playList,
+              onScrollApplied: (path) {
+                if (!mounted) return;
+                setState(() {
+                  _lastAutoScrollPathNorm = path;
+                  _autoscrollInFlight = false;
+                });
+              },
+              onScrollFailed: () {
+                if (!mounted) return;
+                setState(() => _autoscrollInFlight = false);
+              },
+            );
+          }
+        }
+
         return Consumer<ThemeConfigProvider>(
           builder: (context, themeConfig, _) {
             return themeConfig.buildThemedBackground(
@@ -321,6 +413,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                                   orderedSongs,
                                   playList,
                                   playbackContextQueue: orderedSongs,
+                                  userPlaylistIdForContext: pl.id,
                                 ),
                               );
                             },
@@ -366,63 +459,79 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                                 ),
                               ),
                             )
-                          : ScrollAwareListFrame(
-                              child: ListView.builder(
-                                itemExtent: 80,
-                                cacheExtent: 280,
-                                padding: const EdgeInsets.only(bottom: 100),
-                                itemCount: orderedSongs.length,
-                                itemBuilder: (context, index) {
-                                  final song = orderedSongs[index];
-                                  return Dismissible(
-                                    key: ValueKey('${pl.id}_${song.path}'),
-                                    direction: DismissDirection.endToStart,
-                                    background: Container(
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(right: 20),
-                                      color: Colors.red.shade800,
-                                      child: const Icon(
-                                        Icons.remove_circle_outline,
-                                        color: Colors.white,
+                          : SongListScrollToCurrentLocate(
+                              controller: _listScrollController,
+                              songs: orderedSongs,
+                              itemExtent: 80,
+                              playList: playList,
+                              child: ScrollAwareListFrame(
+                                child: ListView.builder(
+                                  controller: _listScrollController,
+                                  itemExtent: 80,
+                                  cacheExtent: 280,
+                                  padding: const EdgeInsets.only(bottom: 100),
+                                  itemCount: orderedSongs.length,
+                                  itemBuilder: (context, index) {
+                                    final song = orderedSongs[index];
+                                    final cur = playList.currentSong;
+                                    final isRowCurrent = cur != null &&
+                                        songPathsEqual(song.path, cur.path);
+                                    return Dismissible(
+                                      key: ValueKey('${pl.id}_${song.path}'),
+                                      direction: DismissDirection.endToStart,
+                                      background: Container(
+                                        alignment: Alignment.centerRight,
+                                        padding: const EdgeInsets.only(
+                                          right: 20,
+                                        ),
+                                        color: Colors.red.shade800,
+                                        child: const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                    onDismissed: (_) {
-                                      _memoOrderKey = null;
-                                      _memoOrderedSongs = null;
-                                      userPl.removeSongFromPlaylist(
-                                        pl.id,
-                                        song,
-                                      );
-                                    },
-                                    child: CompactSongListRow(
-                                      key: ValueKey(
-                                        'row_${pl.id}_${song.path}',
-                                      ),
-                                      song: song,
-                                      title: song.title ?? '未知音乐',
-                                      subtitle: _subtitle(song),
-                                      onTap: () async {
-                                        final playListProv = context
-                                            .read<PlayListProvider>();
-                                        await playListProv
-                                            .setPlaybackQueueAndPlay(
-                                              orderedSongs,
-                                              index,
-                                            );
-                                        if (!context.mounted) return;
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                SongPage(index: index),
-                                          ),
+                                      onDismissed: (_) {
+                                        _memoOrderKey = null;
+                                        _memoOrderedSongs = null;
+                                        userPl.removeSongFromPlaylist(
+                                          pl.id,
+                                          song,
                                         );
                                       },
-                                    ),
-                                  );
-                                },
+                                      child: CompactSongListRow(
+                                        key: ValueKey(
+                                          'row_${pl.id}_${song.path}',
+                                        ),
+                                        song: song,
+                                        title: song.title ?? '未知音乐',
+                                        subtitle: _subtitle(song),
+                                        isCurrent: isRowCurrent,
+                                        onTap: () async {
+                                          final playListProv = context
+                                              .read<PlayListProvider>();
+                                          await playListProv
+                                              .setPlaybackQueueAndPlay(
+                                                orderedSongs,
+                                                index,
+                                                session: PlaybackSessionSurface
+                                                    .userPlaylist,
+                                                userPlaylistId: pl.id,
+                                              );
+                                          if (!context.mounted) return;
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SongPage(index: index),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
                               ),
                             ),
+                          ),
                     ),
                   ],
                 ),

@@ -6,6 +6,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/menu_page.dart';
@@ -625,6 +626,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                           i,
                           recordRecent: false,
                           bumpPlayCount: true,
+                          session: PlaybackSessionSurface.recentList,
                         );
                       },
                     ),
@@ -703,6 +705,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                             i,
                             recordRecent: true,
                             bumpPlayCount: false,
+                            session: PlaybackSessionSurface.adHoc,
                           );
                         },
                       ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:yeah_music/models/playback_mode.dart';
+import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/services/music_service.dart';
@@ -73,6 +74,47 @@ class PlayListProvider extends ChangeNotifier {
   bool _statsBumpPlayCount = true;
 
   bool get hasPlaybackQueueOverride => _playbackQueueOverride != null;
+
+  /// 当前一次播放会话在 UI 上「属于」哪个列表，用于从 [SongPage] 返回时是否在该表滚到当前曲
+  PlaybackSessionSurface _playbackSessionSurface = PlaybackSessionSurface.library;
+  String? _playbackSessionUserPlaylistId;
+
+  /// 是否为「从全库/全部歌曲」发起的会話（在 [PlayListPage] 滚屏）
+  bool get playbackSessionIsLibrary =>
+      _playbackSessionSurface == PlaybackSessionSurface.library;
+
+  /// 是否为「从最近播放相关列表」发起（在 [RecentPlaysPage] 滚屏）
+  bool get playbackSessionIsRecentList =>
+      _playbackSessionSurface == PlaybackSessionSurface.recentList;
+
+  /// 是否为「从指定用户歌单」发起（在对应 [UserPlaylistDetailPage] 滚屏）
+  bool playbackSessionIsUserPlaylist(String playlistId) =>
+      _playbackSessionSurface == PlaybackSessionSurface.userPlaylist &&
+      _playbackSessionUserPlaylistId == playlistId;
+
+  /// 当前是否为「用户歌单」类会话（不限定 id，供 [SongPage] 判断是否保持）
+  bool get playbackSessionIsUserPlaylistKind =>
+      _playbackSessionSurface == PlaybackSessionSurface.userPlaylist;
+
+  bool get playbackSessionIsAdHoc =>
+      _playbackSessionSurface == PlaybackSessionSurface.adHoc;
+
+  void _applyPlaybackSession(
+    PlaybackSessionSurface surface, {
+    String? userPlaylistId,
+  }) {
+    _playbackSessionSurface = surface;
+    if (surface == PlaybackSessionSurface.userPlaylist) {
+      _playbackSessionUserPlaylistId = userPlaylistId;
+    } else {
+      _playbackSessionUserPlaylistId = null;
+    }
+  }
+
+  /// 在仅打开 [SongPage] 而未切队列时（如从全库行进入），将会话标为全库
+  void setPlaybackListSessionForLibrary() {
+    _applyPlaybackSession(PlaybackSessionSurface.library);
+  }
 
   /// 本地已扫描目录的合并曲库（不受 [_playbackQueueOverride] 影响）
   List<Song> get libraryMergedSongs {
@@ -156,13 +198,27 @@ class PlayListProvider extends ChangeNotifier {
   /// 将播放队列设为 [songs]（顺序与列表一致），并从 [index] 开始播放。
   ///
   /// [recordRecent] / [bumpPlayCount] 控制 [RecentPlayService.recordPath] 行为，并在切歌 [playAt] 时沿用，直至 [clearPlaybackQueueOverride]。
+  ///
+  /// [session] / [userPlaylistId] 描述本次播放来自哪类列表，用于从播放页返回时只在该表定位。
   Future<void> setPlaybackQueueAndPlay(
     List<Song> songs,
     int index, {
     bool recordRecent = true,
     bool bumpPlayCount = true,
+    required PlaybackSessionSurface session,
+    String? userPlaylistId,
   }) async {
     if (songs.isEmpty) return;
+    if (session == PlaybackSessionSurface.userPlaylist) {
+      assert(
+        userPlaylistId != null && userPlaylistId.isNotEmpty,
+        'userPlaylist 会话需提供 userPlaylistId',
+      );
+    }
+    _applyPlaybackSession(
+      session,
+      userPlaylistId: userPlaylistId,
+    );
     _statsRecordRecent = recordRecent;
     _statsBumpPlayCount = bumpPlayCount;
     _playbackQueueOverride = List<Song>.from(songs);
@@ -407,10 +463,19 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 播放指定索引
-  Future<void> playAt(int index) async {
+  /// 播放指定索引；[listSession] 非空时（例如从「最近播放」切到全库索引后 [playAt]）会更新会话面。
+  Future<void> playAt(int index, {PlaybackSessionSurface? listSession}) async {
     final list = playList;
     if (list.isEmpty) return;
+    if (listSession != null) {
+      assert(
+        listSession != PlaybackSessionSurface.userPlaylist,
+        '歌单会话请使用 setPlaybackQueueAndPlay',
+      );
+      _applyPlaybackSession(
+        listSession,
+      );
+    }
     _currentIndex = index.clamp(0, list.length - 1);
     notifyListeners();
     final playing = list[_currentIndex];

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 
@@ -11,6 +12,7 @@ class CompactSongListRow extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.isCurrent = false,
     this.showAddToPlaylist = true,
   });
 
@@ -18,17 +20,27 @@ class CompactSongListRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  /// 是否为当前正在播放（与 [PlayListProvider.currentSong] 对应行）
+  final bool isCurrent;
   final bool showAddToPlaylist;
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isCurrent ? primary.withValues(alpha: 0.14) : null,
+              border: isCurrent
+                  ? Border.all(color: primary.withValues(alpha: 0.35), width: 1)
+                  : null,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -47,10 +59,11 @@ class CompactSongListRow extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isCurrent ? primary : Colors.white,
                           fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                          fontWeight:
+                              isCurrent ? FontWeight.w700 : FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -59,13 +72,17 @@ class CompactSongListRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: isCurrent
+                              ? primary.withValues(alpha: 0.82)
+                              : Colors.white.withValues(alpha: 0.6),
                           fontSize: 13,
                         ),
                       ),
                     ],
                   ),
                 ),
+                if (isCurrent) PlayingBarsIndicator(color: primary),
+                if (isCurrent && showAddToPlaylist) const SizedBox(width: 2),
                 if (showAddToPlaylist)
                   IconButton(
                     icon: const Icon(Icons.playlist_add, color: Colors.white70),

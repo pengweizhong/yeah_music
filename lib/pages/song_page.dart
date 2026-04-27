@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' show pi, sin;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -20,7 +19,8 @@ import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
-import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
+import 'package:yeah_music/widgets/playing_bars_indicator.dart';
+import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 
 var log = Logger(printer: SimplePrinter());
@@ -119,6 +119,15 @@ class _SongPageState extends State<SongPage> {
         context,
         listen: false,
       );
+      // 从迷你条等仅 push [SongPage] 而无 [navToSongPage] 时补标「全库」；不覆盖最近/歌单/adHoc 会话
+      if (!playListProvider.hasPlaybackQueueOverride) {
+        final keepNonLibrary = playListProvider.playbackSessionIsRecentList ||
+            playListProvider.playbackSessionIsUserPlaylistKind ||
+            playListProvider.playbackSessionIsAdHoc;
+        if (!keepNonLibrary) {
+          playListProvider.setPlaybackListSessionForLibrary();
+        }
+      }
       if (playListProvider.playList.isNotEmpty) {
         final targetIndex = widget.index;
         final currentIndex = playListProvider.currentIndex;
@@ -241,7 +250,6 @@ class _SongPageState extends State<SongPage> {
     _scrollController.dispose();
     _splitLyricScrollController.dispose();
     _pageController.dispose();
-    _scrollTimer?.cancel();
     _scrollTimer?.cancel();
     // 延迟保存设置，避免在dispose时访问已关闭的box
     Future.microtask(() => _saveSettings());
@@ -1273,60 +1281,38 @@ class _SongPageState extends State<SongPage> {
     required EdgeInsets listPadding,
     required int pageIndexForFab,
   }) {
-    return Stack(
-      children: [
-        NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            if (notification is UserScrollNotification) {
-              _onUserScroll();
-            }
-            return false;
+    return ScrollToCurrentLocateLayer(
+      onManualScroll: _onUserScroll,
+      isManual: _isManualScrolling,
+      canLocate: _currentLyricIndex >= 0 && _currentPage == pageIndexForFab,
+      onLocate: _scrollToCurrentPlayingLyric,
+      tooltip: '定位到当前歌词',
+      child: ScrollConfiguration(
+        // 不显示歌词列表滚动条（自动跟唱与手动滚动均不显示，避免桌面端条常显/闪动）
+        behavior: const MaterialScrollBehavior().copyWith(
+          scrollbars: false,
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+            PointerDeviceKind.trackpad,
           },
-          child: ScrollConfiguration(
-            // 不显示歌词列表滚动条（自动跟唱与手动滚动均不显示，避免桌面端条常显/闪动）
-            behavior: const MaterialScrollBehavior().copyWith(
-              scrollbars: false,
-              dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-                PointerDeviceKind.trackpad,
-              },
-            ),
-            child: ListView.builder(
-              controller: controller,
-              physics: const ClampingScrollPhysics(),
-              padding: listPadding,
-              itemCount: _lyrics.length,
-              itemBuilder: (context, index) {
-                final key = keys.length == _lyrics.length
-                    ? keys[index]
-                    : null;
-                return _lyricListItem(
-                  index,
-                  effectivePos,
-                  key,
-                );
-              },
-            ),
-          ),
         ),
-        if (_isManualScrolling &&
-            _currentLyricIndex >= 0 &&
-            _currentPage == pageIndexForFab)
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: FloatingActionButton(
-              mini: true,
-              onPressed: _scrollToCurrentPlayingLyric,
-              child: const Icon(
-                Icons.my_location,
-                size: 20,
-              ),
-              tooltip: '定位到当前歌词',
-            ),
-          ),
-      ],
+        child: ListView.builder(
+          controller: controller,
+          physics: const ClampingScrollPhysics(),
+          padding: listPadding,
+          itemCount: _lyrics.length,
+          itemBuilder: (context, index) {
+            final key =
+                keys.length == _lyrics.length ? keys[index] : null;
+            return _lyricListItem(
+              index,
+              effectivePos,
+              key,
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -1941,21 +1927,36 @@ class _PlaybackQueueSheet extends StatefulWidget {
 }
 
 class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
-  final GlobalKey _playingRowKey = GlobalKey();
+  static const double _kQueueRowH = 72;
+  static const double _kQueueSepH = 1;
+  static const double _kQueueItemExtent = _kQueueRowH + _kQueueSepH;
+
+  late final ScrollController _queueScroll;
   late int _lastHeardIndex;
 
   @override
   void initState() {
     super.initState();
     _lastHeardIndex = widget.provider.currentIndex;
+    final list = widget.provider.playList;
+    final n = list.length;
+    final i = n == 0
+        ? 0
+        : widget.provider.currentIndex.clamp(0, n - 1);
+    // 首帧即接近目标行，避免从 0 全量再 jump 造成一帧大布局与多帧重排
+    _queueScroll = ScrollController(
+      initialScrollOffset: i * _kQueueItemExtent,
+    );
     widget.provider.addListener(_onProviderChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollCurrentIntoView(animated: false));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollCurrentIntoView(animated: false));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refineQueueScroll(animated: false);
+    });
   }
 
   @override
   void dispose() {
     widget.provider.removeListener(_onProviderChanged);
+    _queueScroll.dispose();
     super.dispose();
   }
 
@@ -1966,19 +1967,34 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     _lastHeardIndex = idx;
     setState(() {});
     if (indexMoved) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollCurrentIntoView(animated: true));
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _refineQueueScroll(animated: true));
     }
   }
 
-  void _scrollCurrentIntoView({required bool animated}) {
-    final ctx = _playingRowKey.currentContext;
-    if (ctx == null) return;
-    Scrollable.ensureVisible(
-      ctx,
-      alignment: 0.22,
-      duration: animated ? const Duration(milliseconds: 320) : Duration.zero,
-      curve: Curves.easeOutCubic,
-    );
+  /// 定高行 + [itemExtent]，与 [_kQueueItemExtent] 一致
+  double _rowTopForIndex(int index) => index * _kQueueItemExtent;
+
+  void _refineQueueScroll({required bool animated}) {
+    if (!mounted) return;
+    if (!_queueScroll.hasClients) return;
+    final list = widget.provider.playList;
+    if (list.isEmpty) return;
+    final i = widget.provider.currentIndex.clamp(0, list.length - 1);
+    final pos = _queueScroll.position;
+    final rowTop = _rowTopForIndex(i);
+    final viewH = pos.viewportDimension;
+    final target =
+        (rowTop - viewH * 0.22).clamp(0.0, pos.maxScrollExtent);
+    if (animated) {
+      _queueScroll.animateTo(
+        target,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _queueScroll.jumpTo(target);
+    }
   }
 
   @override
@@ -1986,6 +2002,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     final provider = widget.provider;
     final list = provider.playList;
     final primary = Theme.of(context).colorScheme.primary;
+    final divColor = Colors.white.withValues(alpha: 0.12);
 
     if (list.isEmpty) {
       return Center(
@@ -2011,124 +2028,67 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
           ),
         ),
         Expanded(
-          child: ScrollAwareListFrame(
-            child: ListView.separated(
-              padding: const EdgeInsets.only(bottom: 12),
-              itemCount: list.length,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.12),
-              ),
-              itemBuilder: (context, index) {
-                final s = list[index];
-                final isCurrent = index == provider.currentIndex;
-                return ListTile(
-                  key: isCurrent
-                      ? _playingRowKey
-                      : ValueKey<String>('${index}_${s.path}'),
-                  dense: true,
-                  visualDensity: VisualDensity.compact,
-                  minVerticalPadding: 0,
-                  selected: isCurrent,
-                  selectedColor: primary,
-                  selectedTileColor: primary.withValues(alpha: 0.16),
-                  leading: SongListCover(
-                    song: s,
-                    size: 48,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  title: Text(
-                    s.title ?? '未知标题',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-                      color: isCurrent ? primary : Colors.white,
+          child: ListView.builder(
+            controller: _queueScroll,
+            itemExtent: _kQueueItemExtent,
+            cacheExtent: 180,
+            padding: const EdgeInsets.only(bottom: 12),
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              final s = list[index];
+              final isCurrent = index == provider.currentIndex;
+              return Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  SizedBox(
+                    height: _kQueueRowH,
+                    child: ListTile(
+                      key: ValueKey<String>('q_${index}_${s.path}'),
+                      dense: true,
+                      visualDensity: VisualDensity.compact,
+                      minVerticalPadding: 0,
+                      selected: isCurrent,
+                      selectedColor: primary,
+                      selectedTileColor: primary.withValues(alpha: 0.16),
+                      leading: SongListCover(
+                        song: s,
+                        size: 48,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      title: Text(
+                        s.title ?? '未知标题',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight:
+                              isCurrent ? FontWeight.w600 : FontWeight.w500,
+                          color: isCurrent ? primary : Colors.white,
+                        ),
+                      ),
+                      subtitle: Text(
+                        s.artist ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: isCurrent
+                              ? primary.withValues(alpha: 0.8)
+                              : Colors.white.withValues(alpha: 0.5),
+                          fontSize: 13,
+                        ),
+                      ),
+                    trailing: isCurrent
+                        ? PlayingBarsIndicator(color: primary)
+                        : null,
+                      onTap: () => widget.onPick(index),
                     ),
                   ),
-                  subtitle: Text(
-                    s.artist ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isCurrent
-                          ? primary.withValues(alpha: 0.8)
-                          : Colors.white.withValues(alpha: 0.5),
-                      fontSize: 13,
-                    ),
-                  ),
-                  trailing: isCurrent
-                      ? _PlayingBarsIndicator(color: primary)
-                      : null,
-                  onTap: () => widget.onPick(index),
-                );
-              },
-            ),
+                  Container(height: _kQueueSepH, color: divColor),
+                ],
+              );
+            },
           ),
         ),
       ],
-    );
-  }
-}
-
-/// 随节拍起伏的条形播放指示器
-class _PlayingBarsIndicator extends StatefulWidget {
-  const _PlayingBarsIndicator({required this.color});
-
-  final Color color;
-
-  @override
-  State<_PlayingBarsIndicator> createState() => _PlayingBarsIndicatorState();
-}
-
-class _PlayingBarsIndicatorState extends State<_PlayingBarsIndicator>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 480),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final t = _controller.value * 2 * pi;
-        const barCount = 4;
-        return SizedBox(
-          width: 22,
-          height: 22,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(barCount, (i) {
-              final wave = sin(t + i * 0.85);
-              final h = 4.0 + 12.0 * ((wave + 1) / 2);
-              return Container(
-                width: 3,
-                height: h,
-                margin: const EdgeInsets.symmetric(horizontal: 0.5),
-                decoration: BoxDecoration(
-                  color: widget.color,
-                  borderRadius: BorderRadius.circular(1.5),
-                ),
-              );
-            }),
-          ),
-        );
-      },
     );
   }
 }
