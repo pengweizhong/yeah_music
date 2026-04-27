@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_config.dart';
 
 import '../models/song.dart';
@@ -6,118 +7,81 @@ import '../models/song.dart';
 class ApplicationUtils {
   ///弹出软件的"关于信息"
   static void showAboutDialog(BuildContext context) {
-    showDialog(
+    showFrostedDialog<void>(
       context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 应用图标
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+      maxWidth: 400,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      'assets/icons/yeah_music.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/icons/yeah_music.png',
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: 16),
-                
-                // 应用名称
-                const Text(
-                  AppConfig.appTitle,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                
-                // 版本号
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    "v1.0.0",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // 分隔线
-                Divider(color: Colors.grey.withOpacity(0.3)),
-                const SizedBox(height: 16),
-                
-                // 作者信息
-                _buildInfoRow(Icons.person_outline, "作者", "PengWeiZhong"),
-                const SizedBox(height: 12),
-                
-                // 仓库地址
-                _buildInfoRow(Icons.code, "仓库", "github.com/pengweizhong/yeah_music"),
-                const SizedBox(height: 12),
-                
-                // 许可证
-                _buildInfoRow(Icons.gavel, "许可证", "GPL-3.0"),
-                const SizedBox(height: 12),
-                
-                // 版权信息
-                _buildInfoRow(Icons.copyright, "版权", "©2025 pengweizhong"),
-                const SizedBox(height: 24),
-                
-                // 关闭按钮
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      "关闭",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+            const SizedBox(height: 16),
+            const Text(
+              AppConfig.appTitle,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0x332196F3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'v1.0.0',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64B5F6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Divider(color: Colors.white.withValues(alpha: 0.2)),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.person_outline, '作者', 'PengWeiZhong'),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.code, '仓库', 'github.com/pengweizhong/yeah_music'),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.gavel, '许可证', 'GPL-3.0'),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.copyright, '版权', '©2025 pengweizhong'),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('关闭'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -126,7 +90,7 @@ class ApplicationUtils {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey),
+        Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.6)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -136,7 +100,7 @@ class ApplicationUtils {
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade600,
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 2),
@@ -145,6 +109,7 @@ class ApplicationUtils {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -155,20 +120,61 @@ class ApplicationUtils {
   }
 
   ///自定义提示框
-  static void alertDialog(BuildContext context, String title, List<Widget> children, List<TextButton> textButtons) {
-    showDialog(
+  static void alertDialog(
+    BuildContext context,
+    String title,
+    List<Widget> children,
+    List<TextButton> textButtons,
+  ) {
+    showFrostedDialog<void>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min, // 内容自适应，不撑满屏幕
-            crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
-            children: children, //弹出内容
-          ),
-          actions: textButtons,
-        );
-      },
+      maxWidth: 400,
+      child: Builder(
+        builder: (ctx) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DefaultTextStyle(
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: children,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Theme(
+                  data: Theme.of(ctx).copyWith(
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(foregroundColor: Colors.white),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: textButtons,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

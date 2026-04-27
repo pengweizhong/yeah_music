@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 
 /// 主题设置页面
@@ -407,49 +408,71 @@ class ThemeSettingPage extends StatelessWidget {
   }
 
   void _showColorPicker(BuildContext context, ThemeConfigProvider themeConfig, bool isPrimary) {
-    showDialog(
+    showFrostedDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        title: Text(
-          isPrimary ? '选择主色调' : '选择次色调',
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: SingleChildScrollView(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(360, (index) {
-              final hue = index.toDouble();
-              final color = HSLColor.fromAHSL(1.0, hue, 0.5, 0.1).toColor();
-              return GestureDetector(
-                onTap: () {
-                  if (isPrimary) {
-                    themeConfig.setPrimaryColor(color);
-                  } else {
-                    themeConfig.setSecondaryColor(color);
-                  }
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+      maxWidth: 360,
+      child: Builder(
+        builder: (ctx) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isPrimary ? '选择主色调' : '选择次色调',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
-              );
-            }),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(ctx).height * 0.45,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(360, (index) {
+                        final hue = index.toDouble();
+                        final color =
+                            HSLColor.fromAHSL(1.0, hue, 0.5, 0.1).toColor();
+                        return GestureDetector(
+                          onTap: () {
+                            if (isPrimary) {
+                              themeConfig.setPrimaryColor(color);
+                            } else {
+                              themeConfig.setSecondaryColor(color);
+                            }
+                            Navigator.pop(ctx);
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('取消'),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

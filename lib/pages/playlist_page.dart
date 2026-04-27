@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
@@ -266,7 +267,13 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     this.allSongs,
     this.playListProvider, {
     this.playbackContextQueue,
-  });
+  }) : super(
+          searchFieldStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w400,
+          ),
+        );
 
   @override
   String get searchFieldLabel => '搜索歌曲、艺术家或文件名...';
@@ -274,14 +281,34 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   @override
   ThemeData appBarTheme(BuildContext context) {
     return Theme.of(context).copyWith(
-      appBarTheme: AppBarTheme(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+      scaffoldBackgroundColor: Colors.transparent,
+      appBarTheme: const AppBarThemeData(
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+        ),
+        toolbarTextStyle: TextStyle(color: Colors.white),
       ),
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         border: InputBorder.none,
-        hintStyle: TextStyle(color: Colors.grey.shade400),
+        hintStyle: TextStyle(color: Color(0xB3FFFFFF)),
       ),
+    );
+  }
+
+  @override
+  Widget? buildFlexibleSpace(BuildContext context) {
+    return Consumer<ThemeConfigProvider>(
+      builder: (context, themeConfig, _) {
+        return themeConfig.buildThemedBackground(
+          child: const SizedBox.expand(),
+        );
+      },
     );
   }
 
@@ -290,7 +317,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     return [
       if (query.isNotEmpty)
         IconButton(
-          icon: const Icon(Icons.clear),
+          icon: const Icon(Icons.clear, color: Colors.white),
           onPressed: () {
             query = '';
           },
@@ -301,7 +328,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back, color: Colors.white),
       onPressed: () {
         close(context, null);
       },
@@ -319,6 +346,19 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   }
 
   Widget _buildSearchResults(BuildContext context) {
+    return Consumer<ThemeConfigProvider>(
+      builder: (context, themeConfig, _) {
+        return themeConfig.buildThemedBackground(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints.expand(),
+            child: _buildSearchResultsContent(context),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchResultsContent(BuildContext context) {
     final results = allSongs.where((song) {
       final q = query.toLowerCase();
       final title = (song.title ?? '').toLowerCase();
@@ -332,11 +372,18 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.white.withValues(alpha: 0.35),
+            ),
             const SizedBox(height: 16),
             Text(
               '未找到匹配的歌曲',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 16,
+              ),
             ),
           ],
         ),
@@ -362,13 +409,16 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
               ),
             ),
           ),
-          title: Text(song.title ?? "未知音乐"),
+          title: Text(
+            song.title ?? "未知音乐",
+            style: const TextStyle(color: Colors.white),
+          ),
           subtitle: Text(
             song.artist ?? song.album ?? '',
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
           ),
           trailing: IconButton(
-            icon: const Icon(Icons.playlist_add),
+            icon: const Icon(Icons.playlist_add, color: Colors.white70),
             tooltip: '加入歌单',
             onPressed: () => showAddToUserPlaylistsSheet(context, song),
           ),

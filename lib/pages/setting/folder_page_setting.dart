@@ -8,6 +8,7 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
 import '../../compments/bookmark_service.dart';
+import '../../compments/frosted_glass_panel.dart';
 import '../../compments/folder_provider.dart';
 import '../../compments/play_list_provider.dart';
 import '../../models/folder.dart';
@@ -54,55 +55,106 @@ class FolderPageSettings extends StatelessWidget {
                     tooltip: "目录信息",
                     onPressed: () {
                       showModalBottomSheet(
-                        isScrollControlled: true, // 允许全屏滚动
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        showDragHandle: false,
                         context: context,
-                        builder: (context) {
-                          return Container(
-                            width: double.infinity, // 横向撑满
-                            height: 300,
-                            // width: 200,
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              //左对齐
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              //主轴方向仅占用子组件需要的最小空间
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text("文件夹别名：", style: TextStyle(fontWeight: FontWeight.w900)),
-                                    Text("${folder.name}"),
-                                  ],
-                                ),
-                                SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Text("文件夹路径：", style: TextStyle(fontWeight: FontWeight.w900)),
-                                    Flexible(
-                                      child: SelectableText(
-                                        folder.path,
-                                        maxLines: null,
-                                        showCursor: true,
-                                        textAlign: TextAlign.start,
+                        builder: (sheetContext) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+                            ),
+                            child: FrostedGlassBottomSheet(
+                              child: Theme(
+                                data: frostedBottomSheetContentTheme(sheetContext),
+                                child: SafeArea(
+                                  top: false,
+                                  child: SizedBox(
+                                    height: 300,
+                                    width: double.infinity,
+                                    child: SingleChildScrollView(
+                                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                                      child: DefaultTextStyle(
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text(
+                                              '目录信息',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  '文件夹别名：',
+                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                ),
+                                                Expanded(child: Text('${folder.name}')),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  '文件夹路径：',
+                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                ),
+                                                Expanded(
+                                                  child: SelectableText(
+                                                    folder.path,
+                                                    maxLines: null,
+                                                    showCursor: true,
+                                                    textAlign: TextAlign.start,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              children: [
+                                                const Text(
+                                                  '歌曲数量：',
+                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                ),
+                                                Text('${folder.songList?.length}'),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              children: [
+                                                const Text(
+                                                  '加入时间：',
+                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                ),
+                                                Text(
+                                                  LocalDateUtils.formatDateTime(
+                                                    folder.createdAt,
+                                                    'yyyy-MM-dd HH:mm:ss',
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
-                                SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Text("歌曲数量：", style: TextStyle(fontWeight: FontWeight.w900)),
-                                    Text("${folder.songList?.length}"),
-                                  ],
-                                ),
-                                SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Text("加入时间：", style: TextStyle(fontWeight: FontWeight.w900)),
-                                    Text(LocalDateUtils.formatDateTime(folder.createdAt, 'yyyy-MM-dd HH:mm:ss')),
-                                  ],
-                                ),
-                              ],
+                              ),
                             ),
                           );
                         },
@@ -113,17 +165,33 @@ class FolderPageSettings extends StatelessWidget {
                     icon: const Icon(Icons.refresh_outlined, color: Colors.white),
                     tooltip: "重新加载歌曲",
                     onPressed: () async {
-                      // 显示加载进度对话框
-                      showDialog(
+                      showFrostedDialog<void>(
                         context: context,
                         barrierDismissible: false,
-                        builder: (dialogContext) => WillPopScope(
-                          onWillPop: () async => false,
-                          child: AlertDialog(
-                            title: Text("正在重新加载"),
-                            content: Column(
+                        child: PopScope(
+                          canPop: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+                            child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: [CircularProgressIndicator(), SizedBox(height: 16), Text("正在扫描文件夹，请稍候...")],
+                              children: const [
+                                Text(
+                                  '正在重新加载',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                CircularProgressIndicator(),
+                                SizedBox(height: 16),
+                                Text(
+                                  '正在扫描文件夹，请稍候…',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.white, height: 1.3),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -210,17 +278,33 @@ class FolderPageSettings extends StatelessWidget {
       selectedDirectory = await FilePicker.platform.getDirectoryPath();
     }
     if (selectedDirectory != null) {
-      // 显示加载进度对话框
-      showDialog(
+      showFrostedDialog<void>(
         context: context,
         barrierDismissible: false,
-        builder: (dialogContext) => WillPopScope(
-          onWillPop: () async => false,
-          child: AlertDialog(
-            title: Text("正在加载歌曲"),
-            content: Column(
+        child: PopScope(
+          canPop: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [CircularProgressIndicator(), SizedBox(height: 16), Text("正在扫描文件夹，请稍候...")],
+              children: const [
+                Text(
+                  '正在加载歌曲',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 16),
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text(
+                  '正在扫描文件夹，请稍候…',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, height: 1.3),
+                ),
+              ],
             ),
           ),
         ),
@@ -267,26 +351,70 @@ class FolderPageSettings extends StatelessWidget {
 
   void _showRenameDialog(BuildContext context, Folder folder, FolderProvider provider) {
     final controller = TextEditingController(text: folder.name);
-    showDialog(
+    showFrostedDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text("重命名文件夹"),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: "新名称"),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("取消")),
-          TextButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                provider.renameFolder(folder, controller.text.trim());
-              }
-              Navigator.pop(context);
-            },
-            child: Text("确定"),
-          ),
-        ],
+      child: Builder(
+        builder: (ctx) {
+          final scheme = Theme.of(ctx).colorScheme;
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  '重命名文件夹',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  style: const TextStyle(color: Colors.white),
+                  cursorColor: Colors.white,
+                  decoration: InputDecoration(
+                    hintText: '新名称',
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: scheme.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('取消'),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        if (controller.text.isNotEmpty) {
+                          provider.renameFolder(folder, controller.text.trim());
+                        }
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('确定'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

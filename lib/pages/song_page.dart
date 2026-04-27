@@ -5,7 +5,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
@@ -496,25 +498,29 @@ class _SongPageState extends State<SongPage> {
     BuildContext context,
     PlayListProvider playListProvider,
   ) {
-    final surface = Theme.of(context).colorScheme.surface;
     showModalBottomSheet(
       context: context,
-      showDragHandle: true,
+      showDragHandle: false,
       isScrollControlled: true,
-      backgroundColor: surface,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final h = MediaQuery.sizeOf(sheetContext).height * 0.56;
-        return SafeArea(
-          child: SizedBox(
-            height: h,
-            child: _PlaybackQueueSheet(
-              provider: playListProvider,
-              onPick: (index) async {
-                Navigator.pop(sheetContext);
-                await playListProvider.playAt(index);
-                _initLyrics();
-                _updateDuration();
-              },
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
+          child: FrostedGlassBottomSheet(
+            child: SafeArea(
+              child: SizedBox(
+                height: h,
+                child: _PlaybackQueueSheet(
+                  provider: playListProvider,
+                  onPick: (index) async {
+                    Navigator.pop(sheetContext);
+                    await playListProvider.playAt(index);
+                    _initLyrics();
+                    _updateDuration();
+                  },
+                ),
+              ),
             ),
           ),
         );
@@ -525,13 +531,25 @@ class _SongPageState extends State<SongPage> {
   void _showLyricStyleSheet() {
     showModalBottomSheet(
       context: context,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      showDragHandle: false,
       isScrollControlled: true,
-      builder: (_) {
-        return SafeArea(
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: FrostedGlassBottomSheet(
+            child: Theme(
+              data: frostedBottomSheetContentTheme(sheetContext),
+              child: SafeArea(
+                top: false,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.9,
+                  ),
+                  child: StatefulBuilder(
+                    builder: (context, setModalState) {
               Widget switchRow(
                 String title,
                 bool value,
@@ -592,35 +610,62 @@ class _SongPageState extends State<SongPage> {
                       Colors.orange.shade300,
                       Colors.purple.shade300,
                     ];
-                    return AlertDialog(
-                      title: Text(title),
-                      content: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: colors.map((color) {
-                          return GestureDetector(
-                            onTap: () {
-                              onChanged(color);
-                              Navigator.pop(dialogContext);
-                              setModalState(() {});
-                              setState(() {});
-                            },
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: currentColor == color
-                                      ? Colors.blue
-                                      : Colors.grey,
-                                  width: currentColor == color ? 3 : 1,
+                    return Dialog(
+                      backgroundColor: Colors.transparent,
+                      child: Theme(
+                        data: frostedDialogContentTheme(dialogContext),
+                        child: FrostedGlassDialog(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  title,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: colors.map((color) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        onChanged(color);
+                                        Navigator.pop(dialogContext);
+                                        setModalState(() {});
+                                        setState(() {});
+                                      },
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: currentColor == color
+                                                ? Theme.of(dialogContext)
+                                                    .colorScheme
+                                                    .primary
+                                                : Colors.white30,
+                                            width: currentColor == color
+                                                ? 3
+                                                : 1,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ),
-                          );
-                        }).toList(),
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -660,6 +705,7 @@ class _SongPageState extends State<SongPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -697,6 +743,7 @@ class _SongPageState extends State<SongPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -707,6 +754,7 @@ class _SongPageState extends State<SongPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -730,6 +778,7 @@ class _SongPageState extends State<SongPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -753,6 +802,7 @@ class _SongPageState extends State<SongPage> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -773,7 +823,11 @@ class _SongPageState extends State<SongPage> {
                   ],
                 ),
               );
-            },
+                    },
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -839,43 +893,59 @@ class _SongPageState extends State<SongPage> {
 
   // 显示播放模式选择弹窗
   void _showPlaybackModeSheet(BuildContext context, PlayListProvider provider) {
+    final primary = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (_) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  '播放模式',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      showDragHandle: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: FrostedGlassBottomSheet(
+            child: Theme(
+              data: frostedBottomSheetContentTheme(sheetContext),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Text(
+                        '播放模式',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    ...PlaybackMode.values.map((mode) {
+                      final isSelected = provider.playbackMode == mode;
+                      return ListTile(
+                        leading: Icon(
+                          _getPlaybackModeIcon(mode),
+                          color: Colors.white,
+                        ),
+                        title: Text(mode.displayName),
+                        trailing: isSelected
+                            ? Icon(Icons.check, color: primary)
+                            : null,
+                        onTap: () {
+                          provider.setPlaybackMode(mode);
+                          SettingsService.savePlaybackMode(mode);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: PlaybackMode.values.map((mode) {
-                    final isSelected = provider.playbackMode == mode;
-                    return ListTile(
-                      leading: Icon(_getPlaybackModeIcon(mode)),
-                      title: Text(mode.displayName),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: Colors.blue)
-                          : null,
-                      onTap: () {
-                        provider.setPlaybackMode(mode);
-                        SettingsService.savePlaybackMode(mode);
-                        Navigator.pop(context);
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -897,28 +967,78 @@ class _SongPageState extends State<SongPage> {
     return showDialog<int>(
       context: dialogContext,
       builder: (ctx) {
-        return AlertDialog(
-          title: const Text('自定义时间'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: '分钟',
-              hintText: '$_customTimerMinMinutes–$_customTimerMaxMinutes',
+        final scheme = Theme.of(ctx).colorScheme;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Theme(
+            data: frostedDialogContentTheme(ctx),
+            child: FrostedGlassDialog(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      '自定义时间',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controller,
+                      style: const TextStyle(color: Colors.white),
+                      cursorColor: Colors.white,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: '分钟',
+                        labelStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                        hintText:
+                            '$_customTimerMinMinutes–$_customTimerMaxMinutes',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.38),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: scheme.primary),
+                        ),
+                      ),
+                      autofocus: true,
+                      onSubmitted: (_) => _submitCustomTimer(ctx, controller),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                          ),
+                          child: const Text('取消'),
+                        ),
+                        TextButton(
+                          onPressed: () => _submitCustomTimer(ctx, controller),
+                          child: const Text('确定'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            autofocus: true,
-            onSubmitted: (_) => _submitCustomTimer(ctx, controller),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () => _submitCustomTimer(ctx, controller),
-              child: const Text('确定'),
-            ),
-          ],
         );
       },
     ).whenComplete(controller.dispose);
@@ -941,31 +1061,41 @@ class _SongPageState extends State<SongPage> {
 
   // 显示定时关闭弹窗
   void _showTimerSheet(BuildContext context, PlayListProvider provider) {
+    final primary = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      showDragHandle: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final isCustom = provider.isSleepTimerActive &&
             !_presetTimerMinutes.contains(provider.timerDuration);
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  '定时关闭',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: FrostedGlassBottomSheet(
+            child: Theme(
+              data: frostedBottomSheetContentTheme(sheetContext),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Text(
+                        '定时关闭',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                     if (provider.isSleepTimerActive)
                       ListTile(
-                        leading: const Icon(Icons.timer_off),
+                        leading: const Icon(Icons.timer_off, color: Colors.white),
                         title: const Text('取消定时关闭'),
                         onTap: () {
                           provider.cancelSleepTimer();
@@ -974,11 +1104,11 @@ class _SongPageState extends State<SongPage> {
                       ),
                     ..._presetTimerMinutes.map((minutes) {
                       return ListTile(
-                        leading: const Icon(Icons.timer),
+                        leading: const Icon(Icons.timer, color: Colors.white),
                         title: Text('$minutes 分钟'),
                         trailing: provider.timerDuration == minutes &&
                                 provider.isSleepTimerActive
-                            ? const Icon(Icons.check, color: Colors.blue)
+                            ? Icon(Icons.check, color: primary)
                             : null,
                         onTap: () {
                           _startSleepTimer(minutes, provider);
@@ -987,13 +1117,13 @@ class _SongPageState extends State<SongPage> {
                       );
                     }),
                     ListTile(
-                      leading: const Icon(Icons.edit_outlined),
+                      leading: const Icon(Icons.edit_outlined, color: Colors.white),
                       title: const Text('自定义时间'),
                       subtitle: isCustom
                           ? Text('当前 ${provider.timerDuration} 分钟')
                           : null,
                       trailing: isCustom
-                          ? const Icon(Icons.check, color: Colors.blue)
+                          ? Icon(Icons.check, color: primary)
                           : null,
                       onTap: () async {
                         final minutes = await _promptCustomTimerMinutes(
@@ -1007,10 +1137,11 @@ class _SongPageState extends State<SongPage> {
                         }
                       },
                     ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         );
       },
@@ -1089,10 +1220,20 @@ class _SongPageState extends State<SongPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PlayListProvider>(
-      builder: (context, playListProvider, childWidget) {
+    return Consumer2<PlayListProvider, ThemeConfigProvider>(
+      builder: (context, playListProvider, themeConfig, childWidget) {
         if (playListProvider.playList.isEmpty) {
-          return const Scaffold(body: Center(child: Text('歌曲不存在')));
+          return themeConfig.buildThemedBackground(
+            child: const Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(
+                child: Text(
+                  '歌曲不存在',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ),
+          );
         }
 
         final song =
@@ -1111,70 +1252,72 @@ class _SongPageState extends State<SongPage> {
           });
         }
 
-        final pageBg = Theme.of(context).colorScheme.surface;
-        return SafeArea(
-          child: Scaffold(
-            backgroundColor: pageBg,
-            body: Column(
-              children: [
-                // 顶部栏：返回按钮和歌曲信息
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              song.title ?? '未知标题',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            if (song.artist != null && song.artist!.isNotEmpty)
+        return themeConfig.buildThemedBackground(
+          child: SafeArea(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              extendBody: true,
+              body: Column(
+                children: [
+                  // 顶部栏：与主页一致，浅色字叠在全局背景上
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                          color: Colors.white,
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                               Text(
-                                song.artist!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade400,
-                                  fontWeight: FontWeight.w400,
+                                song.title ?? '未知标题',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                  color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                          ],
+                              const SizedBox(height: 4),
+                              if (song.artist != null && song.artist!.isNotEmpty)
+                                Text(
+                                  song.artist!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withValues(alpha: 0.65),
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.list, size: 24),
-                        onPressed: () {
-                          _showPlayListSheet(context, playListProvider);
-                        },
-                      ),
-                    ],
+                        IconButton(
+                          icon: const Icon(Icons.list, size: 24),
+                          color: Colors.white,
+                          onPressed: () {
+                            _showPlayListSheet(context, playListProvider);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                // 歌词/封皮显示区域（与 Scaffold 同底色，避免未绘制区域透出 theme 的纯黑 canvas）
-                Expanded(
-                  child: ColoredBox(
-                    color: pageBg,
+                  // 封皮 / 歌词区：透明，透出 [buildThemedBackground] 与主页相同
+                  Expanded(
                     child: ScrollConfiguration(
                     // 支持鼠标滑动
                     behavior: const MaterialScrollBehavior().copyWith(
@@ -1246,14 +1389,14 @@ class _SongPageState extends State<SongPage> {
                                     Icon(
                                       Icons.music_note,
                                       size: 64,
-                                      color: Colors.grey.shade600,
+                                      color: Colors.white.withValues(alpha: 0.45),
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
                                       '暂无歌词',
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.grey.shade500,
+                                        color: Colors.white.withValues(alpha: 0.55),
                                       ),
                                     ),
                                   ],
@@ -1477,7 +1620,6 @@ class _SongPageState extends State<SongPage> {
                               ),
                       ],
                     ),
-                    ),
                   ),
                 ),
 
@@ -1497,14 +1639,14 @@ class _SongPageState extends State<SongPage> {
                             LyricsUtils.formatDuration(effectivePos),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade500,
+                              color: Colors.white.withValues(alpha: 0.55),
                             ),
                           ),
                           Text(
                             LyricsUtils.formatDuration(_totalDuration),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade500,
+                              color: Colors.white.withValues(alpha: 0.55),
                             ),
                           ),
                         ],
@@ -1525,7 +1667,7 @@ class _SongPageState extends State<SongPage> {
                           min: 0.0,
                           max: 1.0,
                           activeColor: Theme.of(context).colorScheme.primary,
-                          inactiveColor: Colors.grey.shade700,
+                          inactiveColor: Colors.white.withValues(alpha: 0.25),
                           onChangeStart: (_) {
                             _isSeeking = true;
                             _seekPreview = effectivePos;
@@ -1577,6 +1719,7 @@ class _SongPageState extends State<SongPage> {
                       // 上一曲
                       IconButton(
                         icon: const Icon(Icons.skip_previous),
+                        color: Colors.white,
                         iconSize: 32,
                         onPressed: () async {
                           await playListProvider.playPrev();
@@ -1641,6 +1784,7 @@ class _SongPageState extends State<SongPage> {
                       // 下一曲
                       IconButton(
                         icon: const Icon(Icons.skip_next),
+                        color: Colors.white,
                         iconSize: 32,
                         onPressed: () async {
                           await playListProvider.playNext();
@@ -1663,12 +1807,14 @@ class _SongPageState extends State<SongPage> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.translate),
+                        color: Colors.white,
                         onPressed: _showLyricStyleSheet,
                         tooltip: '歌词样式',
                       ),
                       // 显示模式切换按钮（替代长按）
                       IconButton(
                         icon: const Icon(Icons.view_agenda),
+                        color: Colors.white,
                         onPressed: _toggleDisplayMode,
                         tooltip: '切换显示模式',
                       ),
@@ -1679,6 +1825,7 @@ class _SongPageState extends State<SongPage> {
                             icon: Icon(
                               _getPlaybackModeIcon(provider.playbackMode),
                             ),
+                            color: Colors.white,
                             onPressed: () {
                               _showPlaybackModeSheet(context, provider);
                             },
@@ -1695,7 +1842,7 @@ class _SongPageState extends State<SongPage> {
                         ),
                         color: playListProvider.isSleepTimerActive
                             ? Theme.of(context).colorScheme.primary
-                            : null,
+                            : Colors.white,
                         onPressed: () {
                           _showTimerSheet(context, playListProvider);
                         },
@@ -1705,6 +1852,7 @@ class _SongPageState extends State<SongPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.playlist_add),
+                        color: Colors.white,
                         onPressed: () {
                           final song = playListProvider.currentSong;
                           if (song == null) return;
@@ -1714,6 +1862,7 @@ class _SongPageState extends State<SongPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.playlist_play),
+                        color: Colors.white,
                         onPressed: () {
                           _showPlayListSheet(context, playListProvider);
                         },
@@ -1726,6 +1875,7 @@ class _SongPageState extends State<SongPage> {
               ],
             ),
           ),
+        ),
         );
       },
     );
@@ -1791,12 +1941,14 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   Widget build(BuildContext context) {
     final provider = widget.provider;
     final list = provider.playList;
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final primary = Theme.of(context).colorScheme.primary;
 
     if (list.isEmpty) {
       return Center(
-        child: Text('暂无曲目', style: TextStyle(color: theme.hintColor)),
+        child: Text(
+          '暂无曲目',
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
+        ),
       );
     }
 
@@ -1804,32 +1956,39 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: Text(
             '播放队列',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.only(bottom: 12),
             itemCount: list.length,
-            separatorBuilder: (_, _) =>
-                Divider(height: 1, color: Colors.grey.shade800),
+            separatorBuilder: (_, _) => Divider(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
             itemBuilder: (context, index) {
               final s = list[index];
               final isCurrent = index == provider.currentIndex;
               return ListTile(
                 key: isCurrent ? _playingRowKey : ValueKey<String>('${index}_${s.path}'),
                 selected: isCurrent,
-                selectedTileColor: primary.withValues(alpha: 0.12),
+                selectedColor: primary,
+                selectedTileColor: primary.withValues(alpha: 0.16),
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Image(
@@ -1843,8 +2002,8 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
-                    color: isCurrent ? primary : null,
+                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                    color: isCurrent ? primary : Colors.white,
                   ),
                 ),
                 subtitle: Text(
@@ -1853,8 +2012,9 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: isCurrent
-                        ? primary.withValues(alpha: 0.75)
-                        : Colors.grey.shade600,
+                        ? primary.withValues(alpha: 0.8)
+                        : Colors.white.withValues(alpha: 0.5),
+                    fontSize: 13,
                   ),
                 ),
                 trailing: isCurrent

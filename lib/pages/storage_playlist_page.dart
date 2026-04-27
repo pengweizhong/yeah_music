@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
@@ -47,20 +48,66 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
 
   Future<void> _createPlaylist(BuildContext context, UserPlaylistProvider user) async {
     final controller = TextEditingController();
-    final name = await showDialog<String>(
+    final name = await showFrostedDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('新建歌单'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: '歌单名称'),
-          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('创建')),
-        ],
+      maxWidth: 400,
+      child: Builder(
+        builder: (ctx) {
+          final scheme = Theme.of(ctx).colorScheme;
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  '新建歌单',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white),
+                  cursorColor: Colors.white,
+                  decoration: InputDecoration(
+                    labelText: '歌单名称',
+                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: scheme.primary),
+                    ),
+                  ),
+                  onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('取消'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                      child: const Text('创建'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
     controller.dispose();
@@ -220,23 +267,54 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
   Future<void> _confirmDeleteSelected(BuildContext context, UserPlaylistProvider user) async {
     if (_selectedPlaylistIds.isEmpty) return;
     final n = _selectedPlaylistIds.length;
-    final ok = await showDialog<bool>(
+    final ok = await showFrostedDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(n == 1 ? '删除歌单' : '批量删除歌单'),
-        content: Text(
-          n == 1
-              ? '确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。'
-              : '确定删除已选的 $n 个歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.red.shade700),
-            child: const Text('删除'),
-          ),
-        ],
+      maxWidth: 400,
+      child: Builder(
+        builder: (ctx) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  n == 1 ? '删除歌单' : '批量删除歌单',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  n == 1
+                      ? '确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。'
+                      : '确定删除已选的 $n 个歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。',
+                  style: const TextStyle(color: Colors.white, height: 1.35),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('取消'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: FilledButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.red.shade700,
+                      ),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
     if (ok != true || !context.mounted) return;
@@ -292,22 +370,58 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       }
 
       if (!context.mounted) return;
-      final replaceAll = await showDialog<bool>(
+      final replaceAll = await showFrostedDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('导入歌单'),
-          content: const SingleChildScrollView(
-            child: Text(
-              '歌曲以「完整文件路径」区分：同名、同歌手、不同文件或不同音质会对应不同路径，导入后不会误合并。\n\n'
-              '• 合并导入：与本地「歌单 id」相同的条目会合并曲目列表（路径去重）；备份中有而本地没有的歌单会新建。\n'
-              '• 替换全部：先清空本地全部歌单，再按备份恢复（谨慎操作）。',
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('合并导入')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('替换全部')),
-          ],
+        maxWidth: 420,
+        child: Builder(
+          builder: (ctx) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    '导入歌单',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const SingleChildScrollView(
+                    child: Text(
+                      '歌曲以「完整文件路径」区分：同名、同歌手、不同文件或不同音质会对应不同路径，导入后不会误合并。\n\n'
+                      '• 合并导入：与本地「歌单 id」相同的条目会合并曲目列表（路径去重）；备份中有而本地没有的歌单会新建。\n'
+                      '• 替换全部：先清空本地全部歌单，再按备份恢复（谨慎操作）。',
+                      style: TextStyle(color: Colors.white, height: 1.35),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('取消'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('合并导入'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('替换全部'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       );
 
