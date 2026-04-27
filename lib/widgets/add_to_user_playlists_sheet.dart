@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
 
@@ -11,12 +12,14 @@ Future<void> showAddToUserPlaylistsSheet(BuildContext context, Song song) async 
   if (!context.mounted) return;
   await showModalBottomSheet<void>(
     context: context,
-    showDragHandle: true,
+    showDragHandle: false,
     isScrollControlled: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
+    backgroundColor: Colors.transparent,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: _AddToUserPlaylistsBody(song: song),
+      child: FrostedGlassBottomSheet(
+        child: _AddToUserPlaylistsBody(song: song),
+      ),
     ),
   );
 }
@@ -63,38 +66,66 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
     final user = context.watch<UserPlaylistProvider>();
     final playlists = user.playlists;
 
+    final scheme = Theme.of(context).colorScheme;
+
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
             child: Text(
               '加入歌单 · ${widget.song.title ?? widget.song.path.split('/').last}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                height: 1.3,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               '可多选；取消勾选将从对应歌单移除该歌曲',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.55),
+              ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _newNameController,
-                    decoration: const InputDecoration(
+                    style: const TextStyle(color: Colors.white),
+                    cursorColor: Colors.white,
+                    decoration: InputDecoration(
                       hintText: '新建歌单名称',
-                      border: OutlineInputBorder(),
+                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.08),
                       isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.22),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: scheme.primary.withValues(alpha: 0.9),
+                        ),
+                      ),
                     ),
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _createAndSelect(user),
@@ -110,10 +141,16 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
           ),
           Flexible(
             child: playlists.isEmpty
-                ? const Center(
+                ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('暂无歌单，请先输入名称并创建'),
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        '暂无歌单，请先输入名称并创建',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -133,19 +170,42 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                             }
                           });
                         },
-                        title: Text(pl.name),
-                        subtitle: Text('${pl.songPaths.length} 首'),
+                        checkColor: Colors.black87,
+                        fillColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return scheme.primary;
+                          }
+                          return Colors.white.withValues(alpha: 0.2);
+                        }),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
+                        title: Text(
+                          pl.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${pl.songPaths.length} 首',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 13,
+                          ),
+                        ),
                         controlAffinity: ListTileControlAffinity.leading,
                       );
                     },
                   ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
             child: Row(
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
                   child: const Text('取消'),
                 ),
                 const Spacer(),
