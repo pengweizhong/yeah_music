@@ -486,80 +486,202 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                             style: TextStyle(color: Colors.white.withValues(alpha: 0.65)),
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 120),
-                          itemCount: userPl.playlists.length,
-                          itemBuilder: (context, index) {
-                            final pl = userPl.playlists[index];
-                            final selected = _selectedPlaylistIds.contains(pl.id);
-                            void toggleSelection() {
-                              setState(() {
-                                if (_singleSelectOnly) {
-                                  if (selected) {
-                                    _selectedPlaylistIds.clear();
-                                  } else {
-                                    _selectedPlaylistIds
-                                      ..clear()
-                                      ..add(pl.id);
-                                  }
-                                } else if (selected) {
-                                  _selectedPlaylistIds.remove(pl.id);
-                                } else {
-                                  _selectedPlaylistIds.add(pl.id);
+                      : _selectMode
+                          ? ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 120),
+                              itemCount: userPl.playlists.length,
+                              itemBuilder: (context, index) {
+                                final pl = userPl.playlists[index];
+                                final selected = _selectedPlaylistIds.contains(pl.id);
+                                void toggleSelection() {
+                                  setState(() {
+                                    if (_singleSelectOnly) {
+                                      if (selected) {
+                                        _selectedPlaylistIds.clear();
+                                      } else {
+                                        _selectedPlaylistIds
+                                          ..clear()
+                                          ..add(pl.id);
+                                      }
+                                    } else if (selected) {
+                                      _selectedPlaylistIds.remove(pl.id);
+                                    } else {
+                                      _selectedPlaylistIds.add(pl.id);
+                                    }
+                                  });
                                 }
-                              });
-                            }
 
-                            if (_selectMode) {
-                              return Padding(
-                                key: ValueKey('sel_${pl.id}'),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: toggleSelection,
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: Ink(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(14),
-                                        border: Border.all(
+                                return Padding(
+                                  key: ValueKey('sel_${pl.id}'),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: toggleSelection,
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Ink(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(
+                                            color: selected
+                                                ? _kSelectAccent.withValues(alpha: 0.6)
+                                                : Colors.white.withValues(alpha: 0.12),
+                                            width: 1.2,
+                                          ),
                                           color: selected
-                                              ? _kSelectAccent.withValues(alpha: 0.6)
-                                              : Colors.white.withValues(alpha: 0.12),
-                                          width: 1.2,
+                                              ? _kSelectAccent.withValues(alpha: 0.12)
+                                              : Colors.white.withValues(alpha: 0.04),
                                         ),
-                                        color: selected
-                                            ? _kSelectAccent.withValues(alpha: 0.12)
-                                            : Colors.white.withValues(alpha: 0.04),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              _selectLeadingIcon(selected),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      pl.name,
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    Text(
+                                                      '${pl.songPaths.length} 首 · 创建于 ${pl.createdAt.toString().split(' ').first}',
+                                                      style: TextStyle(
+                                                        color: Colors.white.withValues(alpha: 0.52),
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : ReorderableListView.builder(
+                              padding: const EdgeInsets.fromLTRB(16, 6, 16, 120),
+                              buildDefaultDragHandles: false,
+                              itemCount: userPl.playlists.length,
+                              onReorder: userPl.reorderPlaylists,
+                              itemBuilder: (context, index) {
+                                final pl = userPl.playlists[index];
+                                final dateStr = pl.createdAt.toString().split(' ').first;
+                                return Material(
+                                  key: ValueKey<String>(pl.id),
+                                  color: Colors.transparent,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                        ),
+                                        color: Colors.white.withValues(alpha: 0.055),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
                                         child: Row(
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
-                                            _selectLeadingIcon(selected),
-                                            const SizedBox(width: 10),
                                             Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    pl.name,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.w500,
+                                              child: Material(
+                                                color: Colors.transparent,
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            UserPlaylistDetailPage(playlistId: pl.id),
+                                                      ),
+                                                    );
+                                                  },
+                                                  onLongPress: () {
+                                                    setState(() {
+                                                      _selectMode = true;
+                                                      _singleSelectOnly = false;
+                                                      _selectedPlaylistIds
+                                                        ..clear()
+                                                        ..add(pl.id);
+                                                    });
+                                                  },
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                                                    child: Row(
+                                                      children: [
+                                                        Container(
+                                                          width: 44,
+                                                          height: 44,
+                                                          decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(12),
+                                                            color: Colors.white.withValues(alpha: 0.08),
+                                                          ),
+                                                          child: Icon(
+                                                            Icons.queue_music_rounded,
+                                                            color: Colors.white.withValues(alpha: 0.88),
+                                                            size: 22,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Expanded(
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Text(
+                                                                pl.name,
+                                                                maxLines: 1,
+                                                                overflow: TextOverflow.ellipsis,
+                                                                style: const TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontSize: 16,
+                                                                  fontWeight: FontWeight.w600,
+                                                                  height: 1.25,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(height: 4),
+                                                              Text(
+                                                                '${pl.songPaths.length} 首 · $dateStr',
+                                                                maxLines: 1,
+                                                                overflow: TextOverflow.ellipsis,
+                                                                style: TextStyle(
+                                                                  color: Colors.white.withValues(alpha: 0.5),
+                                                                  fontSize: 13,
+                                                                  height: 1.2,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
-                                                  const SizedBox(height: 3),
-                                                  Text(
-                                                    '${pl.songPaths.length} 首 · 创建于 ${pl.createdAt.toString().split(' ').first}',
-                                                    style: TextStyle(
-                                                      color: Colors.white.withValues(alpha: 0.52),
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
+                                                ),
+                                              ),
+                                            ),
+                                            ReorderableDragStartListener(
+                                              index: index,
+                                              child: Padding(
+                                                padding: const EdgeInsets.fromLTRB(4, 8, 10, 8),
+                                                child: Icon(
+                                                  Icons.drag_indicator_rounded,
+                                                  size: 22,
+                                                  color: Colors.white.withValues(alpha: 0.38),
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -567,38 +689,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }
-
-                            return ListTile(
-                              leading: const Icon(Icons.queue_music, color: Colors.white70),
-                              title: Text(pl.name, style: const TextStyle(color: Colors.white)),
-                              subtitle: Text(
-                                '${pl.songPaths.length} 首 · 创建于 ${pl.createdAt.toString().split(' ').first}',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
-                              ),
-                              trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-                              onLongPress: () {
-                                setState(() {
-                                  _selectMode = true;
-                                  _singleSelectOnly = false;
-                                  _selectedPlaylistIds
-                                    ..clear()
-                                    ..add(pl.id);
-                                });
-                              },
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => UserPlaylistDetailPage(playlistId: pl.id),
-                                  ),
                                 );
                               },
-                            );
-                          },
-                        ),
+                            ),
                 ),
               ],
             ),

@@ -175,6 +175,22 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 调整歌单在列表中的顺序（与本地存储数组一致，[首页-我的歌单]横滑取前几位同序）
+  /// [onReorder] 的约定与 [ReorderableListView] 相同（向下拖时 [newIndex] 需由调用方在框架侧先或此处统一修正）
+  Future<void> reorderPlaylists(int oldIndex, int newIndex) async {
+    if (oldIndex < 0 || oldIndex >= _playlists.length) return;
+    if (newIndex < 0) return;
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    if (oldIndex == newIndex) return;
+    if (newIndex < 0 || newIndex >= _playlists.length) return;
+    final item = _playlists.removeAt(oldIndex);
+    _playlists.insert(newIndex, item);
+    await _save();
+    notifyListeners();
+  }
+
   Future<void> renamePlaylist(String playlistId, String name) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) return;
