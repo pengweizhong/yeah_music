@@ -44,6 +44,11 @@ class _SongPageState extends State<SongPage> {
   StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   late ScrollController _scrollController;
+  /// 分屏页右侧歌词列表独立滚动，与全屏 [ListView] 解耦
+  late ScrollController _splitLyricScrollController;
+
+  /// 分屏页歌词行 [GlobalKey]，与 [_lyricKeys] 一一对应、仅供分屏列表 [ensureVisible]
+  List<GlobalKey> _lyricKeysSplit = [];
 
   /// 与当前已加载歌词对应的曲目路径（build 中用于检测切歌，需与 [ _lyricsHydratedForPath ] 同步）
   String? _lyricsBoundSongPath;
@@ -66,7 +71,7 @@ class _SongPageState extends State<SongPage> {
   Duration _seekPreview = Duration.zero;
 
   late final PageController _pageController;
-  int _currentPage = 0; // 0=封皮，1=歌词
+  int _currentPage = 0; // 0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
   bool _pageStateLoaded = false; // 标记页面状态是否已加载
 
   // 手动滚动控制
@@ -78,9 +83,10 @@ class _SongPageState extends State<SongPage> {
     super.initState();
     _scrollController = ScrollController();
     _settings = LyricSettings(); // 初始化默认设置
-    final initialPage = widget.initialPage.clamp(0, 1);
+    final initialPage = widget.initialPage.clamp(0, 2);
     _currentPage = initialPage;
     _pageController = PageController(initialPage: initialPage);
+    _splitLyricScrollController = ScrollController();
     _loadSettings();
     _listenToPlayer();
     _initPostFrame();
@@ -143,7 +149,7 @@ class _SongPageState extends State<SongPage> {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       final savedPage = box.get('last_song_page', defaultValue: 0) as int?;
-      if (savedPage != null && savedPage >= 0 && savedPage <= 1) {
+      if (savedPage != null && savedPage >= 0 && savedPage <= 2) {
         _pageStateLoaded = true;
         if (savedPage == _currentPage) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -228,6 +234,7 @@ class _SongPageState extends State<SongPage> {
     _playingSubscription?.cancel();
     _durationSubscription?.cancel();
     _scrollController.dispose();
+    _splitLyricScrollController.dispose();
     _pageController.dispose();
     _scrollTimer?.cancel();
     _scrollTimer?.cancel();
@@ -267,6 +274,10 @@ class _SongPageState extends State<SongPage> {
 
       _scrollController.dispose();
       _scrollController = ScrollController(initialScrollOffset: initialOffset);
+      _splitLyricScrollController.dispose();
+      _splitLyricScrollController = ScrollController(
+        initialScrollOffset: initialOffset,
+      );
 
       setState(() {
         _lyricsBoundSongPath = song.path;
@@ -274,6 +285,10 @@ class _SongPageState extends State<SongPage> {
         _currentPosition = pos;
         _lyrics = parsed;
         _lyricKeys = List<GlobalKey>.generate(
+          _lyrics.length,
+          (_) => GlobalKey(),
+        );
+        _lyricKeysSplit = List<GlobalKey>.generate(
           _lyrics.length,
           (_) => GlobalKey(),
         );
@@ -301,11 +316,14 @@ class _SongPageState extends State<SongPage> {
     } else {
       _scrollController.dispose();
       _scrollController = ScrollController();
+      _splitLyricScrollController.dispose();
+      _splitLyricScrollController = ScrollController();
       setState(() {
         _lyricsBoundSongPath = song.path;
         _lyricsHydratedForPath = song.path;
         _lyrics = [];
         _lyricKeys = [];
+        _lyricKeysSplit = [];
         _currentLyricIndex = -1;
       });
     }
@@ -411,14 +429,24 @@ class _SongPageState extends State<SongPage> {
     bool force = false,
     bool instant = false,
   }) {
-    // 如果正在手动滚动且不是强制滚动，则不自动滚动
     if (_isManualScrolling && !force) return;
+    if (index < 0) return;
+    if (_currentPage == 0) {
+      return;
+    }
+    if (_currentPage == 2) {
+      _scrollSplitToCurrentLyric(
+        index,
+        force: force,
+        instant: instant,
+      );
+      return;
+    }
     if (!_scrollController.hasClients) return;
+    if (index >= _lyricKeys.length) return;
 
-    if (index < 0 || index >= _lyricKeys.length) return;
     final ctx = _lyricKeys[index].currentContext;
     if (ctx != null) {
-      // 目标行已经构建时，直接精确居中。
       Scrollable.ensureVisible(
         ctx,
         alignment: 0.5,
@@ -428,8 +456,6 @@ class _SongPageState extends State<SongPage> {
       return;
     }
 
-    // ListView.builder 只构建可见区域附近的歌词。跳转距离较远时，目标行还没有 context，
-    // 需要先用索引比例滚到目标附近，等待目标行构建后再精确定位。
     final pos = _scrollController.position;
     final maxExtent = pos.maxScrollExtent;
     if (maxExtent <= 0 || _lyrics.length <= 1) {
@@ -471,11 +497,92 @@ class _SongPageState extends State<SongPage> {
     });
   }
 
+  /// 分屏右栏歌词表：与 [_scrollToCurrentLyric] 相同策略，独立 [ScrollController] / keys
+  void _scrollSplitToCurrentLyric(
+    int index, {
+    bool force = false,
+    bool instant = false,
+  }) {
+    if (_isManualScrolling && !force) return;
+    if (!_splitLyricScrollController.hasClients) return;
+    if (index < 0 || index >= _lyricKeysSplit.length) return;
+
+    final ctx = _lyricKeysSplit[index].currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+        duration: instant ? Duration.zero : const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+
+    final pos = _splitLyricScrollController.position;
+    final maxExtent = pos.maxScrollExtent;
+    if (maxExtent <= 0 || _lyrics.length <= 1) {
+      if (instant) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollSplitToCurrentLyric(
+              index,
+              force: force,
+              instant: instant,
+            );
+          }
+        });
+      }
+      return;
+    }
+
+    final estimatedOffset = (maxExtent * (index / (_lyrics.length - 1))).clamp(
+      pos.minScrollExtent,
+      maxExtent,
+    );
+    if (instant) {
+      _splitLyricScrollController.jumpTo(estimatedOffset);
+    } else {
+      _splitLyricScrollController.animateTo(
+        estimatedOffset,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final builtCtx = _lyricKeysSplit[index].currentContext;
+      if (builtCtx != null) {
+        Scrollable.ensureVisible(
+          builtCtx,
+          alignment: 0.5,
+          duration: instant ? Duration.zero : const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   // 定位到当前播放行
   void _scrollToCurrentPlayingLyric() {
-    if (_currentLyricIndex >= 0 && _currentLyricIndex < _lyricKeys.length) {
-      _isManualScrolling = false; // 重置手动滚动标志
-      _scrollToCurrentLyric(_currentLyricIndex, force: true);
+    if (_currentLyricIndex < 0) return;
+    _isManualScrolling = false;
+    if (_currentPage == 2) {
+      if (_currentLyricIndex < _lyricKeysSplit.length) {
+        _scrollSplitToCurrentLyric(
+          _currentLyricIndex,
+          force: true,
+          instant: false,
+        );
+      }
+    } else if (_currentPage == 1) {
+      if (_currentLyricIndex < _lyricKeys.length) {
+        _scrollToCurrentLyric(
+          _currentLyricIndex,
+          force: true,
+          instant: false,
+        );
+      }
     }
   }
 
@@ -1255,6 +1362,282 @@ class _SongPageState extends State<SongPage> {
     }
   }
 
+  /// 与第一页相同封面资源；[side] 有值时按第三页分屏区计算出的边长，否则为全屏第一页布局
+  Widget _buildCoverArt(Song song, {double? side}) {
+    final img = Image(
+      image: ApplicationUtils.getImageCoverProvider(song, size: 400),
+      fit: BoxFit.cover,
+    );
+    if (side != null) {
+      return SizedBox(
+        width: side,
+        height: side,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: img,
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: img,
+        ),
+      ),
+    );
+  }
+
+  /// 与第二页全屏歌词列表行完全一致的单元（显示模式/翻译/高亮/点击 seek）
+  Widget _lyricListItem(
+    int index,
+    Duration effectivePos,
+    GlobalKey? lineKey,
+  ) {
+    final line = _lyrics[index];
+    final ts = line.timestamp;
+    final played = ts != null && ts <= effectivePos;
+    final active = line.isActive;
+    final lineSpecificMode = _lyricDisplayMode[index];
+    final displayMode = lineSpecificMode ?? _globalDisplayMode;
+    final linesToShow = <String>[];
+
+    if (displayMode == -1) {
+      if (_settings.showOriginal && line.lines.isNotEmpty) {
+        linesToShow.add(line.lines[0]);
+      }
+      if (_settings.showTranslations && line.lines.length > 1) {
+        linesToShow.addAll(line.lines.sublist(1));
+      }
+    } else if (displayMode < line.lines.length) {
+      linesToShow.add(line.lines[displayMode]);
+    } else {
+      if (_settings.showOriginal && line.lines.isNotEmpty) {
+        linesToShow.add(line.lines[0]);
+      }
+      if (_settings.showTranslations && line.lines.length > 1) {
+        linesToShow.addAll(line.lines.sublist(1));
+      }
+    }
+
+    if (linesToShow.isEmpty) {
+      return SizedBox(
+        key: lineKey,
+        height: 0.01,
+      );
+    }
+    final isShowingAll = displayMode == -1;
+    final isShowingSingleLine =
+        displayMode >= 0 && displayMode < line.lines.length;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        vertical: _settings.lyricLineSpacing / 2,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: ts == null ? null : () => _seekTo(ts),
+        child: Container(
+          key: lineKey,
+          padding: const EdgeInsets.symmetric(
+            vertical: 6,
+            horizontal: 8,
+          ),
+          child: Column(
+            children: [
+              for (int i = 0; i < linesToShow.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(top: i > 0 ? 4 : 0),
+                  child: Builder(
+                    builder: (context) {
+                      final originalIndex = isShowingAll ? i : displayMode;
+                      final isOriginalLine = originalIndex == 0;
+                      final shouldHighlight = active &&
+                          ((isShowingAll) ||
+                              (isShowingSingleLine &&
+                                  originalIndex == displayMode));
+                      final activeColor = Color(
+                        isOriginalLine
+                            ? _settings.activeOriginalColor
+                            : _settings.activeTranslationColor,
+                      );
+                      final playedColor = Color(
+                        isOriginalLine
+                            ? _settings.playedOriginalColor
+                            : _settings.playedTranslationColor,
+                      );
+                      final upcomingColor = Color(
+                        isOriginalLine
+                            ? _settings.upcomingOriginalColor
+                            : _settings.upcomingTranslationColor,
+                      );
+                      return AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 160),
+                        style: TextStyle(
+                          fontSize: shouldHighlight && isOriginalLine
+                              ? _settings.originalFontSize + 2
+                              : (isOriginalLine
+                                  ? _settings.originalFontSize
+                                  : _settings.translationFontSize),
+                          fontWeight: shouldHighlight
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: shouldHighlight
+                              ? activeColor
+                              : (played
+                                  ? playedColor
+                                  : upcomingColor),
+                          height: 1.35,
+                          letterSpacing: 0.2,
+                        ),
+                        child: Text(
+                          linesToShow[i],
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 与第二页全屏歌词 [Stack] 行为一致；[pageIndexForFab] 为当前全屏/分屏页下标 1 或 2
+  Widget _buildLyricsScrollStack(
+    Duration effectivePos, {
+    required ScrollController controller,
+    required List<GlobalKey> keys,
+    required EdgeInsets listPadding,
+    required int pageIndexForFab,
+  }) {
+    return Stack(
+      children: [
+        NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is UserScrollNotification) {
+              _onUserScroll();
+            }
+            return false;
+          },
+          child: ListView.builder(
+            controller: controller,
+            physics: const ClampingScrollPhysics(),
+            padding: listPadding,
+            itemCount: _lyrics.length,
+            itemBuilder: (context, index) {
+              final key = keys.length == _lyrics.length
+                  ? keys[index]
+                  : null;
+              return _lyricListItem(
+                index,
+                effectivePos,
+                key,
+              );
+            },
+          ),
+        ),
+        if (_isManualScrolling &&
+            _currentLyricIndex >= 0 &&
+            _currentPage == pageIndexForFab)
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton(
+              mini: true,
+              onPressed: _scrollToCurrentPlayingLyric,
+              child: const Icon(
+                Icons.my_location,
+                size: 20,
+              ),
+              tooltip: '定位到当前歌词',
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 第三页：左为 [_buildCoverArt] 的第三页边长、右为与第二页相同的 [_buildLyricsScrollStack]
+  Widget _buildSplitScreenPage(
+    Song song,
+    Duration effectivePos,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const outerH = 16.0;
+        const outerHRight = 12.0;
+        final innerW =
+            (constraints.maxWidth - outerH - outerHRight).clamp(0.0, 4000.0);
+        const flexL = 8;
+        const flexR = 11;
+        final leftColW = innerW * flexL / (flexL + flexR) - 6;
+        const edgePad = 4.0;
+        final wAvail = (leftColW - edgePad * 2).clamp(0.0, 2000.0);
+        final hAvail = (constraints.maxHeight - edgePad * 2).clamp(0.0, 2000.0);
+        var coverSide = wAvail < hAvail ? wAvail : hAvail;
+        coverSide *= 0.99;
+        if (coverSide > wAvail) {
+          coverSide = wAvail;
+        }
+        coverSide = coverSide.clamp(80.0, 720.0);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(outerH, 4, outerHRight, 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 8,
+                child: Align(
+                  alignment: const Alignment(0.32, 0.0),
+                  child: _buildCoverArt(song, side: coverSide),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 11,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // const SizedBox(height: 6),
+                      Expanded(
+                        child: _lyrics.isEmpty
+                            ? Center(
+                                child: Text(
+                                  '暂无歌词',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.45),
+                                  ),
+                                ),
+                              )
+                            : _buildLyricsScrollStack(
+                                effectivePos,
+                                controller: _splitLyricScrollController,
+                                keys: _lyricKeysSplit,
+                                listPadding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 20,
+                                ),
+                                pageIndexForFab: 2,
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<PlayListProvider, ThemeConfigProvider>(
@@ -1353,18 +1736,21 @@ class _SongPageState extends State<SongPage> {
                     ),
                   ),
 
-                  // 封皮 / 歌词区：透明，透出 [buildThemedBackground] 与主页相同
+                  // 封皮 / 全屏歌词 / 分屏；底部分段指示
                   Expanded(
-                    child: ScrollConfiguration(
-                    // 支持鼠标滑动
-                    behavior: const MaterialScrollBehavior().copyWith(
-                      dragDevices: {
-                        PointerDeviceKind.touch,
-                        PointerDeviceKind.mouse,
-                        PointerDeviceKind.trackpad,
-                      },
-                    ),
-                    child: PageView(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ScrollConfiguration(
+                            // 支持鼠标滑动
+                            behavior: const MaterialScrollBehavior().copyWith(
+                              dragDevices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                                PointerDeviceKind.trackpad,
+                              },
+                            ),
+                            child: PageView(
                       controller: _pageController,
                       physics: const BouncingScrollPhysics(),
                       // 启用页面滑动
@@ -1372,7 +1758,7 @@ class _SongPageState extends State<SongPage> {
                       // 水平滑动
                       allowImplicitScrolling: false,
                       reverse: false,
-                      // 正常顺序：0=封皮，1=歌词
+                      // 正常顺序：0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
                       onPageChanged: (index) {
                         setState(() {
                           _currentPage = index;
@@ -1389,35 +1775,26 @@ class _SongPageState extends State<SongPage> {
                             );
                           });
                         }
+                        if (index == 2 && _lyrics.isNotEmpty) {
+                          _isManualScrolling = false;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            _updateCurrentLyric(
+                              _effectivePosition(),
+                              instantScroll: true,
+                            );
+                          });
+                        }
                       },
                       children: [
-                        // 封皮页面（第0页）
+                        // 封皮页面（第0页）：与 [_buildCoverArt] 全屏形态一致
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(32.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                width: double.infinity,
-                                constraints: const BoxConstraints(
-                                  maxWidth: 400,
-                                ),
-                                child: AspectRatio(
-                                  aspectRatio: 1,
-                                  child: Image(
-                                    image:
-                                        ApplicationUtils.getImageCoverProvider(
-                                          song,
-                                          size: 400,
-                                        ),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            child: _buildCoverArt(song),
                           ),
                         ),
-                        // 歌词页面（第1页）
+                        // 歌词页面（第1页）：与 [_buildLyricsScrollStack] 分屏复用
                         _lyrics.isEmpty
                             ? Center(
                                 child: Column(
@@ -1439,226 +1816,25 @@ class _SongPageState extends State<SongPage> {
                                   ],
                                 ),
                               )
-                            : Stack(
-                                children: [
-                                  NotificationListener<ScrollNotification>(
-                                    onNotification: (notification) {
-                                      if (notification
-                                          is UserScrollNotification) {
-                                        _onUserScroll();
-                                      }
-                                      return false;
-                                    },
-                                    child: ListView.builder(
-                                      controller: _scrollController,
-                                      physics: const ClampingScrollPhysics(),
-                                      // 使用ClampingScrollPhysics，允许PageView处理水平滑动
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 20,
-                                      ),
-                                      itemCount: _lyrics.length,
-                                      itemBuilder: (context, index) {
-                                        final line = _lyrics[index];
-                                        final ts = line.timestamp;
-                                        final played =
-                                            ts != null && ts <= effectivePos;
-                                        final active = line.isActive;
-
-                                        // 根据显示模式决定显示哪些行（使用全局模式或该行的特定模式）
-                                        final lineSpecificMode =
-                                            _lyricDisplayMode[index];
-                                        final displayMode =
-                                            lineSpecificMode ??
-                                            _globalDisplayMode; // 优先使用行特定模式，否则使用全局模式
-                                        final linesToShow = <String>[];
-
-                                        if (displayMode == -1) {
-                                          // 全部显示
-                                          if (_settings.showOriginal &&
-                                              line.lines.isNotEmpty) {
-                                            linesToShow.add(line.lines[0]);
-                                          }
-                                          if (_settings.showTranslations &&
-                                              line.lines.length > 1) {
-                                            linesToShow.addAll(
-                                              line.lines.sublist(1),
-                                            );
-                                          }
-                                        } else if (displayMode <
-                                            line.lines.length) {
-                                          // 只显示指定行
-                                          linesToShow.add(
-                                            line.lines[displayMode],
-                                          );
-                                        } else {
-                                          // 容错：如果模式超出范围，显示全部
-                                          if (_settings.showOriginal &&
-                                              line.lines.isNotEmpty) {
-                                            linesToShow.add(line.lines[0]);
-                                          }
-                                          if (_settings.showTranslations &&
-                                              line.lines.length > 1) {
-                                            linesToShow.addAll(
-                                              line.lines.sublist(1),
-                                            );
-                                          }
-                                        }
-
-                                        final isShowingAll = displayMode == -1;
-                                        final isShowingSingleLine =
-                                            displayMode >= 0 &&
-                                            displayMode < line.lines.length;
-
-                                        return Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            vertical:
-                                                _settings.lyricLineSpacing / 2,
-                                          ),
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            onTap: ts == null
-                                                ? null
-                                                : () => _seekTo(ts),
-                                            child: Container(
-                                              key:
-                                                  _lyricKeys.length ==
-                                                      _lyrics.length
-                                                  ? _lyricKeys[index]
-                                                  : null,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 6,
-                                                    horizontal: 8,
-                                                  ),
-                                              child: Column(
-                                                children: [
-                                                  for (
-                                                    int i = 0;
-                                                    i < linesToShow.length;
-                                                    i++
-                                                  )
-                                                    Padding(
-                                                      padding: EdgeInsets.only(
-                                                        top: i > 0 ? 4 : 0,
-                                                      ),
-                                                      child: Builder(
-                                                        builder: (context) {
-                                                          // 确定当前显示的行在原始lines中的索引
-                                                          final originalIndex =
-                                                              isShowingAll
-                                                              ? i
-                                                              : displayMode;
-                                                          final isOriginalLine =
-                                                              originalIndex ==
-                                                              0;
-
-                                                          // 如果显示全部且是当前行，所有行都高亮
-                                                          final shouldHighlight =
-                                                              active &&
-                                                              ((isShowingAll) ||
-                                                                  (isShowingSingleLine &&
-                                                                      originalIndex ==
-                                                                          displayMode));
-
-                                                          final activeColor = Color(
-                                                            isOriginalLine
-                                                                ? _settings
-                                                                      .activeOriginalColor
-                                                                : _settings
-                                                                      .activeTranslationColor,
-                                                          );
-                                                          final playedColor = Color(
-                                                            isOriginalLine
-                                                                ? _settings
-                                                                      .playedOriginalColor
-                                                                : _settings
-                                                                      .playedTranslationColor,
-                                                          );
-                                                          final upcomingColor = Color(
-                                                            isOriginalLine
-                                                                ? _settings
-                                                                      .upcomingOriginalColor
-                                                                : _settings
-                                                                      .upcomingTranslationColor,
-                                                          );
-                                                          return AnimatedDefaultTextStyle(
-                                                            duration:
-                                                                const Duration(
-                                                                  milliseconds:
-                                                                      160,
-                                                                ),
-                                                            style: TextStyle(
-                                                              fontSize:
-                                                                  shouldHighlight &&
-                                                                      isOriginalLine
-                                                                  ? _settings
-                                                                            .originalFontSize +
-                                                                        2
-                                                                  : (isOriginalLine
-                                                                        ? _settings
-                                                                              .originalFontSize
-                                                                        : _settings
-                                                                              .translationFontSize),
-                                                              fontWeight:
-                                                                  shouldHighlight
-                                                                  ? FontWeight
-                                                                        .w600
-                                                                  : FontWeight
-                                                                        .w400,
-                                                              color:
-                                                                  shouldHighlight
-                                                                  ? activeColor
-                                                                  : (played
-                                                                        ? playedColor
-                                                                        : upcomingColor),
-                                                              height: 1.35,
-                                                              letterSpacing:
-                                                                  0.2,
-                                                            ),
-                                                            child: Text(
-                                                              linesToShow[i],
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    ),
-                                                  // 移除长按提示
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  // 定位按钮
-                                  if (_isManualScrolling &&
-                                      _currentLyricIndex >= 0)
-                                    Positioned(
-                                      right: 16,
-                                      bottom: 16,
-                                      child: FloatingActionButton(
-                                        mini: true,
-                                        onPressed: _scrollToCurrentPlayingLyric,
-                                        child: const Icon(
-                                          Icons.my_location,
-                                          size: 20,
-                                        ),
-                                        tooltip: '定位到当前歌词',
-                                      ),
-                                    ),
-                                ],
+                            : _buildLyricsScrollStack(
+                                effectivePos,
+                                controller: _scrollController,
+                                keys: _lyricKeys,
+                                listPadding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 20,
+                                ),
+                                pageIndexForFab: 1,
                               ),
+                        _buildSplitScreenPage(song, effectivePos),
                       ],
                     ),
                   ),
                 ),
+                        _SongPageIndicator(currentIndex: _currentPage),
+                      ],
+                    ),
+                  ),
 
                 // 播放进度条
                 Padding(
@@ -1892,6 +2068,40 @@ class _SongPageState extends State<SongPage> {
         ),
         );
       },
+    );
+  }
+}
+
+/// 播放页中间区域三页：封面 / 全屏歌词 / 分屏
+class _SongPageIndicator extends StatelessWidget {
+  const _SongPageIndicator({required this.currentIndex});
+
+  final int currentIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final idx = currentIndex.clamp(0, 2);
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(3, (i) {
+          final sel = i == idx;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: sel ? 22 : 6,
+            height: 4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              color: sel
+                  ? Colors.white.withValues(alpha: 0.88)
+                  : Colors.white.withValues(alpha: 0.28),
+            ),
+          );
+        }),
+      ),
     );
   }
 }
