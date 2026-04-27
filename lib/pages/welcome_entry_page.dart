@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -14,8 +14,6 @@ import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/welcome/welcome_countdown_view.dart';
 import 'package:yeah_music/welcome/welcome_fake_status.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 const _kDeferLoadMs = 80;
 
@@ -154,7 +152,7 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     try {
       _initial = await _load();
     } catch (e, st) {
-      log.e('欢迎页预加载失败: $e', error: e, stackTrace: st);
+      appLog.e('欢迎页预加载失败', error: e, stackTrace: st);
       if (mounted) setState(() => _error = e);
       return;
     }

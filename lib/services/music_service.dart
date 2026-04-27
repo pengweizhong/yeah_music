@@ -2,12 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
+import 'package:yeah_music/logging/app_log.dart';
 
 import '../models/song.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 class MusicService {
   //播放器成为全局单例
@@ -20,7 +18,7 @@ class MusicService {
   Future<void> playSong(Song song) {
     final f = _playChain
         .catchError((Object? e) {
-      log.d('playSong 前序(可忽略): $e');
+      appLog.d('playSong 前序(可忽略): $e');
     })
         .then((_) => _playSongBody(song));
     _playChain = f;
@@ -28,7 +26,6 @@ class MusicService {
   }
 
   Future<void> _playSongBody(Song song) async {
-    log.d("播放歌曲: ${song.title}");
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         await _player.stop();
@@ -45,7 +42,7 @@ class MusicService {
       } catch (e) {
         final msg = e.toString();
         if (attempt == 0 && msg.contains('interrupted')) {
-          log.d("换源被中断，重试一次: $e");
+          appLog.d('换源被中断，重试一次: $e');
           continue;
         }
         // macOS 安全作用域未恢复时常见 257 / permission
@@ -54,13 +51,13 @@ class MusicService {
             (msg.contains('257') ||
                 msg.contains('permission') ||
                 msg.contains('Permission'))) {
-          log.d('macOS: 尝试恢复安全作用域书签后重试播放');
+          appLog.d('macOS: 尝试恢复安全作用域书签后重试播放');
           try {
             await BookmarkService.restoreAllBookmarks();
           } catch (_) {}
           continue;
         }
-        log.e("播放失败: $e");
+        appLog.e('设置音频并播放失败', error: e);
         return;
       }
     }

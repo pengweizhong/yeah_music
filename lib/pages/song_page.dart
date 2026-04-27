@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -14,6 +13,7 @@ import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
@@ -22,8 +22,6 @@ import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 class SongPage extends StatefulWidget {
   int index;
@@ -1103,7 +1101,7 @@ class _SongPageState extends State<SongPage> {
 
       MusicService().play();
     } catch (e) {
-      log.e("跳转播放位置失败：$e");
+      appLog.e('跳转播放位置失败', error: e);
     } finally {
       if (mounted && requestId == _seekRequestId) {
         Future.delayed(const Duration(milliseconds: 250), () {

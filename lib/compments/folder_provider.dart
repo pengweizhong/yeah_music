@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:logger/logger.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/models/constants.dart';
@@ -13,8 +13,6 @@ import 'package:yeah_music/utils/hive_utils.dart';
 
 import '../config/app_config.dart';
 import '../models/folder.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 class FolderProvider extends ChangeNotifier {
   //main 里调用了 ..init()，也不能保证 UI 构建时 _box 已经就绪。
@@ -38,9 +36,9 @@ class FolderProvider extends ChangeNotifier {
     if (Platform.isMacOS) {
       try {
         await BookmarkService.restoreAllBookmarks();
-        log.d('macOS: 已恢复音乐目录安全作用域书签');
+        appLog.d('macOS: 已恢复音乐目录安全作用域书签');
       } catch (e) {
-        log.w('macOS 恢复书签失败（可尝试在「音乐源」中刷新）: $e');
+        appLog.w('macOS 恢复书签失败（可尝试在「音乐源」中刷新）', error: e);
       }
     }
     notifyListeners();
@@ -50,7 +48,7 @@ class FolderProvider extends ChangeNotifier {
   Future<Folder?> addFolder(String folder) async {
     //检验文件夹是否已经存在
     if (await existFolder(_box!, folder)) {
-      log.d("用户添加了重复的文件夹：$folder");
+      appLog.d("用户添加了重复的文件夹：$folder");
       return null;
     }
     String folderName = folder.split('/').last;
@@ -64,7 +62,7 @@ class FolderProvider extends ChangeNotifier {
       notifyListeners();
       return f;
     } catch (e) {
-      log.e("添加文件夹失败：$folder，错误：$e");
+      appLog.e('添加文件夹失败: $folder', error: e);
       // 如果添加失败，不保存到数据库
       rethrow;
     }
@@ -91,11 +89,11 @@ class FolderProvider extends ChangeNotifier {
       try {
         final restored = await BookmarkService.restoreBookmark(folderPath);
         if (restored == null) {
-          log.w("无法恢复macOS权限，路径：$folderPath");
+          appLog.w("无法恢复macOS权限，路径：$folderPath");
           // 即使权限恢复失败，也尝试访问，可能会触发系统权限请求
         }
       } catch (e) {
-        log.e("恢复macOS权限时出错：$e");
+        appLog.e('恢复 macOS 权限失败', error: e);
       }
     } else if (Platform.isAndroid) {
       // 筛选支持的音频文件格式
@@ -116,7 +114,7 @@ class FolderProvider extends ChangeNotifier {
       final dir = Directory(folderPath);
       // 先检查目录是否存在和可访问
       if (!await dir.exists()) {
-        log.e("文件夹不存在：$folderPath");
+        appLog.e("文件夹不存在：$folderPath");
         folder.songList = [];
         if (save) await folder.save();
         if (listen) notifyListeners();
@@ -125,7 +123,7 @@ class FolderProvider extends ChangeNotifier {
       
       // 使用异步方式列出文件，避免阻塞UI
       final songFiles = await _listAudioFilesAsync(dir);
-      log.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
+      appLog.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
       
       // 批量处理歌曲，避免一次性加载过多导致内存溢出
       List<Song> songlist = [];
@@ -142,8 +140,9 @@ class FolderProvider extends ChangeNotifier {
         // 每处理一批后，让出控制权，避免阻塞UI
         await Future.delayed(Duration.zero);
         
-        // 可选：每批处理后通知进度（如果需要显示进度条）
-        log.d("已加载 ${songlist.length}/${songFiles.length} 首歌曲");
+      }
+      if (songFiles.isNotEmpty) {
+        appLog.d('目录已扫描: ${dir.path} → ${songlist.length} 首');
       }
       
       folder.songList = songlist;
@@ -154,7 +153,7 @@ class FolderProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      log.e("访问文件夹时出错：$folderPath，错误：$e");
+      appLog.e('访问文件夹失败: $folderPath', error: e);
       // 权限错误时，清空歌曲列表，避免显示错误数据
       folder.songList = [];
       if (save) {
@@ -188,7 +187,7 @@ class FolderProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      log.e("列出文件时出错：$e");
+      appLog.e('列出目录内文件失败', error: e);
     }
     
     return audioFiles;
@@ -204,7 +203,7 @@ class FolderProvider extends ChangeNotifier {
         FileUtils.loadSongMeta(song);
         songs.add(song);
       } catch (e) {
-        log.w("加载歌曲元数据失败：${file.path}，错误：$e");
+        appLog.w('歌曲元数据读取失败', error: e);
         // 即使元数据加载失败，也添加基本信息
         try {
           Song song = Song(file.path);

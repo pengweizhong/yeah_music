@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/pages/welcome_entry_page.dart';
 import 'package:yeah_music/themes/app_material_themes.dart';
@@ -18,11 +18,8 @@ import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
 import 'compments/user_playlist_provider.dart';
 
-//SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
-var log = Logger(printer: SimplePrinter());
-
 void main() {
-  log.i('应用正在启动。。。');
+  appLog.i('应用正在启动');
 
   WidgetsFlutterBinding.ensureInitialized();
   PaintingBinding.instance.imageCache
@@ -132,13 +129,13 @@ class _AppStartupGateState extends State<AppStartupGate>
     try {
       await appInit.initHive();
     } catch (e, st) {
-      log.e('initHive 失败: $e', error: e, stackTrace: st);
+      appLog.e('initHive 失败', error: e, stackTrace: st);
       _onHiveInitError(e);
       return;
     }
     if (!mounted) return;
     _disposePreHiveResources(_secondsLeft);
-    log.i('应用启动成功！');
+    appLog.i('应用启动成功');
   }
 
   void _retry() {

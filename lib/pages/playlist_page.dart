@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
@@ -9,7 +9,6 @@ import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/playback_session_surface.dart';
-import '../models/folder.dart';
 import '../navigation/app_route_observer.dart';
 import '../utils/scroll_list_to_current_song.dart';
 import '../utils/song_list_sort.dart';
@@ -18,8 +17,6 @@ import '../widgets/compact_song_list_row.dart';
 import '../widgets/scroll_aware_list_frame.dart';
 import '../widgets/scroll_to_current_locate_layer.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 @immutable
 class PlayListPage extends StatefulWidget {
@@ -120,7 +117,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       final folderProvider = context.read<FolderProvider>();
       final playListProvider = context.read<PlayListProvider>();
       if (!playListProvider.initialized) {
-        log.d("初始化全部歌单列表");
+        appLog.d('曲库页: 正在初始化 PlayListProvider');
         await playListProvider.init(folderProvider);
       }
       if (!context.mounted) return;
@@ -147,19 +144,19 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           _sortType = prefs.type;
           _isAscending = prefs.ascending;
         });
-        log.d("加载排序设置: $_sortType, 正序: $_isAscending");
+        appLog.d('曲库页: 排序已加载 ($_sortType, asc=$_isAscending)');
       }
     } catch (e) {
-      log.e("加载排序设置失败: $e");
+      appLog.e('曲库页: 加载排序设置失败', error: e);
     }
   }
 
   Future<void> _saveSortSettings() async {
     try {
       await saveSongSortPreferences(_sortType, _isAscending);
-      log.d("保存排序设置: $_sortType, 正序: $_isAscending");
+      appLog.d('曲库页: 已保存排序 ($_sortType, asc=$_isAscending)');
     } catch (e) {
-      log.e("保存排序设置失败: $e");
+      appLog.e('曲库页: 保存排序设置失败', error: e);
     }
   }
 
@@ -363,18 +360,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         );
       },
     );
-  }
-
-  void addPlayList(List<Song> playList, FolderProvider folderProvider) {
-    //所有的文件夹
-    List<Folder> folders = folderProvider.folders;
-    for (var value in folders) {
-      log.d("添加了目录：${value.name}，共${value.songList?.length}首歌曲");
-      if (value.songList == null || value.songList!.isEmpty) {
-        continue;
-      }
-      playList.addAll(value.songList as Iterable<Song>);
-    }
   }
 
   String showSecondTitle(Song song) {

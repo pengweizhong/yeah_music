@@ -1,12 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:logger/logger.dart';
+import 'package:yeah_music/logging/app_log.dart';
 
 import '../models/system_info.dart';
 
 const MethodChannel _channel = MethodChannel('disk_space');
-var log = Logger(printer: SimplePrinter());
 
 class SystemUtils {
   static Future<SystemInfo> getSystemInfo() async {
@@ -23,7 +22,7 @@ class SystemUtils {
         }
         systemInfo.platformName = "Android";
       } catch (e) {
-        log.e("获取Android磁盘空间失败：$e");
+        appLog.e('获取 Android 磁盘空间失败', error: e);
         // 如果 MethodChannel 失败，尝试使用命令行
         try {
           ProcessResult result = await Process.run('df', ['-m', '/data']);
@@ -39,7 +38,7 @@ class SystemUtils {
             }
           }
         } catch (e2) {
-          log.e("使用df命令获取Android磁盘空间也失败：$e2");
+          appLog.e('df 回退获取 Android 磁盘空间仍失败', error: e2);
         }
         systemInfo.platformName = "Android";
       }
@@ -54,7 +53,7 @@ class SystemUtils {
         }
         systemInfo.platformName = "iOS";
       } catch (e) {
-        log.e("获取iOS磁盘空间失败：$e");
+        appLog.e('获取 iOS 磁盘空间失败', error: e);
         systemInfo.platformName = "iOS";
       }
       return systemInfo;
@@ -68,7 +67,7 @@ class SystemUtils {
         }
         systemInfo.platformName = "macOS";
       } catch (e) {
-        log.e("获取macOS磁盘空间失败：$e");
+        appLog.e('获取 macOS 磁盘空间失败', error: e);
         systemInfo.platformName = "macOS";
       }
       return systemInfo;
@@ -88,7 +87,7 @@ class SystemUtils {
         }
         systemInfo.platformName = "Linux";
       } catch (e) {
-        log.e("获取Linux磁盘空间失败：$e");
+        appLog.e('获取 Linux 磁盘空间失败', error: e);
         systemInfo.platformName = "Linux";
       }
       return systemInfo;
@@ -118,7 +117,7 @@ class SystemUtils {
         }
         systemInfo.platformName = "Windows";
       } catch (e) {
-        log.e("获取Windows磁盘空间失败：$e");
+        appLog.e('获取 Windows 磁盘空间失败', error: e);
         systemInfo.platformName = "Windows";
       }
       return systemInfo;

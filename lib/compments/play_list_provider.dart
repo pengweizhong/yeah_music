@@ -3,7 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
@@ -18,7 +18,6 @@ import 'package:yeah_music/models/constants.dart';
 import '../models/folder.dart';
 import 'folder_provider.dart';
 
-var log = Logger(printer: SimplePrinter());
 
 /// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
 String _libraryPathKey(String path) {
@@ -334,10 +333,10 @@ class PlayListProvider extends ChangeNotifier {
       final savedIndex = box.get('last_played_index', defaultValue: 0) as int?;
       if (savedIndex != null && savedIndex >= 0) {
         _currentIndex = savedIndex;
-        log.d("加载上次播放的歌曲索引: $_currentIndex");
+        appLog.d('已恢复播放位置: 索引 $_currentIndex');
       }
     } catch (e) {
-      log.e("加载上次播放索引失败: $e");
+      appLog.e('加载上次播放索引失败', error: e);
     }
   }
 
@@ -346,9 +345,8 @@ class PlayListProvider extends ChangeNotifier {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       await box.put('last_played_index', _currentIndex);
-      log.d("保存当前播放索引: $_currentIndex");
     } catch (e) {
-      log.e("保存播放索引失败: $e");
+      appLog.e('保存播放索引失败', error: e);
     }
   }
 
@@ -359,26 +357,16 @@ class PlayListProvider extends ChangeNotifier {
     
     var i = 0;
     for (var value in folders) {
-      log.d("添加了目录：${value.name}，共${value.songList?.length}首歌曲");
       putFolder(value);
       i++;
-      // 让出控制权，避免阻塞主线程上的启动转场 / 菊花动画
+      // 让出控制权，避免阻塞主线程上的启动转场
       await Future<void>.delayed(Duration.zero);
       if (i % 4 == 0) {
         await Future<void>.delayed(const Duration(milliseconds: 1));
       }
     }
-  }
-
-  void _addPlayList(FolderProvider folderProvider) {
-    //所有的文件夹
-    List<Folder> folders = folderProvider.folders;
-    for (var value in folders) {
-      log.d("添加了目录：${value.name}，共${value.songList?.length}首歌曲");
-      // if (value.songList == null || value.songList!.isEmpty) {
-      //   continue;
-      // }
-      putFolder(value);
+    if (folders.isNotEmpty) {
+      appLog.d('曲库: 已合并 ${folders.length} 个媒体目录');
     }
   }
 

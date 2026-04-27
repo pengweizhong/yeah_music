@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/system_info.dart';
 import 'package:yeah_music/utils/system_utils.dart';
 
@@ -32,7 +33,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
     try {
       systemInfo = await SystemUtils.getSystemInfo();
     } catch (e) {
-      print("加载系统信息失败: $e");
+      appLog.e('加载系统/磁盘信息失败', error: e);
     }
     
     // 加载设备信息
@@ -78,7 +79,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
         };
       }
     } catch (e) {
-      print("获取设备信息失败: $e");
+      appLog.e('获取设备信息失败', error: e);
       deviceInfo = {'错误': '无法获取设备信息'};
     }
     

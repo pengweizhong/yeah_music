@@ -3,11 +3,9 @@ import 'dart:io';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:charset/charset.dart';
-import 'package:logger/logger.dart';
+import 'package:yeah_music/logging/app_log.dart';
 
 import '../models/song.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 class FileUtils {
   static Future<void> loadSongMeta(Song song) async {
@@ -18,11 +16,10 @@ class FileUtils {
       metadata = readMetadata(file, getImage: true);
     } catch (e) {
       song.title = filename;
-      log.e("读取歌曲元信息失败：文件：${song.path}");
+      appLog.e('读取歌曲元信息失败', error: e);
       return;
     }
     String title = decodeString(metadata.title ?? filename);
-    log.d("加载歌曲元信息: $title，原始文件名称: $filename");
     song.album = decodeString(metadata.album);
     song.artist = decodeString(metadata.artist);
     song.title = title;

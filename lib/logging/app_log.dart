@@ -1,0 +1,29 @@
+import 'package:flutter/foundation.dart';
+import 'package:logger/logger.dart';
+
+/// 全应用统一 [Logger]。
+///
+/// 级别约定：
+/// - `t`：极细，默认关闭（需将 [level] 调到 [Level.trace] 才全量，一般不用）
+/// - `d`：开发排障（换源、排序、单目录等），**仅 [kDebugMode] 下**输出
+/// - `i`：重要生命周期、用户可感知的成功操作
+/// - `w`：可恢复问题、降级
+/// - `e` / `f`：失败、致命；尽量带 [LogEvent.error] 与 [LogEvent.stackTrace]
+///
+/// [kDebugMode] 为 true 时用 [DevelopmentFilter]；否则用 [ProductionFilter]，
+/// 只输出 [Level.info] 及以上，避免发版后刷屏与无意义 [d] 开销，同时仍保留启动、错误行。
+final Logger appLog = Logger(
+  filter: kDebugMode ? DevelopmentFilter() : ProductionFilter(),
+  level: kDebugMode ? Level.debug : Level.info,
+  printer: kDebugMode
+      ? PrettyPrinter(
+          methodCount: 0,
+          errorMethodCount: 6,
+          lineLength: 100,
+          printEmojis: false,
+        )
+      : SimplePrinter(
+          printTime: true,
+          colors: false,
+        ),
+);

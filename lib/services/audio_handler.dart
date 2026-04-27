@@ -1,8 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
-
-var log = Logger(printer: SimplePrinter());
+import 'package:yeah_music/logging/app_log.dart';
 
 /// 音频处理器 - 处理后台音频和通知栏
 class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
@@ -91,9 +89,8 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       // 设置音频源
       await _player.setAudioSource(source);
       
-      log.d('设置音频源成功: ${mediaItem.title}');
     } catch (e) {
-      log.e('设置音频源失败: $e');
+      appLog.e('audio_service: 设置音频源失败', error: e);
       rethrow;
     }
   }

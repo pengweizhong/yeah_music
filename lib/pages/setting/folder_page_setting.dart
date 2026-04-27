@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
@@ -14,15 +13,12 @@ import '../../compments/play_list_provider.dart';
 import '../../models/folder.dart';
 import '../../utils/date_utils.dart';
 
-var log = Logger(printer: SimplePrinter());
-
 class FolderPageSettings extends StatelessWidget {
   const FolderPageSettings({super.key});
 
   @override
   Widget build(BuildContext context) {
     final folderProvider = context.watch<FolderProvider>();
-    // log.d("文件夹资源是否已经初始化？${folderProvider.initialized}");
     if (!folderProvider.initialized) {
       return Center(child: CircularProgressIndicator());
     }

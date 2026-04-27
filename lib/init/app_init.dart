@@ -4,14 +4,12 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
-import 'package:logger/logger.dart';
+import 'package:yeah_music/logging/app_log.dart';
 
 import '../models/constants.dart';
 import '../models/folder.dart';
 import '../models/song.dart';
 import '../models/lyric_settings.dart';
-
-var log = Logger(printer: SimplePrinter());
 
 class AppInit {
   ///初始化JustAudio 音频播放插件
@@ -19,7 +17,7 @@ class AppInit {
     if (!Platform.isLinux) {
       return;
     }
-    log.d("初始化 Linux setlocale C");
+    appLog.d('Linux: 初始化 setlocale C');
     // 强制设置 locale
     ffi.DynamicLibrary.process();
     // 仅在 Linux 桌面需要
@@ -30,7 +28,7 @@ class AppInit {
         ffi.Pointer<ffi.Int8> Function(int, ffi.Pointer<ffi.Int8>)
       >("setlocale")(6, "C".toNativeUtf8().cast()); // 6 = LC_NUMERIC
     } catch (_) {}
-    log.d("初始化 just_audio_media_kit");
+    appLog.d('just_audio_media_kit 已初始化');
     //初始化AudioPlayer
     JustAudioMediaKit.ensureInitialized(
       linux: true,
@@ -47,7 +45,7 @@ class AppInit {
 
   ///初始化hive数据库（各 box 无依赖，并行打开以压缩冷启动时间）
   Future<void> initHive() async {
-    log.d("Hive Init.");
+    appLog.d('Hive: 开始初始化');
     await Hive.initFlutter();
 
     Hive.registerAdapter(FolderAdapter());
@@ -61,7 +59,7 @@ class AppInit {
       try {
         await open();
       } catch (e) {
-        log.w("打开 $name box 失败，尝试删除并重新创建: $e");
+        appLog.w('打开 Hive box 失败，将删除后重建: $name', error: e);
         try {
           await Hive.deleteBoxFromDisk(name);
           await open();
@@ -91,11 +89,6 @@ class AppInit {
       else
         Future<void>.value(),
     ]);
-  }
-
-  void _clearCache() {
-    log.i("清除缓存");
-    Hive.deleteBoxFromDisk(Constant.hiveRootPath);
-    Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
+    appLog.d('Hive: 已就绪');
   }
 }
