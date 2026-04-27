@@ -79,8 +79,7 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
             if (didPop) return;
             await _saveAndPop();
           },
-          child: Container(
-            decoration: themeConfig.getBackgroundDecoration(),
+          child: themeConfig.buildThemedBackground(
             child: Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(

@@ -33,6 +33,8 @@ dependencies:
   palette_generator: ^0.3.3+4 # 从图片提取颜色调色板
   shared_preferences: ^2.3.5 # 本地存储
   image_picker: ^1.1.2 # 图片选择器
+  path_provider: ^2.1.5 # 沙箱内持久路径（主题背景图缓存）
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

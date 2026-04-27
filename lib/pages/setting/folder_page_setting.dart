@@ -4,7 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
-import 'package:yeah_music/compments/animated_gradient_background.dart';
+import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
 import '../../compments/bookmark_service.dart';
@@ -25,19 +25,20 @@ class FolderPageSettings extends StatelessWidget {
     if (!folderProvider.initialized) {
       return Center(child: CircularProgressIndicator());
     }
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text("文件夹", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: AnimatedGradientBackground(
-        colors: GradientColorExtractor.getDefaultColors(),
-        child: ListView.builder(
+    return Consumer<ThemeConfigProvider>(
+      builder: (context, themeConfig, _) {
+        return themeConfig.buildThemedBackground(
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              title: const Text("文件夹", style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            body: ListView.builder(
           padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight),
           itemCount: folderProvider.folders.length,
           itemBuilder: (context, index) {
@@ -187,14 +188,16 @@ class FolderPageSettings extends StatelessWidget {
               ),
             );
           },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          _showAddFolderDialog(context, folderProvider);
-        },
-      ),
+            ),
+            floatingActionButton: FloatingActionButton(
+              child: const Icon(Icons.add),
+              onPressed: () {
+                _showAddFolderDialog(context, folderProvider);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 

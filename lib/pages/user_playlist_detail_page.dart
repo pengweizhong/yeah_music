@@ -185,8 +185,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
 
         return Consumer<ThemeConfigProvider>(
           builder: (context, themeConfig, _) {
-            return Container(
-              decoration: themeConfig.getBackgroundDecoration(),
+            return themeConfig.buildThemedBackground(
               child: Scaffold(
                 extendBodyBehindAppBar: true,
                 extendBody: true,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/song_page.dart';
@@ -10,6 +11,9 @@ import 'package:yeah_music/utils/hive_utils.dart';
 /// 迷你播放器组件 - 显示在底部的正在播放栏
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
+
+  /// 与 [MiniPlayer] 竖向占位一致，供主页等在 `extendBody` 下为列表预留底部边距
+  static const double barHeight = 80;
 
   @override
   Widget build(BuildContext context) {
@@ -33,18 +37,8 @@ class MiniPlayer extends StatelessWidget {
           builder: (context, snapshot) {
             final isPlaying = snapshot.data ?? false;
 
-            return Container(
-              height: 80,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
+            return FrostedGlassPanel.bottomBar(
+              height: barHeight,
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -102,6 +96,7 @@ class MiniPlayer extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
+                                  color: Colors.white,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -111,7 +106,7 @@ class MiniPlayer extends StatelessWidget {
                                 currentSong.artist ?? '未知艺术家',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey.shade600,
+                                  color: Colors.white.withValues(alpha: 0.7),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -122,6 +117,7 @@ class MiniPlayer extends StatelessWidget {
                         // 上一曲按钮
                         IconButton(
                           icon: const Icon(Icons.skip_previous, size: 24),
+                          color: Colors.white,
                           onPressed: () async {
                             await playListProvider.playPrev();
                           },
@@ -131,6 +127,7 @@ class MiniPlayer extends StatelessWidget {
                           icon: Icon(
                             isPlaying ? Icons.pause : Icons.play_arrow,
                             size: 28,
+                            color: Colors.white,
                           ),
                           onPressed: () {
                             if (isPlaying) {
@@ -143,6 +140,7 @@ class MiniPlayer extends StatelessWidget {
                         // 下一曲按钮
                         IconButton(
                           icon: const Icon(Icons.skip_next, size: 24),
+                          color: Colors.white,
                           onPressed: () async {
                             await playListProvider.playNext();
                           },

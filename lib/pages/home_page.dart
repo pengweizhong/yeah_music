@@ -171,12 +171,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
-        return Container(
-          decoration: themeConfig.getBackgroundDecoration(),
+        return themeConfig.buildThemedBackground(
           child: Scaffold(
             key: _scaffoldKey,
             extendBodyBehindAppBar: false,
-            extendBody: false,
+            extendBody: true,
             backgroundColor: Colors.transparent,
             drawer: const MenuPage(),
             appBar: AppBar(
@@ -212,13 +211,18 @@ class _HomePageState extends State<HomePage> {
                   _recentPaths,
                   maxSongs: 8,
                 );
+                final showMini = play.initialized &&
+                    play.currentSong != null &&
+                    play.playList.isNotEmpty;
+                final miniBottom =
+                    showMini ? MiniPlayer.barHeight : 0.0;
                 return RefreshIndicator(
                   color: Colors.white,
                   backgroundColor: Colors.black54,
                   onRefresh: _loadRecentPaths,
                   child: _HomeScrollBody(
                     quickEntry: _quickEntry,
-                    safeBottom: MediaQuery.paddingOf(context).bottom + 8,
+                    safeBottom: MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
                     greeting: _greeting(),
                     play: play,
                     user: user,
@@ -932,8 +936,6 @@ class _ContinuePlayCard extends StatelessWidget {
   final String subtitle;
   final double progress;
   final Future<void> Function() onToggle;
-  static const _accentStart = Color(0xFF7C4DFF);
-  static const _accentEnd = Color(0xFF536DFE);
 
   @override
   Widget build(BuildContext context) {
@@ -945,19 +947,11 @@ class _ContinuePlayCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_accentStart, _accentEnd],
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: _accentStart.withValues(alpha: 0.35),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

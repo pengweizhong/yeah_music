@@ -12,8 +12,7 @@ class ThemeSettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
-        return Container(
-          decoration: themeConfig.getBackgroundDecoration(),
+        return themeConfig.buildThemedBackground(
           child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
@@ -54,6 +53,8 @@ class ThemeSettingPage extends StatelessWidget {
                   _buildSectionTitle('背景图片'),
                   const SizedBox(height: 12),
                   _buildImagePicker(context, themeConfig),
+                  const SizedBox(height: 20),
+                  _buildImageEffectSection(themeConfig),
                 ],
               ],
             ),
@@ -261,6 +262,76 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
+  Widget _buildImageEffectSection(ThemeConfigProvider themeConfig) {
+    final v = themeConfig.backgroundImageEffect;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '背景雾化',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.65),
+              fontSize: 13,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                '弱',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+              ),
+              Expanded(
+                child: Slider(
+                  value: v,
+                  min: 0,
+                  max: 1,
+                  divisions: 20,
+                  label: '${(v * 100).round()}%',
+                  onChanged: (nv) {
+                    themeConfig.setBackgroundImageEffect(nv);
+                  },
+                ),
+              ),
+              Text(
+                '强',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${(v * 100).round()}%',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildImagePicker(BuildContext context, ThemeConfigProvider themeConfig) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -320,9 +391,18 @@ class ThemeSettingPage extends StatelessWidget {
   Future<void> _pickImage(BuildContext context, ThemeConfigProvider themeConfig) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (pickedFile != null) {
+
+    if (pickedFile == null) return;
+    if (!context.mounted) return;
+    try {
       await themeConfig.setBackgroundImage(pickedFile.path);
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('无法保存背景图（请重试或换一张）：$e'),
+        ),
+      );
     }
   }
 

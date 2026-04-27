@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yeah_music/compments/animated_gradient_background.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/setting_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
@@ -18,8 +18,7 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.transparent,
-      child: AnimatedGradientBackground(
-        colors: GradientColorExtractor.getDefaultColors(),
+      child: FrostedGlassPanel.drawer(
         child: SafeArea(
           child: ListView(
             //这里放一个Music的Logo
@@ -39,7 +38,10 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 20),
                 child: ListTile(
-                  title: const Text("主页", style: TextStyle(color: Colors.white)),
+                  title: const Text(
+                    "主页",
+                    style: TextStyle(color: Colors.white),
+                  ),
                   leading: const Icon(Icons.home, color: Colors.white),
                   onTap: () => Navigator.pop(context),
                 ),
@@ -48,10 +50,16 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 65, top: 5),
                 child: ListTile(
-                  title: const Text("歌曲列表", style: TextStyle(color: Colors.white)),
+                  title: const Text(
+                    "歌曲列表",
+                    style: TextStyle(color: Colors.white),
+                  ),
                   leading: const Icon(Icons.list, color: Colors.white),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => PlayListPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PlayListPage()),
+                    );
                   },
                 ),
               ),
@@ -59,12 +67,20 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
-                  title: const Text("歌单", style: TextStyle(color: Colors.white)),
-                  leading: const Icon(Icons.folder_copy_outlined, color: Colors.white),
+                  title: const Text(
+                    "歌单",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  leading: const Icon(
+                    Icons.folder_copy_outlined,
+                    color: Colors.white,
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const StoragePlayListPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const StoragePlayListPage(),
+                      ),
                     );
                   },
                 ),
@@ -73,10 +89,18 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
-                  title: const Text("音乐源", style: TextStyle(color: Colors.white)),
+                  title: const Text(
+                    "音乐源",
+                    style: TextStyle(color: Colors.white),
+                  ),
                   leading: const Icon(Icons.source, color: Colors.white),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => FolderPageSettings()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FolderPageSettings(),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -84,10 +108,16 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
-                  title: const Text("设置", style: TextStyle(color: Colors.white)),
+                  title: const Text(
+                    "设置",
+                    style: TextStyle(color: Colors.white),
+                  ),
                   leading: const Icon(Icons.settings, color: Colors.white),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SettingPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SettingPage()),
+                    );
                   },
                 ),
               ),
@@ -98,4 +128,3 @@ class _MenuPageState extends State<MenuPage> {
     );
   }
 }
-

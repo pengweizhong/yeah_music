@@ -13,8 +13,7 @@ class SettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
-        return Container(
-          decoration: themeConfig.getBackgroundDecoration(),
+        return themeConfig.buildThemedBackground(
           child: Scaffold(
             extendBodyBehindAppBar: true,
             extendBody: true,
