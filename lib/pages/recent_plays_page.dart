@@ -106,6 +106,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(

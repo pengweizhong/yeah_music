@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/themes/app_theme_mode_provider.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 
 /// 主题设置页面
 class ThemeSettingPage extends StatelessWidget {
@@ -11,25 +13,39 @@ class ThemeSettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeConfigProvider>(
-      builder: (context, themeConfig, child) {
+    return Consumer2<ThemeConfigProvider, AppThemeModeProvider>(
+      builder: (context, themeConfig, appTheme, child) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: const Text('主题设置', style: TextStyle(color: Colors.white)),
+              title: Text('主题设置', style: TextStyle(color: context.gradFg())),
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                icon: Icon(Icons.arrow_back_ios_new, color: context.gradFg(), size: 20),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _buildSectionTitle(context, '全局主题'),
+                const SizedBox(height: 6),
+                Text(
+                  '控制应用界面整体为浅色、深色或跟随系统；将保存到本机。',
+                  style: TextStyle(
+                    color: context.gradFgMuted(0.75),
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildGlobalThemeSelector(context, appTheme),
+                const SizedBox(height: 24),
                 // 主题类型选择
-                _buildSectionTitle('主题类型'),
+                _buildSectionTitle(context, '主题类型'),
                 const SizedBox(height: 12),
                 _buildThemeTypeSelector(context, themeConfig),
                 
@@ -37,21 +53,21 @@ class ThemeSettingPage extends StatelessWidget {
                 
                 // 预设颜色
                 if (themeConfig.themeType == ThemeType.solidColor) ...[
-                  _buildSectionTitle('预设颜色'),
+                  _buildSectionTitle(context, '预设颜色'),
                   const SizedBox(height: 12),
                   _buildPresetColors(context, themeConfig),
                 ],
                 
                 // 自定义颜色
                 if (themeConfig.themeType == ThemeType.customColor) ...[
-                  _buildSectionTitle('自定义颜色'),
+                  _buildSectionTitle(context, '自定义颜色'),
                   const SizedBox(height: 12),
                   _buildCustomColorPicker(context, themeConfig),
                 ],
                 
                 // 背景图片
                 if (themeConfig.themeType == ThemeType.backgroundImage) ...[
-                  _buildSectionTitle('背景图片'),
+                  _buildSectionTitle(context, '背景图片'),
                   const SizedBox(height: 12),
                   _buildImagePicker(context, themeConfig),
                   const SizedBox(height: 20),
@@ -65,23 +81,81 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: context.gradFg(),
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
     );
   }
 
+  Widget _buildGlobalThemeSelector(
+    BuildContext context,
+    AppThemeModeProvider appTheme,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradBorder(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.gradBorder(0.2)),
+      ),
+      child: Column(
+        children: [
+          _buildGlobalThemeTile(
+            context,
+            appTheme,
+            ThemeMode.light,
+            '白天模式',
+            Icons.light_mode_outlined,
+          ),
+          Divider(height: 1, color: context.gradBorder(0.1)),
+          _buildGlobalThemeTile(
+            context,
+            appTheme,
+            ThemeMode.dark,
+            '夜晚模式',
+            Icons.dark_mode_outlined,
+          ),
+          Divider(height: 1, color: context.gradBorder(0.1)),
+          _buildGlobalThemeTile(
+            context,
+            appTheme,
+            ThemeMode.system,
+            '跟随系统',
+            Icons.brightness_auto_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlobalThemeTile(
+    BuildContext context,
+    AppThemeModeProvider appTheme,
+    ThemeMode value,
+    String label,
+    IconData icon,
+  ) {
+    final selected = appTheme.themeMode == value;
+    return ListTile(
+      leading: Icon(icon, color: context.gradFg(), size: 22),
+      title: Text(label, style: TextStyle(color: context.gradFg(), fontSize: 15)),
+      trailing: selected
+          ? Icon(Icons.check_circle, color: context.gradFg(), size: 22)
+          : Icon(Icons.circle_outlined, color: context.gradFg(0.3), size: 22),
+      onTap: () => appTheme.setThemeMode(value),
+    );
+  }
+
   Widget _buildThemeTypeSelector(BuildContext context, ThemeConfigProvider themeConfig) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: context.gradBorder(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: context.gradBorder(0.14)),
       ),
       child: Column(
         children: [
@@ -92,7 +166,7 @@ class ThemeSettingPage extends StatelessWidget {
             '预设颜色',
             Icons.palette,
           ),
-          Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+          Divider(height: 1, color: context.gradBorder(0.1)),
           _buildThemeTypeOption(
             context,
             themeConfig,
@@ -100,7 +174,7 @@ class ThemeSettingPage extends StatelessWidget {
             '自定义颜色',
             Icons.color_lens,
           ),
-          Divider(height: 1, color: Colors.white.withOpacity(0.1)),
+          Divider(height: 1, color: context.gradBorder(0.1)),
           _buildThemeTypeOption(
             context,
             themeConfig,
@@ -122,11 +196,11 @@ class ThemeSettingPage extends StatelessWidget {
   ) {
     final isSelected = themeConfig.themeType == type;
     return ListTile(
-      leading: Icon(icon, color: Colors.white, size: 22),
-      title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 15)),
+      leading: Icon(icon, color: context.gradFg(), size: 22),
+      title: Text(label, style: TextStyle(color: context.gradFg(), fontSize: 15)),
       trailing: isSelected
-          ? const Icon(Icons.check_circle, color: Colors.white, size: 22)
-          : Icon(Icons.circle_outlined, color: Colors.white.withOpacity(0.3), size: 22),
+          ? Icon(Icons.check_circle, color: context.gradFg(), size: 22)
+          : Icon(Icons.circle_outlined, color: context.gradFg(0.3), size: 22),
       onTap: () => themeConfig.setThemeType(type),
     );
   }

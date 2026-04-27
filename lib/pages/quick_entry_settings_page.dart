@@ -80,6 +80,7 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
             await _saveAndPop();
           },
           child: themeConfig.buildThemedBackground(
+            context: context,
             child: Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(

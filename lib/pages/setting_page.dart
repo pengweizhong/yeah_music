@@ -5,6 +5,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -14,49 +15,50 @@ class SettingPage extends StatelessWidget {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: Scaffold(
             extendBodyBehindAppBar: true,
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
-              title: const Text("设置", style: TextStyle(color: Colors.white)),
+              title: Text("设置", style: TextStyle(color: context.gradFg())),
               backgroundColor: Colors.transparent,
               elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
+              iconTheme: IconThemeData(color: context.gradFg()),
             ),
             body: ListView(
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight),
               children: [
                 // 设置项分组
                 ListTile(
-                  title: const Text("背景主题", style: TextStyle(color: Colors.white)),
+                  title: Text("背景主题", style: TextStyle(color: context.gradFg())),
                   subtitle: Text(
                     "纯色、自定义颜色、背景图片",
-                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    style: TextStyle(color: context.gradFg(0.6)),
                   ),
-                  leading: const Icon(Icons.color_lens, color: Colors.white),
+                  leading: Icon(Icons.color_lens, color: context.gradFg()),
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const ThemeSettingPage()));
                   },
                 ),
             ExpansionTile(
-              title: const Text("系统信息", style: TextStyle(color: Colors.white)),
+              title: Text("系统信息", style: TextStyle(color: context.gradFg())),
               subtitle: Text(
                 "设备信息、存储空间",
-                style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                style: TextStyle(color: context.gradFg(0.6)),
               ),
-              leading: const Icon(Icons.info_outline, color: Colors.white),
-              iconColor: Colors.white,
-              collapsedIconColor: Colors.white,
+              leading: Icon(Icons.info_outline, color: context.gradFg()),
+              iconColor: context.gradFg(),
+              collapsedIconColor: context.gradFg(),
               children: [DiskSpaceView()],
             ),
             ListTile(
-              title: const Text("关于", style: TextStyle(color: Colors.white)),
+              title: Text("关于", style: TextStyle(color: context.gradFg())),
               subtitle: Text(
                 "应用信息、版本、开源协议",
-                style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                style: TextStyle(color: context.gradFg(0.6)),
               ),
-              leading: const Icon(Icons.favorite, color: Colors.white),
+              leading: Icon(Icons.favorite, color: context.gradFg()),
               onTap: () {
                 ApplicationUtils.showAboutDialog(context);
               },

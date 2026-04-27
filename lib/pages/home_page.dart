@@ -10,6 +10,7 @@ import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/quick_entry_settings_page.dart';
@@ -185,6 +186,7 @@ class _HomePageState extends State<HomePage> {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: Scaffold(
             key: _scaffoldKey,
             extendBodyBehindAppBar: false,
@@ -196,14 +198,14 @@ class _HomePageState extends State<HomePage> {
               title: Text(
                 'Yeah Music',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: context.gradFg(0.95),
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
                 ),
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
+              iconTheme: IconThemeData(color: context.gradFg()),
               leading: IconButton(
                 icon: const Icon(Icons.menu_rounded, size: 26),
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -234,8 +236,10 @@ class _HomePageState extends State<HomePage> {
                 final miniBottom =
                     showMini ? MiniPlayer.barHeight : 0.0;
                 return RefreshIndicator(
-                  color: Colors.white,
-                  backgroundColor: Colors.black54,
+                  color: context.gradFg(),
+                  backgroundColor: Theme.of(context).brightness == Brightness.light
+                      ? const Color(0x33000000)
+                      : Colors.black54,
                   onRefresh: _loadRecentPaths,
                   child: _HomeScrollBody(
                     quickEntry: _quickEntry,
@@ -397,7 +401,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
       return Text(
         '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等',
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.45),
+          color: context.gradFg(0.45),
           fontSize: 14,
           height: 1.35,
         ),
@@ -582,7 +586,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                 child: Text(
                   '正在加载曲库…',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: context.gradFg(0.5),
                     fontSize: 14,
                   ),
                 ),
@@ -590,15 +594,15 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
             ),
           )
         else if (!widget.showRecentList)
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(24.0),
               child: Center(
                 child: SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    color: Colors.white38,
+                    color: context.gradFg(0.38),
                     strokeWidth: 2,
                   ),
                 ),
@@ -612,7 +616,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               child: Text(
                 '暂无最近播放，在曲库或歌单中播放歌曲后会显示',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: context.gradFg(0.45),
                   fontSize: 14,
                 ),
               ),
@@ -679,7 +683,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                       ? '已有播放次数记录，但路径与当前曲库不一致（重命名/移动后请重扫音乐目录，再播几次会恢复）'
                       : '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.45),
+                    color: context.gradFg(0.45),
                     fontSize: 14,
                   ),
                 ),
@@ -879,16 +883,16 @@ class _ContinueEmptyCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.gradBorder(0.08),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: context.gradBorder(0.1)),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.library_music_outlined,
                 size: 40,
-                color: Colors.white.withValues(alpha: 0.4),
+                color: context.gradFg(0.4),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -898,7 +902,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                     Text(
                       '还没有在播放',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: context.gradFg(0.9),
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
@@ -907,7 +911,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                     Text(
                       '去本地曲库选一首歌开始',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
+                        color: context.gradFg(0.45),
                         fontSize: 13,
                       ),
                     ),
@@ -916,7 +920,7 @@ class _ContinueEmptyCard extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.white.withValues(alpha: 0.35),
+                color: context.gradFg(0.35),
               ),
             ],
           ),
@@ -954,14 +958,14 @@ class _PlaylistCarousels extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!user.initialized) {
-      return const SizedBox(
+      return SizedBox(
         height: 168,
         child: Center(
           child: SizedBox(
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
-              color: Colors.white30,
+              color: context.gradFg(0.3),
               strokeWidth: 2,
             ),
           ),
@@ -1043,10 +1047,10 @@ class _GreetingBlock extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: context.gradBorder(0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gradBorder(0.1),
         ),
       ),
       child: Column(
@@ -1056,7 +1060,7 @@ class _GreetingBlock extends StatelessWidget {
           Text(
             '$greeting，今天想听点什么？',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.95),
+              color: context.gradFg(0.95),
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.35,
@@ -1068,7 +1072,7 @@ class _GreetingBlock extends StatelessWidget {
           Text(
             '从下面继续上次的歌，或选一张歌单开始',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.45),
+              color: context.gradFg(0.45),
               fontSize: 13,
               height: 1.35,
             ),
@@ -1095,17 +1099,17 @@ class _SearchPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.10),
+            color: context.gradBorder(0.10),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: context.gradBorder(0.12),
             ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.search_rounded,
-                color: Colors.white.withValues(alpha: 0.45),
+                color: context.gradFg(0.45),
                 size: 22,
               ),
               const SizedBox(width: 10),
@@ -1113,7 +1117,7 @@ class _SearchPill extends StatelessWidget {
                 child: Text(
                   '搜索歌曲、歌手、歌单',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.45),
+                    color: context.gradFg(0.45),
                     fontSize: 15,
                   ),
                 ),
@@ -1144,7 +1148,7 @@ class _SectionTitle extends StatelessWidget {
           width: 3,
           height: 16,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: context.gradFg(0.5),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -1153,7 +1157,7 @@ class _SectionTitle extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.95),
+              color: context.gradFg(0.95),
               fontSize: 16,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.2,
@@ -1173,7 +1177,7 @@ class _SectionTitle extends StatelessWidget {
             child: Text(
               actionLabel!,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.45),
+                color: context.gradFg(0.45),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -1206,10 +1210,10 @@ class _ContinuePlayCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.gradBorder(0.08),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: context.gradBorder(0.1),
             ),
           ),
           child: Column(
@@ -1220,13 +1224,13 @@ class _ContinuePlayCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: context.gradBorder(0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       '继续播放',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: context.gradFg(0.9),
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.3,
@@ -1243,7 +1247,7 @@ class _ContinuePlayCard extends StatelessWidget {
                         playing
                             ? Icons.pause_circle_filled_rounded
                             : Icons.play_circle_fill_rounded,
-                        color: Colors.white.withValues(alpha: 0.95),
+                        color: context.gradFg(0.95),
                         size: 32,
                       );
                     },
@@ -1255,8 +1259,8 @@ class _ContinuePlayCard extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.gradFg(),
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1267,7 +1271,7 @@ class _ContinuePlayCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: context.gradFg(0.8),
                   fontSize: 14,
                 ),
               ),
@@ -1277,8 +1281,8 @@ class _ContinuePlayCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 3,
-                  backgroundColor: Colors.white.withValues(alpha: 0.25),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  backgroundColor: context.gradBorder(0.25),
+                  valueColor: AlwaysStoppedAnimation<Color>(context.gradFg()),
                 ),
               ),
             ],
@@ -1332,10 +1336,10 @@ class _QuickEntryTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.gradBorder(0.08),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: context.gradBorder(0.1),
             ),
           ),
           child: Column(
@@ -1360,7 +1364,7 @@ class _QuickEntryTile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: context.gradFg(0.9),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1420,8 +1424,8 @@ class _MixCard extends StatelessWidget {
                 title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.gradFg(),
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
@@ -1433,7 +1437,7 @@ class _MixCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: context.gradFg(0.8),
                   fontSize: 11,
                 ),
               ),

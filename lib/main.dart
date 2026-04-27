@@ -4,7 +4,8 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/pages/welcome_entry_page.dart';
-import 'package:yeah_music/themes/theme_provider.dart';
+import 'package:yeah_music/themes/app_material_themes.dart';
+import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
 import 'app_scaffold_messenger.dart';
@@ -119,7 +120,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
     }
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AppThemeModeProvider()),
         ChangeNotifierProvider(create: (_) => PlayListProvider()),
         ChangeNotifierProvider(
           create: (_) {
@@ -141,42 +142,18 @@ class YeahMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      scaffoldMessengerKey: appScaffoldMessengerKey,
-      navigatorObservers: <NavigatorObserver>[appRouteObserver],
-      // 去掉右上角的 "Debug" 标签
-      debugShowCheckedModeBanner: false,
-      home: const WelcomeEntryPage(),
-      // 动态主题 - 使用深色主题避免白色闪光
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppSplashChrome.gradientColors[1],
-        canvasColor: AppSplashChrome.gradientColors[1],
-        cardColor: const Color(0xFF0A0E14),
-        dialogBackgroundColor: Colors.black87,
-        // 完全不设置 textTheme 和 fontFamily，让 Flutter 使用系统默认字体
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppSplashChrome.gradientColors[1],
-        canvasColor: AppSplashChrome.gradientColors[1],
-        cardColor: const Color(0xFF0A0E14),
-        dialogBackgroundColor: Colors.black87,
-        // 完全不设置 textTheme 和 fontFamily，让 Flutter 使用系统默认字体
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
-      ),
-      themeMode: ThemeMode.dark,
+    return Consumer<AppThemeModeProvider>(
+      builder: (context, appearance, _) {
+        return MaterialApp(
+          scaffoldMessengerKey: appScaffoldMessengerKey,
+          navigatorObservers: <NavigatorObserver>[appRouteObserver],
+          debugShowCheckedModeBanner: false,
+          home: const WelcomeEntryPage(),
+          theme: AppMaterialThemes.light,
+          darkTheme: AppMaterialThemes.dark,
+          themeMode: appearance.themeMode,
+        );
+      },
     );
   }
 }

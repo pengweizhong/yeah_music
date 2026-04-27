@@ -447,6 +447,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: Scaffold(
             extendBodyBehindAppBar: true,
             extendBody: true,

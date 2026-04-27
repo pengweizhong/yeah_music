@@ -5,6 +5,7 @@ import 'package:yeah_music/pages/setting_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
 
 import '../pages/setting/folder_page_setting.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -38,11 +39,11 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 20),
                 child: ListTile(
-                  title: const Text(
+                  title: Text(
                     "主页",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg()),
                   ),
-                  leading: const Icon(Icons.home, color: Colors.white),
+                  leading: Icon(Icons.home, color: context.gradFg()),
                   onTap: () => Navigator.pop(context),
                 ),
               ),
@@ -50,11 +51,11 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 65, top: 5),
                 child: ListTile(
-                  title: const Text(
+                  title: Text(
                     "歌曲列表",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg()),
                   ),
-                  leading: const Icon(Icons.list, color: Colors.white),
+                  leading: Icon(Icons.list, color: context.gradFg()),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -67,13 +68,13 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
-                  title: const Text(
+                  title: Text(
                     "歌单",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg()),
                   ),
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.folder_copy_outlined,
-                    color: Colors.white,
+                    color: context.gradFg(),
                   ),
                   onTap: () {
                     Navigator.push(
@@ -89,11 +90,11 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
-                  title: const Text(
+                  title: Text(
                     "音乐源",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg()),
                   ),
-                  leading: const Icon(Icons.source, color: Colors.white),
+                  leading: Icon(Icons.source, color: context.gradFg()),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -108,11 +109,11 @@ class _MenuPageState extends State<MenuPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
-                  title: const Text(
+                  title: Text(
                     "设置",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg()),
                   ),
-                  leading: const Icon(Icons.settings, color: Colors.white),
+                  leading: Icon(Icons.settings, color: context.gradFg()),
                   onTap: () {
                     Navigator.push(
                       context,

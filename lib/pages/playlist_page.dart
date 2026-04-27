@@ -233,6 +233,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         return Consumer<ThemeConfigProvider>(
           builder: (context, themeConfig, child) {
             return themeConfig.buildThemedBackground(
+              context: context,
               child: Scaffold(
                 extendBodyBehindAppBar: true,
                 extendBody: true,
@@ -428,6 +429,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: const SizedBox.expand(),
         );
       },
@@ -471,6 +473,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
         return themeConfig.buildThemedBackground(
+          context: context,
           child: ConstrainedBox(
             constraints: const BoxConstraints.expand(),
             child: _buildSearchResultsContent(context),

@@ -199,8 +199,14 @@ class ThemeConfigProvider extends ChangeNotifier {
     await prefs.setDouble('background_image_effect', _backgroundImageEffect);
   }
 
-  /// 全页背景：自定义图时用 [ImageFiltered] + 蒙层，其它与 [getBackgroundDecoration] 一致
-  Widget buildThemedBackground({required Widget child}) {
+  /// 全页背景：自定义图时用 [ImageFiltered] + 蒙层，其它与 [getBackgroundDecoration] 一致。
+  /// 必须传入 [context]，以响应 [AppThemeModeProvider] / [ThemeMode] 的亮暗。
+  Widget buildThemedBackground({
+    required BuildContext context,
+    required Widget child,
+  }) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     if (_themeType == ThemeType.backgroundImage &&
         _backgroundImagePath != null &&
         File(_backgroundImagePath!).existsSync()) {
@@ -233,6 +239,14 @@ class ThemeConfigProvider extends ChangeNotifier {
               ),
             ),
           ),
+          if (isLight)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ColoredBox(
+                  color: const Color(0xFF0D1117).withValues(alpha: 0.06),
+                ),
+              ),
+            ),
           Positioned.fill(
             child: IgnorePointer(
               child: DecoratedBox(
@@ -242,13 +256,31 @@ class ThemeConfigProvider extends ChangeNotifier {
               ),
             ),
           ),
-          child,
+          _ThemedOnGradientContent(child: child),
         ],
+      );
+    }
+    if (isLight) {
+      // 中灰冷色渐变，避免「一片死白」；与 [gradFg] 深字对比足够
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFC5CED9),
+              Color(0xFFB0BAC8),
+              Color(0xFF9BABB8),
+            ],
+            stops: [0.0, 0.45, 1.0],
+          ),
+        ),
+        child: _ThemedOnGradientContent(child: child),
       );
     }
     return Container(
       decoration: getBackgroundDecoration(),
-      child: child,
+      child: _ThemedOnGradientContent(child: child),
     );
   }
 
@@ -295,6 +327,25 @@ class ThemeConfigProvider extends ChangeNotifier {
           ),
         );
     }
+  }
+}
+
+class _ThemedOnGradientContent extends StatelessWidget {
+  const _ThemedOnGradientContent({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final c = isLight ? const Color(0xFF0D1117) : Colors.white;
+    return DefaultTextStyle(
+      style: TextStyle(color: c, height: 1.3),
+      child: IconTheme(
+        data: IconThemeData(color: c),
+        child: child,
+      ),
+    );
   }
 }
 

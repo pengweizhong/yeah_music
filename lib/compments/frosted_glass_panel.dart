@@ -1,22 +1,23 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 
 /// 与 [MiniPlayer] 条一致的毛玻璃：模糊、半透明、描边与阴影；抽屉 [FrostedGlassPanel.drawer]；
 /// 底栏 [FrostedGlassBottomSheet]；居中 [FrostedGlassDialog] / [showFrostedDialog]。
 class FrostedGlassPanel extends StatelessWidget {
   const FrostedGlassPanel._({
     super.key,
-    required this.border,
+    required this.frostedKind,
     required this.shadowOffset,
     this.height,
     required this.child,
   });
 
   final Widget child;
-  final BoxBorder border;
   final Offset shadowOffset;
   final double? height;
+  final FrostedSurfaceKind frostedKind;
 
   /// 底部迷你播放器条；固定高度以与 [MiniPlayer.barHeight] 一致。
   factory FrostedGlassPanel.bottomBar({
@@ -26,37 +27,29 @@ class FrostedGlassPanel extends StatelessWidget {
   }) {
     return FrostedGlassPanel._(
       key: key,
-      border: Border(
-        top: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-      ),
+      frostedKind: FrostedSurfaceKind.bottomBar,
       shadowOffset: const Offset(0, -2),
       height: height,
       child: child,
     );
   }
 
-  /// 侧栏抽屉：铺满侧栏，右侧边线与轻微右侧阴影，与条同一套材质参数。
+  /// 侧栏抽屉
   factory FrostedGlassPanel.drawer({Key? key, required Widget child}) {
     return FrostedGlassPanel._(
       key: key,
-      border: Border(
-        right: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-      ),
+      frostedKind: FrostedSurfaceKind.drawerOrPinned,
       shadowOffset: const Offset(2, 0),
       height: null,
       child: child,
     );
   }
 
-  /// 吸顶分节标题条（如首页「最近播放」）：底边 + 向下轻阴影，与 [FrostedGlassPanel.bottomBar] 同模糊与填充。
+  /// 吸顶分节标题条（如首页「最近播放」）
   factory FrostedGlassPanel.pinnedSection({Key? key, required Widget child}) {
     return FrostedGlassPanel._(
       key: key,
-      border: Border(
-        bottom: BorderSide(
-          color: Colors.white.withValues(alpha: 0.18),
-        ),
-      ),
+      frostedKind: FrostedSurfaceKind.drawerOrPinned,
       shadowOffset: const Offset(0, 3),
       height: null,
       child: child,
@@ -65,6 +58,18 @@ class FrostedGlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 抽屉：x 正；吸顶条：x=0, y=3；底栏：y 负
+    final border = (frostedKind == FrostedSurfaceKind.drawerOrPinned)
+        ? (shadowOffset.dx > 0
+            ? Border(right: BorderSide(color: FrostedPalette.edgeLine(context)))
+            : Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? const Color(0xFF0D1117).withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.18),
+                ),
+              ))
+        : Border(top: BorderSide(color: FrostedPalette.edgeLine(context)));
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -72,7 +77,7 @@ class FrostedGlassPanel extends StatelessWidget {
           width: double.infinity,
           height: height ?? double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0x33FFFFFF),
+            color: FrostedPalette.fill(context, frostedKind),
             border: border,
             boxShadow: [
               BoxShadow(
@@ -105,7 +110,9 @@ class FrostedGlassBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
     final r = BorderRadius.vertical(top: Radius.circular(topRadius));
+    final e = FrostedPalette.edgeLine(context);
     return ClipRRect(
       borderRadius: r,
       child: BackdropFilter(
@@ -113,10 +120,10 @@ class FrostedGlassBottomSheet extends StatelessWidget {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0x33FFFFFF),
+            color: FrostedPalette.fill(context, FrostedSurfaceKind.sheet),
             borderRadius: r,
             border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              top: BorderSide(color: e),
             ),
             boxShadow: [
               BoxShadow(
@@ -136,7 +143,9 @@ class FrostedGlassBottomSheet extends StatelessWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.32),
+                      color: isLight
+                          ? const Color(0xFF0D1117).withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.32),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -152,9 +161,24 @@ class FrostedGlassBottomSheet extends StatelessWidget {
   }
 }
 
-/// 底部毛玻璃上使用的 [Theme]（高对比浅色字/图标，与 [FrostedGlassBottomSheet] 搭配）
+const Color _kLightInkFrost = Color(0xFF0D1117);
+
+/// 底部毛玻璃上使用的 [Theme]：夜间高对比白字；白天为浅底配深字。
 ThemeData frostedBottomSheetContentTheme(BuildContext context) {
   final t = Theme.of(context);
+  if (t.brightness == Brightness.light) {
+    return t.copyWith(
+      colorScheme: t.colorScheme.copyWith(
+        onSurface: _kLightInkFrost,
+        onSurfaceVariant: const Color(0xB30D1117),
+      ),
+      listTileTheme: t.listTileTheme.copyWith(
+        textColor: _kLightInkFrost,
+        iconColor: _kLightInkFrost,
+      ),
+      dividerTheme: const DividerThemeData(color: Color(0x1F0D1117)),
+    );
+  }
   return t.copyWith(
     colorScheme: t.colorScheme.copyWith(
       onSurface: Colors.white,
@@ -193,9 +217,12 @@ class FrostedGlassDialog extends StatelessWidget {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0x33FFFFFF),
+              color: FrostedPalette.fill(
+                context,
+                FrostedSurfaceKind.dialog,
+              ),
               borderRadius: r,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              border: Border.all(color: FrostedPalette.edgeLine(context)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.22),
@@ -212,9 +239,17 @@ class FrostedGlassDialog extends StatelessWidget {
   }
 }
 
-/// [FrostedGlassDialog] 内正文等浅色 [Theme]
+/// [FrostedGlassDialog] 内 [Theme]：夜白字 / 日深字。
 ThemeData frostedDialogContentTheme(BuildContext context) {
   final t = Theme.of(context);
+  if (t.brightness == Brightness.light) {
+    return t.copyWith(
+      colorScheme: t.colorScheme.copyWith(
+        onSurface: _kLightInkFrost,
+        onSurfaceVariant: const Color(0xB30D1117),
+      ),
+    );
+  }
   return t.copyWith(
     colorScheme: t.colorScheme.copyWith(
       onSurface: Colors.white,

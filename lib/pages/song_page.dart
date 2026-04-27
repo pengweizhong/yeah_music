@@ -1398,6 +1398,7 @@ class _SongPageState extends State<SongPage> {
       builder: (context, playListProvider, themeConfig, childWidget) {
         if (playListProvider.playList.isEmpty) {
           return themeConfig.buildThemedBackground(
+            context: context,
             child: const Scaffold(
               backgroundColor: Colors.transparent,
               body: Center(
@@ -1427,6 +1428,7 @@ class _SongPageState extends State<SongPage> {
         }
 
         return themeConfig.buildThemedBackground(
+          context: context,
           child: SafeArea(
             child: Scaffold(
               backgroundColor: Colors.transparent,
