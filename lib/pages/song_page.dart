@@ -10,6 +10,7 @@ import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
+import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/application_utils.dart';
@@ -40,10 +41,13 @@ class _SongPageState extends State<SongPage> {
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
-  final ScrollController _scrollController = ScrollController();
+  late ScrollController _scrollController;
 
-  /// 与当前已加载歌词对应的曲目路径（用于后台/列表自动切歌后刷新歌词 UI）
+  /// 与当前已加载歌词对应的曲目路径（build 中用于检测切歌，需与 [ _lyricsHydratedForPath ] 同步）
   String? _lyricsBoundSongPath;
+
+  /// 已完成歌词数据与滚动对齐的曲路径；用于避免首帧无歌词、以及 initState 的 postFrame 重复 [_initLyrics]
+  String? _lyricsHydratedForPath;
 
   // 歌词显示配置（从设置加载）
   late LyricSettings _settings;
@@ -70,12 +74,34 @@ class _SongPageState extends State<SongPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _settings = LyricSettings(); // 初始化默认设置
     final initialPage = widget.initialPage.clamp(0, 1);
     _currentPage = initialPage;
     _pageController = PageController(initialPage: initialPage);
     _loadSettings();
     _listenToPlayer();
+    _initPostFrame();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 在首帧 build 前尽量解析好歌词，避免先闪「暂无/黑底」再出现列表
+    _tryEagerHydrateLyrics();
+  }
+
+  void _tryEagerHydrateLyrics() {
+    if (!mounted) return;
+    final p = Provider.of<PlayListProvider>(context, listen: false);
+    if (p.playList.isEmpty) return;
+    final idx = widget.index.clamp(0, p.playList.length - 1);
+    final song = p.playList[idx];
+    if (_lyricsHydratedForPath == song.path) return;
+    _applySongLyrics(song);
+  }
+
+  void _initPostFrame() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 用路由传入的 index 初始化当前播放索引
       final playListProvider = Provider.of<PlayListProvider>(
@@ -208,38 +234,78 @@ class _SongPageState extends State<SongPage> {
     super.dispose();
   }
 
+  /// 用于 [ScrollController.initialScrollOffset]，使首帧即接近当前行，避免先整屏从顶再跳
+  double _lineScrollUnitEstimate() {
+    final o = _settings.originalFontSize;
+    final t = _settings.translationFontSize;
+    final sp = _settings.lyricLineSpacing;
+    return o * 1.35 + t * 1.35 + sp + 28;
+  }
+
   void _initLyrics() {
     final playListProvider = Provider.of<PlayListProvider>(
       context,
       listen: false,
     );
     final currentSong = playListProvider.currentSong;
-    if (currentSong != null) {
-      final song = currentSong;
-      if (song.lyrics != null && song.lyrics!.isNotEmpty) {
-        setState(() {
-          _lyrics = LyricsUtils.parseLyrics(song.lyrics);
+    if (currentSong == null) return;
+    if (_lyricsHydratedForPath == currentSong.path) return;
+    _applySongLyrics(currentSong);
+  }
+
+  void _applySongLyrics(Song song) {
+    if (song.lyrics != null && song.lyrics!.isNotEmpty) {
+      final pos = MusicService.lastPosition;
+      final parsed = LyricsUtils.parseLyrics(song.lyrics!);
+      final lineIndex = LyricsUtils.findCurrentLyricIndex(parsed, pos);
+      final scrollLine = lineIndex >= 0 ? lineIndex : 0;
+      final initialOffset = parsed.length <= 1
+          ? 0.0
+          : (scrollLine * _lineScrollUnitEstimate()).clamp(0.0, double.infinity);
+
+      _scrollController.dispose();
+      _scrollController = ScrollController(initialScrollOffset: initialOffset);
+
+      setState(() {
+        _lyricsBoundSongPath = song.path;
+        _lyricsHydratedForPath = song.path;
+        _currentPosition = pos;
+        _lyrics = parsed;
+        _lyricKeys = List<GlobalKey>.generate(
+          _lyrics.length,
+          (_) => GlobalKey(),
+        );
+        for (var line in _lyrics) {
+          line.isActive = false;
+        }
+        if (lineIndex >= 0 && lineIndex < _lyrics.length) {
+          _lyrics[lineIndex].isActive = true;
+          _currentLyricIndex = lineIndex;
+        } else {
           _currentLyricIndex = -1;
-          // 重置所有行的激活状态
-          for (var line in _lyrics) {
-            line.isActive = false;
-          }
-          _lyricKeys = List<GlobalKey>.generate(
-            _lyrics.length,
-            (_) => GlobalKey(),
+        }
+      });
+      // 再一帧瞬时微调行高误差/未建全的 item
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _lyrics.isEmpty) return;
+        if (_currentLyricIndex >= 0) {
+          _scrollToCurrentLyric(
+            _currentLyricIndex,
+            force: true,
+            instant: true,
           );
-          // 重置滚动位置
-          if (_scrollController.hasClients) {
-            _scrollController.jumpTo(0);
-          }
-        });
-      } else {
-        setState(() {
-          _lyrics = [];
-          _lyricKeys = [];
-          _currentLyricIndex = -1;
-        });
-      }
+        }
+      });
+    } else {
+      _scrollController.dispose();
+      _scrollController = ScrollController();
+      setState(() {
+        _lyricsBoundSongPath = song.path;
+        _lyricsHydratedForPath = song.path;
+        _lyrics = [];
+        _lyricKeys = [];
+        _currentLyricIndex = -1;
+      });
     }
   }
 
@@ -270,7 +336,7 @@ class _SongPageState extends State<SongPage> {
             _ignoreStalePositionUntil = null;
           }
           _currentPosition = position;
-          _updateCurrentLyric(position);
+          _updateCurrentLyric(position, instantScroll: false);
           setState(() {});
         }
       }
@@ -284,7 +350,7 @@ class _SongPageState extends State<SongPage> {
           _updateDuration();
           // 首次播放时，确保歌词与滚动立即对齐
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _updateCurrentLyric(_currentPosition);
+            _updateCurrentLyric(_currentPosition, instantScroll: true);
           });
         }
       }
@@ -302,7 +368,10 @@ class _SongPageState extends State<SongPage> {
     // 自动切歌由 PlayListProvider 全局订阅 completion，避免离开本页后无法连播
   }
 
-  void _updateCurrentLyric(Duration position) {
+  void _updateCurrentLyric(
+    Duration position, {
+    bool instantScroll = false,
+  }) {
     final newIndex = LyricsUtils.findCurrentLyricIndex(_lyrics, position);
     // 即使索引相同，也要更新激活状态，确保UI同步
     if (newIndex >= 0 && newIndex < _lyrics.length) {
@@ -313,13 +382,16 @@ class _SongPageState extends State<SongPage> {
       // 设置当前行为激活状态
       _lyrics[newIndex].isActive = true;
 
-      // 如果索引变化，更新并滚动
-      if (newIndex != _currentLyricIndex) {
+      // 如果索引变化，更新并滚动；初次瞬时对齐时索引从 -1 变到当前，也用 instant
+      if (newIndex != _currentLyricIndex || instantScroll) {
         _currentLyricIndex = newIndex;
         // 滚动到当前歌词行
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            _scrollToCurrentLyric(newIndex);
+            _scrollToCurrentLyric(
+              newIndex,
+              instant: instantScroll,
+            );
           }
         });
       }
@@ -332,7 +404,11 @@ class _SongPageState extends State<SongPage> {
     }
   }
 
-  void _scrollToCurrentLyric(int index, {bool force = false}) {
+  void _scrollToCurrentLyric(
+    int index, {
+    bool force = false,
+    bool instant = false,
+  }) {
     // 如果正在手动滚动且不是强制滚动，则不自动滚动
     if (_isManualScrolling && !force) return;
     if (!_scrollController.hasClients) return;
@@ -344,7 +420,7 @@ class _SongPageState extends State<SongPage> {
       Scrollable.ensureVisible(
         ctx,
         alignment: 0.5,
-        duration: const Duration(milliseconds: 250),
+        duration: instant ? Duration.zero : const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
       return;
@@ -352,19 +428,32 @@ class _SongPageState extends State<SongPage> {
 
     // ListView.builder 只构建可见区域附近的歌词。跳转距离较远时，目标行还没有 context，
     // 需要先用索引比例滚到目标附近，等待目标行构建后再精确定位。
-    final position = _scrollController.position;
-    final maxExtent = position.maxScrollExtent;
-    if (maxExtent <= 0 || _lyrics.length <= 1) return;
+    final pos = _scrollController.position;
+    final maxExtent = pos.maxScrollExtent;
+    if (maxExtent <= 0 || _lyrics.length <= 1) {
+      if (instant) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollToCurrentLyric(index, force: force, instant: instant);
+          }
+        });
+      }
+      return;
+    }
 
     final estimatedOffset = (maxExtent * (index / (_lyrics.length - 1))).clamp(
-      position.minScrollExtent,
+      pos.minScrollExtent,
       maxExtent,
     );
-    _scrollController.animateTo(
-      estimatedOffset,
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-    );
+    if (instant) {
+      _scrollController.jumpTo(estimatedOffset);
+    } else {
+      _scrollController.animateTo(
+        estimatedOffset,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -373,7 +462,7 @@ class _SongPageState extends State<SongPage> {
         Scrollable.ensureVisible(
           builtCtx,
           alignment: 0.5,
-          duration: const Duration(milliseconds: 220),
+          duration: instant ? Duration.zero : const Duration(milliseconds: 220),
           curve: Curves.easeOut,
         );
       }
@@ -1022,9 +1111,10 @@ class _SongPageState extends State<SongPage> {
           });
         }
 
+        final pageBg = Theme.of(context).colorScheme.surface;
         return SafeArea(
           child: Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+            backgroundColor: pageBg,
             body: Column(
               children: [
                 // 顶部栏：返回按钮和歌曲信息
@@ -1081,9 +1171,11 @@ class _SongPageState extends State<SongPage> {
                   ),
                 ),
 
-                // 歌词/封皮显示区域（支持左右滑动：左滑显示封面，右滑显示歌词）
+                // 歌词/封皮显示区域（与 Scaffold 同底色，避免未绘制区域透出 theme 的纯黑 canvas）
                 Expanded(
-                  child: ScrollConfiguration(
+                  child: ColoredBox(
+                    color: pageBg,
+                    child: ScrollConfiguration(
                     // 支持鼠标滑动
                     behavior: const MaterialScrollBehavior().copyWith(
                       dragDevices: {
@@ -1106,6 +1198,17 @@ class _SongPageState extends State<SongPage> {
                           _currentPage = index;
                         });
                         _savePageState(); // 保存页面状态
+                        if (index == 1 && _lyrics.isNotEmpty) {
+                          // 从封面切到歌词时瞬时对齐，避免先看到顶再滚到当前行
+                          _isManualScrolling = false;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            _updateCurrentLyric(
+                              _effectivePosition(),
+                              instantScroll: true,
+                            );
+                          });
+                        }
                       },
                       children: [
                         // 封皮页面（第0页）
@@ -1373,6 +1476,7 @@ class _SongPageState extends State<SongPage> {
                                 ],
                               ),
                       ],
+                    ),
                     ),
                   ),
                 ),

@@ -134,7 +134,17 @@ class MusicService {
     });
   }
 
-  static Stream<Duration> get positionStream => _player.positionStream;
+  /// 最近一次 [positionStream] 的位置，供 UI 在尚未收到下一帧流事件时与歌词对齐
+  static Duration _positionCache = Duration.zero;
+
+  static Duration get lastPosition => _positionCache;
+
+  static Stream<Duration> get positionStream {
+    return _player.positionStream.map((d) {
+      _positionCache = d;
+      return d;
+    });
+  }
 
   static Stream<Duration?> get durationStream => _player.durationStream;
 
