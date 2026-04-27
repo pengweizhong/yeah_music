@@ -327,13 +327,41 @@ class _SongPageState extends State<SongPage> {
   void _scrollToCurrentLyric(int index, {bool force = false}) {
     // 如果正在手动滚动且不是强制滚动，则不自动滚动
     if (_isManualScrolling && !force) return;
+    if (!_scrollController.hasClients) return;
 
     if (index < 0 || index >= _lyricKeys.length) return;
     final ctx = _lyricKeys[index].currentContext;
-    if (ctx == null) return;
+    if (ctx != null) {
+      // 目标行已经构建时，直接精确居中。
+      Scrollable.ensureVisible(ctx, alignment: 0.5, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      return;
+    }
 
-    // 用 ensureVisible，避免“固定高度估算”导致多行歌词滚动不准
-    Scrollable.ensureVisible(ctx, alignment: 0.5, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    // ListView.builder 只构建可见区域附近的歌词。跳转距离较远时，目标行还没有 context，
+    // 需要先用索引比例滚到目标附近，等待目标行构建后再精确定位。
+    final position = _scrollController.position;
+    final maxExtent = position.maxScrollExtent;
+    if (maxExtent <= 0 || _lyrics.length <= 1) return;
+
+    final estimatedOffset = (maxExtent * (index / (_lyrics.length - 1))).clamp(position.minScrollExtent, maxExtent);
+    _scrollController.animateTo(
+      estimatedOffset,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final builtCtx = _lyricKeys[index].currentContext;
+      if (builtCtx != null) {
+        Scrollable.ensureVisible(
+          builtCtx,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   // 定位到当前播放行
