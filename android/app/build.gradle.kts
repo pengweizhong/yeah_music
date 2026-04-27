@@ -35,6 +35,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // flutter_appauth 合并清单时使用 ${appAuthRedirectScheme}，须与 Azure 重定向 URI 的 scheme 一致
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.pengwz.yeahmusic"
     }
 
     //  必须先声明 signingConfigs
