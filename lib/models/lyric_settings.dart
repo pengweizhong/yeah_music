@@ -5,6 +5,12 @@ part 'lyric_settings.g.dart';
 
 @HiveType(typeId: 2)
 class LyricSettings extends HiveObject {
+  /// 与歌词样式面板的滑条范围一致
+  static const double minFontSize = 5;
+  static const double maxFontSize = 40;
+  static const double minLineSpacing = 0;
+  static const double maxLineSpacing = 50;
+
   @HiveField(0)
   bool showOriginal = true;
 
@@ -47,6 +53,13 @@ class LyricSettings extends HiveObject {
   int lyricTextAlignIndex = 1;
 
   LyricSettings();
+
+  /// 将字号、行距限制在可编辑范围内（与 UI 滑条、历史存盘数据对齐）
+  void normalizeLayoutFields() {
+    originalFontSize = originalFontSize.clamp(minFontSize, maxFontSize);
+    translationFontSize = translationFontSize.clamp(minFontSize, maxFontSize);
+    lyricLineSpacing = lyricLineSpacing.clamp(minLineSpacing, maxLineSpacing);
+  }
 
   /// 歌词行文字对齐
   TextAlign get lyricTextAlign {
