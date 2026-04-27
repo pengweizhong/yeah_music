@@ -47,6 +47,21 @@ class FrostedGlassPanel extends StatelessWidget {
     );
   }
 
+  /// 吸顶分节标题条（如首页「最近播放」）：底边 + 向下轻阴影，与 [FrostedGlassPanel.bottomBar] 同模糊与填充。
+  factory FrostedGlassPanel.pinnedSection({Key? key, required Widget child}) {
+    return FrostedGlassPanel._(
+      key: key,
+      border: Border(
+        bottom: BorderSide(
+          color: Colors.white.withValues(alpha: 0.18),
+        ),
+      ),
+      shadowOffset: const Offset(0, 3),
+      height: null,
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ClipRect(

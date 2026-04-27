@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
@@ -262,7 +263,7 @@ class _HomePageState extends State<HomePage> {
 // 滚动主体
 // ---------------------------------------------------------------------------
 
-class _HomeScrollBody extends StatelessWidget {
+class _HomeScrollBody extends StatefulWidget {
   const _HomeScrollBody({
     required this.quickEntry,
     required this.safeBottom,
@@ -297,13 +298,66 @@ class _HomeScrollBody extends StatelessWidget {
   final void Function(String playlistId) onOpenUserPlaylist;
   final String Function(Song) songSubtitle;
 
+  @override
+  State<_HomeScrollBody> createState() => _HomeScrollBodyState();
+}
+
+class _HomeScrollBodyState extends State<_HomeScrollBody> {
   static const _hPad = 20.0;
   static const _gapL = 24.0;
   static const _gapM = 16.0;
   static const _gapS = 12.0;
 
+  late final ScrollController _scrollController;
+  /// [SliverLayoutBuilder] 测得的「最近播放」吸顶条在内容中的起点（与 [ScrollController.offset] 同坐标系）
+  double? _recentPlaysSectionStartScroll;
+  double _lastPrecedingLogged = -1.0;
+  bool? _lastFrosted;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScrollFrosted);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScrollFrosted)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScrollFrosted() {
+    if (!mounted) return;
+    if (!_scrollController.hasClients) return;
+    final start = _recentPlaysSectionStartScroll;
+    if (start == null) return;
+    final next = _scrollController.offset + 0.1 >= start;
+    if (next == _lastFrosted) return;
+    _lastFrosted = next;
+    setState(() {});
+  }
+
+  void _onRecentSectionLayoutStart(double precedingScrollExtent) {
+    if (precedingScrollExtent == _lastPrecedingLogged) {
+      return;
+    }
+    _lastPrecedingLogged = precedingScrollExtent;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_recentPlaysSectionStartScroll == precedingScrollExtent) {
+        return;
+      }
+      setState(() {
+        _recentPlaysSectionStartScroll = precedingScrollExtent;
+        _lastFrosted = null;
+      });
+    });
+  }
+
   Widget _buildQuickEntryRow() {
-    final ids = quickEntry.visibleInOrder;
+    final ids = widget.quickEntry.visibleInOrder;
     if (ids.isEmpty) {
       return Text(
         '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等',
@@ -323,7 +377,7 @@ class _HomeScrollBody extends StatelessWidget {
               '本地曲库',
               Icons.library_music_rounded,
               const Color(0xFF4FC3F7),
-              onOpenLibrary,
+              widget.onOpenLibrary,
             ),
           );
           break;
@@ -333,7 +387,7 @@ class _HomeScrollBody extends StatelessWidget {
               '我的歌单',
               Icons.playlist_play_rounded,
               const Color(0xFF81C784),
-              onOpenStorage,
+              widget.onOpenStorage,
             ),
           );
           break;
@@ -343,7 +397,7 @@ class _HomeScrollBody extends StatelessWidget {
               '最近播放',
               Icons.history_rounded,
               const Color(0xFFFFB74D),
-              onOpenRecent,
+              widget.onOpenRecent,
             ),
           );
           break;
@@ -353,7 +407,7 @@ class _HomeScrollBody extends StatelessWidget {
               '发现',
               Icons.explore_rounded,
               const Color(0xFFE57373),
-              onOpenSearch,
+              widget.onOpenSearch,
             ),
           );
           break;
@@ -362,10 +416,23 @@ class _HomeScrollBody extends StatelessWidget {
     return _QuickEntryRow(entries: entries);
   }
 
+  bool _computeRecentFrosted() {
+    final s = _recentPlaysSectionStartScroll;
+    if (s == null) {
+      return false;
+    }
+    if (!_scrollController.hasClients) {
+      return false;
+    }
+    return _scrollController.offset + 0.1 >= s;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bottomPad = safeBottom + 20.0;
+    final bottomPad = widget.safeBottom + 20.0;
+    final useFrostedRecent = _computeRecentFrosted();
     return CustomScrollView(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),
@@ -373,14 +440,14 @@ class _HomeScrollBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 0),
-            child: _GreetingBlock(greeting: greeting),
+            child: _GreetingBlock(greeting: widget.greeting),
           ),
         ),
         SliverToBoxAdapter(child: SizedBox(height: _gapM)),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _SearchPill(onTap: onOpenSearch),
+            child: _SearchPill(onTap: widget.onOpenSearch),
           ),
         ),
         SliverToBoxAdapter(child: SizedBox(height: _gapL)),
@@ -397,7 +464,7 @@ class _HomeScrollBody extends StatelessWidget {
             child: _SectionTitle(
               title: '快捷入口',
               actionLabel: '管理',
-              onAction: onManageQuickEntry,
+              onAction: widget.onManageQuickEntry,
             ),
           ),
         ),
@@ -414,29 +481,36 @@ class _HomeScrollBody extends StatelessWidget {
             child: _SectionTitle(
               title: '我的歌单',
               actionLabel: '更多',
-              onAction: onOpenStorage,
+              onAction: widget.onOpenStorage,
             ),
           ),
         ),
         SliverToBoxAdapter(child: SizedBox(height: _gapS)),
         SliverToBoxAdapter(
           child: _PlaylistCarousels(
-            user: user,
-            onOpenPlaylist: onOpenUserPlaylist,
-            onCreate: onOpenStorage,
+            user: widget.user,
+            onOpenPlaylist: widget.onOpenUserPlaylist,
+            onCreate: widget.onOpenStorage,
           ),
         ),
         SliverToBoxAdapter(
           child: SizedBox(height: _gapL + 4),
         ),
+        SliverLayoutBuilder(
+          builder: (context, constraints) {
+            _onRecentSectionLayoutStart(constraints.precedingScrollExtent);
+            return const SliverToBoxAdapter(child: SizedBox.shrink());
+          },
+        ),
         SliverPersistentHeader(
           pinned: true,
           delegate: _RecentPlaysHeaderDelegate(
-            onOpenRecent: onOpenRecent,
+            onOpenRecent: widget.onOpenRecent,
             horizontalPadding: _hPad,
+            useFrosted: useFrostedRecent,
           ),
         ),
-        if (!play.initialized)
+        if (!widget.play.initialized)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -451,7 +525,7 @@ class _HomeScrollBody extends StatelessWidget {
               ),
             ),
           )
-        else if (!showRecentList)
+        else if (!widget.showRecentList)
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(24.0),
@@ -467,7 +541,7 @@ class _HomeScrollBody extends StatelessWidget {
               ),
             ),
           )
-        else if (recentSongs.isEmpty)
+        else if (widget.recentSongs.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 0),
@@ -486,26 +560,26 @@ class _HomeScrollBody extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, i) {
-                  final song = recentSongs[i];
-                  final isCurrent = play.currentSong?.path == song.path;
+                  final song = widget.recentSongs[i];
+                  final isCurrent = widget.play.currentSong?.path == song.path;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: RecentPlayListRow(
                       song: song,
-                      subtitle: songSubtitle(song),
+                      subtitle: widget.songSubtitle(song),
                       isCurrent: isCurrent,
                       onTap: () async {
-                        final idx = play.indexInLibraryByPath(song.path);
+                        final idx = widget.play.indexInLibraryByPath(song.path);
                         if (idx < 0) return;
-                        play.clearPlaybackQueueOverride();
-                        await play.playAt(idx);
+                        widget.play.clearPlaybackQueueOverride();
+                        await widget.play.playAt(idx);
                         if (!context.mounted) return;
-                        await onOpenSongIndex(idx);
+                        await widget.onOpenSongIndex(idx);
                       },
                     ),
                   );
                 },
-                childCount: recentSongs.length,
+                childCount: widget.recentSongs.length,
               ),
             ),
           ),
@@ -515,26 +589,29 @@ class _HomeScrollBody extends StatelessWidget {
   }
 
   Widget _buildContinue(BuildContext context) {
-    if (!play.initialized) {
+    if (!widget.play.initialized) {
       return const SizedBox.shrink();
     }
-    final cur = play.currentSong;
-    if (cur == null || play.playList.isEmpty) {
-      return _ContinueEmptyCard(onBrowse: onOpenLibrary);
+    final cur = widget.play.currentSong;
+    if (cur == null || widget.play.playList.isEmpty) {
+      return _ContinueEmptyCard(onBrowse: widget.onOpenLibrary);
     }
     return const _ContinuePlayLive();
   }
 }
 
-/// 让「最近播放」标题在向下滚动时吸附在 [CustomScrollView] 顶部，类似表头冻结
+/// 让「最近播放」标题在向下滚动时吸附在 [CustomScrollView] 顶部，类似表头冻结。
+/// 毛玻璃用 [SliverLayoutBuilder] + [ScrollController] 标定的分节位置驱动（[overlapsContent] 在单独吸顶时不可靠）。
 class _RecentPlaysHeaderDelegate extends SliverPersistentHeaderDelegate {
   const _RecentPlaysHeaderDelegate({
     required this.onOpenRecent,
     required this.horizontalPadding,
+    required this.useFrosted,
   });
 
   final VoidCallback onOpenRecent;
   final double horizontalPadding;
+  final bool useFrosted;
 
   static const double _h = 50;
 
@@ -550,27 +627,31 @@ class _RecentPlaysHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    // 与「我的歌单」分节相同：仅标题，背景透明，不单独铺色块
-    return ColoredBox(
-      color: Colors.transparent,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(horizontalPadding, 0, 8, 0),
-          child: _SectionTitle(
-            title: '最近播放',
-            actionLabel: '全部',
-            onAction: onOpenRecent,
-          ),
+    final child = Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(horizontalPadding, 0, 8, 0),
+        child: _SectionTitle(
+          title: '最近播放',
+          actionLabel: '全部',
+          onAction: onOpenRecent,
         ),
       ),
+    );
+    if (useFrosted) {
+      return FrostedGlassPanel.pinnedSection(child: child);
+    }
+    return ColoredBox(
+      color: Colors.transparent,
+      child: child,
     );
   }
 
   @override
   bool shouldRebuild(covariant _RecentPlaysHeaderDelegate oldDelegate) {
     return oldDelegate.onOpenRecent != onOpenRecent ||
-        oldDelegate.horizontalPadding != horizontalPadding;
+        oldDelegate.horizontalPadding != horizontalPadding ||
+        oldDelegate.useFrosted != useFrosted;
   }
 }
 
