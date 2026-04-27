@@ -66,7 +66,11 @@ class ApplicationUtils {
             const SizedBox(height: 12),
             _buildInfoRow(Icons.person_outline, '作者', 'PengWeiZhong'),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.code, '仓库', 'github.com/pengweizhong/yeah_music'),
+            _buildInfoRow(
+              Icons.code,
+              '仓库',
+              'github.com/pengweizhong/yeah_music',
+            ),
             const SizedBox(height: 12),
             _buildInfoRow(Icons.gavel, '许可证', 'GPL-3.0'),
             const SizedBox(height: 12),
@@ -162,7 +166,9 @@ class ApplicationUtils {
                 Theme(
                   data: Theme.of(ctx).copyWith(
                     textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(foregroundColor: Colors.white),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ),
                   child: Row(
@@ -178,8 +184,17 @@ class ApplicationUtils {
     );
   }
 
-  //获取歌曲封面图
-  static ImageProvider getImageCoverProvider(Song song, {double size = 32}) {
+  /// 按路径与边长复用 [ImageProvider]，避免滑条反复 build 时创建新 [ResizeImage] 导致反复解码。
+  static final Map<String, ImageProvider> _coverProviderCache = {};
+  static const int _coverProviderMax = 500;
+
+  /// 获取歌曲封面 [ImageProvider]。
+  /// 内嵌封面使用 [ResizeImage] 按 [size]×[devicePixelRatio] 降采样解码，避免列表滚动时全尺寸解码进显存。
+  static ImageProvider getImageCoverProvider(
+    Song song, {
+    double size = 32,
+    double devicePixelRatio = 2.0,
+  }) {
     if (song.imageBytes == null) {
       if (size < 20) {
         return AssetImage("assets/icons/icon_16x16@2x.png");
@@ -189,6 +204,23 @@ class ApplicationUtils {
       }
       return AssetImage("assets/icons/icon_512x512@2x.png");
     }
-    return MemoryImage(song.imageBytes!);
+    final dim = (size * devicePixelRatio).round().clamp(32, 2048);
+    final key = '${song.path}#$dim';
+    final existing = _coverProviderCache[key];
+    if (existing != null) {
+      return existing;
+    }
+    if (_coverProviderCache.length >= _coverProviderMax) {
+      _coverProviderCache.remove(_coverProviderCache.keys.first);
+    }
+    final base = MemoryImage(song.imageBytes!);
+    final created = ResizeImage(
+      base,
+      width: dim,
+      height: dim,
+      allowUpscaling: false,
+    );
+    _coverProviderCache[key] = created;
+    return created;
   }
 }

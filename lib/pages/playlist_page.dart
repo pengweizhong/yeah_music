@@ -9,9 +9,10 @@ import 'package:yeah_music/pages/song_page.dart';
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/folder.dart';
-import '../utils/application_utils.dart';
 import '../utils/song_list_sort.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
+import '../widgets/scroll_aware_list_frame.dart';
+import '../widgets/song_list_cover.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
 
 var log = Logger(printer: SimplePrinter());
@@ -33,13 +34,33 @@ class _PlayListProviderState extends State<PlayListPage> {
 
   List<Song> _filteredSongs = [];
 
+  List<Song>? _memoSortSourceRef;
+  SongListSortType? _memoSortType;
+  bool? _memoSortAsc;
+  List<Song> _memoSorted = const [];
+
+  /// 在 [playList] 与排序不变时复用结果，避免每次 notify（如切歌）都全量排序
+  List<Song> _sortedForPlayList(List<Song> source) {
+    if (_memoSortSourceRef != null &&
+        identical(_memoSortSourceRef, source) &&
+        _memoSortType == _sortType &&
+        _memoSortAsc == _isAscending) {
+      return _memoSorted;
+    }
+    _memoSortSourceRef = source;
+    _memoSortType = _sortType;
+    _memoSortAsc = _isAscending;
+    _memoSorted = _getFilteredAndSortedSongs(source);
+    return _memoSorted;
+  }
+
   @override
   void initState() {
     super.initState();
-    
+
     // 加载排序配置
     _loadSortSettings();
-    
+
     // 使用postFrameCallback避免在build期间调用setState
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final folderProvider = context.read<FolderProvider>();
@@ -49,7 +70,9 @@ class _PlayListProviderState extends State<PlayListPage> {
         await playListProvider.init(folderProvider);
       }
       if (!context.mounted) return;
-      playListProvider.clearPlaybackQueueOverride();
+      if (playListProvider.hasPlaybackQueueOverride) {
+        playListProvider.clearPlaybackQueueOverride();
+      }
       if (!mounted) return;
       if (widget.openSearchOnOpen) {
         if (!context.mounted) return;
@@ -112,119 +135,138 @@ class _PlayListProviderState extends State<PlayListPage> {
 
   @override
   Widget build(BuildContext context) {
-    PlayListProvider playListProvider = context.watch<PlayListProvider>();
-    
-    // 获取过滤和排序后的歌曲列表
-    _filteredSongs = _getFilteredAndSortedSongs(playListProvider.playList);
-    
-    return Consumer<ThemeConfigProvider>(
-      builder: (context, themeConfig, child) {
-        return themeConfig.buildThemedBackground(
-          child: Scaffold(
-            extendBodyBehindAppBar: true,
-            extendBody: true,
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              title: const Text("歌曲列表", style: TextStyle(color: Colors.white)),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-              actions: [
-                // 搜索按钮
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    showSearch(
-                      context: context,
-                      delegate: SongSearchDelegate(
-                        _filteredSongs,
-                        playListProvider,
-                      ),
-                    );
-                  },
-                  tooltip: '搜索',
-                ),
-                // 排序按钮
-                IconButton(
-                  icon: const Icon(Icons.sort),
-                  onPressed: _showSortOptions,
-                  tooltip: '排序',
-                ),
-              ],
-            ),
-            body: Column(
-              children: [
-                // 顶部间距
-                SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
-                
-                // 歌曲列表
-                Expanded(
-                  child: _filteredSongs.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.music_note,
-                                size: 64,
-                                color: Colors.white.withOpacity(0.3),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                '暂无歌曲',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.5),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+    return Selector<PlayListProvider, List<Song>>(
+      selector: (_, p) => p.playList,
+      shouldRebuild: (a, b) => !identical(a, b) || a.length != b.length,
+      builder: (context, playList, _) {
+        final playListProvider = context.read<PlayListProvider>();
+        _filteredSongs = _sortedForPlayList(playList);
+        final pathToIndex = <String, int>{
+          for (var i = 0; i < playList.length; i++) playList[i].path: i,
+        };
+        return Consumer<ThemeConfigProvider>(
+          builder: (context, themeConfig, child) {
+            return themeConfig.buildThemedBackground(
+              child: Scaffold(
+                extendBodyBehindAppBar: true,
+                extendBody: true,
+                backgroundColor: Colors.transparent,
+                appBar: AppBar(
+                  title: const Text(
+                    "歌曲列表",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  actions: [
+                    // 搜索按钮
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () {
+                        showSearch(
+                          context: context,
+                          delegate: SongSearchDelegate(
+                            _filteredSongs,
+                            playListProvider,
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 100),
-                          itemCount: _filteredSongs.length,
-                          itemBuilder: (context, index) {
-                            Song song = _filteredSongs[index];
-                            final originalIndex =
-                                playListProvider.playList.indexWhere((s) => s.path == song.path);
-                            
-                            return ListTile(
-                              leading: ClipRRect(
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
+                        );
+                      },
+                      tooltip: '搜索',
+                    ),
+                    // 排序按钮
+                    IconButton(
+                      icon: const Icon(Icons.sort),
+                      onPressed: _showSortOptions,
+                      tooltip: '排序',
+                    ),
+                  ],
+                ),
+                body: Column(
+                  children: [
+                    // 顶部间距
+                    SizedBox(
+                      height:
+                          MediaQuery.of(context).padding.top + kToolbarHeight,
+                    ),
+
+                    // 歌曲列表
+                    Expanded(
+                      child: _filteredSongs.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.music_note,
+                                    size: 64,
+                                    color: Colors.white.withOpacity(0.3),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    '暂无歌曲',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.5),
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                      : ScrollAwareListFrame(
+                          child: ListView.builder(
+                            // 略增大预建范围，快滑时减少「出屏再入屏才解码」的顿挫
+                            cacheExtent: 480,
+                            padding: const EdgeInsets.only(bottom: 100),
+                            itemCount: _filteredSongs.length,
+                            itemBuilder: (context, index) {
+                                final song = _filteredSongs[index];
+                                final originalIndex =
+                                    pathToIndex[song.path] ?? 0;
+                                return ListTile(
+                                  key: ValueKey<String>(song.path),
+                                  leading: SongListCover(
+                                    song: song,
+                                    size: 48,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: Image(
-                                    fit: BoxFit.cover,
-                                    image: ApplicationUtils.getImageCoverProvider(song),
+                                  title: Text(
+                                    song.title ?? "未知音乐",
+                                    style: const TextStyle(color: Colors.white),
                                   ),
-                                ),
-                              ),
-                              title: Text(
-                                song.title ?? "未知音乐",
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              subtitle: Text(
-                                showSecondTitle(song),
-                                style: TextStyle(color: Colors.white.withOpacity(0.6)),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.playlist_add, color: Colors.white70),
-                                tooltip: '加入歌单',
-                                onPressed: () => showAddToUserPlaylistsSheet(context, song),
-                              ),
-                              onTap: () => navToSongPage(originalIndex, playListProvider),
-                            );
-                          },
-                        ),
+                                  subtitle: Text(
+                                    showSecondTitle(song),
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(
+                                      Icons.playlist_add,
+                                      color: Colors.white70,
+                                    ),
+                                    tooltip: '加入歌单',
+                                    onPressed: () =>
+                                        showAddToUserPlaylistsSheet(
+                                          context,
+                                          song,
+                                        ),
+                                  ),
+                                  onTap: () => navToSongPage(
+                                    originalIndex,
+                                    playListProvider,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            bottomNavigationBar: const MiniPlayer(),
-          ),
+                bottomNavigationBar: const MiniPlayer(),
+              ),
+            );
+          },
         );
       },
     );
@@ -243,7 +285,10 @@ class _PlayListProviderState extends State<PlayListPage> {
   }
 
   void navToSongPage(int index, PlayListProvider playListProvider) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => SongPage(index: index)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SongPage(index: index)),
+    );
   }
 
   String showSecondTitle(Song song) {
@@ -268,12 +313,12 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     this.playListProvider, {
     this.playbackContextQueue,
   }) : super(
-          searchFieldStyle: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w400,
-          ),
-        );
+         searchFieldStyle: const TextStyle(
+           color: Colors.white,
+           fontSize: 20,
+           fontWeight: FontWeight.w400,
+         ),
+       );
 
   @override
   String get searchFieldLabel => '搜索歌曲、艺术家或文件名...';
@@ -288,10 +333,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-        ),
+        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
         toolbarTextStyle: TextStyle(color: Colors.white),
       ),
       inputDecorationTheme: const InputDecorationTheme(
@@ -367,6 +409,11 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       return title.contains(q) || artist.contains(q) || fileName.contains(q);
     }).toList();
 
+    final pl = playListProvider.playList;
+    final pathToMainIndex = <String, int>{
+      for (var i = 0; i < pl.length; i++) pl[i].path: i,
+    };
+
     if (results.isEmpty) {
       return Center(
         child: Column(
@@ -390,62 +437,57 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       );
     }
 
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final song = results[index];
-        return ListTile(
-          leading: ClipRRect(
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Image(
-                fit: BoxFit.cover,
-                image: ApplicationUtils.getImageCoverProvider(song),
-              ),
+    return ScrollAwareListFrame(
+      child: ListView.builder(
+        itemCount: results.length,
+        itemBuilder: (context, index) {
+          final song = results[index];
+          return ListTile(
+            leading: SongListCover(
+              song: song,
+              size: 48,
+              borderRadius: BorderRadius.circular(10),
             ),
-          ),
-          title: Text(
-            song.title ?? "未知音乐",
-            style: const TextStyle(color: Colors.white),
-          ),
-          subtitle: Text(
-            song.artist ?? song.album ?? '',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          ),
-          trailing: IconButton(
-            icon: const Icon(Icons.playlist_add, color: Colors.white70),
-            tooltip: '加入歌单',
-            onPressed: () => showAddToUserPlaylistsSheet(context, song),
-          ),
-          onTap: () async {
-            close(context, song);
-            if (playbackContextQueue != null) {
-              final q = playbackContextQueue!;
-              final idx = q.indexWhere((s) => s.path == song.path);
-              if (idx < 0) return;
-              await playListProvider.setPlaybackQueueAndPlay(q, idx);
-              if (!context.mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SongPage(index: idx)),
-              );
-            } else {
-              final originalIndex =
-                  playListProvider.playList.indexWhere((s) => s.path == song.path);
-              if (!context.mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SongPage(index: originalIndex)),
-              );
-            }
-          },
-        );
-      },
+            title: Text(
+              song.title ?? "未知音乐",
+              style: const TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              song.artist ?? song.album ?? '',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.playlist_add, color: Colors.white70),
+              tooltip: '加入歌单',
+              onPressed: () => showAddToUserPlaylistsSheet(context, song),
+            ),
+            onTap: () async {
+              close(context, song);
+              if (playbackContextQueue != null) {
+                final q = playbackContextQueue!;
+                final idx = q.indexWhere((s) => s.path == song.path);
+                if (idx < 0) return;
+                await playListProvider.setPlaybackQueueAndPlay(q, idx);
+                if (!context.mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SongPage(index: idx)),
+                );
+              } else {
+                final originalIndex = pathToMainIndex[song.path] ?? -1;
+                if (originalIndex < 0) return;
+                if (!context.mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SongPage(index: originalIndex),
+                  ),
+                );
+              }
+            },
+          );
+        },
+      ),
     );
   }
 }

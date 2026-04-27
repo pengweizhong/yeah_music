@@ -7,6 +7,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
+import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
 
 /// 最近播放（按 [RecentPlayService] 记录的路径，在全库队列中解析并播放）
 class RecentPlaysPage extends StatefulWidget {
@@ -107,12 +108,14 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> {
                           ),
                         );
                       }
-                      return ListView.builder(
-                        padding: EdgeInsets.only(
-                          bottom: 100 + MediaQuery.paddingOf(context).bottom,
-                        ),
-                        itemCount: items.length,
-                        itemBuilder: (context, i) {
+                      return ScrollAwareListFrame(
+                        child: ListView.builder(
+                          cacheExtent: 480,
+                          padding: EdgeInsets.only(
+                            bottom: 100 + MediaQuery.paddingOf(context).bottom,
+                          ),
+                          itemCount: items.length,
+                          itemBuilder: (context, i) {
                           final song = items[i];
                           final idx = playList.indexInLibraryByPath(song.path);
                           final isCurrent =
@@ -142,7 +145,8 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> {
                             ),
                           );
                         },
-                      );
+                      ),
+                    );
                     },
                   ),
             bottomNavigationBar: const MiniPlayer(),

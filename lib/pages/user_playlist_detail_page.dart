@@ -10,7 +10,8 @@ import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/song_page.dart';
-import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
+import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
@@ -332,10 +333,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                                 style: TextStyle(color: Colors.white.withOpacity(0.6)),
                               ),
                             )
-                          : ListView.builder(
-                              padding: const EdgeInsets.only(bottom: 100),
-                              itemCount: orderedSongs.length,
-                              itemBuilder: (context, index) {
+                          : ScrollAwareListFrame(
+                              child: ListView.builder(
+                                cacheExtent: 480,
+                                padding: const EdgeInsets.only(bottom: 100),
+                                itemCount: orderedSongs.length,
+                                itemBuilder: (context, index) {
                                 final song = orderedSongs[index];
                                 return Dismissible(
                                   key: ValueKey('${pl.id}_${song.path}'),
@@ -350,15 +353,13 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                                     userPl.removeSongFromPlaylist(pl.id, song);
                                   },
                                   child: ListTile(
-                                    leading: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: SizedBox(
-                                        width: 48,
-                                        height: 48,
-                                        child: Image(
-                                          fit: BoxFit.cover,
-                                          image: ApplicationUtils.getImageCoverProvider(song),
-                                        ),
+                                    leading: SizedBox(
+                                      width: 48,
+                                      height: 48,
+                                      child: SongListCover(
+                                        song: song,
+                                        size: 48,
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
                                     title: Text(
@@ -386,6 +387,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                                   ),
                                 );
                               },
+                            ),
                             ),
                     ),
                   ],

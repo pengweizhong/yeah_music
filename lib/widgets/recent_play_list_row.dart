@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
-import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/widgets/song_list_cover.dart';
 
 /// 最近播放列表行（首页、最近播放页共用）。顺序由调用方传入的 [paths] 决定，不在此重排。
 class RecentPlayListRow extends StatelessWidget {
@@ -43,21 +43,10 @@ class RecentPlayListRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           child: Row(
             children: [
-              ClipRRect(
+              SongListCover(
+                song: song,
+                size: 48,
                 borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  color: Colors.white24,
-                  child: Image(
-                    fit: BoxFit.cover,
-                    image: ApplicationUtils.getImageCoverProvider(song, size: 96),
-                    errorBuilder: (c, o, s) => Icon(
-                      Icons.music_note_rounded,
-                      color: Colors.white.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ),
               ),
               const SizedBox(width: 12),
               Expanded(

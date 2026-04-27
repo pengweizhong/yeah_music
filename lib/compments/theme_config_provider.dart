@@ -213,13 +213,23 @@ class ThemeConfigProvider extends ChangeNotifier {
           Positioned.fill(
             child: ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-              child: Image.file(
-                File(_backgroundImagePath!),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                alignment: Alignment.center,
-                filterQuality: FilterQuality.low,
+              child: Builder(
+                builder: (ctx) {
+                  final sz = MediaQuery.sizeOf(ctx);
+                  final dpr = MediaQuery.devicePixelRatioOf(ctx);
+                  final w = (sz.width * dpr).round().clamp(1, 4096);
+                  final h = (sz.height * dpr).round().clamp(1, 4096);
+                  return Image.file(
+                    File(_backgroundImagePath!),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    alignment: Alignment.center,
+                    filterQuality: FilterQuality.low,
+                    cacheWidth: w,
+                    cacheHeight: h,
+                  );
+                },
               ),
             ),
           ),

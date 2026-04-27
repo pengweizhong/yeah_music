@@ -5,7 +5,7 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/services/music_service.dart';
-import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 /// 迷你播放器组件 - 显示在底部的正在播放栏
@@ -68,22 +68,10 @@ class MiniPlayer extends StatelessWidget {
                     child: Row(
                       children: [
                         // 封面
-                        ClipRRect(
+                        SongListCover(
+                          song: currentSong,
+                          size: 56,
                           borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Image(
-                              fit: BoxFit.cover,
-                              image: ApplicationUtils.getImageCoverProvider(
-                                currentSong,
-                              ),
-                            ),
-                          ),
                         ),
                         const SizedBox(width: 12),
                         // 歌曲信息

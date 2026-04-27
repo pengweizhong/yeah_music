@@ -21,6 +21,10 @@ void main() async {
   
   // 确保Flutter绑定初始化
   WidgetsFlutterBinding.ensureInitialized();
+  // 大曲库时多留一些 [Image] 纹理解码缓存，减少滑回时重复工作（仍受 [ApplicationUtils] 的 provider 上限约束）
+  PaintingBinding.instance.imageCache
+    ..maximumSize = 500
+    ..maximumSizeBytes = 200 << 20;
   
   // 设置系统UI样式，避免白色闪光
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

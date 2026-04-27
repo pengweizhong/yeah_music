@@ -20,6 +20,8 @@ import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
+import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
+import 'package:yeah_music/widgets/song_list_cover.dart';
 
 var log = Logger(printer: SimplePrinter());
 
@@ -1109,8 +1111,13 @@ class _SongPageState extends State<SongPage> {
 
   /// 与第一页相同封面资源；[side] 有值时按第三页分屏区计算出的边长，否则为全屏第一页布局
   Widget _buildCoverArt(Song song, {double? side}) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
     final img = Image(
-      image: ApplicationUtils.getImageCoverProvider(song, size: 400),
+      image: ApplicationUtils.getImageCoverProvider(
+        song,
+        size: 400,
+        devicePixelRatio: dpr,
+      ),
       fit: BoxFit.cover,
     );
     if (side != null) {
@@ -2004,62 +2011,56 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
           ),
         ),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.only(bottom: 12),
-            itemCount: list.length,
-            separatorBuilder: (_, _) => Divider(
-              height: 1,
-              color: Colors.white.withValues(alpha: 0.12),
+          child: ScrollAwareListFrame(
+            child: ListView.separated(
+              padding: const EdgeInsets.only(bottom: 12),
+              itemCount: list.length,
+              separatorBuilder: (_, _) => Divider(
+                height: 1,
+                color: Colors.white.withValues(alpha: 0.12),
+              ),
+              itemBuilder: (context, index) {
+                final s = list[index];
+                final isCurrent = index == provider.currentIndex;
+                return ListTile(
+                  key: isCurrent
+                      ? _playingRowKey
+                      : ValueKey<String>('${index}_${s.path}'),
+                  selected: isCurrent,
+                  selectedColor: primary,
+                  selectedTileColor: primary.withValues(alpha: 0.16),
+                  leading: SongListCover(
+                    song: s,
+                    size: 48,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  title: Text(
+                    s.title ?? '未知标题',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                      color: isCurrent ? primary : Colors.white,
+                    ),
+                  ),
+                  subtitle: Text(
+                    s.artist ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isCurrent
+                          ? primary.withValues(alpha: 0.8)
+                          : Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13,
+                    ),
+                  ),
+                  trailing: isCurrent
+                      ? _PlayingBarsIndicator(color: primary)
+                      : null,
+                  onTap: () => widget.onPick(index),
+                );
+              },
             ),
-            itemBuilder: (context, index) {
-              final s = list[index];
-              final isCurrent = index == provider.currentIndex;
-              return ListTile(
-                key: isCurrent ? _playingRowKey : ValueKey<String>('${index}_${s.path}'),
-                selected: isCurrent,
-                selectedColor: primary,
-                selectedTileColor: primary.withValues(alpha: 0.16),
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Image(
-                      fit: BoxFit.cover,
-                      image: ApplicationUtils.getImageCoverProvider(s),
-                    ),
-                  ),
-                ),
-                title: Text(
-                  s.title ?? '未知标题',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-                    color: isCurrent ? primary : Colors.white,
-                  ),
-                ),
-                subtitle: Text(
-                  s.artist ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: isCurrent
-                        ? primary.withValues(alpha: 0.8)
-                        : Colors.white.withValues(alpha: 0.5),
-                    fontSize: 13,
-                  ),
-                ),
-                trailing: isCurrent
-                    ? _PlayingBarsIndicator(color: primary)
-                    : null,
-                onTap: () => widget.onPick(index),
-              );
-            },
           ),
         ),
       ],
