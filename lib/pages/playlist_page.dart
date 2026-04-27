@@ -5,22 +5,15 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/song_page.dart';
-import 'package:yeah_music/utils/hive_utils.dart';
-import 'package:yeah_music/models/constants.dart';
-
 import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/folder.dart';
 import '../utils/application_utils.dart';
+import '../utils/song_list_sort.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
+import '../widgets/song_sort_bottom_sheet.dart';
 
 var log = Logger(printer: SimplePrinter());
-
-enum SortType {
-  name,
-  createTime,
-  modifyTime,
-}
 
 @immutable
 class PlayListPage extends StatefulWidget {
@@ -31,11 +24,9 @@ class PlayListPage extends StatefulWidget {
 }
 
 class _PlayListProviderState extends State<PlayListPage> {
-  // 排序相关
-  SortType _sortType = SortType.name;
+  SongListSortType _sortType = SongListSortType.name;
   bool _isAscending = true;
-  
-  // 过滤和排序后的歌曲列表
+
   List<Song> _filteredSongs = [];
 
   @override
@@ -57,17 +48,13 @@ class _PlayListProviderState extends State<PlayListPage> {
     });
   }
 
-  /// 加载排序设置
   Future<void> _loadSortSettings() async {
     try {
-      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final savedSortType = box.get('sort_type', defaultValue: 0) as int?;
-      final savedIsAscending = box.get('sort_ascending', defaultValue: true) as bool?;
-      
+      final prefs = await loadSongSortPreferences();
       if (mounted) {
         setState(() {
-          _sortType = SortType.values[savedSortType ?? 0];
-          _isAscending = savedIsAscending ?? true;
+          _sortType = prefs.type;
+          _isAscending = prefs.ascending;
         });
         log.d("加载排序设置: $_sortType, 正序: $_isAscending");
       }
@@ -76,12 +63,9 @@ class _PlayListProviderState extends State<PlayListPage> {
     }
   }
 
-  /// 保存排序设置
   Future<void> _saveSortSettings() async {
     try {
-      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      await box.put('sort_type', _sortType.index);
-      await box.put('sort_ascending', _isAscending);
+      await saveSongSortPreferences(_sortType, _isAscending);
       log.d("保存排序设置: $_sortType, 正序: $_isAscending");
     } catch (e) {
       log.e("保存排序设置失败: $e");
@@ -93,134 +77,21 @@ class _PlayListProviderState extends State<PlayListPage> {
     super.dispose();
   }
 
-  // 过滤和排序歌曲
   List<Song> _getFilteredAndSortedSongs(List<Song> songs) {
-    // 排序
-    List<Song> filtered = List.from(songs);
-    
-    filtered.sort((a, b) {
-      int result = 0;
-      switch (_sortType) {
-        case SortType.name:
-          result = (a.title ?? '').compareTo(b.title ?? '');
-          break;
-        case SortType.createTime:
-          // 如果没有创建时间，使用修改时间
-          final aTime = a.createDateTime ?? a.updateDateTime ?? DateTime(1970);
-          final bTime = b.createDateTime ?? b.updateDateTime ?? DateTime(1970);
-          result = aTime.compareTo(bTime);
-          break;
-        case SortType.modifyTime:
-          final aTime = a.updateDateTime ?? DateTime(1970);
-          final bTime = b.updateDateTime ?? DateTime(1970);
-          result = aTime.compareTo(bTime);
-          break;
-      }
-      return _isAscending ? result : -result;
-    });
-
-    return filtered;
+    return sortSongsCopy(songs, _sortType, _isAscending);
   }
 
-  // 显示排序选项
   void _showSortOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('排序方式', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.sort_by_alpha),
-                title: const Text('按名称'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_sortType == SortType.name)
-                      Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
-                    if (_sortType == SortType.name)
-                      const SizedBox(width: 8),
-                    if (_sortType == SortType.name)
-                      const Icon(Icons.check, color: Colors.blue),
-                  ],
-                ),
-                onTap: () {
-                  setState(() {
-                    if (_sortType == SortType.name) {
-                      _isAscending = !_isAscending;
-                    } else {
-                      _sortType = SortType.name;
-                      _isAscending = true;
-                    }
-                  });
-                  _saveSortSettings();
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.access_time),
-                title: const Text('按创建时间'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_sortType == SortType.createTime)
-                      Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
-                    if (_sortType == SortType.createTime)
-                      const SizedBox(width: 8),
-                    if (_sortType == SortType.createTime)
-                      const Icon(Icons.check, color: Colors.blue),
-                  ],
-                ),
-                onTap: () {
-                  setState(() {
-                    if (_sortType == SortType.createTime) {
-                      _isAscending = !_isAscending;
-                    } else {
-                      _sortType = SortType.createTime;
-                      _isAscending = true;
-                    }
-                  });
-                  _saveSortSettings();
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.update),
-                title: const Text('按更新时间'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_sortType == SortType.modifyTime)
-                      Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
-                    if (_sortType == SortType.modifyTime)
-                      const SizedBox(width: 8),
-                    if (_sortType == SortType.modifyTime)
-                      const Icon(Icons.check, color: Colors.blue),
-                  ],
-                ),
-                onTap: () {
-                  setState(() {
-                    if (_sortType == SortType.modifyTime) {
-                      _isAscending = !_isAscending;
-                    } else {
-                      _sortType = SortType.modifyTime;
-                      _isAscending = true;
-                    }
-                  });
-                  _saveSortSettings();
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
+    showSongSortBottomSheet(
+      context,
+      sortType: _sortType,
+      isAscending: _isAscending,
+      onApply: (type, ascending) {
+        setState(() {
+          _sortType = type;
+          _isAscending = ascending;
+        });
+        _saveSortSettings();
       },
     );
   }
@@ -252,7 +123,10 @@ class _PlayListProviderState extends State<PlayListPage> {
                   onPressed: () {
                     showSearch(
                       context: context,
-                      delegate: SongSearchDelegate(_filteredSongs, playListProvider),
+                      delegate: SongSearchDelegate(
+                        _filteredSongs,
+                        playListProvider,
+                      ),
                     );
                   },
                   tooltip: '搜索',
@@ -298,8 +172,8 @@ class _PlayListProviderState extends State<PlayListPage> {
                           itemCount: _filteredSongs.length,
                           itemBuilder: (context, index) {
                             Song song = _filteredSongs[index];
-                            // 找到原始列表中的索引
-                            final originalIndex = playListProvider.playList.indexOf(song);
+                            final originalIndex =
+                                playListProvider.playList.indexWhere((s) => s.path == song.path);
                             
                             return ListTile(
                               leading: ClipRRect(
@@ -370,12 +244,17 @@ class _PlayListProviderState extends State<PlayListPage> {
   }
 }
 
-// 搜索代理
+/// 搜索代理；[playbackContextQueue] 非空时，选中歌曲将按该队列播放（如用户歌单页）
 class SongSearchDelegate extends SearchDelegate<Song?> {
   final List<Song> allSongs;
   final PlayListProvider playListProvider;
+  final List<Song>? playbackContextQueue;
 
-  SongSearchDelegate(this.allSongs, this.playListProvider);
+  SongSearchDelegate(
+    this.allSongs,
+    this.playListProvider, {
+    this.playbackContextQueue,
+  });
 
   @override
   String get searchFieldLabel => '搜索歌曲、艺术家或文件名...';
@@ -432,7 +311,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       final q = query.toLowerCase();
       final title = (song.title ?? '').toLowerCase();
       final artist = (song.artist ?? '').toLowerCase();
-      final fileName = (song.path?.split('/').last ?? '').toLowerCase();
+      final fileName = song.path.split('/').last.toLowerCase();
       return title.contains(q) || artist.contains(q) || fileName.contains(q);
     }).toList();
 
@@ -456,8 +335,6 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       itemCount: results.length,
       itemBuilder: (context, index) {
         final song = results[index];
-        final originalIndex = playListProvider.playList.indexOf(song);
-        
         return ListTile(
           leading: ClipRRect(
             child: Container(
@@ -483,12 +360,27 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
             tooltip: '加入歌单',
             onPressed: () => showAddToUserPlaylistsSheet(context, song),
           ),
-          onTap: () {
+          onTap: () async {
             close(context, song);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SongPage(index: originalIndex)),
-            );
+            if (playbackContextQueue != null) {
+              final q = playbackContextQueue!;
+              final idx = q.indexWhere((s) => s.path == song.path);
+              if (idx < 0) return;
+              await playListProvider.setPlaybackQueueAndPlay(q, idx);
+              if (!context.mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SongPage(index: idx)),
+              );
+            } else {
+              final originalIndex =
+                  playListProvider.playList.indexWhere((s) => s.path == song.path);
+              if (!context.mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SongPage(index: originalIndex)),
+              );
+            }
           },
         );
       },

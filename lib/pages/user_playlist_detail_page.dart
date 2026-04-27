@@ -5,13 +5,61 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/song_list_sort.dart';
+import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
+import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
 
-class UserPlaylistDetailPage extends StatelessWidget {
+class UserPlaylistDetailPage extends StatefulWidget {
   const UserPlaylistDetailPage({super.key, required this.playlistId});
 
   final String playlistId;
+
+  @override
+  State<UserPlaylistDetailPage> createState() => _UserPlaylistDetailPageState();
+}
+
+class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
+  SongListSortType _sortType = SongListSortType.name;
+  bool _isAscending = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSort();
+  }
+
+  Future<void> _loadSort() async {
+    try {
+      final prefs = await loadUserPlaylistSortPreferences();
+      if (mounted) {
+        setState(() {
+          _sortType = prefs.type;
+          _isAscending = prefs.ascending;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveSort() => saveUserPlaylistSortPreferences(_sortType, _isAscending);
+
+  void _showSortOptions() {
+    showSongSortBottomSheet(
+      context,
+      sortType: _sortType,
+      isAscending: _isAscending,
+      includeAddedToPlaylistOption: true,
+      onApply: (type, ascending) {
+        setState(() {
+          _sortType = type;
+          _isAscending = ascending;
+        });
+        _saveSort();
+      },
+    );
+  }
 
   String _subtitle(Song song) {
     if (song.artist == null || song.artist!.isEmpty) {
@@ -36,7 +84,7 @@ class UserPlaylistDetailPage extends StatelessWidget {
       ),
     );
     if (ok == true && context.mounted) {
-      await user.deletePlaylist(playlistId);
+      await user.deletePlaylist(widget.playlistId);
       if (context.mounted) Navigator.pop(context);
     }
   }
@@ -65,7 +113,7 @@ class UserPlaylistDetailPage extends StatelessWidget {
     );
     controller.dispose();
     if (name != null && name.isNotEmpty && context.mounted) {
-      await user.renamePlaylist(playlistId, name);
+      await user.renamePlaylist(widget.playlistId, name);
     }
   }
 
@@ -75,7 +123,7 @@ class UserPlaylistDetailPage extends StatelessWidget {
       builder: (context, userPl, playList, _) {
         UserPlaylist? playlist;
         for (final p in userPl.playlists) {
-          if (p.id == playlistId) {
+          if (p.id == widget.playlistId) {
             playlist = p;
             break;
           }
@@ -88,7 +136,14 @@ class UserPlaylistDetailPage extends StatelessWidget {
         }
 
         final pl = playlist;
-        final songs = userPl.songsForPlaylist(pl, playList.playList);
+        final rawSongs = userPl.songsForPlaylist(pl, playList.playList);
+        final pathAddIndex = {for (var i = 0; i < pl.songPaths.length; i++) pl.songPaths[i]: i};
+        final orderedSongs = sortSongsCopy(
+          rawSongs,
+          _sortType,
+          _isAscending,
+          pathAddIndex: pathAddIndex,
+        );
 
         return Consumer<ThemeConfigProvider>(
           builder: (context, themeConfig, _) {
@@ -104,6 +159,27 @@ class UserPlaylistDetailPage extends StatelessWidget {
                   elevation: 0,
                   iconTheme: const IconThemeData(color: Colors.white),
                   actions: [
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      tooltip: '搜索',
+                      onPressed: orderedSongs.isEmpty
+                          ? null
+                          : () {
+                              showSearch(
+                                context: context,
+                                delegate: SongSearchDelegate(
+                                  orderedSongs,
+                                  playList,
+                                  playbackContextQueue: orderedSongs,
+                                ),
+                              );
+                            },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.sort),
+                      tooltip: '排序',
+                      onPressed: _showSortOptions,
+                    ),
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert, color: Colors.white),
                       onSelected: (value) async {
@@ -124,7 +200,7 @@ class UserPlaylistDetailPage extends StatelessWidget {
                   children: [
                     SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
                     Expanded(
-                      child: songs.isEmpty
+                      child: orderedSongs.isEmpty
                           ? Center(
                               child: Text(
                                 '暂无可用歌曲\n（请先在「音乐源」扫描，或歌曲路径已失效）',
@@ -134,11 +210,11 @@ class UserPlaylistDetailPage extends StatelessWidget {
                             )
                           : ListView.builder(
                               padding: const EdgeInsets.only(bottom: 100),
-                              itemCount: songs.length,
+                              itemCount: orderedSongs.length,
                               itemBuilder: (context, index) {
-                                final song = songs[index];
+                                final song = orderedSongs[index];
                                 return Dismissible(
-                                  key: ValueKey('${pl.id}_${song.path}_$index'),
+                                  key: ValueKey('${pl.id}_${song.path}'),
                                   direction: DismissDirection.endToStart,
                                   background: Container(
                                     alignment: Alignment.centerRight,
@@ -169,9 +245,14 @@ class UserPlaylistDetailPage extends StatelessWidget {
                                       _subtitle(song),
                                       style: TextStyle(color: Colors.white.withOpacity(0.6)),
                                     ),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.playlist_add, color: Colors.white70),
+                                      tooltip: '加入歌单',
+                                      onPressed: () => showAddToUserPlaylistsSheet(context, song),
+                                    ),
                                     onTap: () async {
                                       final playListProv = context.read<PlayListProvider>();
-                                      await playListProv.setPlaybackQueueAndPlay(songs, index);
+                                      await playListProv.setPlaybackQueueAndPlay(orderedSongs, index);
                                       if (!context.mounted) return;
                                       Navigator.push(
                                         context,

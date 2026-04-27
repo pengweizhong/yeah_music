@@ -1,0 +1,118 @@
+import 'package:flutter/material.dart';
+import 'package:yeah_music/utils/song_list_sort.dart';
+
+/// 排序选择底部表单。[includeAddedToPlaylistOption] 为 true 时多出「按加入歌单时间」（用户歌单页）
+void showSongSortBottomSheet(
+  BuildContext context, {
+  required SongListSortType sortType,
+  required bool isAscending,
+  required void Function(SongListSortType type, bool ascending) onApply,
+  bool includeAddedToPlaylistOption = false,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    builder: (ctx) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('排序方式', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sort_by_alpha),
+              title: const Text('按名称'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (sortType == SongListSortType.name)
+                    Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
+                  if (sortType == SongListSortType.name) const SizedBox(width: 8),
+                  if (sortType == SongListSortType.name) const Icon(Icons.check, color: Colors.blue),
+                ],
+              ),
+              onTap: () {
+                if (sortType == SongListSortType.name) {
+                  onApply(SongListSortType.name, !isAscending);
+                } else {
+                  onApply(SongListSortType.name, true);
+                }
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.access_time),
+              title: const Text('按创建时间'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (sortType == SongListSortType.createTime)
+                    Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
+                  if (sortType == SongListSortType.createTime) const SizedBox(width: 8),
+                  if (sortType == SongListSortType.createTime) const Icon(Icons.check, color: Colors.blue),
+                ],
+              ),
+              onTap: () {
+                if (sortType == SongListSortType.createTime) {
+                  onApply(SongListSortType.createTime, !isAscending);
+                } else {
+                  onApply(SongListSortType.createTime, true);
+                }
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.update),
+              title: const Text('按更新时间'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (sortType == SongListSortType.modifyTime)
+                    Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
+                  if (sortType == SongListSortType.modifyTime) const SizedBox(width: 8),
+                  if (sortType == SongListSortType.modifyTime) const Icon(Icons.check, color: Colors.blue),
+                ],
+              ),
+              onTap: () {
+                if (sortType == SongListSortType.modifyTime) {
+                  onApply(SongListSortType.modifyTime, !isAscending);
+                } else {
+                  onApply(SongListSortType.modifyTime, true);
+                }
+                Navigator.pop(ctx);
+              },
+            ),
+            if (includeAddedToPlaylistOption) ...[
+              ListTile(
+                leading: const Icon(Icons.playlist_add_check),
+                title: const Text('按加入歌单时间'),
+                subtitle: const Text('正序：先加入在前 · 反序：后加入在前'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (sortType == SongListSortType.addedToPlaylist)
+                      Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 20),
+                    if (sortType == SongListSortType.addedToPlaylist) const SizedBox(width: 8),
+                    if (sortType == SongListSortType.addedToPlaylist)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+                onTap: () {
+                  if (sortType == SongListSortType.addedToPlaylist) {
+                    onApply(SongListSortType.addedToPlaylist, !isAscending);
+                  } else {
+                    onApply(SongListSortType.addedToPlaylist, true);
+                  }
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    },
+  );
+}
