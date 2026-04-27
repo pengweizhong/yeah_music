@@ -357,12 +357,16 @@ class PlayListProvider extends ChangeNotifier {
     //所有的文件夹
     List<Folder> folders = folderProvider.folders;
     
+    var i = 0;
     for (var value in folders) {
       log.d("添加了目录：${value.name}，共${value.songList?.length}首歌曲");
       putFolder(value);
-      
-      // 每添加一个文件夹后，让出控制权，避免阻塞UI
-      await Future.delayed(Duration.zero);
+      i++;
+      // 让出控制权，避免阻塞主线程上的启动转场 / 菊花动画
+      await Future<void>.delayed(Duration.zero);
+      if (i % 4 == 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
     }
   }
 

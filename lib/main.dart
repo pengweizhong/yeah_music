@@ -1,11 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/init/app_init.dart';
-import 'package:yeah_music/pages/home_page.dart';
+import 'package:yeah_music/pages/welcome_entry_page.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
+import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
@@ -17,30 +17,107 @@ import 'compments/user_playlist_provider.dart';
 //SimplePrinter() 让日志以比较简洁的形式输出（不会带复杂的格式）
 var log = Logger(printer: SimplePrinter());
 
-void main() async {
+void main() {
   log.i('应用正在启动。。。');
-  
-  // 确保Flutter绑定初始化
+
   WidgetsFlutterBinding.ensureInitialized();
-  // 大曲库时多留一些 [Image] 纹理解码缓存，减少滑回时重复工作（仍受 [ApplicationUtils] 的 provider 上限约束）
   PaintingBinding.instance.imageCache
     ..maximumSize = 500
     ..maximumSizeBytes = 200 << 20;
-  
-  // 设置系统UI样式，避免白色闪光
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Colors.black,
+    systemNavigationBarColor: Color(0xFF050608),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
-  
-  final appInit = AppInit();
-  appInit.initJustAudioKit();
-  // 必须 await：否则 FolderProvider 等与 initHive 竞态，deleteBoxFromDisk 会关掉 Provider 已持有的 Box
-  await appInit.initHive();
-  runApp(
-    MultiProvider(
+
+  runApp(const AppStartupGate());
+}
+
+/// 先尽快出首帧（渐变/进度），再异步完成 Hive 后再挂载 [MultiProvider] + 主应用，避免冷启动长时间纯黑屏。
+class AppStartupGate extends StatefulWidget {
+  const AppStartupGate({super.key});
+
+  @override
+  State<AppStartupGate> createState() => _AppStartupGateState();
+}
+
+class _AppStartupGateState extends State<AppStartupGate> {
+  Object? _error;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    final appInit = AppInit();
+    appInit.initJustAudioKit();
+    try {
+      await appInit.initHive();
+    } catch (e, st) {
+      log.e('initHive 失败: $e', error: e, stackTrace: st);
+      if (mounted) setState(() => _error = e);
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _ready = true;
+      _error = null;
+    });
+    log.i('应用启动成功！');
+  }
+
+  void _retry() {
+    setState(() {
+      _error = null;
+      _ready = false;
+    });
+    _bootstrap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF0A0E14),
+        ),
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('启动失败: $_error', textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  TextButton(onPressed: _retry, child: const Text('重试')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    if (!_ready) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF0A0E14),
+        ),
+        home: const AppSplashChrome(
+          showProgress: true,
+        ),
+      );
+    }
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => PlayListProvider()),
@@ -54,10 +131,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FolderProvider()..init()),
         ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),
       ],
-      child: YeahMusicApp(),
-    ),
-  );
-  log.i('应用启动成功！');
+      child: const YeahMusicApp(),
+    );
+  }
 }
 
 class YeahMusicApp extends StatelessWidget {
@@ -70,14 +146,13 @@ class YeahMusicApp extends StatelessWidget {
       navigatorObservers: <NavigatorObserver>[appRouteObserver],
       // 去掉右上角的 "Debug" 标签
       debugShowCheckedModeBanner: false,
-      // 设置应用的首页
-      home: HomePage(),
+      home: const WelcomeEntryPage(),
       // 动态主题 - 使用深色主题避免白色闪光
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        canvasColor: Colors.black,
-        cardColor: Colors.black,
+        scaffoldBackgroundColor: AppSplashChrome.gradientColors[1],
+        canvasColor: AppSplashChrome.gradientColors[1],
+        cardColor: const Color(0xFF0A0E14),
         dialogBackgroundColor: Colors.black87,
         // 完全不设置 textTheme 和 fontFamily，让 Flutter 使用系统默认字体
         pageTransitionsTheme: const PageTransitionsTheme(
@@ -89,9 +164,9 @@ class YeahMusicApp extends StatelessWidget {
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        canvasColor: Colors.black,
-        cardColor: Colors.black,
+        scaffoldBackgroundColor: AppSplashChrome.gradientColors[1],
+        canvasColor: AppSplashChrome.gradientColors[1],
+        cardColor: const Color(0xFF0A0E14),
         dialogBackgroundColor: Colors.black87,
         // 完全不设置 textTheme 和 fontFamily，让 Flutter 使用系统默认字体
         pageTransitionsTheme: const PageTransitionsTheme(

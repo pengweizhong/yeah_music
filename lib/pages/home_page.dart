@@ -6,6 +6,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
@@ -33,7 +34,10 @@ Future<void> _toggleHomeRowPlayback(PlayListProvider play) async {
 
 /// 应用主页
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.initial});
+
+  /// 由 [WelcomeEntryPage] 预拉取时传入，避免首屏二次等待。
+  final HomeInitialData? initial;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -50,6 +54,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    final pre = widget.initial;
+    if (pre != null) {
+      _recentPaths = pre.recentPaths;
+      _mostPlayedRaw = pre.mostPlayedRaw;
+      _quickEntry = pre.quickEntry;
+      _recentReady = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _play = context.read<PlayListProvider>();
+        _play!.addListener(_onPlayListChange);
+      });
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _bootstrap();
       if (!mounted) return;

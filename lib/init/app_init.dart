@@ -2,7 +2,6 @@ import 'dart:ffi' as ffi;
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:logger/logger.dart';
@@ -46,56 +45,52 @@ class AppInit {
     );
   }
 
-  ///初始化hive数据库
+  ///初始化hive数据库（各 box 无依赖，并行打开以压缩冷启动时间）
   Future<void> initHive() async {
     log.d("Hive Init.");
-    WidgetsFlutterBinding.ensureInitialized();
     await Hive.initFlutter();
-    
-    // 必须先注册适配器，再打开 box
+
     Hive.registerAdapter(FolderAdapter());
     Hive.registerAdapter(SongAdapter());
     Hive.registerAdapter(LyricSettingsAdapter());
-    
-    // 打开 box，如果遇到未知 typeId 错误，则删除并重新创建
-    try {
-      await Hive.openBox('settings');
-    } catch (e) {
-      log.w("打开 settings box 失败，尝试删除并重新创建: $e");
+
+    Future<void> openWithRecovery(
+      String name,
+      Future<void> Function() open,
+    ) async {
       try {
-        await Hive.deleteBoxFromDisk('settings');
-        await Hive.openBox('settings');
-      } catch (_) {
-        // 忽略删除失败的错误
-      }
-    }
-    
-    try {
-      await Hive.openBox(Constant.hiveRootPath);
-    } catch (e) {
-      log.w("打开 ${Constant.hiveRootPath} box 失败，尝试删除并重新创建: $e");
-      try {
-        await Hive.deleteBoxFromDisk(Constant.hiveRootPath);
-        await Hive.openBox(Constant.hiveRootPath);
-      } catch (_) {
-        // 忽略删除失败的错误
-      }
-    }
-    
-    // 与 FolderProvider 使用同一泛型，避免已打开时因类型再 close/reopen
-    if (!Hive.isBoxOpen(Constant.hiveFolderBox)) {
-      try {
-        await Hive.openBox<Folder>(Constant.hiveFolderBox);
+        await open();
       } catch (e) {
-        log.w("打开 ${Constant.hiveFolderBox} box 失败，尝试删除并重新创建: $e");
+        log.w("打开 $name box 失败，尝试删除并重新创建: $e");
         try {
-          await Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
-          await Hive.openBox<Folder>(Constant.hiveFolderBox);
+          await Hive.deleteBoxFromDisk(name);
+          await open();
         } catch (_) {
-          // 忽略删除失败的错误
+          // 忽略
         }
       }
     }
+
+    await Future.wait<void>([
+      openWithRecovery('settings', () async {
+        await Hive.openBox('settings');
+      }),
+      openWithRecovery(
+        Constant.hiveRootPath,
+        () async {
+          await Hive.openBox(Constant.hiveRootPath);
+        },
+      ),
+      if (!Hive.isBoxOpen(Constant.hiveFolderBox))
+        openWithRecovery(
+          Constant.hiveFolderBox,
+          () async {
+            await Hive.openBox<Folder>(Constant.hiveFolderBox);
+          },
+        )
+      else
+        Future<void>.value(),
+    ]);
   }
 
   void _clearCache() {
