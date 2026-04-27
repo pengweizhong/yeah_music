@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
@@ -128,9 +129,14 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       if (widget.openSearchOnOpen) {
         if (!context.mounted) return;
         final sorted = _getFilteredAndSortedSongs(playListProvider.playList);
+        final l10n = AppLocalizations.of(context);
         showSearch(
           context: context,
-          delegate: SongSearchDelegate(sorted, playListProvider),
+          delegate: SongSearchDelegate(
+            sorted,
+            playListProvider,
+            searchFieldLabelText: l10n.playlistSearchHint,
+          ),
         );
       }
     });
@@ -229,6 +235,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         };
         return Consumer<ThemeConfigProvider>(
           builder: (context, themeConfig, child) {
+            final l10n = AppLocalizations.of(context);
             return themeConfig.buildThemedBackground(
               context: context,
               child: Scaffold(
@@ -236,9 +243,9 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                 extendBody: true,
                 backgroundColor: Colors.transparent,
                 appBar: AppBar(
-                  title: const Text(
-                    "歌曲列表",
-                    style: TextStyle(color: Colors.white),
+                  title: Text(
+                    l10n.menuSongList,
+                    style: const TextStyle(color: Colors.white),
                   ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
@@ -253,16 +260,17 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                           delegate: SongSearchDelegate(
                             _filteredSongs,
                             playListProvider,
+                            searchFieldLabelText: l10n.playlistSearchHint,
                           ),
                         );
                       },
-                      tooltip: '搜索',
+                      tooltip: l10n.homeSearchTooltip,
                     ),
                     // 排序按钮
                     IconButton(
                       icon: const Icon(Icons.sort),
                       onPressed: _showSortOptions,
-                      tooltip: '排序',
+                      tooltip: l10n.tooltipSort,
                     ),
                   ],
                 ),
@@ -288,7 +296,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    '暂无歌曲',
+                                    l10n.songsListEmpty,
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.5),
                                       fontSize: 16,
@@ -321,7 +329,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                     return CompactSongListRow(
                                       key: ValueKey<String>(song.path),
                                       song: song,
-                                      title: song.title ?? '未知音乐',
+                                      title: song.title ?? l10n.pageUnknownTitle,
                                       subtitle: showSecondTitle(song),
                                       isCurrent: isRowCurrent,
                                       onTap: () async {
@@ -387,6 +395,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     this.playListProvider, {
     this.playbackContextQueue,
     this.userPlaylistIdForContext,
+    required this.searchFieldLabelText,
   }) : super(
          searchFieldStyle: const TextStyle(
            color: Colors.white,
@@ -395,8 +404,10 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
          ),
        );
 
+  final String searchFieldLabelText;
+
   @override
-  String get searchFieldLabel => '搜索歌曲、艺术家或文件名...';
+  String get searchFieldLabel => searchFieldLabelText;
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -487,6 +498,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     }).toList();
 
     if (results.isEmpty) {
+      final l10n = AppLocalizations.of(context);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -498,7 +510,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
             ),
             const SizedBox(height: 16),
             Text(
-              '未找到匹配的歌曲',
+              l10n.searchNoMatchingSongs,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.55),
                 fontSize: 16,
@@ -516,6 +528,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
           for (var i = 0; i < mainList.length; i++) mainList[i].path: i,
         };
         final current = p.currentSong;
+        final l10n = AppLocalizations.of(context);
         return ScrollAwareListFrame(
           child: ListView.builder(
             itemExtent: 80,
@@ -527,7 +540,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
               return CompactSongListRow(
                 key: ValueKey('search_${song.path}'),
                 song: song,
-                title: song.title ?? '未知音乐',
+                title: song.title ?? l10n.pageUnknownTitle,
                 subtitle: song.artist ?? song.album ?? '',
                 isCurrent: isRowCurrent,
                 onTap: () async {

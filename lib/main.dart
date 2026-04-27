@@ -6,10 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/pages/welcome_entry_page.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_material_themes.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
+import 'package:yeah_music/welcome/pre_hive_startup_view.dart';
 import 'package:yeah_music/welcome/welcome_countdown_view.dart';
-import 'package:yeah_music/welcome/welcome_fake_status.dart';
 
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
@@ -33,7 +35,15 @@ void main() {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
-  runApp(const AppStartupGate());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppThemeModeProvider()),
+        ChangeNotifierProvider(create: (_) => AppLocaleProvider()),
+      ],
+      child: const AppStartupGate(),
+    ),
+  );
 }
 
 /// 先尽快出首帧（渐变/进度），再异步完成 Hive 后再挂载 [MultiProvider] + 主应用，避免冷启动长时间纯黑屏。
@@ -50,7 +60,6 @@ class _AppStartupGateState extends State<AppStartupGate>
   bool _ready = false;
   int? _preHiveCountdownToPass;
 
-  WelcomeFakeStatusRotator? _fake;
   AnimationController? _glow;
   int _secondsLeft = kWelcomeCountdownStart;
   Timer? _countdownTimer;
@@ -61,7 +70,6 @@ class _AppStartupGateState extends State<AppStartupGate>
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     )..repeat(reverse: true);
-    _fake = WelcomeFakeStatusRotator()..start();
   }
 
   @override
@@ -76,7 +84,6 @@ class _AppStartupGateState extends State<AppStartupGate>
   void dispose() {
     _countdownTimer?.cancel();
     _glow?.dispose();
-    _fake?.dispose();
     super.dispose();
   }
 
@@ -104,8 +111,6 @@ class _AppStartupGateState extends State<AppStartupGate>
     _countdownTimer = null;
     _glow?.dispose();
     _glow = null;
-    _fake?.dispose();
-    _fake = null;
   }
 
   void _disposePreHiveResources(int captured) {
@@ -155,48 +160,69 @@ class _AppStartupGateState extends State<AppStartupGate>
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF0A0E14),
-        ),
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('启动失败: $_error', textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  TextButton(onPressed: _retry, child: const Text('重试')),
-                ],
-              ),
+      return Consumer2<AppThemeModeProvider, AppLocaleProvider>(
+        builder: (context, themeMode, locale, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: locale.resolvedLocale,
+            theme: ThemeData(
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: const Color(0xFF0A0E14),
             ),
-          ),
-        ),
+            home: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Scaffold(
+                  body: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.startupFailed('$_error'),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: _retry,
+                            child: Text(l10n.actionRetry),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
       );
     }
     if (!_ready) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF0A0E14),
-        ),
-        home: WelcomeCountdownView(
-          statusListenable: _fake!.hint,
-          secondsLeft: _secondsLeft,
-          dataReady: false,
-          glow: _glow!,
-          showEnterButton: false,
-        ),
+      return Consumer2<AppThemeModeProvider, AppLocaleProvider>(
+        builder: (context, themeMode, locale, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: locale.resolvedLocale,
+            theme: ThemeData(
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: const Color(0xFF0A0E14),
+            ),
+            home: PreHiveStartupView(
+              glow: _glow!,
+              secondsLeft: _secondsLeft,
+            ),
+          );
+        },
       );
     }
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppThemeModeProvider()),
         ChangeNotifierProvider(create: (_) => PlayListProvider()),
         ChangeNotifierProvider(
           create: (_) {
@@ -223,12 +249,15 @@ class YeahMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppThemeModeProvider>(
-      builder: (context, appearance, _) {
+    return Consumer2<AppThemeModeProvider, AppLocaleProvider>(
+      builder: (context, appearance, locale, _) {
         return MaterialApp(
           scaffoldMessengerKey: appScaffoldMessengerKey,
           navigatorObservers: <NavigatorObserver>[appRouteObserver],
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: locale.resolvedLocale,
           home: WelcomeEntryPage(
             preHiveCountdownLeft: preHiveCountdownLeft,
           ),

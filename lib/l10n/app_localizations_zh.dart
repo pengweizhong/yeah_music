@@ -1,0 +1,2579 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Chinese (`zh`).
+class AppLocalizationsZh extends AppLocalizations {
+  AppLocalizationsZh([String locale = 'zh']) : super(locale);
+
+  @override
+  String get appTitle => 'Yeah Music';
+
+  @override
+  String get menuHome => '主页';
+
+  @override
+  String get menuSongList => '歌曲列表';
+
+  @override
+  String get menuPlaylists => '歌单';
+
+  @override
+  String get menuMusicSource => '音乐源';
+
+  @override
+  String get menuSettings => '设置';
+
+  @override
+  String get settingsTitle => '设置';
+
+  @override
+  String get settingsBackgroundTheme => '背景主题';
+
+  @override
+  String get settingsBackgroundThemeDesc => '纯色、自定义颜色、背景图片';
+
+  @override
+  String get settingsSystemInfo => '系统信息';
+
+  @override
+  String get settingsSystemInfoDesc => '设备信息、存储空间';
+
+  @override
+  String get settingsAbout => '关于';
+
+  @override
+  String get settingsAboutDesc => '应用信息、版本、开源协议';
+
+  @override
+  String get settingsLanguage => '语言';
+
+  @override
+  String get settingsLanguageDesc => '界面语言';
+
+  @override
+  String get languageSettingsTitle => '语言';
+
+  @override
+  String get languageSettingsDescription =>
+      '选择应用界面显示语言。选择「跟随系统」时，在已提供翻译的情况下将跟随设备语言。';
+
+  @override
+  String get langFollowSystem => '跟随系统';
+
+  @override
+  String get langEnglish => 'English';
+
+  @override
+  String get langJapanese => '日本語';
+
+  @override
+  String get langSimplifiedChinese => '简体中文';
+
+  @override
+  String get langTraditionalChinese => '繁體中文';
+
+  @override
+  String get themeSettingsTitle => '主题设置';
+
+  @override
+  String get globalTheme => '全局主题';
+
+  @override
+  String get globalThemeDesc => '控制应用界面整体为浅色、深色或跟随系统；将保存到本机。';
+
+  @override
+  String get themeLight => '白天模式';
+
+  @override
+  String get themeDark => '夜晚模式';
+
+  @override
+  String get themeSystem => '跟随系统';
+
+  @override
+  String get sectionThemeType => '主题类型';
+
+  @override
+  String get themeTypeSolid => '预设颜色';
+
+  @override
+  String get themeTypeCustom => '自定义颜色';
+
+  @override
+  String get themeTypeImage => '背景图片';
+
+  @override
+  String get sectionPresetColors => '预设颜色';
+
+  @override
+  String get sectionCustomColor => '自定义颜色';
+
+  @override
+  String get sectionBackgroundImage => '背景图片';
+
+  @override
+  String get primaryColor => '主色调';
+
+  @override
+  String get secondaryColor => '次色调';
+
+  @override
+  String get actionSelect => '选择';
+
+  @override
+  String get fogBackground => '背景雾化';
+
+  @override
+  String get fogBackgroundDesc => '虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。';
+
+  @override
+  String get fogWeak => '弱';
+
+  @override
+  String get fogStrong => '强';
+
+  @override
+  String get actionPickImage => '选择图片';
+
+  @override
+  String get actionRemove => '移除';
+
+  @override
+  String cannotSaveBackground(String error) {
+    return '无法保存背景图（请重试或换一张）：$error';
+  }
+
+  @override
+  String get colorDialogTitlePrimary => '选择主色调';
+
+  @override
+  String get colorDialogTitleSecondary => '选择次色调';
+
+  @override
+  String get actionCancel => '取消';
+
+  @override
+  String get actionRetry => '重试';
+
+  @override
+  String startupFailed(String error) {
+    return '启动失败：$error';
+  }
+
+  @override
+  String get welcomeTagline => '每一次聆听，都从这里开始';
+
+  @override
+  String get welcomeEnter => '进入应用';
+
+  @override
+  String get welcomeEnterWait => '进入应用（需等待加载完成）';
+
+  @override
+  String get welcomeHintWhenReady => '加载已完成，可立即进入，也可等待倒计时结束自动进入。';
+
+  @override
+  String get welcomeHintWhenNotReady => '倒计时结束且加载完成后，将自动进入应用。';
+
+  @override
+  String get welcomePreparing => '正在完成启动准备…';
+
+  @override
+  String get welcomeCountdownLabel => '进入倒计时';
+
+  @override
+  String get welcomeCountdownSubDoneReady => '可以进入了';
+
+  @override
+  String get welcomeCountdownSubDoneWait => '请等待数据就绪';
+
+  @override
+  String welcomeCountdownSubNotDone(int n) {
+    return '默认 $n 秒，结束后自动进入';
+  }
+
+  @override
+  String get secondsUnit => '秒';
+
+  @override
+  String get welcomeNotReadyMessage => '请稍等，资源尚未加载完成。';
+
+  @override
+  String welcomeLoadError(String error) {
+    return '加载出错了。请检查存储权限或稍后重试。\n\n$error';
+  }
+
+  @override
+  String get welcomeFakeUserSettings => '正在加载用户设置';
+
+  @override
+  String get welcomeFakeLibrary => '正在加载曲库';
+
+  @override
+  String get welcomeFakePlaylists => '正在加载歌单';
+
+  @override
+  String get welcomeFakeOther => '正在加载其他数据';
+
+  @override
+  String get welcomeFakeFinishing => '正在完成初始化';
+
+  @override
+  String get homeGreetingLateNight => '夜深了';
+
+  @override
+  String get homeGreetingMorning => '早上好';
+
+  @override
+  String get homeGreetingAfternoon => '下午好';
+
+  @override
+  String get homeGreetingEvening => '晚上好';
+
+  @override
+  String get homeMenuTooltip => '菜单';
+
+  @override
+  String get homeSearchTooltip => '搜索';
+
+  @override
+  String get homeQuickEntryEmpty => '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等';
+
+  @override
+  String get homeEntryLibrary => '本地曲库';
+
+  @override
+  String get homeEntryMyPlaylists => '我的歌单';
+
+  @override
+  String get homeEntryRecent => '最近播放';
+
+  @override
+  String get homeEntryDiscover => '发现';
+
+  @override
+  String get homeSectionQuickEntry => '快捷入口';
+
+  @override
+  String get homeActionManage => '管理';
+
+  @override
+  String get homeSectionMyPlaylists => '我的歌单';
+
+  @override
+  String get homeActionMore => '更多';
+
+  @override
+  String get homeLoadingLibrary => '正在加载曲库…';
+
+  @override
+  String get homeRecentEmpty => '暂无最近播放，在曲库或歌单中播放歌曲后会显示';
+
+  @override
+  String get homeSectionMostPlayed => '最多播放';
+
+  @override
+  String get homeSectionRecentPlays => '最近播放';
+
+  @override
+  String get homeActionAll => '全部';
+
+  @override
+  String get homeMostPlayedPathMismatch =>
+      '已有播放次数记录，但路径与当前曲库不一致（重命名/移动后请重扫音乐目录，再播几次会恢复）';
+
+  @override
+  String get homeMostPlayedEmpty => '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行';
+
+  @override
+  String homePlayCount(int c) {
+    return '已播放 $c 次';
+  }
+
+  @override
+  String homePlayCountWithBase(String base, int c) {
+    return '$base · 已播放 $c 次';
+  }
+
+  @override
+  String homeGreetingLine(String greeting) {
+    return '$greeting，今天想听点什么？';
+  }
+
+  @override
+  String get homeGreetingSub => '从下面继续上次的歌，或选一张歌单开始';
+
+  @override
+  String get homeSearchHint => '搜索歌曲、歌手、歌单';
+
+  @override
+  String get homeContinuePlaying => '继续播放';
+
+  @override
+  String get homeUnknownTitle => '未知';
+
+  @override
+  String get homeNowPlayingAlbum => '正在播放';
+
+  @override
+  String get homeNothingPlaying => '还没有在播放';
+
+  @override
+  String get homeOpenLibraryToPlay => '去本地曲库选一首歌开始';
+
+  @override
+  String get homeAllSongsLoading => '加载中…';
+
+  @override
+  String get homeScanMusicFolder => '去扫描音乐目录';
+
+  @override
+  String homeTrackCount(int n) {
+    return '$n 首';
+  }
+
+  @override
+  String get homeAllSongs => '全部歌曲';
+
+  @override
+  String get homeCreatePlaylist => '创建歌单';
+
+  @override
+  String get homeCreatePlaylistSub => '集中收藏你喜欢的歌';
+
+  @override
+  String get homeEmptyPlaylist => '空歌单';
+
+  @override
+  String get songsListEmpty => '暂无歌曲';
+
+  @override
+  String get tooltipSort => '排序';
+
+  @override
+  String get languageRestartNotice => '部分界面需重启应用后才会完全应用所选语言。';
+
+  @override
+  String get locateNotInList => '当前播放不在本列表';
+
+  @override
+  String get locateToCurrent => '定位到当前';
+
+  @override
+  String get locateToCurrentPlaying => '定位到当前播放';
+
+  @override
+  String get locateToLyricLine => '定位到当前歌词';
+
+  @override
+  String get tooltipBack => '返回';
+
+  @override
+  String get tooltipAddToPlaylist => '加入歌单';
+
+  @override
+  String get tooltipDone => '完成';
+
+  @override
+  String get tooltipMoreActions => '操作';
+
+  @override
+  String get tooltipMore => '更多';
+
+  @override
+  String get tooltipLyricStyle => '歌词样式';
+
+  @override
+  String get tooltipFolderInfo => '目录信息';
+
+  @override
+  String get tooltipReloadSongs => '重新加载歌曲';
+
+  @override
+  String get tooltipEdit => '编辑';
+
+  @override
+  String get tooltipRemoveFolder => '移除目录';
+
+  @override
+  String get actionDelete => '删除';
+
+  @override
+  String get actionSave => '保存';
+
+  @override
+  String get actionCreate => '创建';
+
+  @override
+  String get actionConfirm => '确认';
+
+  @override
+  String get actionGotIt => '我知道了';
+
+  @override
+  String get actionOK => '确定';
+
+  @override
+  String get fieldName => '名称';
+
+  @override
+  String get fieldNewNameHint => '新名称';
+
+  @override
+  String get folderAppBarTitle => '文件夹';
+
+  @override
+  String folderSongsCount(int n) {
+    return '$n 首';
+  }
+
+  @override
+  String get folderInfoAlias => '文件夹别名：';
+
+  @override
+  String get folderInfoPath => '文件夹路径：';
+
+  @override
+  String get folderInfoSongCount => '歌曲数量：';
+
+  @override
+  String get folderInfoAdded => '加入时间：';
+
+  @override
+  String get folderAddLoadingTitle => '正在加载歌曲';
+
+  @override
+  String get folderReloading => '正在重新加载';
+
+  @override
+  String get folderScanningWait => '正在扫描文件夹，请稍候…';
+
+  @override
+  String folderLoadOk(int n) {
+    return '成功加载 $n 首歌曲';
+  }
+
+  @override
+  String folderLoadFailed(String error) {
+    return '加载失败：$error';
+  }
+
+  @override
+  String get folderRemoveTitle => '确认移除？';
+
+  @override
+  String folderRemoveMessage(String name) {
+    return '是否移除目录：$name（仅移除引用，不删磁盘上音乐文件）';
+  }
+
+  @override
+  String get folderDuplicateDialogTitle => '提示';
+
+  @override
+  String folderDuplicateMessage(String path) {
+    return '添加了重复的文件夹：$path';
+  }
+
+  @override
+  String folderAddOk(int n) {
+    return '成功添加 $n 首歌曲';
+  }
+
+  @override
+  String get folderAddErrorTitle => '错误';
+
+  @override
+  String folderAddErrorMessage(String error) {
+    return '加载文件夹失败：$error';
+  }
+
+  @override
+  String get folderRenameDialogTitle => '重命名文件夹';
+
+  @override
+  String get playlistPageTitle => '歌单';
+
+  @override
+  String get playlistNotFound => '歌单不存在';
+
+  @override
+  String get playlistNotFoundMessage => '该歌单可能已被删除';
+
+  @override
+  String get playlistEmptyNoSongs => '暂无可用歌曲\n（请先在「音乐源」扫描，或歌曲路径已失效）';
+
+  @override
+  String get playlistDeleteTitle => '删除歌单';
+
+  @override
+  String get playlistDeleteMessage => '确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。';
+
+  @override
+  String get playlistDeleteBatchTitle => '批量删除歌单';
+
+  @override
+  String playlistDeleteBatchMessage(int n) {
+    return '确定删除已选的 $n 个歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。';
+  }
+
+  @override
+  String get playlistDeletedOne => '已删除歌单';
+
+  @override
+  String get importDialogBody =>
+      '歌曲以「完整文件路径」区分：同名、同歌手、不同文件或不同音质会对应不同路径，导入后不会误合并。\n\n• 合并导入：与本地「歌单 id」相同的条目会合并曲目列表（路径去重）；备份中有而本地没有的歌单会新建。\n• 替换全部：先清空本地全部歌单，再按备份恢复（谨慎操作）。';
+
+  @override
+  String playlistCreatedOn(String date) {
+    return '创建于 $date';
+  }
+
+  @override
+  String get recentPlaysEmptyTitle => '还没有播放记录';
+
+  @override
+  String get quickEntryReorderHint => '拖动手柄可调整顺序。关闭「在首页显示」后该入口在首页隐藏。';
+
+  @override
+  String get quickEntryShowOnHome => '在首页显示';
+
+  @override
+  String get playlistSearchHint => '搜索歌曲、艺术家或文件名…';
+
+  @override
+  String get searchNoMatchingSongs => '未找到匹配的歌曲';
+
+  @override
+  String get playlistRenameTitle => '重命名歌单';
+
+  @override
+  String get exportCannot => '无法导出该歌单';
+
+  @override
+  String exportSaved(String path) {
+    return '已导出：$path';
+  }
+
+  @override
+  String get exportCancelled => '已取消导出';
+
+  @override
+  String exportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String get exportDialogTitle => '导出歌单';
+
+  @override
+  String get menuRename => '重命名';
+
+  @override
+  String get menuExportThis => '导出本歌单…';
+
+  @override
+  String get menuDeletePlaylist => '删除歌单';
+
+  @override
+  String get exportSelectFirst => '请先选择要导出的歌单';
+
+  @override
+  String get exportNoneToExport => '没有可导出的歌单，请检查选择';
+
+  @override
+  String get exportAllPlaylists => '导出全部歌单';
+
+  @override
+  String get exportSelectedPlaylists => '导出所选歌单';
+
+  @override
+  String get exportSelected => '导出所选';
+
+  @override
+  String get exportAll => '导出全部';
+
+  @override
+  String get importCannotRead => '无法读取文件（可尝试较小备份或检查权限）';
+
+  @override
+  String importParseError(String message) {
+    return '无法解析：$message';
+  }
+
+  @override
+  String get importMerge => '合并导入';
+
+  @override
+  String get importReplaceAll => '替换全部';
+
+  @override
+  String get importMerged => '已合并导入';
+
+  @override
+  String get importReplaced => '已替换导入';
+
+  @override
+  String importFailed(String error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String playlistsDeletedN(int n) {
+    return '已删除 $n 个歌单';
+  }
+
+  @override
+  String get fabNewPlaylist => '新建歌单';
+
+  @override
+  String get emptyPlaylistsHint =>
+      '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入/导出、单选/多选';
+
+  @override
+  String get sortByName => '按名称';
+
+  @override
+  String get sortByCreated => '按创建时间';
+
+  @override
+  String get sortByUpdated => '按更新时间';
+
+  @override
+  String get sortByAddedToPlaylist => '按加入歌单时间';
+
+  @override
+  String get sortByAddedToPlaylistSub => '正序：先加入在前 · 反序：后加入在前';
+
+  @override
+  String get lyricAlignLeft => '左';
+
+  @override
+  String get lyricAlignCenter => '中';
+
+  @override
+  String get lyricAlignRight => '右';
+
+  @override
+  String get addToPlaylistHint => '新建歌单名称';
+
+  @override
+  String addToPlaylistUpdatedN(int n) {
+    return '已更新歌单（$n 个）';
+  }
+
+  @override
+  String get noLyrics => '暂无歌词';
+
+  @override
+  String get songNotFound => '歌曲不存在';
+
+  @override
+  String get pageUnknownTitle => '未知标题';
+
+  @override
+  String get queueNoTracks => '暂无曲目';
+
+  @override
+  String get playQueueTitle => '播放队列';
+
+  @override
+  String get playbackModeTitle => '播放模式';
+
+  @override
+  String get playbackSequential => '顺序播放';
+
+  @override
+  String get playbackShuffle => '随机播放';
+
+  @override
+  String get playbackSingleLoop => '单曲循环';
+
+  @override
+  String get playbackOnce => '仅播放一次';
+
+  @override
+  String get playbackTimer => '定时关闭';
+
+  @override
+  String get sleepTimerSheetTitle => '定时关闭';
+
+  @override
+  String get sleepTimerCancel => '取消定时关闭';
+
+  @override
+  String sleepTimerMinutesN(int n) {
+    return '$n 分钟';
+  }
+
+  @override
+  String get sleepTimerCustom => '自定义时间';
+
+  @override
+  String sleepTimerCurrentN(int n) {
+    return '当前 $n 分钟';
+  }
+
+  @override
+  String get sleepTimerLabelMinutes => '分钟';
+
+  @override
+  String sleepTimerInvalidRange(int min, int max) {
+    return '请输入 $min–$max 之间的整数';
+  }
+
+  @override
+  String sleepTimerPlayedMinutes(int minutes) {
+    return '定时关闭：已播放 $minutes 分钟';
+  }
+
+  @override
+  String get lyricModeEmptyHint => '切换显示模式';
+
+  @override
+  String get lyricModeAllLines => '多行歌词：全部行（点击为单行）';
+
+  @override
+  String lyricModeSingleLineN(int n) {
+    return '多行歌词：仅第 $n 行（继续点击切换）';
+  }
+
+  @override
+  String get sortOptionsTitle => '排序方式';
+
+  @override
+  String addToPlaylistTitle(String name) {
+    return '加入歌单 · $name';
+  }
+
+  @override
+  String get addToPlaylistMultiHelp => '可多选；取消勾选将从对应歌单移除该歌曲';
+
+  @override
+  String get addToPlaylistNoPlaylistsYet => '暂无歌单，请先输入名称并创建';
+
+  @override
+  String get quickEntrySettingsTitle => '快捷入口';
+
+  @override
+  String get playlistSelectModeSingle => '单选';
+
+  @override
+  String get playlistSelectModeMulti => '多选';
+
+  @override
+  String get menuImportPlaylists => '导入歌单';
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String get deselectAll => '取消全选';
+
+  @override
+  String playlistSelectCount(int n, int m) {
+    return '已选 $n / $m';
+  }
+
+  @override
+  String get lyricStyleSyncSubtitle => '与当前播放页歌词同步';
+
+  @override
+  String get lyricStyleSectionDisplay => '显示';
+
+  @override
+  String get lyricStyleSectionDisplaySub => '原文与多行译文的开关';
+
+  @override
+  String get lyricStyleShowOriginal => '显示原文';
+
+  @override
+  String get lyricStyleShowOriginalSub => '每个时间戳第 1 行';
+
+  @override
+  String get lyricStyleShowTranslation => '显示翻译/附加行';
+
+  @override
+  String get lyricStyleShowTranslationSub => '第 2 行及以后';
+
+  @override
+  String get lyricStyleSectionTypography => '字号与行距';
+
+  @override
+  String get lyricStyleSectionTypographySub => '滑条调节后即时生效';
+
+  @override
+  String get lyricStyleFontOriginal => '原文字号';
+
+  @override
+  String get lyricStyleFontTranslation => '翻译字号';
+
+  @override
+  String get lyricStyleLineSpacing => '行间距';
+
+  @override
+  String get lyricStyleSectionLineAlign => '行对齐';
+
+  @override
+  String get lyricStyleSectionStateColors => '行状态颜色';
+
+  @override
+  String get lyricStyleSectionStateColorsSub => '正在播放、已播过、未播到';
+
+  @override
+  String get lyricStyleStateNowPlaying => '正在播放行';
+
+  @override
+  String get lyricStyleStatePlayed => '已播过的行';
+
+  @override
+  String get lyricStyleStateUpcoming => '未播到的行';
+
+  @override
+  String get lyricStyleColorNowOriginal => '正在播放 — 原文';
+
+  @override
+  String get lyricStyleColorNowTranslation => '正在播放 — 译文';
+
+  @override
+  String get lyricStyleColorPlayedOriginal => '已播过 — 原文';
+
+  @override
+  String get lyricStyleColorPlayedTranslation => '已播过 — 译文';
+
+  @override
+  String get lyricStyleColorUpcomingOriginal => '未播到 — 原文';
+
+  @override
+  String get lyricStyleColorUpcomingTranslation => '未播到 — 译文';
+
+  @override
+  String get lyricStyleColorPersistNote => '颜色将写入本地设置，切歌后仍保留。';
+
+  @override
+  String get lyricColorPickerHint => '点选色块';
+
+  @override
+  String get lyricLabelOriginal => '原文';
+
+  @override
+  String get lyricLabelTranslation => '译文';
+}
+
+/// The translations for Chinese, using the Han script (`zh_Hans`).
+class AppLocalizationsZhHans extends AppLocalizationsZh {
+  AppLocalizationsZhHans() : super('zh_Hans');
+
+  @override
+  String get appTitle => 'Yeah Music';
+
+  @override
+  String get menuHome => '主页';
+
+  @override
+  String get menuSongList => '歌曲列表';
+
+  @override
+  String get menuPlaylists => '歌单';
+
+  @override
+  String get menuMusicSource => '音乐源';
+
+  @override
+  String get menuSettings => '设置';
+
+  @override
+  String get settingsTitle => '设置';
+
+  @override
+  String get settingsBackgroundTheme => '背景主题';
+
+  @override
+  String get settingsBackgroundThemeDesc => '纯色、自定义颜色、背景图片';
+
+  @override
+  String get settingsSystemInfo => '系统信息';
+
+  @override
+  String get settingsSystemInfoDesc => '设备信息、存储空间';
+
+  @override
+  String get settingsAbout => '关于';
+
+  @override
+  String get settingsAboutDesc => '应用信息、版本、开源协议';
+
+  @override
+  String get settingsLanguage => '语言';
+
+  @override
+  String get settingsLanguageDesc => '界面语言';
+
+  @override
+  String get languageSettingsTitle => '语言';
+
+  @override
+  String get languageSettingsDescription =>
+      '选择应用界面显示语言。选择「跟随系统」时，在已提供翻译的情况下将跟随设备语言。';
+
+  @override
+  String get langFollowSystem => '跟随系统';
+
+  @override
+  String get langEnglish => 'English';
+
+  @override
+  String get langJapanese => '日本語';
+
+  @override
+  String get langSimplifiedChinese => '简体中文';
+
+  @override
+  String get langTraditionalChinese => '繁體中文';
+
+  @override
+  String get themeSettingsTitle => '主题设置';
+
+  @override
+  String get globalTheme => '全局主题';
+
+  @override
+  String get globalThemeDesc => '控制应用界面整体为浅色、深色或跟随系统；将保存到本机。';
+
+  @override
+  String get themeLight => '白天模式';
+
+  @override
+  String get themeDark => '夜晚模式';
+
+  @override
+  String get themeSystem => '跟随系统';
+
+  @override
+  String get sectionThemeType => '主题类型';
+
+  @override
+  String get themeTypeSolid => '预设颜色';
+
+  @override
+  String get themeTypeCustom => '自定义颜色';
+
+  @override
+  String get themeTypeImage => '背景图片';
+
+  @override
+  String get sectionPresetColors => '预设颜色';
+
+  @override
+  String get sectionCustomColor => '自定义颜色';
+
+  @override
+  String get sectionBackgroundImage => '背景图片';
+
+  @override
+  String get primaryColor => '主色调';
+
+  @override
+  String get secondaryColor => '次色调';
+
+  @override
+  String get actionSelect => '选择';
+
+  @override
+  String get fogBackground => '背景雾化';
+
+  @override
+  String get fogBackgroundDesc => '虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。';
+
+  @override
+  String get fogWeak => '弱';
+
+  @override
+  String get fogStrong => '强';
+
+  @override
+  String get actionPickImage => '选择图片';
+
+  @override
+  String get actionRemove => '移除';
+
+  @override
+  String cannotSaveBackground(String error) {
+    return '无法保存背景图（请重试或换一张）：$error';
+  }
+
+  @override
+  String get colorDialogTitlePrimary => '选择主色调';
+
+  @override
+  String get colorDialogTitleSecondary => '选择次色调';
+
+  @override
+  String get actionCancel => '取消';
+
+  @override
+  String get actionRetry => '重试';
+
+  @override
+  String startupFailed(String error) {
+    return '启动失败：$error';
+  }
+
+  @override
+  String get welcomeTagline => '每一次聆听，都从这里开始';
+
+  @override
+  String get welcomeEnter => '进入应用';
+
+  @override
+  String get welcomeEnterWait => '进入应用（需等待加载完成）';
+
+  @override
+  String get welcomeHintWhenReady => '加载已完成，可立即进入，也可等待倒计时结束自动进入。';
+
+  @override
+  String get welcomeHintWhenNotReady => '倒计时结束且加载完成后，将自动进入应用。';
+
+  @override
+  String get welcomePreparing => '正在完成启动准备…';
+
+  @override
+  String get welcomeCountdownLabel => '进入倒计时';
+
+  @override
+  String get welcomeCountdownSubDoneReady => '可以进入了';
+
+  @override
+  String get welcomeCountdownSubDoneWait => '请等待数据就绪';
+
+  @override
+  String welcomeCountdownSubNotDone(int n) {
+    return '默认 $n 秒，结束后自动进入';
+  }
+
+  @override
+  String get secondsUnit => '秒';
+
+  @override
+  String get welcomeNotReadyMessage => '请稍等，资源尚未加载完成。';
+
+  @override
+  String welcomeLoadError(String error) {
+    return '加载出错了。请检查存储权限或稍后重试。\n\n$error';
+  }
+
+  @override
+  String get welcomeFakeUserSettings => '正在加载用户设置';
+
+  @override
+  String get welcomeFakeLibrary => '正在加载曲库';
+
+  @override
+  String get welcomeFakePlaylists => '正在加载歌单';
+
+  @override
+  String get welcomeFakeOther => '正在加载其他数据';
+
+  @override
+  String get welcomeFakeFinishing => '正在完成初始化';
+
+  @override
+  String get homeGreetingLateNight => '夜深了';
+
+  @override
+  String get homeGreetingMorning => '早上好';
+
+  @override
+  String get homeGreetingAfternoon => '下午好';
+
+  @override
+  String get homeGreetingEvening => '晚上好';
+
+  @override
+  String get homeMenuTooltip => '菜单';
+
+  @override
+  String get homeSearchTooltip => '搜索';
+
+  @override
+  String get homeQuickEntryEmpty => '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等';
+
+  @override
+  String get homeEntryLibrary => '本地曲库';
+
+  @override
+  String get homeEntryMyPlaylists => '我的歌单';
+
+  @override
+  String get homeEntryRecent => '最近播放';
+
+  @override
+  String get homeEntryDiscover => '发现';
+
+  @override
+  String get homeSectionQuickEntry => '快捷入口';
+
+  @override
+  String get homeActionManage => '管理';
+
+  @override
+  String get homeSectionMyPlaylists => '我的歌单';
+
+  @override
+  String get homeActionMore => '更多';
+
+  @override
+  String get homeLoadingLibrary => '正在加载曲库…';
+
+  @override
+  String get homeRecentEmpty => '暂无最近播放，在曲库或歌单中播放歌曲后会显示';
+
+  @override
+  String get homeSectionMostPlayed => '最多播放';
+
+  @override
+  String get homeSectionRecentPlays => '最近播放';
+
+  @override
+  String get homeActionAll => '全部';
+
+  @override
+  String get homeMostPlayedPathMismatch =>
+      '已有播放次数记录，但路径与当前曲库不一致（重命名/移动后请重扫音乐目录，再播几次会恢复）';
+
+  @override
+  String get homeMostPlayedEmpty => '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行';
+
+  @override
+  String homePlayCount(int c) {
+    return '已播放 $c 次';
+  }
+
+  @override
+  String homePlayCountWithBase(String base, int c) {
+    return '$base · 已播放 $c 次';
+  }
+
+  @override
+  String homeGreetingLine(String greeting) {
+    return '$greeting，今天想听点什么？';
+  }
+
+  @override
+  String get homeGreetingSub => '从下面继续上次的歌，或选一张歌单开始';
+
+  @override
+  String get homeSearchHint => '搜索歌曲、歌手、歌单';
+
+  @override
+  String get homeContinuePlaying => '继续播放';
+
+  @override
+  String get homeUnknownTitle => '未知';
+
+  @override
+  String get homeNowPlayingAlbum => '正在播放';
+
+  @override
+  String get homeNothingPlaying => '还没有在播放';
+
+  @override
+  String get homeOpenLibraryToPlay => '去本地曲库选一首歌开始';
+
+  @override
+  String get homeAllSongsLoading => '加载中…';
+
+  @override
+  String get homeScanMusicFolder => '去扫描音乐目录';
+
+  @override
+  String homeTrackCount(int n) {
+    return '$n 首';
+  }
+
+  @override
+  String get homeAllSongs => '全部歌曲';
+
+  @override
+  String get homeCreatePlaylist => '创建歌单';
+
+  @override
+  String get homeCreatePlaylistSub => '集中收藏你喜欢的歌';
+
+  @override
+  String get homeEmptyPlaylist => '空歌单';
+
+  @override
+  String get songsListEmpty => '暂无歌曲';
+
+  @override
+  String get tooltipSort => '排序';
+
+  @override
+  String get languageRestartNotice => '部分界面需重启应用后才会完全应用所选语言。';
+
+  @override
+  String get locateNotInList => '当前播放不在本列表';
+
+  @override
+  String get locateToCurrent => '定位到当前';
+
+  @override
+  String get locateToCurrentPlaying => '定位到当前播放';
+
+  @override
+  String get locateToLyricLine => '定位到当前歌词';
+
+  @override
+  String get tooltipBack => '返回';
+
+  @override
+  String get tooltipAddToPlaylist => '加入歌单';
+
+  @override
+  String get tooltipDone => '完成';
+
+  @override
+  String get tooltipMoreActions => '操作';
+
+  @override
+  String get tooltipMore => '更多';
+
+  @override
+  String get tooltipLyricStyle => '歌词样式';
+
+  @override
+  String get tooltipFolderInfo => '目录信息';
+
+  @override
+  String get tooltipReloadSongs => '重新加载歌曲';
+
+  @override
+  String get tooltipEdit => '编辑';
+
+  @override
+  String get tooltipRemoveFolder => '移除目录';
+
+  @override
+  String get actionDelete => '删除';
+
+  @override
+  String get actionSave => '保存';
+
+  @override
+  String get actionCreate => '创建';
+
+  @override
+  String get actionConfirm => '确认';
+
+  @override
+  String get actionGotIt => '我知道了';
+
+  @override
+  String get actionOK => '确定';
+
+  @override
+  String get fieldName => '名称';
+
+  @override
+  String get fieldNewNameHint => '新名称';
+
+  @override
+  String get folderAppBarTitle => '文件夹';
+
+  @override
+  String folderSongsCount(int n) {
+    return '$n 首';
+  }
+
+  @override
+  String get folderInfoAlias => '文件夹别名：';
+
+  @override
+  String get folderInfoPath => '文件夹路径：';
+
+  @override
+  String get folderInfoSongCount => '歌曲数量：';
+
+  @override
+  String get folderInfoAdded => '加入时间：';
+
+  @override
+  String get folderAddLoadingTitle => '正在加载歌曲';
+
+  @override
+  String get folderReloading => '正在重新加载';
+
+  @override
+  String get folderScanningWait => '正在扫描文件夹，请稍候…';
+
+  @override
+  String folderLoadOk(int n) {
+    return '成功加载 $n 首歌曲';
+  }
+
+  @override
+  String folderLoadFailed(String error) {
+    return '加载失败：$error';
+  }
+
+  @override
+  String get folderRemoveTitle => '确认移除？';
+
+  @override
+  String folderRemoveMessage(String name) {
+    return '是否移除目录：$name（仅移除引用，不删磁盘上音乐文件）';
+  }
+
+  @override
+  String get folderDuplicateDialogTitle => '提示';
+
+  @override
+  String folderDuplicateMessage(String path) {
+    return '添加了重复的文件夹：$path';
+  }
+
+  @override
+  String folderAddOk(int n) {
+    return '成功添加 $n 首歌曲';
+  }
+
+  @override
+  String get folderAddErrorTitle => '错误';
+
+  @override
+  String folderAddErrorMessage(String error) {
+    return '加载文件夹失败：$error';
+  }
+
+  @override
+  String get folderRenameDialogTitle => '重命名文件夹';
+
+  @override
+  String get playlistPageTitle => '歌单';
+
+  @override
+  String get playlistNotFound => '歌单不存在';
+
+  @override
+  String get playlistNotFoundMessage => '该歌单可能已被删除';
+
+  @override
+  String get playlistEmptyNoSongs => '暂无可用歌曲\n（请先在「音乐源」扫描，或歌曲路径已失效）';
+
+  @override
+  String get playlistDeleteTitle => '删除歌单';
+
+  @override
+  String get playlistDeleteMessage => '确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。';
+
+  @override
+  String get playlistDeleteBatchTitle => '批量删除歌单';
+
+  @override
+  String playlistDeleteBatchMessage(int n) {
+    return '确定删除已选的 $n 个歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。';
+  }
+
+  @override
+  String get playlistDeletedOne => '已删除歌单';
+
+  @override
+  String get importDialogBody =>
+      '歌曲以「完整文件路径」区分：同名、同歌手、不同文件或不同音质会对应不同路径，导入后不会误合并。\n\n• 合并导入：与本地「歌单 id」相同的条目会合并曲目列表（路径去重）；备份中有而本地没有的歌单会新建。\n• 替换全部：先清空本地全部歌单，再按备份恢复（谨慎操作）。';
+
+  @override
+  String playlistCreatedOn(String date) {
+    return '创建于 $date';
+  }
+
+  @override
+  String get recentPlaysEmptyTitle => '还没有播放记录';
+
+  @override
+  String get quickEntryReorderHint => '拖动手柄可调整顺序。关闭「在首页显示」后该入口在首页隐藏。';
+
+  @override
+  String get quickEntryShowOnHome => '在首页显示';
+
+  @override
+  String get playlistSearchHint => '搜索歌曲、艺术家或文件名…';
+
+  @override
+  String get searchNoMatchingSongs => '未找到匹配的歌曲';
+
+  @override
+  String get playlistRenameTitle => '重命名歌单';
+
+  @override
+  String get exportCannot => '无法导出该歌单';
+
+  @override
+  String exportSaved(String path) {
+    return '已导出：$path';
+  }
+
+  @override
+  String get exportCancelled => '已取消导出';
+
+  @override
+  String exportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String get exportDialogTitle => '导出歌单';
+
+  @override
+  String get menuRename => '重命名';
+
+  @override
+  String get menuExportThis => '导出本歌单…';
+
+  @override
+  String get menuDeletePlaylist => '删除歌单';
+
+  @override
+  String get exportSelectFirst => '请先选择要导出的歌单';
+
+  @override
+  String get exportNoneToExport => '没有可导出的歌单，请检查选择';
+
+  @override
+  String get exportAllPlaylists => '导出全部歌单';
+
+  @override
+  String get exportSelectedPlaylists => '导出所选歌单';
+
+  @override
+  String get exportSelected => '导出所选';
+
+  @override
+  String get exportAll => '导出全部';
+
+  @override
+  String get importCannotRead => '无法读取文件（可尝试较小备份或检查权限）';
+
+  @override
+  String importParseError(String message) {
+    return '无法解析：$message';
+  }
+
+  @override
+  String get importMerge => '合并导入';
+
+  @override
+  String get importReplaceAll => '替换全部';
+
+  @override
+  String get importMerged => '已合并导入';
+
+  @override
+  String get importReplaced => '已替换导入';
+
+  @override
+  String importFailed(String error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String playlistsDeletedN(int n) {
+    return '已删除 $n 个歌单';
+  }
+
+  @override
+  String get fabNewPlaylist => '新建歌单';
+
+  @override
+  String get emptyPlaylistsHint =>
+      '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入/导出、单选/多选';
+
+  @override
+  String get sortByName => '按名称';
+
+  @override
+  String get sortByCreated => '按创建时间';
+
+  @override
+  String get sortByUpdated => '按更新时间';
+
+  @override
+  String get sortByAddedToPlaylist => '按加入歌单时间';
+
+  @override
+  String get sortByAddedToPlaylistSub => '正序：先加入在前 · 反序：后加入在前';
+
+  @override
+  String get lyricAlignLeft => '左';
+
+  @override
+  String get lyricAlignCenter => '中';
+
+  @override
+  String get lyricAlignRight => '右';
+
+  @override
+  String get addToPlaylistHint => '新建歌单名称';
+
+  @override
+  String addToPlaylistUpdatedN(int n) {
+    return '已更新歌单（$n 个）';
+  }
+
+  @override
+  String get noLyrics => '暂无歌词';
+
+  @override
+  String get songNotFound => '歌曲不存在';
+
+  @override
+  String get pageUnknownTitle => '未知标题';
+
+  @override
+  String get queueNoTracks => '暂无曲目';
+
+  @override
+  String get playQueueTitle => '播放队列';
+
+  @override
+  String get playbackModeTitle => '播放模式';
+
+  @override
+  String get playbackSequential => '顺序播放';
+
+  @override
+  String get playbackShuffle => '随机播放';
+
+  @override
+  String get playbackSingleLoop => '单曲循环';
+
+  @override
+  String get playbackOnce => '仅播放一次';
+
+  @override
+  String get playbackTimer => '定时关闭';
+
+  @override
+  String get sleepTimerSheetTitle => '定时关闭';
+
+  @override
+  String get sleepTimerCancel => '取消定时关闭';
+
+  @override
+  String sleepTimerMinutesN(int n) {
+    return '$n 分钟';
+  }
+
+  @override
+  String get sleepTimerCustom => '自定义时间';
+
+  @override
+  String sleepTimerCurrentN(int n) {
+    return '当前 $n 分钟';
+  }
+
+  @override
+  String get sleepTimerLabelMinutes => '分钟';
+
+  @override
+  String sleepTimerInvalidRange(int min, int max) {
+    return '请输入 $min–$max 之间的整数';
+  }
+
+  @override
+  String sleepTimerPlayedMinutes(int minutes) {
+    return '定时关闭：已播放 $minutes 分钟';
+  }
+
+  @override
+  String get lyricModeEmptyHint => '切换显示模式';
+
+  @override
+  String get lyricModeAllLines => '多行歌词：全部行（点击为单行）';
+
+  @override
+  String lyricModeSingleLineN(int n) {
+    return '多行歌词：仅第 $n 行（继续点击切换）';
+  }
+
+  @override
+  String get sortOptionsTitle => '排序方式';
+
+  @override
+  String addToPlaylistTitle(String name) {
+    return '加入歌单 · $name';
+  }
+
+  @override
+  String get addToPlaylistMultiHelp => '可多选；取消勾选将从对应歌单移除该歌曲';
+
+  @override
+  String get addToPlaylistNoPlaylistsYet => '暂无歌单，请先输入名称并创建';
+
+  @override
+  String get quickEntrySettingsTitle => '快捷入口';
+
+  @override
+  String get playlistSelectModeSingle => '单选';
+
+  @override
+  String get playlistSelectModeMulti => '多选';
+
+  @override
+  String get menuImportPlaylists => '导入歌单';
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String get deselectAll => '取消全选';
+
+  @override
+  String playlistSelectCount(int n, int m) {
+    return '已选 $n / $m';
+  }
+
+  @override
+  String get lyricStyleSyncSubtitle => '与当前播放页歌词同步';
+
+  @override
+  String get lyricStyleSectionDisplay => '显示';
+
+  @override
+  String get lyricStyleSectionDisplaySub => '原文与多行译文的开关';
+
+  @override
+  String get lyricStyleShowOriginal => '显示原文';
+
+  @override
+  String get lyricStyleShowOriginalSub => '每个时间戳第 1 行';
+
+  @override
+  String get lyricStyleShowTranslation => '显示翻译/附加行';
+
+  @override
+  String get lyricStyleShowTranslationSub => '第 2 行及以后';
+
+  @override
+  String get lyricStyleSectionTypography => '字号与行距';
+
+  @override
+  String get lyricStyleSectionTypographySub => '滑条调节后即时生效';
+
+  @override
+  String get lyricStyleFontOriginal => '原文字号';
+
+  @override
+  String get lyricStyleFontTranslation => '翻译字号';
+
+  @override
+  String get lyricStyleLineSpacing => '行间距';
+
+  @override
+  String get lyricStyleSectionLineAlign => '行对齐';
+
+  @override
+  String get lyricStyleSectionStateColors => '行状态颜色';
+
+  @override
+  String get lyricStyleSectionStateColorsSub => '正在播放、已播过、未播到';
+
+  @override
+  String get lyricStyleStateNowPlaying => '正在播放行';
+
+  @override
+  String get lyricStyleStatePlayed => '已播过的行';
+
+  @override
+  String get lyricStyleStateUpcoming => '未播到的行';
+
+  @override
+  String get lyricStyleColorNowOriginal => '正在播放 — 原文';
+
+  @override
+  String get lyricStyleColorNowTranslation => '正在播放 — 译文';
+
+  @override
+  String get lyricStyleColorPlayedOriginal => '已播过 — 原文';
+
+  @override
+  String get lyricStyleColorPlayedTranslation => '已播过 — 译文';
+
+  @override
+  String get lyricStyleColorUpcomingOriginal => '未播到 — 原文';
+
+  @override
+  String get lyricStyleColorUpcomingTranslation => '未播到 — 译文';
+
+  @override
+  String get lyricStyleColorPersistNote => '颜色将写入本地设置，切歌后仍保留。';
+
+  @override
+  String get lyricColorPickerHint => '点选色块';
+
+  @override
+  String get lyricLabelOriginal => '原文';
+
+  @override
+  String get lyricLabelTranslation => '译文';
+}
+
+/// The translations for Chinese, using the Han script (`zh_Hant`).
+class AppLocalizationsZhHant extends AppLocalizationsZh {
+  AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get appTitle => 'Yeah Music';
+
+  @override
+  String get menuHome => '主頁';
+
+  @override
+  String get menuSongList => '歌曲列表';
+
+  @override
+  String get menuPlaylists => '歌單';
+
+  @override
+  String get menuMusicSource => '音樂來源';
+
+  @override
+  String get menuSettings => '設定';
+
+  @override
+  String get settingsTitle => '設定';
+
+  @override
+  String get settingsBackgroundTheme => '背景主題';
+
+  @override
+  String get settingsBackgroundThemeDesc => '純色、自訂顏色、背景圖片';
+
+  @override
+  String get settingsSystemInfo => '系統資訊';
+
+  @override
+  String get settingsSystemInfoDesc => '裝置與儲存空間';
+
+  @override
+  String get settingsAbout => '關於';
+
+  @override
+  String get settingsAboutDesc => '應用程式資訊、版本、授權';
+
+  @override
+  String get settingsLanguage => '語言';
+
+  @override
+  String get settingsLanguageDesc => '介面語言';
+
+  @override
+  String get languageSettingsTitle => '語言';
+
+  @override
+  String get languageSettingsDescription =>
+      '選擇應用程式介面顯示語言。選擇「跟隨系統」時，在已提供翻譯的情況下將跟隨裝置語言。';
+
+  @override
+  String get langFollowSystem => '跟隨系統';
+
+  @override
+  String get langEnglish => 'English';
+
+  @override
+  String get langJapanese => '日本語';
+
+  @override
+  String get langSimplifiedChinese => '簡體中文';
+
+  @override
+  String get langTraditionalChinese => '繁體中文';
+
+  @override
+  String get themeSettingsTitle => '主題設定';
+
+  @override
+  String get globalTheme => '全域主題';
+
+  @override
+  String get globalThemeDesc => '控制應用程式介面為淺色、深色或跟隨系統；將儲存於本裝置。';
+
+  @override
+  String get themeLight => '日間模式';
+
+  @override
+  String get themeDark => '夜間模式';
+
+  @override
+  String get themeSystem => '跟隨系統';
+
+  @override
+  String get sectionThemeType => '主題類型';
+
+  @override
+  String get themeTypeSolid => '預設顏色';
+
+  @override
+  String get themeTypeCustom => '自訂顏色';
+
+  @override
+  String get themeTypeImage => '背景圖片';
+
+  @override
+  String get sectionPresetColors => '預設顏色';
+
+  @override
+  String get sectionCustomColor => '自訂顏色';
+
+  @override
+  String get sectionBackgroundImage => '背景圖片';
+
+  @override
+  String get primaryColor => '主色調';
+
+  @override
+  String get secondaryColor => '次色調';
+
+  @override
+  String get actionSelect => '選擇';
+
+  @override
+  String get fogBackground => '背景霧化';
+
+  @override
+  String get fogBackgroundDesc => '霧化並調暗背景圖，讓文字與圖示更清楚。預設 45%。';
+
+  @override
+  String get fogWeak => '弱';
+
+  @override
+  String get fogStrong => '強';
+
+  @override
+  String get actionPickImage => '選擇圖片';
+
+  @override
+  String get actionRemove => '移除';
+
+  @override
+  String cannotSaveBackground(String error) {
+    return '無法儲存背景圖（請重試或換一張）：$error';
+  }
+
+  @override
+  String get colorDialogTitlePrimary => '選擇主色調';
+
+  @override
+  String get colorDialogTitleSecondary => '選擇次色調';
+
+  @override
+  String get actionCancel => '取消';
+
+  @override
+  String get actionRetry => '重試';
+
+  @override
+  String startupFailed(String error) {
+    return '啟動失敗：$error';
+  }
+
+  @override
+  String get welcomeTagline => '每一次聆聽，都從這裡開始';
+
+  @override
+  String get welcomeEnter => '進入應用';
+
+  @override
+  String get welcomeEnterWait => '進入應用（需等待載入完成）';
+
+  @override
+  String get welcomeHintWhenReady => '載入已完成，可立即進入，也可等待倒計時結束自動進入。';
+
+  @override
+  String get welcomeHintWhenNotReady => '倒計時結束且載入完成後，將自動進入應用。';
+
+  @override
+  String get welcomePreparing => '正在完成啟動準備…';
+
+  @override
+  String get welcomeCountdownLabel => '進入倒計時';
+
+  @override
+  String get welcomeCountdownSubDoneReady => '可以進入了';
+
+  @override
+  String get welcomeCountdownSubDoneWait => '請等待數據就緒';
+
+  @override
+  String welcomeCountdownSubNotDone(int n) {
+    return '預設 $n 秒，結束後自動進入';
+  }
+
+  @override
+  String get secondsUnit => '秒';
+
+  @override
+  String get welcomeNotReadyMessage => '請稍等，資源尚未載入完成。';
+
+  @override
+  String welcomeLoadError(String error) {
+    return '載入出錯。請檢查儲存權限或稍後重試。\n\n$error';
+  }
+
+  @override
+  String get welcomeFakeUserSettings => '正在載入使用者設定';
+
+  @override
+  String get welcomeFakeLibrary => '正在載入曲庫';
+
+  @override
+  String get welcomeFakePlaylists => '正在載入歌單';
+
+  @override
+  String get welcomeFakeOther => '正在載入其他數據';
+
+  @override
+  String get welcomeFakeFinishing => '正在完成初始化';
+
+  @override
+  String get homeGreetingLateNight => '夜深了';
+
+  @override
+  String get homeGreetingMorning => '早上好';
+
+  @override
+  String get homeGreetingAfternoon => '下午好';
+
+  @override
+  String get homeGreetingEvening => '晚上好';
+
+  @override
+  String get homeMenuTooltip => '選單';
+
+  @override
+  String get homeSearchTooltip => '搜尋';
+
+  @override
+  String get homeQuickEntryEmpty => '暫無捷徑，點「管理」可顯示本機曲庫、我的歌單等';
+
+  @override
+  String get homeEntryLibrary => '本機曲庫';
+
+  @override
+  String get homeEntryMyPlaylists => '我的歌單';
+
+  @override
+  String get homeEntryRecent => '最近播放';
+
+  @override
+  String get homeEntryDiscover => '探索';
+
+  @override
+  String get homeSectionQuickEntry => '捷徑';
+
+  @override
+  String get homeActionManage => '管理';
+
+  @override
+  String get homeSectionMyPlaylists => '我的歌單';
+
+  @override
+  String get homeActionMore => '更多';
+
+  @override
+  String get homeLoadingLibrary => '正在載入曲庫…';
+
+  @override
+  String get homeRecentEmpty => '暫無最近播放，在曲庫或歌單中播放歌曲後會顯示';
+
+  @override
+  String get homeSectionMostPlayed => '最多播放';
+
+  @override
+  String get homeSectionRecentPlays => '最近播放';
+
+  @override
+  String get homeActionAll => '全部';
+
+  @override
+  String get homeMostPlayedPathMismatch =>
+      '已有播放次數記錄，但路徑與目前曲庫不一致（重新命名/移動後請重掃音樂目錄，再播幾次會恢復）';
+
+  @override
+  String get homeMostPlayedEmpty => '暫無播放次數統計，在曲庫或歌單中多播幾首歌後會依次數排行';
+
+  @override
+  String homePlayCount(int c) {
+    return '已播放 $c 次';
+  }
+
+  @override
+  String homePlayCountWithBase(String base, int c) {
+    return '$base · 已播放 $c 次';
+  }
+
+  @override
+  String homeGreetingLine(String greeting) {
+    return '$greeting，今天想聽點什麼？';
+  }
+
+  @override
+  String get homeGreetingSub => '從下面接續上次，或選一張歌單開始';
+
+  @override
+  String get homeSearchHint => '搜尋歌曲、歌手、歌單';
+
+  @override
+  String get homeContinuePlaying => '繼續播放';
+
+  @override
+  String get homeUnknownTitle => '未知';
+
+  @override
+  String get homeNowPlayingAlbum => '正在播放';
+
+  @override
+  String get homeNothingPlaying => '還沒有在播放';
+
+  @override
+  String get homeOpenLibraryToPlay => '去本機曲庫選一首歌開始';
+
+  @override
+  String get homeAllSongsLoading => '載入中…';
+
+  @override
+  String get homeScanMusicFolder => '去掃描音樂目錄';
+
+  @override
+  String homeTrackCount(int n) {
+    return '$n 首';
+  }
+
+  @override
+  String get homeAllSongs => '全部歌曲';
+
+  @override
+  String get homeCreatePlaylist => '建立歌單';
+
+  @override
+  String get homeCreatePlaylistSub => '集中收藏你喜歡的歌';
+
+  @override
+  String get homeEmptyPlaylist => '空歌單';
+
+  @override
+  String get songsListEmpty => '暫無歌曲';
+
+  @override
+  String get tooltipSort => '排序';
+
+  @override
+  String get languageRestartNotice => '部分介面需重新啟動應用程式後才會完全套用所選語言。';
+
+  @override
+  String get locateNotInList => '目前播放不在本清單';
+
+  @override
+  String get locateToCurrent => '定位到目前';
+
+  @override
+  String get locateToCurrentPlaying => '定位到目前播放';
+
+  @override
+  String get locateToLyricLine => '定位到目前歌詞';
+
+  @override
+  String get tooltipBack => '返回';
+
+  @override
+  String get tooltipAddToPlaylist => '加入歌單';
+
+  @override
+  String get tooltipDone => '完成';
+
+  @override
+  String get tooltipMoreActions => '操作';
+
+  @override
+  String get tooltipMore => '更多';
+
+  @override
+  String get tooltipLyricStyle => '歌詞樣式';
+
+  @override
+  String get tooltipFolderInfo => '目錄資訊';
+
+  @override
+  String get tooltipReloadSongs => '重新載入歌曲';
+
+  @override
+  String get tooltipEdit => '編輯';
+
+  @override
+  String get tooltipRemoveFolder => '移除目錄';
+
+  @override
+  String get actionDelete => '刪除';
+
+  @override
+  String get actionSave => '儲存';
+
+  @override
+  String get actionCreate => '建立';
+
+  @override
+  String get actionConfirm => '確認';
+
+  @override
+  String get actionGotIt => '我知道了';
+
+  @override
+  String get actionOK => '確定';
+
+  @override
+  String get fieldName => '名稱';
+
+  @override
+  String get fieldNewNameHint => '新名稱';
+
+  @override
+  String get folderAppBarTitle => '資料夾';
+
+  @override
+  String folderSongsCount(int n) {
+    return '$n 首';
+  }
+
+  @override
+  String get folderInfoAlias => '資料夾別名：';
+
+  @override
+  String get folderInfoPath => '資料夾路徑：';
+
+  @override
+  String get folderInfoSongCount => '歌曲數量：';
+
+  @override
+  String get folderInfoAdded => '加入時間：';
+
+  @override
+  String get folderAddLoadingTitle => '正在載入歌曲';
+
+  @override
+  String get folderReloading => '正在重新載入';
+
+  @override
+  String get folderScanningWait => '正在掃描資料夾，請稍候…';
+
+  @override
+  String folderLoadOk(int n) {
+    return '成功載入 $n 首歌曲';
+  }
+
+  @override
+  String folderLoadFailed(String error) {
+    return '載入失敗：$error';
+  }
+
+  @override
+  String get folderRemoveTitle => '確認移除？';
+
+  @override
+  String folderRemoveMessage(String name) {
+    return '是否移除目錄：$name（僅移除參考，不刪磁碟上音樂檔）';
+  }
+
+  @override
+  String get folderDuplicateDialogTitle => '提示';
+
+  @override
+  String folderDuplicateMessage(String path) {
+    return '此資料夾已存在：$path';
+  }
+
+  @override
+  String folderAddOk(int n) {
+    return '成功新增 $n 首歌曲';
+  }
+
+  @override
+  String get folderAddErrorTitle => '錯誤';
+
+  @override
+  String folderAddErrorMessage(String error) {
+    return '載入資料夾失敗：$error';
+  }
+
+  @override
+  String get folderRenameDialogTitle => '重新命名資料夾';
+
+  @override
+  String get playlistPageTitle => '歌單';
+
+  @override
+  String get playlistNotFound => '找不到歌單';
+
+  @override
+  String get playlistNotFoundMessage => '此歌單可能已被刪除';
+
+  @override
+  String get playlistEmptyNoSongs => '暫無可播放歌曲\n（請先於「音樂來源」掃描，或歌曲路徑已失效）';
+
+  @override
+  String get playlistDeleteTitle => '刪除歌單';
+
+  @override
+  String get playlistDeleteMessage => '確定刪除此歌單？清單內的參考會遺失，不會刪除磁碟上的音樂檔。';
+
+  @override
+  String get playlistDeleteBatchTitle => '大量刪除歌單';
+
+  @override
+  String playlistDeleteBatchMessage(int n) {
+    return '確定刪除已選的 $n 個歌單？清單內的參考會遺失，不會刪除磁碟上的音樂檔。';
+  }
+
+  @override
+  String get playlistDeletedOne => '已刪除歌單';
+
+  @override
+  String get importDialogBody =>
+      '歌曲以「完整檔案路徑」區分：同名、同演出者、不同檔案或不同音質會對應不同路徑，匯入後不會誤合併。\n\n• 合併匯入：與本機「歌單 id」相同的項目會合併曲目清單（路徑去重）；備份中有而本機沒有的歌單會新增。\n• 全部取代：先清空本機全部歌單，再依備份還原（請謹慎操作）。';
+
+  @override
+  String playlistCreatedOn(String date) {
+    return '建立於 $date';
+  }
+
+  @override
+  String get recentPlaysEmptyTitle => '還沒有播放記錄';
+
+  @override
+  String get quickEntryReorderHint => '拖曳控點可調整順序。關閉「在首頁顯示」後，該入口會在首頁隱藏。';
+
+  @override
+  String get quickEntryShowOnHome => '在首頁顯示';
+
+  @override
+  String get playlistSearchHint => '搜尋歌曲、演出者或檔名…';
+
+  @override
+  String get searchNoMatchingSongs => '找不到符合的歌曲';
+
+  @override
+  String get playlistRenameTitle => '重新命名歌單';
+
+  @override
+  String get exportCannot => '無法匯出此歌單';
+
+  @override
+  String exportSaved(String path) {
+    return '已匯出：$path';
+  }
+
+  @override
+  String get exportCancelled => '已取消匯出';
+
+  @override
+  String exportFailed(String error) {
+    return '匯出失敗：$error';
+  }
+
+  @override
+  String get exportDialogTitle => '匯出歌單';
+
+  @override
+  String get menuRename => '重新命名';
+
+  @override
+  String get menuExportThis => '匯出本歌單…';
+
+  @override
+  String get menuDeletePlaylist => '刪除歌單';
+
+  @override
+  String get exportSelectFirst => '請先選擇要匯出的歌單';
+
+  @override
+  String get exportNoneToExport => '沒有可匯出的歌單，請檢查所選內容';
+
+  @override
+  String get exportAllPlaylists => '匯出全部歌單';
+
+  @override
+  String get exportSelectedPlaylists => '匯出所選歌單';
+
+  @override
+  String get exportSelected => '匯出所選';
+
+  @override
+  String get exportAll => '匯出全部';
+
+  @override
+  String get importCannotRead => '無法讀取檔案（可嘗試較小備份或檢查權限）';
+
+  @override
+  String importParseError(String message) {
+    return '無法解析：$message';
+  }
+
+  @override
+  String get importMerge => '合併匯入';
+
+  @override
+  String get importReplaceAll => '全部取代';
+
+  @override
+  String get importMerged => '已合併匯入';
+
+  @override
+  String get importReplaced => '已取代匯入';
+
+  @override
+  String importFailed(String error) {
+    return '匯入失敗：$error';
+  }
+
+  @override
+  String playlistsDeletedN(int n) {
+    return '已刪除 $n 個歌單';
+  }
+
+  @override
+  String get fabNewPlaylist => '新增歌單';
+
+  @override
+  String get emptyPlaylistsHint =>
+      '尚無歌單\n在播放頁面或歌曲清單可將歌曲加入歌單\n\n可於右上角「⋮」匯入／匯出、單選／多選';
+
+  @override
+  String get sortByName => '依名稱';
+
+  @override
+  String get sortByCreated => '依建立時間';
+
+  @override
+  String get sortByUpdated => '依更新時間';
+
+  @override
+  String get sortByAddedToPlaylist => '依加入歌單時間';
+
+  @override
+  String get sortByAddedToPlaylistSub => '正序：先加入在前 · 反序：後加入在前';
+
+  @override
+  String get lyricAlignLeft => '左';
+
+  @override
+  String get lyricAlignCenter => '中';
+
+  @override
+  String get lyricAlignRight => '右';
+
+  @override
+  String get addToPlaylistHint => '新歌單名稱';
+
+  @override
+  String addToPlaylistUpdatedN(int n) {
+    return '已更新歌單（$n 個）';
+  }
+
+  @override
+  String get noLyrics => '暫無歌詞';
+
+  @override
+  String get songNotFound => '歌曲不存在';
+
+  @override
+  String get pageUnknownTitle => '未知標題';
+
+  @override
+  String get queueNoTracks => '暫無曲目';
+
+  @override
+  String get playQueueTitle => '播放佇列';
+
+  @override
+  String get playbackModeTitle => '播放模式';
+
+  @override
+  String get playbackSequential => '循序播放';
+
+  @override
+  String get playbackShuffle => '隨機播放';
+
+  @override
+  String get playbackSingleLoop => '單曲循環';
+
+  @override
+  String get playbackOnce => '僅播放一次';
+
+  @override
+  String get playbackTimer => '定時關閉';
+
+  @override
+  String get sleepTimerSheetTitle => '定時關閉';
+
+  @override
+  String get sleepTimerCancel => '取消定時關閉';
+
+  @override
+  String sleepTimerMinutesN(int n) {
+    return '$n 分鐘';
+  }
+
+  @override
+  String get sleepTimerCustom => '自訂時間';
+
+  @override
+  String sleepTimerCurrentN(int n) {
+    return '目前 $n 分鐘';
+  }
+
+  @override
+  String get sleepTimerLabelMinutes => '分鐘';
+
+  @override
+  String sleepTimerInvalidRange(int min, int max) {
+    return '請輸入 $min–$max 之間的整數';
+  }
+
+  @override
+  String sleepTimerPlayedMinutes(int minutes) {
+    return '定時關閉：已播放 $minutes 分鐘';
+  }
+
+  @override
+  String get lyricModeEmptyHint => '切換顯示模式';
+
+  @override
+  String get lyricModeAllLines => '多行歌詞：全部行（點一下改單行）';
+
+  @override
+  String lyricModeSingleLineN(int n) {
+    return '多行歌詞：僅第 $n 行（再點可切換）';
+  }
+
+  @override
+  String get sortOptionsTitle => '排序方式';
+
+  @override
+  String addToPlaylistTitle(String name) {
+    return '加入歌單 · $name';
+  }
+
+  @override
+  String get addToPlaylistMultiHelp => '可複選；取消勾選將從對應歌單移除此曲';
+
+  @override
+  String get addToPlaylistNoPlaylistsYet => '尚無歌單，請先輸入名稱並建立';
+
+  @override
+  String get quickEntrySettingsTitle => '捷徑';
+
+  @override
+  String get playlistSelectModeSingle => '單選';
+
+  @override
+  String get playlistSelectModeMulti => '多選';
+
+  @override
+  String get menuImportPlaylists => '匯入歌單';
+
+  @override
+  String get selectAll => '全選';
+
+  @override
+  String get deselectAll => '取消全選';
+
+  @override
+  String playlistSelectCount(int n, int m) {
+    return '已選 $n / $m';
+  }
+
+  @override
+  String get lyricStyleSyncSubtitle => '與目前播放頁歌詞同步';
+
+  @override
+  String get lyricStyleSectionDisplay => '顯示';
+
+  @override
+  String get lyricStyleSectionDisplaySub => '原文與多行譯文的開關';
+
+  @override
+  String get lyricStyleShowOriginal => '顯示原文';
+
+  @override
+  String get lyricStyleShowOriginalSub => '每個時間戳第 1 行';
+
+  @override
+  String get lyricStyleShowTranslation => '顯示翻譯/附加行';
+
+  @override
+  String get lyricStyleShowTranslationSub => '第 2 行以後';
+
+  @override
+  String get lyricStyleSectionTypography => '字級與行距';
+
+  @override
+  String get lyricStyleSectionTypographySub => '以滑桿調整後立即生效';
+
+  @override
+  String get lyricStyleFontOriginal => '原文字級';
+
+  @override
+  String get lyricStyleFontTranslation => '翻譯字級';
+
+  @override
+  String get lyricStyleLineSpacing => '行距';
+
+  @override
+  String get lyricStyleSectionLineAlign => '行對齊';
+
+  @override
+  String get lyricStyleSectionStateColors => '行狀態顏色';
+
+  @override
+  String get lyricStyleSectionStateColorsSub => '正在播放、已播過、未播到';
+
+  @override
+  String get lyricStyleStateNowPlaying => '正在播放行';
+
+  @override
+  String get lyricStyleStatePlayed => '已播過的行';
+
+  @override
+  String get lyricStyleStateUpcoming => '未播到的行';
+
+  @override
+  String get lyricStyleColorNowOriginal => '正在播放 — 原文';
+
+  @override
+  String get lyricStyleColorNowTranslation => '正在播放 — 譯文';
+
+  @override
+  String get lyricStyleColorPlayedOriginal => '已播過 — 原文';
+
+  @override
+  String get lyricStyleColorPlayedTranslation => '已播過 — 譯文';
+
+  @override
+  String get lyricStyleColorUpcomingOriginal => '未播到 — 原文';
+
+  @override
+  String get lyricStyleColorUpcomingTranslation => '未播到 — 譯文';
+
+  @override
+  String get lyricStyleColorPersistNote => '顏色會寫入本機設定，換歌後仍保留。';
+
+  @override
+  String get lyricColorPickerHint => '點選色塊';
+
+  @override
+  String get lyricLabelOriginal => '原文';
+
+  @override
+  String get lyricLabelTranslation => '譯文';
+}

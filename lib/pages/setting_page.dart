@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/disk_space.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
@@ -12,6 +14,7 @@ class SettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
@@ -21,7 +24,10 @@ class SettingPage extends StatelessWidget {
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
-              title: Text("设置", style: TextStyle(color: context.gradFg())),
+              title: Text(
+                l10n.settingsTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: IconThemeData(color: context.gradFg()),
@@ -29,42 +35,74 @@ class SettingPage extends StatelessWidget {
             body: ListView(
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight),
               children: [
-                // 设置项分组
                 ListTile(
-                  title: Text("背景主题", style: TextStyle(color: context.gradFg())),
+                  title: Text(
+                    l10n.settingsLanguage,
+                    style: TextStyle(color: context.gradFg()),
+                  ),
                   subtitle: Text(
-                    "纯色、自定义颜色、背景图片",
+                    l10n.settingsLanguageDesc,
+                    style: TextStyle(color: context.gradFg(0.6)),
+                  ),
+                  leading: Icon(Icons.language, color: context.gradFg()),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => const LanguageSettingsPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  title: Text(
+                    l10n.settingsBackgroundTheme,
+                    style: TextStyle(color: context.gradFg()),
+                  ),
+                  subtitle: Text(
+                    l10n.settingsBackgroundThemeDesc,
                     style: TextStyle(color: context.gradFg(0.6)),
                   ),
                   leading: Icon(Icons.color_lens, color: context.gradFg()),
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ThemeSettingPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ThemeSettingPage(),
+                      ),
+                    );
                   },
                 ),
-            ExpansionTile(
-              title: Text("系统信息", style: TextStyle(color: context.gradFg())),
-              subtitle: Text(
-                "设备信息、存储空间",
-                style: TextStyle(color: context.gradFg(0.6)),
-              ),
-              leading: Icon(Icons.info_outline, color: context.gradFg()),
-              iconColor: context.gradFg(),
-              collapsedIconColor: context.gradFg(),
-              children: [DiskSpaceView()],
+                ExpansionTile(
+                  title: Text(
+                    l10n.settingsSystemInfo,
+                    style: TextStyle(color: context.gradFg()),
+                  ),
+                  subtitle: Text(
+                    l10n.settingsSystemInfoDesc,
+                    style: TextStyle(color: context.gradFg(0.6)),
+                  ),
+                  leading: Icon(Icons.info_outline, color: context.gradFg()),
+                  iconColor: context.gradFg(),
+                  collapsedIconColor: context.gradFg(),
+                  children: const [DiskSpaceView()],
+                ),
+                ListTile(
+                  title: Text(
+                    l10n.settingsAbout,
+                    style: TextStyle(color: context.gradFg()),
+                  ),
+                  subtitle: Text(
+                    l10n.settingsAboutDesc,
+                    style: TextStyle(color: context.gradFg(0.6)),
+                  ),
+                  leading: Icon(Icons.favorite, color: context.gradFg()),
+                  onTap: () {
+                    ApplicationUtils.showAboutDialog(context);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              title: Text("关于", style: TextStyle(color: context.gradFg())),
-              subtitle: Text(
-                "应用信息、版本、开源协议",
-                style: TextStyle(color: context.gradFg(0.6)),
-              ),
-              leading: Icon(Icons.favorite, color: context.gradFg()),
-              onTap: () {
-                ApplicationUtils.showAboutDialog(context);
-              },
-            ),
-          ],
-        ),
             bottomNavigationBar: const MiniPlayer(),
           ),
         );

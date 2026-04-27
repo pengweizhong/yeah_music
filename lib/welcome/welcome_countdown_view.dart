@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
 /// 欢迎页/启动门控共用的倒计时刻度起点（与欢迎页 [WelcomeEntryPage] 一致）
@@ -27,6 +28,7 @@ class WelcomeCountdownView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bottomPad = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
@@ -93,7 +95,7 @@ class WelcomeCountdownView extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  'Yeah Music',
+                  l10n.appTitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.95),
                     fontSize: 28,
@@ -103,7 +105,7 @@ class WelcomeCountdownView extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '每一次聆听，都从这里开始',
+                  l10n.welcomeTagline,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 14,
@@ -126,7 +128,10 @@ class WelcomeCountdownView extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 32),
-                _CountdownCard(secondsLeft: secondsLeft, dataReady: dataReady),
+                _CountdownCard(
+                  secondsLeft: secondsLeft,
+                  dataReady: dataReady,
+                ),
                 const SizedBox(height: 28),
                 const RepaintBoundary(
                   child: _SplashIndeterminateControl(),
@@ -155,7 +160,9 @@ class WelcomeCountdownView extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        dataReady ? '进入应用' : '进入应用（需等待加载完成）',
+                        dataReady
+                            ? l10n.welcomeEnter
+                            : l10n.welcomeEnterWait,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -166,8 +173,8 @@ class WelcomeCountdownView extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     dataReady
-                        ? '加载已完成，可立即进入，也可等待倒计时结束自动进入。'
-                        : '倒计时结束且加载完成后，将自动进入应用。',
+                        ? l10n.welcomeHintWhenReady
+                        : l10n.welcomeHintWhenNotReady,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.32),
@@ -178,7 +185,7 @@ class WelcomeCountdownView extends StatelessWidget {
                 ],
                 if (!showEnterButton)
                   Text(
-                    '正在完成启动准备…',
+                    l10n.welcomePreparing,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.32),
@@ -207,6 +214,7 @@ class _CountdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final s = secondsLeft.clamp(0, 99);
     final done = s <= 0;
     return Container(
@@ -233,7 +241,7 @@ class _CountdownCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '进入倒计时',
+                l10n.welcomeCountdownLabel,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 13,
@@ -242,8 +250,10 @@ class _CountdownCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 done
-                    ? (dataReady ? '可以进入了' : '请等待数据就绪')
-                    : '默认 $kWelcomeCountdownStart 秒，结束后自动进入',
+                    ? (dataReady
+                        ? l10n.welcomeCountdownSubDoneReady
+                        : l10n.welcomeCountdownSubDoneWait)
+                    : l10n.welcomeCountdownSubNotDone(kWelcomeCountdownStart),
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.32),
                   fontSize: 11.5,
@@ -270,7 +280,7 @@ class _CountdownCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: Text(
-              '秒',
+              l10n.secondsUnit,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.45),
                 fontSize: 15,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/services/settings_service.dart';
 
 /// 首页「快捷入口」显隐与排序
@@ -31,16 +32,16 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
     _hidden = c.hidden;
   }
 
-  String _title(String id) {
+  String _title(String id, AppLocalizations l10n) {
     switch (id) {
       case QuickEntryConfig.idLibrary:
-        return '本地曲库';
+        return l10n.homeEntryLibrary;
       case QuickEntryConfig.idPlaylists:
-        return '我的歌单';
+        return l10n.homeEntryMyPlaylists;
       case QuickEntryConfig.idRecent:
-        return '最近播放';
+        return l10n.homeEntryRecent;
       case QuickEntryConfig.idDiscover:
-        return '发现';
+        return l10n.homeEntryDiscover;
       default:
         return id;
     }
@@ -71,6 +72,7 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
         return PopScope(
@@ -84,9 +86,9 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
             child: Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(
-                title: const Text(
-                  '快捷入口',
-                  style: TextStyle(color: Colors.white),
+                title: Text(
+                  l10n.quickEntrySettingsTitle,
+                  style: const TextStyle(color: Colors.white),
                 ),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -94,13 +96,13 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_rounded),
                   onPressed: _saveAndPop,
-                  tooltip: '返回',
+                  tooltip: l10n.tooltipBack,
                 ),
                 actions: [
                   TextButton(
                     onPressed: _saveAndPop,
                     child: Text(
-                      '完成',
+                      l10n.tooltipDone,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.95),
                         fontWeight: FontWeight.w600,
@@ -115,7 +117,7 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                     child: Text(
-                      '拖动手柄可调整顺序。关闭「在首页显示」后该入口在首页隐藏。',
+                      l10n.quickEntryReorderHint,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 14,
@@ -163,7 +165,7 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
                                   : Colors.white.withValues(alpha: 0.35),
                             ),
                             title: Text(
-                              _title(id),
+                              _title(id, l10n),
                               style: TextStyle(
                                 color: show
                                     ? Colors.white
@@ -172,7 +174,7 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
                               ),
                             ),
                             subtitle: Text(
-                              '在首页显示',
+                              l10n.quickEntryShowOnHome,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.35),
                                 fontSize: 12,

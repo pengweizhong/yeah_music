@@ -10,6 +10,7 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 
 const _kSelectAccent = Color(0xFF8AB4F8);
@@ -53,6 +54,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       maxWidth: 400,
       child: Builder(
         builder: (ctx) {
+          final l10n = AppLocalizations.of(ctx);
           final scheme = Theme.of(ctx).colorScheme;
           return Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -60,9 +62,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  '新建歌单',
-                  style: TextStyle(
+                Text(
+                  l10n.homeCreatePlaylist,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -75,7 +77,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   style: const TextStyle(color: Colors.white),
                   cursorColor: Colors.white,
                   decoration: InputDecoration(
-                    labelText: '歌单名称',
+                    labelText: l10n.fieldName,
                     labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -96,11 +98,11 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('取消'),
+                      child: Text(l10n.actionCancel),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-                      child: const Text('创建'),
+                      child: Text(l10n.actionCreate),
                     ),
                   ],
                 ),
@@ -122,6 +124,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     UserPlaylistProvider user, {
     Set<String>? selectedIds,
   }) async {
+    final l10n = AppLocalizations.of(context);
     final Map<String, dynamic> map;
     if (selectedIds == null) {
       map = user.buildExportMap();
@@ -129,7 +132,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       if (selectedIds.isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('请先选择要导出的歌单')),
+            SnackBar(content: Text(l10n.exportSelectFirst)),
           );
         }
         return;
@@ -138,7 +141,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       if ((map['playlists'] as List<dynamic>).isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('没有可导出的歌单，请检查选择')),
+            SnackBar(content: Text(l10n.exportNoneToExport)),
           );
         }
         return;
@@ -155,14 +158,18 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       final path = await pickSaveUserPlaylistJson(
         jsonStr: jsonStr,
         dialogTitle: selectedIds == null
-            ? '导出全部歌单'
-            : (selectedIds.length == 1 ? '导出歌单' : '导出所选歌单'),
+            ? l10n.exportAllPlaylists
+            : (selectedIds.length == 1
+                ? l10n.exportDialogTitle
+                : l10n.exportSelectedPlaylists),
         fileName: suggestedName,
       );
 
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已导出：$path')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.exportSaved(path))),
+        );
         if (_selectMode) {
           setState(() {
             _selectMode = false;
@@ -171,11 +178,15 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
           });
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消导出')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.exportCancelled)),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出失败：$e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.exportFailed('$e'))),
+        );
       }
     }
   }
@@ -272,6 +283,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       maxWidth: 400,
       child: Builder(
         builder: (ctx) {
+          final l10n = AppLocalizations.of(ctx);
           return Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Column(
@@ -279,7 +291,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  n == 1 ? '删除歌单' : '批量删除歌单',
+                  n == 1
+                      ? l10n.playlistDeleteTitle
+                      : l10n.playlistDeleteBatchTitle,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -289,8 +303,8 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                 const SizedBox(height: 12),
                 Text(
                   n == 1
-                      ? '确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。'
-                      : '确定删除已选的 $n 个歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。',
+                      ? l10n.playlistDeleteMessage
+                      : l10n.playlistDeleteBatchMessage(n),
                   style: const TextStyle(color: Colors.white, height: 1.35),
                 ),
                 const SizedBox(height: 16),
@@ -299,7 +313,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('取消'),
+                      child: Text(l10n.actionCancel),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, true),
@@ -307,7 +321,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         foregroundColor: Colors.white,
                         backgroundColor: Colors.red.shade700,
                       ),
-                      child: const Text('删除'),
+                      child: Text(l10n.actionDelete),
                     ),
                   ],
                 ),
@@ -318,10 +332,17 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       ),
     );
     if (ok != true || !context.mounted) return;
+    final l10nAfter = AppLocalizations.of(context);
     await user.deletePlaylists(_selectedPlaylistIds);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(n == 1 ? '已删除歌单' : '已删除 $n 个歌单')),
+      SnackBar(
+        content: Text(
+          n == 1
+              ? l10nAfter.playlistDeletedOne
+              : l10nAfter.playlistsDeletedN(n),
+        ),
+      ),
     );
     _exitSelectMode();
   }
@@ -339,6 +360,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
   }
 
   Future<void> _importPlaylists(BuildContext context, UserPlaylistProvider user) async {
+    final l10n = AppLocalizations.of(context);
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -352,7 +374,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       if (bytes == null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法读取文件（可尝试较小备份或检查权限）')),
+            SnackBar(content: Text(l10n.importCannotRead)),
           );
         }
         return;
@@ -364,7 +386,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         doc = parseUserPlaylistExportJson(jsonStr);
       } on FormatException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('无法解析：${e.message}')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.importParseError(e.message))),
+          );
         }
         return;
       }
@@ -375,27 +399,26 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         maxWidth: 420,
         child: Builder(
           builder: (ctx) {
+            final sl = AppLocalizations.of(ctx);
             return Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    '导入歌单',
-                    style: TextStyle(
+                  Text(
+                    sl.menuImportPlaylists,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const SingleChildScrollView(
+                  SingleChildScrollView(
                     child: Text(
-                      '歌曲以「完整文件路径」区分：同名、同歌手、不同文件或不同音质会对应不同路径，导入后不会误合并。\n\n'
-                      '• 合并导入：与本地「歌单 id」相同的条目会合并曲目列表（路径去重）；备份中有而本地没有的歌单会新建。\n'
-                      '• 替换全部：先清空本地全部歌单，再按备份恢复（谨慎操作）。',
-                      style: TextStyle(color: Colors.white, height: 1.35),
+                      sl.importDialogBody,
+                      style: const TextStyle(color: Colors.white, height: 1.35),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -406,15 +429,15 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('取消'),
+                        child: Text(sl.actionCancel),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('合并导入'),
+                        child: Text(sl.importMerge),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('替换全部'),
+                        child: Text(sl.importReplaceAll),
                       ),
                     ],
                   ),
@@ -429,13 +452,21 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
 
       await user.applyImportedDocument(doc, replaceAll: replaceAll);
       if (context.mounted) {
+        final m = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(replaceAll ? '已替换导入' : '已合并导入')),
+          SnackBar(
+            content: Text(
+              replaceAll ? m.importReplaced : m.importMerged,
+            ),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导入失败：$e')));
+        final m = AppLocalizations.of(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(m.importFailed('$e'))));
       }
     }
   }
@@ -446,6 +477,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
 
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
+        final l10n = AppLocalizations.of(context);
         return themeConfig.buildThemedBackground(
           context: context,
           child: Scaffold(
@@ -456,7 +488,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                 ? AppBar(
                     leading: IconButton(
                       icon: const Icon(Icons.close_rounded, color: Colors.white),
-                      tooltip: '完成',
+                      tooltip: l10n.tooltipDone,
                       onPressed: _exitSelectMode,
                     ),
                     title: Column(
@@ -464,7 +496,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _singleSelectOnly ? '单选' : '多选',
+                          _singleSelectOnly
+                              ? l10n.playlistSelectModeSingle
+                              : l10n.playlistSelectModeMulti,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.65),
                             fontSize: 12,
@@ -474,8 +508,15 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '已选 ${_selectedPlaylistIds.length} / ${userPl.playlists.length}',
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                          l10n.playlistSelectCount(
+                            _selectedPlaylistIds.length,
+                            userPl.playlists.length,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -484,7 +525,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     iconTheme: const IconThemeData(color: Colors.white),
                     actions: [
                       PopupMenuButton<String>(
-                        tooltip: '操作',
+                        tooltip: l10n.tooltipMoreActions,
                         icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                         color: const Color(0xFF2D2D2D),
                         surfaceTintColor: Colors.transparent,
@@ -492,6 +533,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         offset: const Offset(0, kToolbarHeight),
                         onSelected: (v) => _handleSelectMenu(v, userPl),
                         itemBuilder: (context) {
+                          final m = AppLocalizations.of(context);
                           final allOn = _selectedPlaylistIds.length == userPl.playlists.length &&
                               userPl.playlists.isNotEmpty;
                           return [
@@ -501,7 +543,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                 enabled: userPl.playlists.isNotEmpty,
                                 child: _playlistMenuItemRow(
                                   allOn ? Icons.deselect : Icons.select_all,
-                                  allOn ? '取消全选' : '全选',
+                                  allOn ? m.deselectAll : m.selectAll,
                                 ),
                               ),
                             PopupMenuItem(
@@ -509,7 +551,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               enabled: _selectedPlaylistIds.isNotEmpty,
                               child: _playlistMenuItemRow(
                                 Icons.upload_file_outlined,
-                                '导出所选',
+                                m.exportSelected,
                                 iconColor: _selectedPlaylistIds.isNotEmpty ? Colors.white70 : Colors.white30,
                               ),
                             ),
@@ -518,7 +560,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               enabled: _selectedPlaylistIds.isNotEmpty,
                               child: _playlistMenuItemRow(
                                 Icons.delete_outline_rounded,
-                                '删除',
+                                m.actionDelete,
                                 iconColor: _selectedPlaylistIds.isNotEmpty
                                     ? const Color(0xFFFFAB91)
                                     : Colors.white30,
@@ -530,13 +572,19 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     ],
                   )
                 : AppBar(
-                    title: const Text('歌单', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    title: Text(
+                      l10n.playlistPageTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     iconTheme: const IconThemeData(color: Colors.white),
                     actions: [
                       PopupMenuButton<String>(
-                        tooltip: '更多',
+                        tooltip: l10n.tooltipMore,
                         icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                         color: const Color(0xFF2D2D2D),
                         surfaceTintColor: Colors.transparent,
@@ -544,37 +592,38 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         offset: const Offset(0, kToolbarHeight),
                         onSelected: (v) => _handleMainMenu(v, userPl),
                         itemBuilder: (context) {
+                          final m = AppLocalizations.of(context);
                           final hasLists = userPl.playlists.isNotEmpty;
                           return [
                             if (hasLists) ...[
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'enter_single',
                                 child: _PlaylistMenuRowStatic(
                                   icon: Icons.radio_button_checked,
-                                  label: '单选',
+                                  label: m.playlistSelectModeSingle,
                                 ),
                               ),
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'enter_multi',
                                 child: _PlaylistMenuRowStatic(
                                   icon: Icons.check_box_outlined,
-                                  label: '多选',
+                                  label: m.playlistSelectModeMulti,
                                 ),
                               ),
                               const PopupMenuDivider(height: 1),
                             ],
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'import',
                               child: _PlaylistMenuRowStatic(
                                 icon: Icons.file_download_outlined,
-                                label: '导入歌单',
+                                label: m.menuImportPlaylists,
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'export_all',
                               child: _PlaylistMenuRowStatic(
                                 icon: Icons.save_alt_outlined,
-                                label: '导出全部',
+                                label: m.exportAll,
                               ),
                             ),
                           ];
@@ -587,7 +636,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                 : FloatingActionButton.extended(
                     onPressed: () => _createPlaylist(context, userPl),
                     icon: const Icon(Icons.playlist_add),
-                    label: const Text('新建歌单'),
+                    label: Text(l10n.fabNewPlaylist),
                   ),
             body: Column(
               children: [
@@ -596,7 +645,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   child: userPl.playlists.isEmpty
                       ? Center(
                           child: Text(
-                            '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入/导出、单选/多选',
+                            l10n.emptyPlaylistsHint,
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.white.withValues(alpha: 0.65)),
                           ),
@@ -668,7 +717,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                     ),
                                                     const SizedBox(height: 3),
                                                     Text(
-                                                      '${pl.songPaths.length} 首 · 创建于 ${pl.createdAt.toString().split(' ').first}',
+                                                      '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(pl.createdAt.toString().split(' ').first)}',
                                                       style: TextStyle(
                                                         color: Colors.white.withValues(alpha: 0.52),
                                                         fontSize: 13,
@@ -770,7 +819,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                               ),
                                                               const SizedBox(height: 4),
                                                               Text(
-                                                                '${pl.songPaths.length} 首 · $dateStr',
+                                                                '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(dateStr)}',
                                                                 maxLines: 1,
                                                                 overflow: TextOverflow.ellipsis,
                                                                 style: TextStyle(

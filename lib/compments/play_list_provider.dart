@@ -8,6 +8,7 @@ import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -513,9 +514,16 @@ class PlayListProvider extends ChangeNotifier {
     _sleepShutdownTimer = Timer(Duration(minutes: minutes), () {
       _sleepShutdownTimer = null;
       MusicService().pause();
-      appScaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('定时关闭：已播放 $minutes 分钟')),
-      );
+      final sm = appScaffoldMessengerKey.currentState;
+      final ctx = sm?.context;
+      if (ctx != null) {
+        final l10n = AppLocalizations.of(ctx);
+        sm?.showSnackBar(
+          SnackBar(
+            content: Text(l10n.sleepTimerPlayedMinutes(minutes)),
+          ),
+        );
+      }
       notifyListeners();
     });
     notifyListeners();

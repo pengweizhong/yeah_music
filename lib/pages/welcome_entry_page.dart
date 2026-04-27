@@ -8,16 +8,16 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/welcome/welcome_countdown_view.dart';
 import 'package:yeah_music/welcome/welcome_fake_status.dart';
+import 'package:yeah_music/welcome/welcome_l10n.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
 const _kDeferLoadMs = 80;
-
-const _kNotReadyMessage = '请稍等，资源尚未加载完成。';
 
 class WelcomeEntryPage extends StatefulWidget {
   const WelcomeEntryPage({super.key, this.preHiveCountdownLeft});
@@ -33,7 +33,7 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     with SingleTickerProviderStateMixin {
   Object? _error;
   int _pass = 0;
-  late final WelcomeFakeStatusRotator _fake;
+  WelcomeFakeStatusRotator? _fake;
 
   bool _dataReady = false;
   bool _navigated = false;
@@ -45,9 +45,20 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   late final AnimationController _glow;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context);
+    final hints = welcomeFakeLoadHintsList(l10n);
+    if (_fake == null) {
+      _fake = WelcomeFakeStatusRotator(hints)..start();
+    } else {
+      _fake!.setHintsIfChanged(hints);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
-    _fake = WelcomeFakeStatusRotator()..start();
     _glow = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
@@ -60,7 +71,7 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   void dispose() {
     _glow.dispose();
     _countdownTimer?.cancel();
-    _fake.dispose();
+    _fake?.dispose();
     super.dispose();
   }
 
@@ -101,9 +112,10 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   void _onTapEnter() {
     if (!mounted) return;
     if (!_dataReady || _initial == null) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(_kNotReadyMessage),
+          content: Text(l10n.welcomeNotReadyMessage),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           shape: RoundedRectangleBorder(
@@ -194,7 +206,7 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   }
 
   void _retry() {
-    _fake.restart();
+    _fake?.restart();
     _dataReady = false;
     _initial = null;
     _navigated = false;
@@ -208,15 +220,17 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
 
   @override
   Widget build(BuildContext context) {
+    final fake = _fake;
     if (_error != null) {
+      final l10n = AppLocalizations.of(context);
       return Scaffold(
         body: Stack(
           fit: StackFit.expand,
           children: [
             AppSplashChrome(
               key: ValueKey(_pass),
-              title: 'Yeah Music',
-              subtitle: '加载出错了。请检查存储权限或稍后重试。\n\n$_error',
+              title: l10n.appTitle,
+              subtitle: l10n.welcomeLoadError('$_error'),
               showProgress: false,
             ),
             Positioned(
@@ -226,7 +240,7 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
               child: Center(
                 child: FilledButton.tonal(
                   onPressed: _retry,
-                  child: const Text('重试'),
+                  child: Text(l10n.actionRetry),
                 ),
               ),
             ),
@@ -234,9 +248,12 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
         ),
       );
     }
+    if (fake == null) {
+      return const SizedBox.shrink();
+    }
     return WelcomeCountdownView(
       key: ValueKey(_pass),
-      statusListenable: _fake.hint,
+      statusListenable: fake.hint,
       secondsLeft: _secondsLeft,
       dataReady: _dataReady,
       glow: _glow,

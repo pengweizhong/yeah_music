@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 
@@ -17,6 +18,7 @@ void showSongSortBottomSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) {
+      final l10n = AppLocalizations.of(ctx);
       return Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
         child: FrostedGlassBottomSheet(
@@ -27,11 +29,11 @@ void showSongSortBottomSheet(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                     child: Text(
-                      '排序方式',
-                      style: TextStyle(
+                      l10n.sortOptionsTitle,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -40,7 +42,7 @@ void showSongSortBottomSheet(
                   ),
                   ListTile(
                     leading: const Icon(Icons.sort_by_alpha, color: Colors.white),
-                    title: const Text('按名称'),
+                    title: Text(l10n.sortByName),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -69,7 +71,7 @@ void showSongSortBottomSheet(
                   ),
                   ListTile(
                     leading: const Icon(Icons.access_time, color: Colors.white),
-                    title: const Text('按创建时间'),
+                    title: Text(l10n.sortByCreated),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -98,7 +100,7 @@ void showSongSortBottomSheet(
                   ),
                   ListTile(
                     leading: const Icon(Icons.update, color: Colors.white),
-                    title: const Text('按更新时间'),
+                    title: Text(l10n.sortByUpdated),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -131,8 +133,8 @@ void showSongSortBottomSheet(
                         Icons.playlist_add_check,
                         color: Colors.white,
                       ),
-                      title: const Text('按加入歌单时间'),
-                      subtitle: const Text('正序：先加入在前 · 反序：后加入在前'),
+                      title: Text(l10n.sortByAddedToPlaylist),
+                      subtitle: Text(l10n.sortByAddedToPlaylistSub),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

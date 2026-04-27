@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 
@@ -36,6 +37,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final t = Theme.of(context);
     final primary = t.colorScheme.primary;
 
@@ -65,17 +67,17 @@ class LyricStyleSettingsPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(context),
+            _buildHeader(context, l10n),
             const SizedBox(height: 6),
-            _sectionLabel('显示', '原文与多行译文的开关'),
+            _sectionLabel(l10n.lyricStyleSectionDisplay, l10n.lyricStyleSectionDisplaySub),
             const SizedBox(height: 8),
             _frostedCard(
               child: Column(
                 children: [
                   _switchRow(
                     icon: Icons.subject_rounded,
-                    label: '显示原文',
-                    sub: '每个时间戳第 1 行',
+                    label: l10n.lyricStyleShowOriginal,
+                    sub: l10n.lyricStyleShowOriginalSub,
                     value: settings.showOriginal,
                     onChanged: (v) => _apply(() {
                       settings.showOriginal = v;
@@ -84,8 +86,8 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                   _softDivider(),
                   _switchRow(
                     icon: Icons.translate_rounded,
-                    label: '显示翻译/附加行',
-                    sub: '第 2 行及以后',
+                    label: l10n.lyricStyleShowTranslation,
+                    sub: l10n.lyricStyleShowTranslationSub,
                     value: settings.showTranslations,
                     onChanged: (v) => _apply(() {
                       settings.showTranslations = v;
@@ -95,13 +97,13 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _sectionLabel('字号与行距', '滑条调节后即时生效'),
+            _sectionLabel(l10n.lyricStyleSectionTypography, l10n.lyricStyleSectionTypographySub),
             const SizedBox(height: 8),
             _frostedCard(
               child: Column(
                 children: [
                   _sliderBlock(
-                    label: '原文字号',
+                    label: l10n.lyricStyleFontOriginal,
                     value: settings.originalFontSize,
                     min: LyricSettings.minFontSize,
                     max: LyricSettings.maxFontSize,
@@ -111,7 +113,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                   ),
                   _softDivider(),
                   _sliderBlock(
-                    label: '翻译字号',
+                    label: l10n.lyricStyleFontTranslation,
                     value: settings.translationFontSize,
                     min: LyricSettings.minFontSize,
                     max: LyricSettings.maxFontSize,
@@ -121,7 +123,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                   ),
                   _softDivider(),
                   _sliderBlock(
-                    label: '行间距',
+                    label: l10n.lyricStyleLineSpacing,
                     value: settings.lyricLineSpacing,
                     min: LyricSettings.minLineSpacing,
                     max: LyricSettings.maxLineSpacing,
@@ -133,26 +135,26 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _sectionLabel('行对齐', null),
+            _sectionLabel(l10n.lyricStyleSectionLineAlign, null),
             const SizedBox(height: 8),
             _frostedCard(
               child: SegmentedButton<int>(
                 showSelectedIcon: false,
-                segments: const [
+                segments: [
                   ButtonSegment<int>(
                     value: 0,
-                    label: Text('左'),
-                    icon: Icon(Icons.format_align_left_rounded, size: 18),
+                    label: Text(l10n.lyricAlignLeft),
+                    icon: const Icon(Icons.format_align_left_rounded, size: 18),
                   ),
                   ButtonSegment<int>(
                     value: 1,
-                    label: Text('中'),
-                    icon: Icon(Icons.format_align_center_rounded, size: 18),
+                    label: Text(l10n.lyricAlignCenter),
+                    icon: const Icon(Icons.format_align_center_rounded, size: 18),
                   ),
                   ButtonSegment<int>(
                     value: 2,
-                    label: Text('右'),
-                    icon: Icon(Icons.format_align_right_rounded, size: 18),
+                    label: Text(l10n.lyricAlignRight),
+                    icon: const Icon(Icons.format_align_right_rounded, size: 18),
                   ),
                 ],
                 selected: {settings.lyricTextAlignIndex},
@@ -178,20 +180,22 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _sectionLabel('行状态颜色', '正在播放、已播过、未播到'),
+            _sectionLabel(l10n.lyricStyleSectionStateColors, l10n.lyricStyleSectionStateColorsSub),
             const SizedBox(height: 8),
             _frostedCard(
               child: Column(
                 children: [
                   _colorStateBlock(
                     accent: const Color(0xFFFFB74D),
-                    title: '正在播放行',
+                    title: l10n.lyricStyleStateNowPlaying,
+                    labelOriginal: l10n.lyricLabelOriginal,
+                    labelTranslation: l10n.lyricLabelTranslation,
                     icon: Icons.label_important_rounded,
                     c1: Color(settings.activeOriginalColor),
                     c2: Color(settings.activeTranslationColor),
                     onPick1: () => _pickColor(
                       pageContext,
-                      '正在播放 — 原文',
+                      l10n.lyricStyleColorNowOriginal,
                       Color(settings.activeOriginalColor),
                       (c) => _apply(
                         () => settings.activeOriginalColor = _argbFromColor(c),
@@ -199,7 +203,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                     onPick2: () => _pickColor(
                       pageContext,
-                      '正在播放 — 译文',
+                      l10n.lyricStyleColorNowTranslation,
                       Color(settings.activeTranslationColor),
                       (c) => _apply(
                         () =>
@@ -210,13 +214,15 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                   _softDivider(),
                   _colorStateBlock(
                     accent: const Color(0xFF81C784),
-                    title: '已播过的行',
+                    title: l10n.lyricStyleStatePlayed,
+                    labelOriginal: l10n.lyricLabelOriginal,
+                    labelTranslation: l10n.lyricLabelTranslation,
                     icon: Icons.history_rounded,
                     c1: Color(settings.playedOriginalColor),
                     c2: Color(settings.playedTranslationColor),
                     onPick1: () => _pickColor(
                       pageContext,
-                      '已播过 — 原文',
+                      l10n.lyricStyleColorPlayedOriginal,
                       Color(settings.playedOriginalColor),
                       (c) => _apply(
                         () => settings.playedOriginalColor = _argbFromColor(c),
@@ -224,7 +230,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                     onPick2: () => _pickColor(
                       pageContext,
-                      '已播过 — 译文',
+                      l10n.lyricStyleColorPlayedTranslation,
                       Color(settings.playedTranslationColor),
                       (c) => _apply(
                         () => settings.playedTranslationColor =
@@ -235,13 +241,15 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                   _softDivider(),
                   _colorStateBlock(
                     accent: const Color(0xFF64B5F6),
-                    title: '未播到的行',
+                    title: l10n.lyricStyleStateUpcoming,
+                    labelOriginal: l10n.lyricLabelOriginal,
+                    labelTranslation: l10n.lyricLabelTranslation,
                     icon: Icons.schedule_rounded,
                     c1: Color(settings.upcomingOriginalColor),
                     c2: Color(settings.upcomingTranslationColor),
                     onPick1: () => _pickColor(
                       pageContext,
-                      '未播到 — 原文',
+                      l10n.lyricStyleColorUpcomingOriginal,
                       Color(settings.upcomingOriginalColor),
                       (c) => _apply(
                         () => settings.upcomingOriginalColor = _argbFromColor(c),
@@ -249,7 +257,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                     onPick2: () => _pickColor(
                       pageContext,
-                      '未播到 — 译文',
+                      l10n.lyricStyleColorUpcomingTranslation,
                       Color(settings.upcomingTranslationColor),
                       (c) => _apply(
                         () => settings.upcomingTranslationColor =
@@ -262,7 +270,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '颜色将写入本地设置，切歌后仍保留。',
+              l10n.lyricStyleColorPersistNote,
               style: TextStyle(fontSize: 12, color: _onDim, height: 1.3),
             ),
           ],
@@ -271,7 +279,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -279,9 +287,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '歌词样式',
-                style: TextStyle(
+              Text(
+                l10n.tooltipLyricStyle,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
@@ -290,7 +298,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '与当前播放页歌词同步',
+                l10n.lyricStyleSyncSubtitle,
                 style: TextStyle(
                   fontSize: 13,
                   color: _onMuted,
@@ -475,6 +483,8 @@ class LyricStyleSettingsPanel extends StatelessWidget {
   Widget _colorStateBlock({
     required Color accent,
     required String title,
+    required String labelOriginal,
+    required String labelTranslation,
     required IconData icon,
     required Color c1,
     required Color c2,
@@ -514,7 +524,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: _colorChip(
-                  label: '原文',
+                  label: labelOriginal,
                   color: c1,
                   onTap: onPick1,
                 ),
@@ -522,7 +532,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _colorChip(
-                  label: '译文',
+                  label: labelTranslation,
                   color: c2,
                   onTap: onPick2,
                 ),
@@ -594,6 +604,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     Color current,
     void Function(Color) onPick,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<Color>(
       context: context,
       builder: (dialogContext) {
@@ -630,7 +641,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      '点选色块',
+                      l10n.lyricColorPickerHint,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.5),

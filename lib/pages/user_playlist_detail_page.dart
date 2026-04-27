@@ -17,6 +17,7 @@ import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
@@ -150,24 +151,25 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       context: context,
       child: Builder(
         builder: (ctx) {
+          final l10n = AppLocalizations.of(ctx);
           return Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  '删除歌单',
-                  style: TextStyle(
+                Text(
+                  l10n.playlistDeleteTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  '确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。',
-                  style: TextStyle(color: Colors.white, height: 1.35),
+                Text(
+                  l10n.playlistDeleteMessage,
+                  style: const TextStyle(color: Colors.white, height: 1.35),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -175,7 +177,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('取消'),
+                      child: Text(l10n.actionCancel),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, true),
@@ -183,7 +185,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                         backgroundColor: Colors.red.shade700,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('删除'),
+                      child: Text(l10n.actionDelete),
                     ),
                   ],
                 ),
@@ -209,6 +211,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       context: context,
       child: Builder(
         builder: (ctx) {
+          final l10n = AppLocalizations.of(ctx);
           final scheme = Theme.of(ctx).colorScheme;
           return Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -216,9 +219,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  '重命名歌单',
-                  style: TextStyle(
+                Text(
+                  l10n.playlistRenameTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -231,7 +234,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   style: const TextStyle(color: Colors.white),
                   cursorColor: Colors.white,
                   decoration: InputDecoration(
-                    labelText: '名称',
+                    labelText: l10n.fieldName,
                     labelStyle: TextStyle(
                       color: Colors.white.withValues(alpha: 0.7),
                     ),
@@ -254,12 +257,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('取消'),
+                      child: Text(l10n.actionCancel),
                     ),
                     FilledButton(
                       onPressed: () =>
                           Navigator.pop(ctx, controller.text.trim()),
-                      child: const Text('保存'),
+                      child: Text(l10n.actionSave),
                     ),
                   ],
                 ),
@@ -283,35 +286,37 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     final map = user.buildExportMapForPlaylists([playlist.id]);
     if ((map['playlists'] as List<dynamic>).isEmpty) {
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('无法导出该歌单')));
+        ).showSnackBar(SnackBar(content: Text(l10n.exportCannot)));
       }
       return;
     }
     final jsonStr = const JsonEncoder.withIndent('  ').convert(map);
     final fileName = suggestedSubsetPlaylistsFileName(user, {playlist.id});
+    final l10n = AppLocalizations.of(context);
     try {
       final path = await pickSaveUserPlaylistJson(
         jsonStr: jsonStr,
-        dialogTitle: '导出歌单',
+        dialogTitle: l10n.exportDialogTitle,
         fileName: fileName,
       );
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('已导出：$path')));
+        ).showSnackBar(SnackBar(content: Text(l10n.exportSaved(path))));
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('已取消导出')));
+        ).showSnackBar(SnackBar(content: Text(l10n.exportCancelled)));
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('导出失败：$e')));
+        ).showSnackBar(SnackBar(content: Text(l10n.exportFailed('$e'))));
       }
     }
   }
@@ -320,6 +325,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   Widget build(BuildContext context) {
     return Consumer2<UserPlaylistProvider, PlayListProvider>(
       builder: (context, userPl, playList, _) {
+        final l10n = AppLocalizations.of(context);
         UserPlaylist? playlist;
         for (final p in userPl.playlists) {
           if (p.id == widget.playlistId) {
@@ -329,8 +335,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
         }
         if (playlist == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('歌单不存在')),
-            body: const Center(child: Text('该歌单可能已被删除')),
+            appBar: AppBar(title: Text(l10n.playlistNotFound)),
+            body: Center(child: Text(l10n.playlistNotFoundMessage)),
           );
         }
 
@@ -404,7 +410,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   actions: [
                     IconButton(
                       icon: const Icon(Icons.search),
-                      tooltip: '搜索',
+                      tooltip: l10n.homeSearchTooltip,
                       onPressed: orderedSongs.isEmpty
                           ? null
                           : () {
@@ -415,13 +421,14 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                   playList,
                                   playbackContextQueue: orderedSongs,
                                   userPlaylistIdForContext: pl.id,
+                                  searchFieldLabelText: l10n.playlistSearchHint,
                                 ),
                               );
                             },
                     ),
                     IconButton(
                       icon: const Icon(Icons.sort),
-                      tooltip: '排序',
+                      tooltip: l10n.tooltipSort,
                       onPressed: _showSortOptions,
                     ),
                     PopupMenuButton<String>(
@@ -435,10 +442,19 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                           await _confirmDeletePlaylist(context, userPl);
                         }
                       },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'rename', child: Text('重命名')),
-                        PopupMenuItem(value: 'export', child: Text('导出本歌单…')),
-                        PopupMenuItem(value: 'delete', child: Text('删除歌单')),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'rename',
+                          child: Text(l10n.menuRename),
+                        ),
+                        PopupMenuItem(
+                          value: 'export',
+                          child: Text(l10n.menuExportThis),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(l10n.menuDeletePlaylist),
+                        ),
                       ],
                     ),
                   ],
@@ -451,9 +467,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                     ),
                     Expanded(
                       child: orderedSongs.isEmpty
-                          ? Center(
+                            ? Center(
                               child: Text(
-                                '暂无可用歌曲\n（请先在「音乐源」扫描，或歌曲路径已失效）',
+                                l10n.playlistEmptyNoSongs,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.6),
@@ -504,7 +520,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                           'row_${pl.id}_${song.path}',
                                         ),
                                         song: song,
-                                        title: song.title ?? '未知音乐',
+                                        title: song.title ?? l10n.pageUnknownTitle,
                                         subtitle: _subtitle(song),
                                         isCurrent: isRowCurrent,
                                         onTap: () async {

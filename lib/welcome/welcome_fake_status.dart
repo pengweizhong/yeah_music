@@ -2,32 +2,52 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-/// 启动/欢迎页中间轮播的「假加载」提示语（不反映真实 I/O 阶段，仅作观感）。
-const List<String> kWelcomeFakeLoadHints = [
-  '正在加载用户设置',
-  '正在加载曲库',
-  '正在加载歌单',
-  '正在加载其他数据',
-  '正在完成初始化',
-];
-
 const Duration kWelcomeFakeHintInterval = Duration(milliseconds: 1400);
 
-/// 依序轮播 [kWelcomeFakeLoadHints]；[stop] 后不再更新 [hint].
+/// 依序轮播 [hints]；[stop] 后不再更新 [hint]。
 class WelcomeFakeStatusRotator {
-  WelcomeFakeStatusRotator() : hint = ValueNotifier<String>(kWelcomeFakeLoadHints.first);
+  WelcomeFakeStatusRotator(List<String> hints)
+      : assert(hints.isNotEmpty),
+        _hints = List<String>.from(hints),
+        hint = ValueNotifier<String>(hints.first);
 
+  List<String> _hints;
   final ValueNotifier<String> hint;
   Timer? _t;
 
+  void setHintsIfChanged(List<String> next) {
+    if (next.isEmpty) {
+      return;
+    }
+    if (next.length == _hints.length) {
+      var same = true;
+      for (var i = 0; i < next.length; i++) {
+        if (next[i] != _hints[i]) {
+          same = false;
+          break;
+        }
+      }
+      if (same) {
+        return;
+      }
+    }
+    _hints = List<String>.from(next);
+    stop();
+    hint.value = _hints.first;
+    start();
+  }
+
   void start() {
+    if (_hints.isEmpty) {
+      return;
+    }
     _t?.cancel();
     _t = null;
-    hint.value = kWelcomeFakeLoadHints.first;
+    hint.value = _hints.first;
     var i = 0;
     _t = Timer.periodic(kWelcomeFakeHintInterval, (_) {
-      i = (i + 1) % kWelcomeFakeLoadHints.length;
-      hint.value = kWelcomeFakeLoadHints[i];
+      i = (i + 1) % _hints.length;
+      hint.value = _hints[i];
     });
   }
 

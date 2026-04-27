@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
 
 /// 右下「定位到当前」按钮（与 [FrostedGlassPanel] 同系毛玻璃圆钮；歌词、列表共用）
@@ -13,17 +14,21 @@ class ScrollLocateToCurrentActionButton extends StatelessWidget {
   const ScrollLocateToCurrentActionButton({
     super.key,
     required this.onPressed,
-    this.tooltip = '定位到当前',
+    this.tooltip,
   });
 
   final VoidCallback? onPressed;
+  /// 为 null 时在 [onPressed] 非空时使用 [AppLocalizations.locateToCurrentPlaying]。
   final String? tooltip;
 
   static const double _diameter = 44;
 
   @override
   Widget build(BuildContext context) {
-    final tip = onPressed == null ? '当前播放不在本列表' : tooltip;
+    final l10n = AppLocalizations.of(context);
+    final tip = onPressed == null
+        ? l10n.locateNotInList
+        : (tooltip ?? l10n.locateToCurrentPlaying);
     final iconColor = onPressed == null
         ? Colors.white.withValues(alpha: 0.38)
         : Colors.white;
@@ -80,7 +85,7 @@ class ScrollToCurrentLocateLayer extends StatefulWidget {
     required this.child,
     required this.canLocate,
     required this.onLocate,
-    this.tooltip = '定位到当前播放',
+    this.tooltip,
     this.onManualScroll,
     this.isManual,
     this.resetToken,
@@ -99,7 +104,7 @@ class ScrollToCurrentLocateLayer extends StatefulWidget {
   /// 是否展示定位按钮的「可执行」条件（列表：当前歌在列表中；歌词：有当前行等）
   final bool canLocate;
   final VoidCallback onLocate;
-  final String tooltip;
+  final String? tooltip;
 
   /// 非 null 时为**外接模式**（与歌词页 [SongPage] 一致）：
   /// [UserScrollNotification] 时调用；[isManual] 为父级维护的手动滚动状态
@@ -292,7 +297,7 @@ class SongListScrollToCurrentLocate extends StatelessWidget {
     required this.songs,
     required this.itemExtent,
     required this.playList,
-    this.tooltip = '定位到当前播放',
+    this.tooltip,
     this.forceShowLocateFab = false,
   });
 
@@ -301,7 +306,7 @@ class SongListScrollToCurrentLocate extends StatelessWidget {
   final List<Song> songs;
   final double itemExtent;
   final PlayListProvider playList;
-  final String tooltip;
+  final String? tooltip;
   final bool forceShowLocateFab;
 
   @override

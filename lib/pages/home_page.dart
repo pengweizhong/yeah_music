@@ -6,6 +6,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
@@ -127,12 +128,13 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  String _greeting() {
+  String _greeting(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final h = DateTime.now().hour;
-    if (h < 6) return '夜深了';
-    if (h < 12) return '早上好';
-    if (h < 18) return '下午好';
-    return '晚上好';
+    if (h < 6) return l10n.homeGreetingLateNight;
+    if (h < 12) return l10n.homeGreetingMorning;
+    if (h < 18) return l10n.homeGreetingAfternoon;
+    return l10n.homeGreetingEvening;
   }
 
   void _goLibrary({bool openSearch = false}) {
@@ -173,6 +175,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
@@ -186,7 +189,7 @@ class _HomePageState extends State<HomePage> {
             appBar: AppBar(
               centerTitle: false,
               title: Text(
-                'Yeah Music',
+                l10n.appTitle,
                 style: TextStyle(
                   color: context.gradFg(0.95),
                   fontWeight: FontWeight.w600,
@@ -199,13 +202,13 @@ class _HomePageState extends State<HomePage> {
               leading: IconButton(
                 icon: const Icon(Icons.menu_rounded, size: 26),
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                tooltip: '菜单',
+                tooltip: l10n.homeMenuTooltip,
               ),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.search_rounded, size: 26),
                   onPressed: () => _goLibrary(openSearch: true),
-                  tooltip: '搜索',
+                  tooltip: l10n.homeSearchTooltip,
                 ),
                 const SizedBox(width: 4),
               ],
@@ -234,7 +237,7 @@ class _HomePageState extends State<HomePage> {
                   child: _HomeScrollBody(
                     quickEntry: _quickEntry,
                     safeBottom: MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
-                    greeting: _greeting(),
+                    greeting: _greeting(context),
                     play: play,
                     user: user,
                     recentSongs: recentSongs,
@@ -386,10 +389,11 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
   }
 
   Widget _buildQuickEntryRow() {
+    final l10n = AppLocalizations.of(context);
     final ids = widget.quickEntry.visibleInOrder;
     if (ids.isEmpty) {
       return Text(
-        '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等',
+        l10n.homeQuickEntryEmpty,
         style: TextStyle(
           color: context.gradFg(0.45),
           fontSize: 14,
@@ -403,7 +407,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         case QuickEntryConfig.idLibrary:
           entries.add(
             _QuickItem(
-              '本地曲库',
+              l10n.homeEntryLibrary,
               Icons.library_music_rounded,
               const Color(0xFF4FC3F7),
               widget.onOpenLibrary,
@@ -413,7 +417,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         case QuickEntryConfig.idPlaylists:
           entries.add(
             _QuickItem(
-              '我的歌单',
+              l10n.homeEntryMyPlaylists,
               Icons.playlist_play_rounded,
               const Color(0xFF81C784),
               widget.onOpenStorage,
@@ -423,7 +427,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         case QuickEntryConfig.idRecent:
           entries.add(
             _QuickItem(
-              '最近播放',
+              l10n.homeEntryRecent,
               Icons.history_rounded,
               const Color(0xFFFFB74D),
               widget.onOpenRecent,
@@ -433,7 +437,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         case QuickEntryConfig.idDiscover:
           entries.add(
             _QuickItem(
-              '发现',
+              l10n.homeEntryDiscover,
               Icons.explore_rounded,
               const Color(0xFFE57373),
               widget.onOpenSearch,
@@ -478,6 +482,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bottomPad = widget.safeBottom + 20.0;
     if (_scrollController.hasClients) {
       _lastScrollOffset = _scrollController.offset;
@@ -517,8 +522,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: _hPad),
             child: _SectionTitle(
-              title: '快捷入口',
-              actionLabel: '管理',
+              title: l10n.homeSectionQuickEntry,
+              actionLabel: l10n.homeActionManage,
               onAction: widget.onManageQuickEntry,
             ),
           ),
@@ -534,8 +539,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           child: Padding(
             padding: const EdgeInsets.only(left: _hPad, right: 8, top: _gapL + 4),
             child: _SectionTitle(
-              title: '我的歌单',
-              actionLabel: '更多',
+              title: l10n.homeSectionMyPlaylists,
+              actionLabel: l10n.homeActionMore,
               onAction: widget.onOpenStorage,
             ),
           ),
@@ -574,7 +579,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               padding: const EdgeInsets.all(32.0),
               child: Center(
                 child: Text(
-                  '正在加载曲库…',
+                  l10n.homeLoadingLibrary,
                   style: TextStyle(
                     color: context.gradFg(0.5),
                     fontSize: 14,
@@ -604,7 +609,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 0),
               child: Text(
-                '暂无最近播放，在曲库或歌单中播放歌曲后会显示',
+                l10n.homeRecentEmpty,
                 style: TextStyle(
                   color: context.gradFg(0.45),
                   fontSize: 14,
@@ -660,7 +665,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-              child: const _SectionTitle(title: '最多播放'),
+              child: _SectionTitle(title: l10n.homeSectionMostPlayed),
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: _gapS)),
@@ -670,8 +675,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                 padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
                 child: Text(
                   widget.mostPlayedRaw.isNotEmpty
-                      ? '已有播放次数记录，但路径与当前曲库不一致（重命名/移动后请重扫音乐目录，再播几次会恢复）'
-                      : '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行',
+                      ? l10n.homeMostPlayedPathMismatch
+                      : l10n.homeMostPlayedEmpty,
                   style: TextStyle(
                     color: context.gradFg(0.45),
                     fontSize: 14,
@@ -692,8 +697,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                         widget.play.currentSong?.path == song.path;
                     final base = widget.songSubtitle(song);
                     final subtitle = base.isEmpty
-                        ? '已播放 $c 次'
-                        : '$base · 已播放 $c 次';
+                        ? l10n.homePlayCount(c)
+                        : l10n.homePlayCountWithBase(base, c);
                     return Padding(
                       key: ValueKey<String>(
                         'home_most_${song.path}_$c',
@@ -772,15 +777,16 @@ class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate 
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final l10n = AppLocalizations.of(context);
     final child = Align(
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: EdgeInsets.fromLTRB(horizontalPadding, 0, 8, 0),
         child: showMost
-            ? const _SectionTitle(title: '最多播放')
+            ? _SectionTitle(title: l10n.homeSectionMostPlayed)
             : _SectionTitle(
-                title: '最近播放',
-                actionLabel: '全部',
+                title: l10n.homeSectionRecentPlays,
+                actionLabel: l10n.homeActionAll,
                 onAction: onOpenRecent,
               ),
       ),
@@ -828,9 +834,10 @@ class _ContinuePlayLive extends StatelessWidget {
         final p = (dur != null && dur.inMilliseconds > 0)
             ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
             : 0.0;
+        final l10n = AppLocalizations.of(context);
         return _ContinuePlayCard(
-          title: song.title ?? '未知',
-          subtitle: _secondary(song),
+          title: song.title ?? l10n.homeUnknownTitle,
+          subtitle: _secondary(song, l10n),
           progress: p,
           onToggle: () async {
             if (MusicService.isPlaying) {
@@ -847,9 +854,9 @@ class _ContinuePlayLive extends StatelessWidget {
     );
   }
 
-  String _secondary(Song s) {
+  String _secondary(Song s, AppLocalizations l10n) {
     if (s.artist == null || s.artist!.isEmpty) {
-      return s.album ?? '正在播放';
+      return s.album ?? l10n.homeNowPlayingAlbum;
     }
     if (s.album == null || s.album!.isEmpty) {
       return s.artist!;
@@ -864,6 +871,7 @@ class _ContinueEmptyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -890,7 +898,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '还没有在播放',
+                      l10n.homeNothingPlaying,
                       style: TextStyle(
                         color: context.gradFg(0.9),
                         fontSize: 17,
@@ -899,7 +907,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '去本地曲库选一首歌开始',
+                      l10n.homeOpenLibraryToPlay,
                       style: TextStyle(
                         color: context.gradFg(0.45),
                         fontSize: 13,
@@ -947,6 +955,7 @@ class _PlaylistCarousels extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (!user.initialized) {
       return SizedBox(
         height: 168,
@@ -964,12 +973,14 @@ class _PlaylistCarousels extends StatelessWidget {
     }
     final allN = play.initialized ? play.libraryMergedSongs.length : 0;
     final allSubtitle = !play.initialized
-        ? '加载中…'
-        : (allN == 0 ? '去扫描音乐目录' : '$allN 首');
+        ? l10n.homeAllSongsLoading
+        : (allN == 0
+            ? l10n.homeScanMusicFolder
+            : l10n.homeTrackCount(allN));
     const allC1 = Color(0xFF1565C0);
     const allC2 = Color(0xFF0D47A1);
     final allCard = _MixCard(
-      title: '全部歌曲',
+      title: l10n.homeAllSongs,
       subtitle: allSubtitle,
       c1: allC1,
       c2: allC2,
@@ -986,8 +997,8 @@ class _PlaylistCarousels extends StatelessWidget {
             allCard,
             const SizedBox(width: 12),
             _MixCard(
-              title: '创建歌单',
-              subtitle: '集中收藏你喜欢的歌',
+              title: l10n.homeCreatePlaylist,
+              subtitle: l10n.homeCreatePlaylistSub,
               c1: const Color(0xFF37474F),
               c2: const Color(0xFF455A64),
               onTap: onCreate,
@@ -1012,7 +1023,9 @@ class _PlaylistCarousels extends StatelessWidget {
           final n = p.songPaths.length;
           return _MixCard(
             title: p.name,
-            subtitle: n == 0 ? '空歌单' : '$n 首',
+            subtitle: n == 0
+                ? l10n.homeEmptyPlaylist
+                : l10n.homeTrackCount(n),
             c1: g[0],
             c2: g[1],
             onTap: () => onOpenPlaylist(p.id),
@@ -1033,6 +1046,7 @@ class _GreetingBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -1048,7 +1062,7 @@ class _GreetingBlock extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '$greeting，今天想听点什么？',
+            l10n.homeGreetingLine(greeting),
             style: TextStyle(
               color: context.gradFg(0.95),
               fontSize: 18,
@@ -1060,7 +1074,7 @@ class _GreetingBlock extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '从下面继续上次的歌，或选一张歌单开始',
+            l10n.homeGreetingSub,
             style: TextStyle(
               color: context.gradFg(0.45),
               fontSize: 13,
@@ -1081,6 +1095,7 @@ class _SearchPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1105,7 +1120,7 @@ class _SearchPill extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '搜索歌曲、歌手、歌单',
+                  l10n.homeSearchHint,
                   style: TextStyle(
                     color: context.gradFg(0.45),
                     fontSize: 15,
@@ -1192,6 +1207,7 @@ class _ContinuePlayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1218,7 +1234,7 @@ class _ContinuePlayCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '继续播放',
+                      l10n.homeContinuePlaying,
                       style: TextStyle(
                         color: context.gradFg(0.9),
                         fontSize: 11,

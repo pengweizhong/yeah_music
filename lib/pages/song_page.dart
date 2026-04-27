@@ -14,7 +14,9 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
@@ -762,14 +764,14 @@ class _SongPageState extends State<SongPage> {
     }
   }
 
-  String _lyricLineDisplayModeTooltip() {
+  String _lyricLineDisplayModeTooltip(AppLocalizations l10n) {
     if (_lyrics.isEmpty) {
-      return '切换显示模式';
+      return l10n.lyricModeEmptyHint;
     }
     if (_globalDisplayMode < 0) {
-      return '多行歌词：全部行（点击为单行）';
+      return l10n.lyricModeAllLines;
     }
-    return '多行歌词：仅第 ${_globalDisplayMode + 1} 行（继续点击切换）';
+    return l10n.lyricModeSingleLineN(_globalDisplayMode + 1);
   }
 
   // 获取播放模式图标（圆角系，与底栏/模式列表一致）
@@ -791,12 +793,14 @@ class _SongPageState extends State<SongPage> {
   // 显示播放模式选择弹窗
   void _showPlaybackModeSheet(BuildContext context, PlayListProvider provider) {
     final primary = Theme.of(context).colorScheme.primary;
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       showDragHandle: false,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
+        final sheetL10n = AppLocalizations.of(sheetContext);
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
@@ -809,11 +813,11 @@ class _SongPageState extends State<SongPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       child: Text(
-                        '播放模式',
-                        style: TextStyle(
+                        l10n.playbackModeTitle,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -827,7 +831,7 @@ class _SongPageState extends State<SongPage> {
                           _getPlaybackModeIcon(mode),
                           color: Colors.white,
                         ),
-                        title: Text(mode.displayName),
+                        title: Text(playbackModeLabel(mode, sheetL10n)),
                         trailing: isSelected
                             ? Icon(Icons.check, color: primary)
                             : null,
@@ -864,6 +868,7 @@ class _SongPageState extends State<SongPage> {
     return showDialog<int>(
       context: dialogContext,
       builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
         final scheme = Theme.of(ctx).colorScheme;
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -876,9 +881,9 @@ class _SongPageState extends State<SongPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      '自定义时间',
-                      style: TextStyle(
+                    Text(
+                      l10n.sleepTimerCustom,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -891,7 +896,7 @@ class _SongPageState extends State<SongPage> {
                       cursorColor: Colors.white,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: '分钟',
+                        labelText: l10n.sleepTimerLabelMinutes,
                         labelStyle: TextStyle(
                           color: Colors.white.withValues(alpha: 0.7),
                         ),
@@ -923,11 +928,11 @@ class _SongPageState extends State<SongPage> {
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.white70,
                           ),
-                          child: const Text('取消'),
+                          child: Text(l10n.actionCancel),
                         ),
                         TextButton(
                           onPressed: () => _submitCustomTimer(ctx, controller),
-                          child: const Text('确定'),
+                          child: Text(l10n.actionOK),
                         ),
                       ],
                     ),
@@ -944,10 +949,14 @@ class _SongPageState extends State<SongPage> {
   void _submitCustomTimer(BuildContext ctx, TextEditingController c) {
     final v = int.tryParse(c.text.trim());
     if (v == null || v < _customTimerMinMinutes || v > _customTimerMaxMinutes) {
+      final l10n = AppLocalizations.of(ctx);
       ScaffoldMessenger.of(ctx).showSnackBar(
         SnackBar(
           content: Text(
-            '请输入 $_customTimerMinMinutes–$_customTimerMaxMinutes 之间的整数',
+            l10n.sleepTimerInvalidRange(
+              _customTimerMinMinutes,
+              _customTimerMaxMinutes,
+            ),
           ),
         ),
       );
@@ -965,6 +974,7 @@ class _SongPageState extends State<SongPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext);
         final isCustom = provider.isSleepTimerActive &&
             !_presetTimerMinutes.contains(provider.timerDuration);
         return Padding(
@@ -979,11 +989,11 @@ class _SongPageState extends State<SongPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       child: Text(
-                        '定时关闭',
-                        style: TextStyle(
+                        l10n.sleepTimerSheetTitle,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -993,7 +1003,7 @@ class _SongPageState extends State<SongPage> {
                     if (provider.isSleepTimerActive)
                       ListTile(
                         leading: const Icon(Icons.timer_off, color: Colors.white),
-                        title: const Text('取消定时关闭'),
+                        title: Text(l10n.sleepTimerCancel),
                         onTap: () {
                           provider.cancelSleepTimer();
                           Navigator.pop(sheetContext);
@@ -1002,7 +1012,7 @@ class _SongPageState extends State<SongPage> {
                     ..._presetTimerMinutes.map((minutes) {
                       return ListTile(
                         leading: const Icon(Icons.timer, color: Colors.white),
-                        title: Text('$minutes 分钟'),
+                        title: Text(l10n.sleepTimerMinutesN(minutes)),
                         trailing: provider.timerDuration == minutes &&
                                 provider.isSleepTimerActive
                             ? Icon(Icons.check, color: primary)
@@ -1015,9 +1025,11 @@ class _SongPageState extends State<SongPage> {
                     }),
                     ListTile(
                       leading: const Icon(Icons.edit_outlined, color: Colors.white),
-                      title: const Text('自定义时间'),
+                      title: Text(l10n.sleepTimerCustom),
                       subtitle: isCustom
-                          ? Text('当前 ${provider.timerDuration} 分钟')
+                          ? Text(
+                              l10n.sleepTimerCurrentN(provider.timerDuration),
+                            )
                           : null,
                       trailing: isCustom
                           ? Icon(Icons.check, color: primary)
@@ -1279,12 +1291,13 @@ class _SongPageState extends State<SongPage> {
     required EdgeInsets listPadding,
     required int pageIndexForFab,
   }) {
+    final l10n = AppLocalizations.of(context);
     return ScrollToCurrentLocateLayer(
       onManualScroll: _onUserScroll,
       isManual: _isManualScrolling,
       canLocate: _currentLyricIndex >= 0 && _currentPage == pageIndexForFab,
       onLocate: _scrollToCurrentPlayingLyric,
-      tooltip: '定位到当前歌词',
+      tooltip: l10n.locateToLyricLine,
       child: ScrollConfiguration(
         // 不显示歌词列表滚动条（自动跟唱与手动滚动均不显示，避免桌面端条常显/闪动）
         behavior: const MaterialScrollBehavior().copyWith(
@@ -1321,6 +1334,7 @@ class _SongPageState extends State<SongPage> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final l10n = AppLocalizations.of(context);
         const outerH = 16.0;
         const outerHRight = 12.0;
         final innerW =
@@ -1362,7 +1376,7 @@ class _SongPageState extends State<SongPage> {
                         child: _lyrics.isEmpty
                             ? Center(
                                 child: Text(
-                                  '暂无歌词',
+                                  l10n.noLyrics,
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.45),
                                   ),
@@ -1394,15 +1408,16 @@ class _SongPageState extends State<SongPage> {
   Widget build(BuildContext context) {
     return Consumer2<PlayListProvider, ThemeConfigProvider>(
       builder: (context, playListProvider, themeConfig, childWidget) {
+        final l10n = AppLocalizations.of(context);
         if (playListProvider.playList.isEmpty) {
           return themeConfig.buildThemedBackground(
             context: context,
-            child: const Scaffold(
+            child: Scaffold(
               backgroundColor: Colors.transparent,
               body: Center(
                 child: Text(
-                  '歌曲不存在',
-                  style: TextStyle(color: Colors.white70),
+                  l10n.songNotFound,
+                  style: const TextStyle(color: Colors.white70),
                 ),
               ),
             ),
@@ -1452,7 +1467,7 @@ class _SongPageState extends State<SongPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                song.title ?? '未知标题',
+                                song.title ?? l10n.pageUnknownTitle,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
@@ -1561,7 +1576,7 @@ class _SongPageState extends State<SongPage> {
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      '暂无歌词',
+                                      l10n.noLyrics,
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: Colors.white.withValues(alpha: 0.55),
@@ -1768,7 +1783,7 @@ class _SongPageState extends State<SongPage> {
                       _SongToolIcon(
                         icon: Icons.translate_rounded,
                         onPressed: _showLyricStyleSheet,
-                        tooltip: '歌词样式',
+                        tooltip: l10n.tooltipLyricStyle,
                       ),
                       _SongToolIcon(
                         icon: _lyricLineDisplayModeIcon(),
@@ -1776,16 +1791,20 @@ class _SongPageState extends State<SongPage> {
                             ? null
                             : Theme.of(context).colorScheme.primary,
                         onPressed: _toggleDisplayMode,
-                        tooltip: _lyricLineDisplayModeTooltip(),
+                        tooltip: _lyricLineDisplayModeTooltip(l10n),
                       ),
                       Consumer<PlayListProvider>(
                         builder: (context, provider, _) {
+                          final t = AppLocalizations.of(context);
                           return _SongToolIcon(
                             icon: _getPlaybackModeIcon(provider.playbackMode),
                             onPressed: () {
                               _showPlaybackModeSheet(context, provider);
                             },
-                            tooltip: provider.playbackMode.displayName,
+                            tooltip: playbackModeLabel(
+                              provider.playbackMode,
+                              t,
+                            ),
                           );
                         },
                       ),
@@ -1800,8 +1819,8 @@ class _SongPageState extends State<SongPage> {
                           _showTimerSheet(context, playListProvider);
                         },
                         tooltip: playListProvider.isSleepTimerActive
-                            ? '取消定时关闭'
-                            : '定时关闭',
+                            ? l10n.sleepTimerCancel
+                            : l10n.sleepTimerSheetTitle,
                       ),
                       _SongToolIcon(
                         icon: Icons.library_add_rounded,
@@ -1810,7 +1829,7 @@ class _SongPageState extends State<SongPage> {
                           if (song == null) return;
                           showAddToUserPlaylistsSheet(context, song);
                         },
-                        tooltip: '加入歌单',
+                        tooltip: l10n.tooltipAddToPlaylist,
                       ),
                     ],
                   ),
@@ -1999,6 +2018,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final provider = widget.provider;
     final list = provider.playList;
     final primary = Theme.of(context).colorScheme.primary;
@@ -2007,7 +2027,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     if (list.isEmpty) {
       return Center(
         child: Text(
-          '暂无曲目',
+          l10n.queueNoTracks,
           style: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
         ),
       );
@@ -2019,7 +2039,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: Text(
-            '播放队列',
+            l10n.playQueueTitle,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -2056,7 +2076,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       title: Text(
-                        s.title ?? '未知标题',
+                        s.title ?? l10n.pageUnknownTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

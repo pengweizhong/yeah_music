@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
@@ -24,6 +25,7 @@ class FolderPageSettings extends StatelessWidget {
     }
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
+        final l10n = AppLocalizations.of(context);
         return themeConfig.buildThemedBackground(
           context: context,
           child: Scaffold(
@@ -31,7 +33,10 @@ class FolderPageSettings extends StatelessWidget {
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
-              title: const Text("文件夹", style: TextStyle(color: Colors.white)),
+              title: Text(
+                l10n.folderAppBarTitle,
+                style: const TextStyle(color: Colors.white),
+              ),
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
@@ -41,15 +46,22 @@ class FolderPageSettings extends StatelessWidget {
           itemCount: folderProvider.folders.length,
           itemBuilder: (context, index) {
             final folder = folderProvider.folders[index];
+            final n = folder.songList?.length ?? 0;
             return ListTile(
-              title: Text(folder.name ?? "未知", style: const TextStyle(color: Colors.white)),
-              subtitle: Text("${folder.songList?.length} 首歌", style: TextStyle(color: Colors.white.withOpacity(0.6))),
+              title: Text(
+                folder.name ?? l10n.homeUnknownTitle,
+                style: const TextStyle(color: Colors.white),
+              ),
+              subtitle: Text(
+                l10n.homeTrackCount(n),
+                style: TextStyle(color: Colors.white.withOpacity(0.6)),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
-                    tooltip: "目录信息",
+                    tooltip: l10n.tooltipFolderInfo,
                     onPressed: () {
                       showModalBottomSheet(
                         isScrollControlled: true,
@@ -57,6 +69,7 @@ class FolderPageSettings extends StatelessWidget {
                         showDragHandle: false,
                         context: context,
                         builder: (sheetContext) {
+                          final sl = AppLocalizations.of(sheetContext);
                           return Padding(
                             padding: EdgeInsets.only(
                               bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
@@ -80,9 +93,9 @@ class FolderPageSettings extends StatelessWidget {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Text(
-                                              '目录信息',
-                                              style: TextStyle(
+                                            Text(
+                                              sl.tooltipFolderInfo,
+                                              style: const TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w600,
                                                 color: Colors.white,
@@ -92,9 +105,11 @@ class FolderPageSettings extends StatelessWidget {
                                             Row(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                const Text(
-                                                  '文件夹别名：',
-                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                Text(
+                                                  sl.folderInfoAlias,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
                                                 Expanded(child: Text('${folder.name}')),
                                               ],
@@ -103,9 +118,11 @@ class FolderPageSettings extends StatelessWidget {
                                             Row(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                const Text(
-                                                  '文件夹路径：',
-                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                Text(
+                                                  sl.folderInfoPath,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
                                                 Expanded(
                                                   child: SelectableText(
@@ -123,9 +140,11 @@ class FolderPageSettings extends StatelessWidget {
                                             const SizedBox(height: 6),
                                             Row(
                                               children: [
-                                                const Text(
-                                                  '歌曲数量：',
-                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                Text(
+                                                  sl.folderInfoSongCount,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
                                                 Text('${folder.songList?.length}'),
                                               ],
@@ -133,9 +152,11 @@ class FolderPageSettings extends StatelessWidget {
                                             const SizedBox(height: 6),
                                             Row(
                                               children: [
-                                                const Text(
-                                                  '加入时间：',
-                                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                                Text(
+                                                  sl.folderInfoAdded,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
                                                 Text(
                                                   LocalDateUtils.formatDateTime(
@@ -160,7 +181,7 @@ class FolderPageSettings extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.refresh_outlined, color: Colors.white),
-                    tooltip: "重新加载歌曲",
+                    tooltip: l10n.tooltipReloadSongs,
                     onPressed: () async {
                       showFrostedDialog<void>(
                         context: context,
@@ -171,22 +192,25 @@ class FolderPageSettings extends StatelessWidget {
                             padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 Text(
-                                  '正在重新加载',
-                                  style: TextStyle(
+                                  l10n.folderReloading,
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(height: 16),
-                                CircularProgressIndicator(),
-                                SizedBox(height: 16),
+                                const SizedBox(height: 16),
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
                                 Text(
-                                  '正在扫描文件夹，请稍候…',
+                                  l10n.folderScanningWait,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.white, height: 1.3),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    height: 1.3,
+                                  ),
                                 ),
                               ],
                             ),
@@ -204,8 +228,12 @@ class FolderPageSettings extends StatelessWidget {
                         // 显示成功提示
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("成功加载 ${folder.songList?.length ?? 0} 首歌曲"),
-                            duration: Duration(seconds: 2),
+                            content: Text(
+                              l10n.folderLoadOk(
+                                folder.songList?.length ?? 0,
+                              ),
+                            ),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       } catch (e) {
@@ -215,36 +243,52 @@ class FolderPageSettings extends StatelessWidget {
                         // 显示错误提示
                         ScaffoldMessenger.of(
                           context,
-                        ).showSnackBar(SnackBar(content: Text("加载失败：$e"), duration: Duration(seconds: 3)));
+                        ).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.folderLoadFailed('$e')),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
                       }
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.white),
-                    tooltip: "编辑",
+                    tooltip: l10n.tooltipEdit,
                     onPressed: () {
                       _showRenameDialog(context, folder, folderProvider);
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.white),
-                    tooltip: "移除目录",
+                    tooltip: l10n.tooltipRemoveFolder,
                     onPressed: () {
                       ApplicationUtils.alertDialog(
                         context,
-                        "确认移除？",
-                        [Text("是否移除目录：${folder.name}")],
+                        l10n.folderRemoveTitle,
+                        [
+                          Text(
+                            l10n.folderRemoveMessage(folder.name ?? ''),
+                          ),
+                        ],
                         [
                           TextButton(
-                            onPressed: () => {
-                              //通知歌单更新
-                              context.read<PlayListProvider>().flushRemovePlaylist(folder),
-                              folderProvider.deleteFolder(folder),
-                              Navigator.pop(context),
+                            onPressed: () {
+                              context
+                                  .read<PlayListProvider>()
+                                  .flushRemovePlaylist(folder);
+                              folderProvider.deleteFolder(folder);
+                              Navigator.pop(context);
                             },
-                            child: const Text("确认", style: TextStyle(color: Colors.red)),
+                            child: Text(
+                              l10n.actionConfirm,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ),
-                          TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(l10n.actionCancel),
+                          ),
                         ],
                       );
                     },
@@ -267,6 +311,7 @@ class FolderPageSettings extends StatelessWidget {
   }
 
   void _showAddFolderDialog(BuildContext context, FolderProvider provider) async {
+    final l10n = AppLocalizations.of(context);
     // 打开系统文件夹选择器
     String? selectedDirectory;
     if (Platform.isMacOS) {
@@ -284,22 +329,22 @@ class FolderPageSettings extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
-                  '正在加载歌曲',
-                  style: TextStyle(
+                  l10n.folderAddLoadingTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 16),
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
                 Text(
-                  '正在扫描文件夹，请稍候…',
+                  l10n.folderScanningWait,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, height: 1.3),
+                  style: const TextStyle(color: Colors.white, height: 1.3),
                 ),
               ],
             ),
@@ -317,9 +362,14 @@ class FolderPageSettings extends StatelessWidget {
         if (addFolder == null) {
           ApplicationUtils.alertDialog(
             context,
-            "提示",
-            [Text("添加了重复的文件夹：$selectedDirectory")],
-            [TextButton(onPressed: () => Navigator.pop(context), child: const Text("我知道了"))],
+            l10n.folderDuplicateDialogTitle,
+            [Text(l10n.folderDuplicateMessage(selectedDirectory))],
+            [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.actionGotIt),
+              ),
+            ],
           );
         } else {
           //通知歌单更新
@@ -328,7 +378,12 @@ class FolderPageSettings extends StatelessWidget {
 
           // 显示成功提示
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("成功添加 ${addFolder.songList?.length ?? 0} 首歌曲"), duration: Duration(seconds: 2)),
+            SnackBar(
+              content: Text(
+                l10n.folderAddOk(addFolder.songList?.length ?? 0),
+              ),
+              duration: const Duration(seconds: 2),
+            ),
           );
         }
       } catch (e) {
@@ -338,9 +393,14 @@ class FolderPageSettings extends StatelessWidget {
         // 显示错误提示
         ApplicationUtils.alertDialog(
           context,
-          "错误",
-          [Text("加载文件夹失败：$e")],
-          [TextButton(onPressed: () => Navigator.pop(context), child: const Text("确定"))],
+          l10n.folderAddErrorTitle,
+          [Text(l10n.folderAddErrorMessage('$e'))],
+          [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.actionOK),
+            ),
+          ],
         );
       }
     }
@@ -352,6 +412,7 @@ class FolderPageSettings extends StatelessWidget {
       context: context,
       child: Builder(
         builder: (ctx) {
+          final t = AppLocalizations.of(ctx);
           final scheme = Theme.of(ctx).colorScheme;
           return Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -359,9 +420,9 @@ class FolderPageSettings extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  '重命名文件夹',
-                  style: TextStyle(
+                Text(
+                  t.folderRenameDialogTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -373,7 +434,7 @@ class FolderPageSettings extends StatelessWidget {
                   style: const TextStyle(color: Colors.white),
                   cursorColor: Colors.white,
                   decoration: InputDecoration(
-                    hintText: '新名称',
+                    hintText: t.fieldNewNameHint,
                     hintStyle: TextStyle(
                       color: Colors.white.withValues(alpha: 0.45),
                     ),
@@ -395,7 +456,7 @@ class FolderPageSettings extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('取消'),
+                      child: Text(t.actionCancel),
                     ),
                     FilledButton(
                       onPressed: () {
@@ -404,7 +465,7 @@ class FolderPageSettings extends StatelessWidget {
                         }
                         Navigator.pop(ctx);
                       },
-                      child: const Text('确定'),
+                      child: Text(t.actionOK),
                     ),
                   ],
                 ),

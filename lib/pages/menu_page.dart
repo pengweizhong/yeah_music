@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/setting_page.dart';
@@ -17,6 +18,7 @@ class MenuPage extends StatefulWidget {
 class _MenuPageState extends State<MenuPage> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Drawer(
       backgroundColor: Colors.transparent,
       child: FrostedGlassPanel.drawer(
@@ -40,7 +42,7 @@ class _MenuPageState extends State<MenuPage> {
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 20),
                 child: ListTile(
                   title: Text(
-                    "主页",
+                    l10n.menuHome,
                     style: TextStyle(color: context.gradFg()),
                   ),
                   leading: Icon(Icons.home, color: context.gradFg()),
@@ -52,7 +54,7 @@ class _MenuPageState extends State<MenuPage> {
                 padding: const EdgeInsets.only(left: 80, right: 65, top: 5),
                 child: ListTile(
                   title: Text(
-                    "歌曲列表",
+                    l10n.menuSongList,
                     style: TextStyle(color: context.gradFg()),
                   ),
                   leading: Icon(Icons.list, color: context.gradFg()),
@@ -69,7 +71,7 @@ class _MenuPageState extends State<MenuPage> {
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
                   title: Text(
-                    "歌单",
+                    l10n.menuPlaylists,
                     style: TextStyle(color: context.gradFg()),
                   ),
                   leading: Icon(
@@ -91,7 +93,7 @@ class _MenuPageState extends State<MenuPage> {
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
                   title: Text(
-                    "音乐源",
+                    l10n.menuMusicSource,
                     style: TextStyle(color: context.gradFg()),
                   ),
                   leading: Icon(Icons.source, color: context.gradFg()),
@@ -110,7 +112,7 @@ class _MenuPageState extends State<MenuPage> {
                 padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
                 child: ListTile(
                   title: Text(
-                    "设置",
+                    l10n.menuSettings,
                     style: TextStyle(color: context.gradFg()),
                   ),
                   leading: Icon(Icons.settings, color: context.gradFg()),

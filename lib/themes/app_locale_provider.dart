@@ -1,0 +1,76 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// 应用界面语言（与 [AppLocalizations.supportedLocales] 一致）。
+enum AppLanguageOption {
+  /// 跟随 [WidgetsBinding.instance.platformDispatcher.locale]
+  system,
+  en,
+  ja,
+  zhHans,
+  zhHant,
+}
+
+String _optionStorageName(AppLanguageOption o) => o.name;
+
+AppLanguageOption? _optionFromName(String? name) {
+  if (name == null || name.isEmpty) {
+    return null;
+  }
+  for (final o in AppLanguageOption.values) {
+    if (o.name == name) {
+      return o;
+    }
+  }
+  return null;
+}
+
+/// 若不为 null，则 [MaterialApp.locale] 使用该值；为 null 时跟随系统。
+Locale? resolveLocaleForOption(AppLanguageOption o) {
+  switch (o) {
+    case AppLanguageOption.system:
+      return null;
+    case AppLanguageOption.en:
+      return const Locale('en');
+    case AppLanguageOption.ja:
+      return const Locale('ja');
+    case AppLanguageOption.zhHans:
+      return const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans');
+    case AppLanguageOption.zhHant:
+      return const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant');
+  }
+}
+
+/// 持久化键 [prefsKey]；与 [AppThemeModeProvider] 类似供设置页与 [MaterialApp] 使用。
+class AppLocaleProvider extends ChangeNotifier {
+  static const String prefsKey = 'app_language_option';
+
+  AppLocaleProvider() {
+    _load();
+  }
+
+  AppLanguageOption _option = AppLanguageOption.system;
+
+  AppLanguageOption get option => _option;
+
+  /// [MaterialApp] 使用：`locale` 为 null 表示由系统决定。
+  Locale? get resolvedLocale => resolveLocaleForOption(_option);
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(prefsKey);
+    final fromStorage = _optionFromName(raw) ?? AppLanguageOption.system;
+    _option = fromStorage;
+    notifyListeners();
+  }
+
+  Future<void> setOption(AppLanguageOption value) async {
+    if (value == _option) {
+      return;
+    }
+    _option = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(prefsKey, _optionStorageName(value));
+  }
+}

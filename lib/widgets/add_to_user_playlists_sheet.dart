@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
@@ -63,8 +64,11 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final user = context.watch<UserPlaylistProvider>();
     final playlists = user.playlists;
+    final titleName =
+        widget.song.title ?? widget.song.path.split('/').last;
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -76,7 +80,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
             child: Text(
-              '加入歌单 · ${widget.song.title ?? widget.song.path.split('/').last}',
+              l10n.addToPlaylistTitle(titleName),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -90,7 +94,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              '可多选；取消勾选将从对应歌单移除该歌曲',
+              l10n.addToPlaylistMultiHelp,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withValues(alpha: 0.55),
@@ -108,7 +112,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                     style: const TextStyle(color: Colors.white),
                     cursorColor: Colors.white,
                     decoration: InputDecoration(
-                      hintText: '新建歌单名称',
+                      hintText: l10n.addToPlaylistHint,
                       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.08),
@@ -134,7 +138,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: () => _createAndSelect(user),
-                  child: const Text('创建'),
+                  child: Text(l10n.actionCreate),
                 ),
               ],
             ),
@@ -145,7 +149,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        '暂无歌单，请先输入名称并创建',
+                        l10n.addToPlaylistNoPlaylistsYet,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.55),
                         ),
@@ -188,7 +192,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                           ),
                         ),
                         subtitle: Text(
-                          '${pl.songPaths.length} 首',
+                          l10n.homeTrackCount(pl.songPaths.length),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 13,
@@ -206,7 +210,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(foregroundColor: Colors.white70),
-                  child: const Text('取消'),
+                  child: Text(l10n.actionCancel),
                 ),
                 const Spacer(),
                 FilledButton(
@@ -214,11 +218,15 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                     await user.setSongInPlaylists(widget.song, Set<String>.from(_selected));
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('已更新歌单（${_selected.length} 个）')),
+                      SnackBar(
+                        content: Text(
+                          l10n.addToPlaylistUpdatedN(_selected.length),
+                        ),
+                      ),
                     );
                     Navigator.pop(context);
                   },
-                  child: const Text('确定'),
+                  child: Text(l10n.actionOK),
                 ),
               ],
             ),

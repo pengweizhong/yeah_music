@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
@@ -26,6 +27,7 @@ class CompactSongListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     return RepaintBoundary(
       child: Material(
@@ -86,7 +88,7 @@ class CompactSongListRow extends StatelessWidget {
                 if (showAddToPlaylist)
                   IconButton(
                     icon: const Icon(Icons.playlist_add, color: Colors.white70),
-                    tooltip: '加入歌单',
+                    tooltip: l10n.tooltipAddToPlaylist,
                     onPressed: () => showAddToUserPlaylistsSheet(context, song),
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,

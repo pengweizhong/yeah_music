@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
@@ -13,6 +14,7 @@ class ThemeSettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Consumer2<ThemeConfigProvider, AppThemeModeProvider>(
       builder: (context, themeConfig, appTheme, child) {
         return themeConfig.buildThemedBackground(
@@ -22,7 +24,10 @@ class ThemeSettingPage extends StatelessWidget {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: Text('主题设置', style: TextStyle(color: context.gradFg())),
+              title: Text(
+                l10n.themeSettingsTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
               leading: IconButton(
                 icon: Icon(Icons.arrow_back_ios_new, color: context.gradFg(), size: 20),
                 onPressed: () => Navigator.pop(context),
@@ -31,10 +36,10 @@ class ThemeSettingPage extends StatelessWidget {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildSectionTitle(context, '全局主题'),
+                _buildSectionTitle(context, l10n.globalTheme),
                 const SizedBox(height: 6),
                 Text(
-                  '控制应用界面整体为浅色、深色或跟随系统；将保存到本机。',
+                  l10n.globalThemeDesc,
                   style: TextStyle(
                     color: context.gradFgMuted(0.75),
                     fontSize: 13,
@@ -42,36 +47,28 @@ class ThemeSettingPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildGlobalThemeSelector(context, appTheme),
+                _buildGlobalThemeSelector(context, l10n, appTheme),
                 const SizedBox(height: 24),
-                // 主题类型选择
-                _buildSectionTitle(context, '主题类型'),
+                _buildSectionTitle(context, l10n.sectionThemeType),
                 const SizedBox(height: 12),
-                _buildThemeTypeSelector(context, themeConfig),
-                
+                _buildThemeTypeSelector(context, l10n, themeConfig),
                 const SizedBox(height: 24),
-                
-                // 预设颜色
                 if (themeConfig.themeType == ThemeType.solidColor) ...[
-                  _buildSectionTitle(context, '预设颜色'),
+                  _buildSectionTitle(context, l10n.sectionPresetColors),
                   const SizedBox(height: 12),
                   _buildPresetColors(context, themeConfig),
                 ],
-                
-                // 自定义颜色
                 if (themeConfig.themeType == ThemeType.customColor) ...[
-                  _buildSectionTitle(context, '自定义颜色'),
+                  _buildSectionTitle(context, l10n.sectionCustomColor),
                   const SizedBox(height: 12),
-                  _buildCustomColorPicker(context, themeConfig),
+                  _buildCustomColorPicker(context, l10n, themeConfig),
                 ],
-                
-                // 背景图片
                 if (themeConfig.themeType == ThemeType.backgroundImage) ...[
-                  _buildSectionTitle(context, '背景图片'),
+                  _buildSectionTitle(context, l10n.sectionBackgroundImage),
                   const SizedBox(height: 12),
-                  _buildImagePicker(context, themeConfig),
+                  _buildImagePicker(context, l10n, themeConfig),
                   const SizedBox(height: 20),
-                  _buildImageEffectSection(themeConfig),
+                  _buildImageEffectSection(l10n, themeConfig),
                 ],
               ],
             ),
@@ -94,6 +91,7 @@ class ThemeSettingPage extends StatelessWidget {
 
   Widget _buildGlobalThemeSelector(
     BuildContext context,
+    AppLocalizations l10n,
     AppThemeModeProvider appTheme,
   ) {
     return Container(
@@ -108,7 +106,7 @@ class ThemeSettingPage extends StatelessWidget {
             context,
             appTheme,
             ThemeMode.light,
-            '白天模式',
+            l10n.themeLight,
             Icons.light_mode_outlined,
           ),
           Divider(height: 1, color: context.gradBorder(0.1)),
@@ -116,7 +114,7 @@ class ThemeSettingPage extends StatelessWidget {
             context,
             appTheme,
             ThemeMode.dark,
-            '夜晚模式',
+            l10n.themeDark,
             Icons.dark_mode_outlined,
           ),
           Divider(height: 1, color: context.gradBorder(0.1)),
@@ -124,7 +122,7 @@ class ThemeSettingPage extends StatelessWidget {
             context,
             appTheme,
             ThemeMode.system,
-            '跟随系统',
+            l10n.themeSystem,
             Icons.brightness_auto_outlined,
           ),
         ],
@@ -150,7 +148,11 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeTypeSelector(BuildContext context, ThemeConfigProvider themeConfig) {
+  Widget _buildThemeTypeSelector(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: context.gradBorder(0.06),
@@ -163,7 +165,7 @@ class ThemeSettingPage extends StatelessWidget {
             context,
             themeConfig,
             ThemeType.solidColor,
-            '预设颜色',
+            l10n.themeTypeSolid,
             Icons.palette,
           ),
           Divider(height: 1, color: context.gradBorder(0.1)),
@@ -171,7 +173,7 @@ class ThemeSettingPage extends StatelessWidget {
             context,
             themeConfig,
             ThemeType.customColor,
-            '自定义颜色',
+            l10n.themeTypeCustom,
             Icons.color_lens,
           ),
           Divider(height: 1, color: context.gradBorder(0.1)),
@@ -179,7 +181,7 @@ class ThemeSettingPage extends StatelessWidget {
             context,
             themeConfig,
             ThemeType.backgroundImage,
-            '背景图片',
+            l10n.themeTypeImage,
             Icons.image,
           ),
         ],
@@ -256,7 +258,11 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomColorPicker(BuildContext context, ThemeConfigProvider themeConfig) {
+  Widget _buildCustomColorPicker(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -267,15 +273,15 @@ class ThemeSettingPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '主色调',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            l10n.primaryColor,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               GestureDetector(
-                onTap: () => _showColorPicker(context, themeConfig, true),
+                onTap: () => _showColorPicker(context, l10n, themeConfig, true),
                 child: Container(
                   width: 60,
                   height: 60,
@@ -294,21 +300,24 @@ class ThemeSettingPage extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => _showColorPicker(context, themeConfig, true),
-                child: const Text('选择', style: TextStyle(color: Colors.white)),
+                onPressed: () => _showColorPicker(context, l10n, themeConfig, true),
+                child: Text(
+                  l10n.actionSelect,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
-            '次色调',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            l10n.secondaryColor,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               GestureDetector(
-                onTap: () => _showColorPicker(context, themeConfig, false),
+                onTap: () => _showColorPicker(context, l10n, themeConfig, false),
                 child: Container(
                   width: 60,
                   height: 60,
@@ -327,8 +336,11 @@ class ThemeSettingPage extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => _showColorPicker(context, themeConfig, false),
-                child: const Text('选择', style: TextStyle(color: Colors.white)),
+                onPressed: () => _showColorPicker(context, l10n, themeConfig, false),
+                child: Text(
+                  l10n.actionSelect,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -337,7 +349,10 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildImageEffectSection(ThemeConfigProvider themeConfig) {
+  Widget _buildImageEffectSection(
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) {
     final v = themeConfig.backgroundImageEffect;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -349,9 +364,9 @@ class ThemeSettingPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '背景雾化',
-            style: TextStyle(
+          Text(
+            l10n.fogBackground,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -359,7 +374,7 @@ class ThemeSettingPage extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。',
+            l10n.fogBackgroundDesc,
             style: TextStyle(
               color: Colors.white.withOpacity(0.65),
               fontSize: 13,
@@ -370,8 +385,11 @@ class ThemeSettingPage extends StatelessWidget {
           Row(
             children: [
               Text(
-                '弱',
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                l10n.fogWeak,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 12,
+                ),
               ),
               Expanded(
                 child: Slider(
@@ -386,8 +404,11 @@ class ThemeSettingPage extends StatelessWidget {
                 ),
               ),
               Text(
-                '强',
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                l10n.fogStrong,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -407,7 +428,11 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePicker(BuildContext context, ThemeConfigProvider themeConfig) {
+  Widget _buildImagePicker(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -433,9 +458,9 @@ class ThemeSettingPage extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _pickImage(context, themeConfig),
+                  onPressed: () => _pickImage(context, l10n, themeConfig),
                   icon: const Icon(Icons.photo_library, size: 20),
-                  label: const Text('选择图片'),
+                  label: Text(l10n.actionPickImage),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
@@ -448,7 +473,7 @@ class ThemeSettingPage extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: () => themeConfig.setBackgroundImage(null),
                   icon: const Icon(Icons.delete, size: 20),
-                  label: const Text('移除'),
+                  label: Text(l10n.actionRemove),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.withOpacity(0.3),
                     foregroundColor: Colors.white,
@@ -463,7 +488,11 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
-  Future<void> _pickImage(BuildContext context, ThemeConfigProvider themeConfig) async {
+  Future<void> _pickImage(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
@@ -475,13 +504,18 @@ class ThemeSettingPage extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('无法保存背景图（请重试或换一张）：$e'),
+          content: Text(l10n.cannotSaveBackground(e.toString())),
         ),
       );
     }
   }
 
-  void _showColorPicker(BuildContext context, ThemeConfigProvider themeConfig, bool isPrimary) {
+  void _showColorPicker(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+    bool isPrimary,
+  ) {
     showFrostedDialog<void>(
       context: context,
       maxWidth: 360,
@@ -493,7 +527,9 @@ class ThemeSettingPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  isPrimary ? '选择主色调' : '选择次色调',
+                  isPrimary
+                      ? l10n.colorDialogTitlePrimary
+                      : l10n.colorDialogTitleSecondary,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -541,7 +577,7 @@ class ThemeSettingPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('取消'),
+                  child: Text(l10n.actionCancel),
                 ),
               ],
             ),

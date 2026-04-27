@@ -7,6 +7,7 @@ enum PlaybackMode {
 }
 
 extension PlaybackModeExtension on PlaybackMode {
+  /// 仅作调试或日志用；UI 请使用 [playbackModeLabel] 与 [AppLocalizations]。
   String get displayName {
     switch (this) {
       case PlaybackMode.sequential:

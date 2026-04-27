@@ -8,6 +8,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: 1.0.8
   hooks_riverpod: 2.6.1
   just_audio: 0.10.5
@@ -27,7 +29,7 @@ dependencies:
   charset: ^2.0.1 # 字符集
 #  disk_space_2: ^1.0.10 # 获取磁盘信息
 #  system_info2: ^4.0.0 # 读取系统信息
-  intl: ^0.20.2 # 提供国际化和本地化设施，包括消息翻译、复数和性别、日期/数字格式和解析以及双向文本。
+  intl: any
 #  url_launcher: ^6.3.2 # 用于启动 URL 的 Flutter 插件
   device_info_plus: ^11.5.0 # 获取设备信息
   palette_generator: ^0.3.3+4 # 从图片提取颜色调色板
@@ -51,5 +53,6 @@ flutter_icons:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets: # 注册资源
     - assets/icons/
