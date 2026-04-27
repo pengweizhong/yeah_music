@@ -192,6 +192,144 @@ abstract class AppLocalizations {
   /// **'Interface language'**
   String get settingsLanguageDesc;
 
+  /// No description provided for @settingsOneDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive'**
+  String get settingsOneDrive;
+
+  /// No description provided for @settingsOneDriveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and set music root; files cache locally for playback'**
+  String get settingsOneDriveDesc;
+
+  /// No description provided for @oneDriveSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive'**
+  String get oneDriveSettingsTitle;
+
+  /// No description provided for @oneDriveClientIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Application (client) ID'**
+  String get oneDriveClientIdLabel;
+
+  /// No description provided for @oneDriveClientIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From Azure Portal → your app → Overview'**
+  String get oneDriveClientIdHint;
+
+  /// No description provided for @oneDriveMusicRootIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Music root folder (optional)'**
+  String get oneDriveMusicRootIdLabel;
+
+  /// No description provided for @oneDriveMusicRootHint.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive item id, or leave empty for drive root. Children of this folder are shown first.'**
+  String get oneDriveMusicRootHint;
+
+  /// No description provided for @oneDriveSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Microsoft'**
+  String get oneDriveSignIn;
+
+  /// No description provided for @oneDriveSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get oneDriveSignOut;
+
+  /// No description provided for @oneDriveSignOutDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out from OneDrive'**
+  String get oneDriveSignOutDone;
+
+  /// No description provided for @oneDriveSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get oneDriveSignedIn;
+
+  /// No description provided for @oneDriveNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get oneDriveNotSignedIn;
+
+  /// No description provided for @oneDriveLinuxUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive sign-in is not available on this platform yet.'**
+  String get oneDriveLinuxUnsupported;
+
+  /// No description provided for @oneDriveNeedClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the Azure application client ID first.'**
+  String get oneDriveNeedClientId;
+
+  /// No description provided for @oneDriveCacheNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio is cached under the app data folder when you play.'**
+  String get oneDriveCacheNote;
+
+  /// No description provided for @oneDriveOpenBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open OneDrive'**
+  String get oneDriveOpenBrowser;
+
+  /// No description provided for @homeEntryOneDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive'**
+  String get homeEntryOneDrive;
+
+  /// No description provided for @oneDriveBrowserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive'**
+  String get oneDriveBrowserTitle;
+
+  /// No description provided for @oneDriveEmptyFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get oneDriveEmptyFolder;
+
+  /// No description provided for @oneDrivePlayAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all in folder'**
+  String get oneDrivePlayAll;
+
+  /// No description provided for @oneDrivePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get oneDrivePreparing;
+
+  /// No description provided for @oneDriveError.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive error: {message}'**
+  String oneDriveError(String message);
+
+  /// No description provided for @oneDriveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Up'**
+  String get oneDriveUp;
+
   /// No description provided for @languageSettingsTitle.
   ///
   /// In en, this message translates to:

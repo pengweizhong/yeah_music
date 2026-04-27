@@ -15,6 +15,7 @@ import 'package:yeah_music/welcome/welcome_countdown_view.dart';
 
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
+import 'compments/onedrive_controller.dart';
 import 'navigation/app_route_observer.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
@@ -232,6 +233,13 @@ class _AppStartupGateState extends State<AppStartupGate>
           },
         ),
         ChangeNotifierProvider(create: (_) => FolderProvider()..init()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final c = OneDriveController();
+            c.loadFromStorage();
+            return c;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),
       ],
       child: YeahMusicApp(

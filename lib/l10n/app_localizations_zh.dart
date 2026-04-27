@@ -54,6 +54,78 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLanguageDesc => '界面语言';
 
   @override
+  String get settingsOneDrive => 'OneDrive';
+
+  @override
+  String get settingsOneDriveDesc => '登录并设置音乐根目录；播放时缓存到本地';
+
+  @override
+  String get oneDriveSettingsTitle => 'OneDrive';
+
+  @override
+  String get oneDriveClientIdLabel => '应用程序(客户端) ID';
+
+  @override
+  String get oneDriveClientIdHint => '在 Azure 门户 → 应用 → 概述 中复制';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音乐根文件夹（可选）';
+
+  @override
+  String get oneDriveMusicRootHint =>
+      '填 OneDrive 文件项 id，留空则从网盘根目录进入。将优先显示该文件夹下的内容。';
+
+  @override
+  String get oneDriveSignIn => '使用 Microsoft 登录';
+
+  @override
+  String get oneDriveSignOut => '退出登录';
+
+  @override
+  String get oneDriveSignOutDone => '已退出 OneDrive 账号';
+
+  @override
+  String get oneDriveSignedIn => '已登录';
+
+  @override
+  String get oneDriveNotSignedIn => '未登录';
+
+  @override
+  String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
+
+  @override
+  String get oneDriveNeedClientId => '请先填写 Azure 应用的客户端 ID。';
+
+  @override
+  String get oneDriveCacheNote => '播放时音频会缓存在应用数据目录。';
+
+  @override
+  String get oneDriveOpenBrowser => '打开 OneDrive';
+
+  @override
+  String get homeEntryOneDrive => 'OneDrive';
+
+  @override
+  String get oneDriveBrowserTitle => 'OneDrive';
+
+  @override
+  String get oneDriveEmptyFolder => '此文件夹为空';
+
+  @override
+  String get oneDrivePlayAll => '播放本文件夹全部';
+
+  @override
+  String get oneDrivePreparing => '正在准备…';
+
+  @override
+  String oneDriveError(String message) {
+    return 'OneDrive 错误：$message';
+  }
+
+  @override
+  String get oneDriveUp => '上级';
+
+  @override
   String get languageSettingsTitle => '语言';
 
   @override
@@ -912,6 +984,78 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsLanguageDesc => '界面语言';
 
   @override
+  String get settingsOneDrive => 'OneDrive';
+
+  @override
+  String get settingsOneDriveDesc => '登录并设置音乐根目录；播放时缓存到本地';
+
+  @override
+  String get oneDriveSettingsTitle => 'OneDrive';
+
+  @override
+  String get oneDriveClientIdLabel => '应用程序(客户端) ID';
+
+  @override
+  String get oneDriveClientIdHint => '在 Azure 门户 → 应用 → 概述 中复制';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音乐根文件夹（可选）';
+
+  @override
+  String get oneDriveMusicRootHint =>
+      '填 OneDrive 文件项 id，留空则从网盘根目录进入。将优先显示该文件夹下的内容。';
+
+  @override
+  String get oneDriveSignIn => '使用 Microsoft 登录';
+
+  @override
+  String get oneDriveSignOut => '退出登录';
+
+  @override
+  String get oneDriveSignOutDone => '已退出 OneDrive 账号';
+
+  @override
+  String get oneDriveSignedIn => '已登录';
+
+  @override
+  String get oneDriveNotSignedIn => '未登录';
+
+  @override
+  String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
+
+  @override
+  String get oneDriveNeedClientId => '请先填写 Azure 应用的客户端 ID。';
+
+  @override
+  String get oneDriveCacheNote => '播放时音频会缓存在应用数据目录。';
+
+  @override
+  String get oneDriveOpenBrowser => '打开 OneDrive';
+
+  @override
+  String get homeEntryOneDrive => 'OneDrive';
+
+  @override
+  String get oneDriveBrowserTitle => 'OneDrive';
+
+  @override
+  String get oneDriveEmptyFolder => '此文件夹为空';
+
+  @override
+  String get oneDrivePlayAll => '播放本文件夹全部';
+
+  @override
+  String get oneDrivePreparing => '正在准备…';
+
+  @override
+  String oneDriveError(String message) {
+    return 'OneDrive 错误：$message';
+  }
+
+  @override
+  String get oneDriveUp => '上级';
+
+  @override
   String get languageSettingsTitle => '语言';
 
   @override
@@ -1768,6 +1912,78 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsLanguageDesc => '介面語言';
+
+  @override
+  String get settingsOneDrive => 'OneDrive';
+
+  @override
+  String get settingsOneDriveDesc => '登入並設定音樂根目錄；播放時快取到本機';
+
+  @override
+  String get oneDriveSettingsTitle => 'OneDrive';
+
+  @override
+  String get oneDriveClientIdLabel => '應用程式 (用戶端) ID';
+
+  @override
+  String get oneDriveClientIdHint => '在 Azure 入口網站 → 應用程式 → 概觀 複製';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音樂根資料夾（選填）';
+
+  @override
+  String get oneDriveMusicRootHint =>
+      '填 OneDrive 項目 id，留空則從雲端根目錄進入。會優先顯示此資料夾下的內容。';
+
+  @override
+  String get oneDriveSignIn => '使用 Microsoft 登入';
+
+  @override
+  String get oneDriveSignOut => '登出';
+
+  @override
+  String get oneDriveSignOutDone => '已登出 OneDrive';
+
+  @override
+  String get oneDriveSignedIn => '已登入';
+
+  @override
+  String get oneDriveNotSignedIn => '未登入';
+
+  @override
+  String get oneDriveLinuxUnsupported => '此平台尚不支援 OneDrive 登入。';
+
+  @override
+  String get oneDriveNeedClientId => '請先填寫 Azure 應用程式的用戶端 ID。';
+
+  @override
+  String get oneDriveCacheNote => '播放時音訊會快取在應用程式資料目錄。';
+
+  @override
+  String get oneDriveOpenBrowser => '開啟 OneDrive';
+
+  @override
+  String get homeEntryOneDrive => 'OneDrive';
+
+  @override
+  String get oneDriveBrowserTitle => 'OneDrive';
+
+  @override
+  String get oneDriveEmptyFolder => '此資料夾是空的';
+
+  @override
+  String get oneDrivePlayAll => '播放此資料夾全部';
+
+  @override
+  String get oneDrivePreparing => '準備中…';
+
+  @override
+  String oneDriveError(String message) {
+    return 'OneDrive 錯誤：$message';
+  }
+
+  @override
+  String get oneDriveUp => '上層';
 
   @override
   String get languageSettingsTitle => '語言';

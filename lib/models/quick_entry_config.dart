@@ -8,7 +8,8 @@ class QuickEntryConfig {
   static const idPlaylists = 'playlists';
   static const idRecent = 'recent';
   static const idDiscover = 'discover';
-  static const allIds = [idLibrary, idPlaylists, idRecent, idDiscover];
+  static const idOneDrive = 'onedrive';
+  static const allIds = [idLibrary, idPlaylists, idRecent, idDiscover, idOneDrive];
 
   /// 全部门口的排列顺序（含被隐藏的，便于管理页排序）
   List<String> order;

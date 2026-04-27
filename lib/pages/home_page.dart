@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
+import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -13,6 +14,8 @@ import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
+import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/quick_entry_settings_page.dart';
 import 'package:yeah_music/pages/recent_plays_page.dart';
@@ -164,6 +167,25 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _goOneDrive() {
+    final od = context.read<OneDriveController>();
+    if (od.signedIn) {
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (context) => const OneDriveBrowserPage(),
+        ),
+      );
+    } else {
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (context) => const OneDriveSettingsPage(),
+        ),
+      );
+    }
+  }
+
   void _goUserPlaylist(String playlistId) {
     Navigator.push(
       context,
@@ -248,6 +270,7 @@ class _HomePageState extends State<HomePage> {
                     onOpenSearch: () => _goLibrary(openSearch: true),
                     onOpenStorage: _goStoragePlaylists,
                     onOpenRecent: _goRecentPlays,
+                    onOpenOneDrive: _goOneDrive,
                     onManageQuickEntry: _goQuickEntrySettings,
                     onOpenUserPlaylist: _goUserPlaylist,
                     songSubtitle: _songSecondaryLine,
@@ -292,6 +315,7 @@ class _HomeScrollBody extends StatefulWidget {
     required this.onOpenSearch,
     required this.onOpenStorage,
     required this.onOpenRecent,
+    required this.onOpenOneDrive,
     required this.onManageQuickEntry,
     required this.onOpenUserPlaylist,
     required this.songSubtitle,
@@ -310,6 +334,7 @@ class _HomeScrollBody extends StatefulWidget {
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenStorage;
   final VoidCallback onOpenRecent;
+  final VoidCallback onOpenOneDrive;
   final VoidCallback onManageQuickEntry;
   final void Function(String playlistId) onOpenUserPlaylist;
   final String Function(Song) songSubtitle;
@@ -441,6 +466,16 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               Icons.explore_rounded,
               const Color(0xFFE57373),
               widget.onOpenSearch,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idOneDrive:
+          entries.add(
+            _QuickItem(
+              l10n.homeEntryOneDrive,
+              Icons.cloud_rounded,
+              const Color(0xFF0078D4),
+              widget.onOpenOneDrive,
             ),
           );
           break;

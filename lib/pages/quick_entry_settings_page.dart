@@ -42,6 +42,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return l10n.homeEntryRecent;
       case QuickEntryConfig.idDiscover:
         return l10n.homeEntryDiscover;
+      case QuickEntryConfig.idOneDrive:
+        return l10n.homeEntryOneDrive;
       default:
         return id;
     }
@@ -57,6 +59,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return Icons.history_rounded;
       case QuickEntryConfig.idDiscover:
         return Icons.explore_rounded;
+      case QuickEntryConfig.idOneDrive:
+        return Icons.cloud_rounded;
       default:
         return Icons.apps_rounded;
     }

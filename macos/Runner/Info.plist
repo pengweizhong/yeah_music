@@ -32,5 +32,18 @@
     <string>Yeah Music</string>
     <key>CFBundleDisplayName</key>
     <string>Yeah Music</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.pengwz.yeahmusic.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.pengwz.yeahmusic</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -55,6 +55,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageDesc => 'Interface language';
 
   @override
+  String get settingsOneDrive => 'OneDrive';
+
+  @override
+  String get settingsOneDriveDesc =>
+      'Sign in and set music root; files cache locally for playback';
+
+  @override
+  String get oneDriveSettingsTitle => 'OneDrive';
+
+  @override
+  String get oneDriveClientIdLabel => 'Application (client) ID';
+
+  @override
+  String get oneDriveClientIdHint => 'From Azure Portal → your app → Overview';
+
+  @override
+  String get oneDriveMusicRootIdLabel => 'Music root folder (optional)';
+
+  @override
+  String get oneDriveMusicRootHint =>
+      'OneDrive item id, or leave empty for drive root. Children of this folder are shown first.';
+
+  @override
+  String get oneDriveSignIn => 'Sign in with Microsoft';
+
+  @override
+  String get oneDriveSignOut => 'Sign out';
+
+  @override
+  String get oneDriveSignOutDone => 'Signed out from OneDrive';
+
+  @override
+  String get oneDriveSignedIn => 'Signed in';
+
+  @override
+  String get oneDriveNotSignedIn => 'Not signed in';
+
+  @override
+  String get oneDriveLinuxUnsupported =>
+      'OneDrive sign-in is not available on this platform yet.';
+
+  @override
+  String get oneDriveNeedClientId =>
+      'Set the Azure application client ID first.';
+
+  @override
+  String get oneDriveCacheNote =>
+      'Audio is cached under the app data folder when you play.';
+
+  @override
+  String get oneDriveOpenBrowser => 'Open OneDrive';
+
+  @override
+  String get homeEntryOneDrive => 'OneDrive';
+
+  @override
+  String get oneDriveBrowserTitle => 'OneDrive';
+
+  @override
+  String get oneDriveEmptyFolder => 'This folder is empty';
+
+  @override
+  String get oneDrivePlayAll => 'Play all in folder';
+
+  @override
+  String get oneDrivePreparing => 'Preparing…';
+
+  @override
+  String oneDriveError(String message) {
+    return 'OneDrive error: $message';
+  }
+
+  @override
+  String get oneDriveUp => 'Up';
+
+  @override
   String get languageSettingsTitle => 'Language';
 
   @override

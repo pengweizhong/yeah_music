@@ -10,6 +10,8 @@ class SettingsService {
   static const String _timerDurationKey = 'timer_duration';
   static const String _quickEntryOrderKey = 'quick_entry_order';
   static const String _quickEntryHiddenKey = 'quick_entry_hidden';
+  static const String _oneDriveClientIdKey = 'onedrive_client_id';
+  static const String _oneDriveMusicRootIdKey = 'onedrive_music_root_id';
 
   /// 保存歌词设置
   static Future<void> saveLyricSettings(LyricSettings settings) async {
@@ -96,6 +98,72 @@ class SettingsService {
       return QuickEntryConfig.fromStorage(orderRaw, hiddenRaw);
     } catch (e) {
       return null;
+    }
+  }
+
+  /// OneDrive Azure 应用 ID（与门户中「应用程序(客户端)ID」一致）。
+  static Future<String?> loadOneDriveClientId() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_oneDriveClientIdKey) as String?;
+      if (v != null && v.trim().isEmpty) return null;
+      return v?.trim();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> saveOneDriveClientId(String? value) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (value == null || value.trim().isEmpty) {
+        await box.delete(_oneDriveClientIdKey);
+      } else {
+        await box.put(_oneDriveClientIdKey, value.trim());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (value == null || value.trim().isEmpty) {
+          await box.delete(_oneDriveClientIdKey);
+        } else {
+          await box.put(_oneDriveClientIdKey, value.trim());
+        }
+      } catch (_) {}
+    }
+  }
+
+  /// 进入 OneDrive 浏览页时的根文件夹 item id；`null` 表示个人网盘根「/」。
+  static Future<String?> loadOneDriveMusicRootId() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_oneDriveMusicRootIdKey) as String?;
+      if (v != null && v.trim().isEmpty) return null;
+      return v?.trim();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> saveOneDriveMusicRootId(String? itemId) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (itemId == null || itemId.trim().isEmpty) {
+        await box.delete(_oneDriveMusicRootIdKey);
+      } else {
+        await box.put(_oneDriveMusicRootIdKey, itemId.trim());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (itemId == null || itemId.trim().isEmpty) {
+          await box.delete(_oneDriveMusicRootIdKey);
+        } else {
+          await box.put(_oneDriveMusicRootIdKey, itemId.trim());
+        }
+      } catch (_) {}
     }
   }
 

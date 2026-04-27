@@ -5,6 +5,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
+import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/application_utils.dart';
@@ -48,6 +49,17 @@ class SettingPage extends StatelessWidget {
                     Navigator.push<void>(
                       context,
                       MaterialPageRoute<void>(builder: (context) => const LanguageSettingsPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  title: Text(l10n.settingsOneDrive, style: TextStyle(color: context.gradFg())),
+                  subtitle: Text(l10n.settingsOneDriveDesc, style: TextStyle(color: context.gradFg(0.6))),
+                  leading: Icon(Icons.cloud_outlined, color: context.gradFg()),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(builder: (context) => const OneDriveSettingsPage()),
                     );
                   },
                 ),

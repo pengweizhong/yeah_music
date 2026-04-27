@@ -54,6 +54,78 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsLanguageDesc => '表示言語';
 
   @override
+  String get settingsOneDrive => 'OneDrive';
+
+  @override
+  String get settingsOneDriveDesc =>
+      'Microsoft にサインインし、音楽のルートを設定。再生時にローカルにキャッシュします。';
+
+  @override
+  String get oneDriveSettingsTitle => 'OneDrive';
+
+  @override
+  String get oneDriveClientIdLabel => 'アプリケーション (クライアント) ID';
+
+  @override
+  String get oneDriveClientIdHint => 'Azure ポータル → アプリの概要';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音楽のルートフォルダ（任意）';
+
+  @override
+  String get oneDriveMusicRootHint => 'OneDrive のアイテム ID。空欄の場合はドライブのルートから。';
+
+  @override
+  String get oneDriveSignIn => 'Microsoft でサインイン';
+
+  @override
+  String get oneDriveSignOut => 'サインアウト';
+
+  @override
+  String get oneDriveSignOutDone => 'OneDrive からサインアウトしました';
+
+  @override
+  String get oneDriveSignedIn => 'サインイン済み';
+
+  @override
+  String get oneDriveNotSignedIn => '未サインイン';
+
+  @override
+  String get oneDriveLinuxUnsupported => 'このプラットフォームでは OneDrive サインインに未対応です。';
+
+  @override
+  String get oneDriveNeedClientId => '先に Azure のクライアント ID を入力してください。';
+
+  @override
+  String get oneDriveCacheNote => '再生時、音声はアプリのデータ領域に保存されます。';
+
+  @override
+  String get oneDriveOpenBrowser => 'OneDrive を開く';
+
+  @override
+  String get homeEntryOneDrive => 'OneDrive';
+
+  @override
+  String get oneDriveBrowserTitle => 'OneDrive';
+
+  @override
+  String get oneDriveEmptyFolder => 'このフォルダーは空です';
+
+  @override
+  String get oneDrivePlayAll => 'フォルダー内のすべてを再生';
+
+  @override
+  String get oneDrivePreparing => '準備中…';
+
+  @override
+  String oneDriveError(String message) {
+    return 'OneDrive エラー：$message';
+  }
+
+  @override
+  String get oneDriveUp => '上へ';
+
+  @override
   String get languageSettingsTitle => '言語';
 
   @override
