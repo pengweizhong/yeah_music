@@ -10,11 +10,10 @@ import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/song_page.dart';
+import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
-import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
-import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
 
 class UserPlaylistDetailPage extends StatefulWidget {
@@ -29,6 +28,10 @@ class UserPlaylistDetailPage extends StatefulWidget {
 class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
   SongListSortType _sortType = SongListSortType.name;
   bool _isAscending = true;
+
+  /// 与排序 / 歌单 path 组合一致时复用，避免 [Consumer2] 频繁重建时全量 [sortSongsCopy]
+  String? _memoOrderKey;
+  List<Song>? _memoOrderedSongs;
 
   @override
   void initState() {
@@ -48,7 +51,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
     } catch (_) {}
   }
 
-  Future<void> _saveSort() => saveUserPlaylistSortPreferences(_sortType, _isAscending);
+  Future<void> _saveSort() =>
+      saveUserPlaylistSortPreferences(_sortType, _isAscending);
 
   void _showSortOptions() {
     showSongSortBottomSheet(
@@ -76,7 +80,10 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
     return '${song.artist} · ${song.album}';
   }
 
-  Future<void> _confirmDeletePlaylist(BuildContext context, UserPlaylistProvider user) async {
+  Future<void> _confirmDeletePlaylist(
+    BuildContext context,
+    UserPlaylistProvider user,
+  ) async {
     final ok = await showFrostedDialog<bool>(
       context: context,
       child: Builder(
@@ -188,7 +195,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                       child: const Text('取消'),
                     ),
                     FilledButton(
-                      onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                      onPressed: () =>
+                          Navigator.pop(ctx, controller.text.trim()),
                       child: const Text('保存'),
                     ),
                   ],
@@ -213,9 +221,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
     final map = user.buildExportMapForPlaylists([playlist.id]);
     if ((map['playlists'] as List<dynamic>).isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('无法导出该歌单')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('无法导出该歌单')));
       }
       return;
     }
@@ -229,13 +237,19 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
       );
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已导出：$path')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('已导出：$path')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消导出')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已取消导出')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出失败：$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('导出失败：$e')));
       }
     }
   }
@@ -260,13 +274,24 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
 
         final pl = playlist;
         final rawSongs = userPl.songsForPlaylist(pl, playList.playList);
-        final pathAddIndex = {for (var i = 0; i < pl.songPaths.length; i++) pl.songPaths[i]: i};
-        final orderedSongs = sortSongsCopy(
-          rawSongs,
-          _sortType,
-          _isAscending,
-          pathAddIndex: pathAddIndex,
-        );
+        final pathAddIndex = {
+          for (var i = 0; i < pl.songPaths.length; i++) pl.songPaths[i]: i,
+        };
+        final orderKey =
+            '${pl.songPaths.join('\x1e')}|$_sortType|$_isAscending|${pl.id}';
+        final List<Song> orderedSongs;
+        if (_memoOrderKey == orderKey && _memoOrderedSongs != null) {
+          orderedSongs = _memoOrderedSongs!;
+        } else {
+          orderedSongs = sortSongsCopy(
+            rawSongs,
+            _sortType,
+            _isAscending,
+            pathAddIndex: pathAddIndex,
+          );
+          _memoOrderKey = orderKey;
+          _memoOrderedSongs = orderedSongs;
+        }
 
         return Consumer<ThemeConfigProvider>(
           builder: (context, themeConfig, _) {
@@ -276,7 +301,10 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                 extendBody: true,
                 backgroundColor: Colors.transparent,
                 appBar: AppBar(
-                  title: Text(pl.name, style: const TextStyle(color: Colors.white)),
+                  title: Text(
+                    pl.name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   iconTheme: const IconThemeData(color: Colors.white),
@@ -323,71 +351,77 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                 ),
                 body: Column(
                   children: [
-                    SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
+                    SizedBox(
+                      height:
+                          MediaQuery.of(context).padding.top + kToolbarHeight,
+                    ),
                     Expanded(
                       child: orderedSongs.isEmpty
                           ? Center(
                               child: Text(
                                 '暂无可用歌曲\n（请先在「音乐源」扫描，或歌曲路径已失效）',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
                               ),
                             )
                           : ScrollAwareListFrame(
                               child: ListView.builder(
-                                cacheExtent: 480,
+                                itemExtent: 80,
+                                cacheExtent: 280,
                                 padding: const EdgeInsets.only(bottom: 100),
                                 itemCount: orderedSongs.length,
                                 itemBuilder: (context, index) {
-                                final song = orderedSongs[index];
-                                return Dismissible(
-                                  key: ValueKey('${pl.id}_${song.path}'),
-                                  direction: DismissDirection.endToStart,
-                                  background: Container(
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.only(right: 20),
-                                    color: Colors.red.shade800,
-                                    child: const Icon(Icons.remove_circle_outline, color: Colors.white),
-                                  ),
-                                  onDismissed: (_) {
-                                    userPl.removeSongFromPlaylist(pl.id, song);
-                                  },
-                                  child: ListTile(
-                                    leading: SizedBox(
-                                      width: 48,
-                                      height: 48,
-                                      child: SongListCover(
-                                        song: song,
-                                        size: 48,
-                                        borderRadius: BorderRadius.circular(10),
+                                  final song = orderedSongs[index];
+                                  return Dismissible(
+                                    key: ValueKey('${pl.id}_${song.path}'),
+                                    direction: DismissDirection.endToStart,
+                                    background: Container(
+                                      alignment: Alignment.centerRight,
+                                      padding: const EdgeInsets.only(right: 20),
+                                      color: Colors.red.shade800,
+                                      child: const Icon(
+                                        Icons.remove_circle_outline,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                    title: Text(
-                                      song.title ?? '未知音乐',
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                    subtitle: Text(
-                                      _subtitle(song),
-                                      style: TextStyle(color: Colors.white.withOpacity(0.6)),
-                                    ),
-                                    trailing: IconButton(
-                                      icon: const Icon(Icons.playlist_add, color: Colors.white70),
-                                      tooltip: '加入歌单',
-                                      onPressed: () => showAddToUserPlaylistsSheet(context, song),
-                                    ),
-                                    onTap: () async {
-                                      final playListProv = context.read<PlayListProvider>();
-                                      await playListProv.setPlaybackQueueAndPlay(orderedSongs, index);
-                                      if (!context.mounted) return;
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => SongPage(index: index)),
+                                    onDismissed: (_) {
+                                      _memoOrderKey = null;
+                                      _memoOrderedSongs = null;
+                                      userPl.removeSongFromPlaylist(
+                                        pl.id,
+                                        song,
                                       );
                                     },
-                                  ),
-                                );
-                              },
-                            ),
+                                    child: CompactSongListRow(
+                                      key: ValueKey(
+                                        'row_${pl.id}_${song.path}',
+                                      ),
+                                      song: song,
+                                      title: song.title ?? '未知音乐',
+                                      subtitle: _subtitle(song),
+                                      onTap: () async {
+                                        final playListProv = context
+                                            .read<PlayListProvider>();
+                                        await playListProv
+                                            .setPlaybackQueueAndPlay(
+                                              orderedSongs,
+                                              index,
+                                            );
+                                        if (!context.mounted) return;
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                SongPage(index: index),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                     ),
                   ],

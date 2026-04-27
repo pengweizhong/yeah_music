@@ -77,6 +77,10 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> {
                       final items = playList.resolveRecentSongsFromPaths(
                         _paths,
                       );
+                      final pathToIdx = {
+                        for (var i = 0; i < playList.playList.length; i++)
+                          playList.playList[i].path: i,
+                      };
                       if (items.isEmpty) {
                         return Center(
                           child: Column(
@@ -110,43 +114,44 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> {
                       }
                       return ScrollAwareListFrame(
                         child: ListView.builder(
-                          cacheExtent: 480,
+                          itemExtent: 86,
+                          cacheExtent: 280,
                           padding: EdgeInsets.only(
                             bottom: 100 + MediaQuery.paddingOf(context).bottom,
                           ),
                           itemCount: items.length,
                           itemBuilder: (context, i) {
-                          final song = items[i];
-                          final idx = playList.indexInLibraryByPath(song.path);
-                          final isCurrent =
-                              playList.currentSong?.path == song.path;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: RecentPlayListRow(
-                              song: song,
-                              subtitle: _secondaryLine(song),
-                              isCurrent: isCurrent,
-                              onTap: () async {
-                                if (idx < 0) return;
-                                playList.clearPlaybackQueueOverride();
-                                if (!context.mounted) return;
-                                await playList.playAt(idx);
-                                if (!context.mounted) return;
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SongPage(
-                                      index: idx,
-                                      initialPage: 0,
+                            final song = items[i];
+                            final idx = pathToIdx[song.path] ?? -1;
+                            final isCurrent =
+                                playList.currentSong?.path == song.path;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: RecentPlayListRow(
+                                song: song,
+                                subtitle: _secondaryLine(song),
+                                isCurrent: isCurrent,
+                                onTap: () async {
+                                  if (idx < 0) return;
+                                  playList.clearPlaybackQueueOverride();
+                                  if (!context.mounted) return;
+                                  await playList.playAt(idx);
+                                  if (!context.mounted) return;
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          SongPage(index: idx, initialPage: 0),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      );
                     },
                   ),
             bottomNavigationBar: const MiniPlayer(),

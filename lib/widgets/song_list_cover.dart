@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/application_utils.dart';
-import 'package:yeah_music/widgets/list_cover_image_policy.dart';
 
 /// 与深色播放主题协调的列表封面占位，避免白底在解码前露出。
 Color songListCoverPlaceholderColor() => const Color(0xFF2E2E2E);
 
-/// 与 [SongListCover] 同尺寸占位（无 [Image]），在 [ListCoverImagePolicy] 抑制或无需封面时使用。
+/// 与 [SongListCover] 同尺寸占位（无 [Image]），在仅需静态壳层时使用（如迷你条无封面源等情况）。
 class SongListCoverStaticShell extends StatelessWidget {
   const SongListCoverStaticShell({
     super.key,
@@ -57,8 +56,8 @@ class SongListCoverStaticShell extends StatelessWidget {
   }
 }
 
-/// 列表/迷你播放条用封面：按逻辑尺寸与设备 DPR 限制解码，减轻滚动卡顿与内存峰值。
-/// 在 [ScrollAwareListFrame] 内、滑动进行中仅显示 [SongListCoverStaticShell]，不挂载 [Image]。
+/// 列表/迷你播放条用封面：按逻辑尺寸与设备 DPR 限制解码，减轻内存峰值；滑动中不卸 [Image]，
+/// 已解码资源由 [ImageCache] 与 [ApplicationUtils] 的 provider 缓存复用，避免整屏闪动。
 class SongListCover extends StatelessWidget {
   const SongListCover({
     super.key,
@@ -73,12 +72,6 @@ class SongListCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (ListCoverImagePolicy.shouldSuppressDecode(context)) {
-      return SongListCoverStaticShell(
-        size: size,
-        borderRadius: borderRadius,
-      );
-    }
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final image = ApplicationUtils.getImageCoverProvider(
       song,
@@ -86,6 +79,8 @@ class SongListCover extends StatelessWidget {
       devicePixelRatio: dpr,
     );
 
+    // 不使用 frameBuilder 渐显：停滑/回收后再挂上 Image 时，缓存命中的图也会首帧
+    // frame==null 被做成 opacity:0 再 100ms 渐显，体感像“重新加载”。底层已有占位色。
     final img = Image(
       image: image,
       width: size,
@@ -93,17 +88,6 @@ class SongListCover extends StatelessWidget {
       fit: BoxFit.cover,
       filterQuality: FilterQuality.low,
       gaplessPlayback: true,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) {
-          return child;
-        }
-        return AnimatedOpacity(
-          opacity: frame == null ? 0 : 1,
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOut,
-          child: child,
-        );
-      },
       errorBuilder: (context, error, stackTrace) {
         return ColoredBox(
           color: songListCoverPlaceholderColor(),

@@ -2026,6 +2026,9 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                   key: isCurrent
                       ? _playingRowKey
                       : ValueKey<String>('${index}_${s.path}'),
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  minVerticalPadding: 0,
                   selected: isCurrent,
                   selectedColor: primary,
                   selectedTileColor: primary.withValues(alpha: 0.16),

@@ -10,9 +10,8 @@ import '../compments/folder_provider.dart';
 import '../compments/play_list_provider.dart';
 import '../models/folder.dart';
 import '../utils/song_list_sort.dart';
-import '../widgets/add_to_user_playlists_sheet.dart';
+import '../widgets/compact_song_list_row.dart';
 import '../widgets/scroll_aware_list_frame.dart';
-import '../widgets/song_list_cover.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
 
 var log = Logger(printer: SimplePrinter());
@@ -213,53 +212,29 @@ class _PlayListProviderState extends State<PlayListPage> {
                                 ],
                               ),
                             )
-                      : ScrollAwareListFrame(
-                          child: ListView.builder(
-                            // 略增大预建范围，快滑时减少「出屏再入屏才解码」的顿挫
-                            cacheExtent: 480,
-                            padding: const EdgeInsets.only(bottom: 100),
-                            itemCount: _filteredSongs.length,
-                            itemBuilder: (context, index) {
-                                final song = _filteredSongs[index];
-                                final originalIndex =
-                                    pathToIndex[song.path] ?? 0;
-                                return ListTile(
-                                  key: ValueKey<String>(song.path),
-                                  leading: SongListCover(
+                          : ScrollAwareListFrame(
+                              child: ListView.builder(
+                                itemExtent: 80,
+                                cacheExtent: 280,
+                                padding: const EdgeInsets.only(bottom: 100),
+                                itemCount: _filteredSongs.length,
+                                itemBuilder: (context, index) {
+                                  final song = _filteredSongs[index];
+                                  final originalIndex =
+                                      pathToIndex[song.path] ?? 0;
+                                  return CompactSongListRow(
+                                    key: ValueKey<String>(song.path),
                                     song: song,
-                                    size: 48,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  title: Text(
-                                    song.title ?? "未知音乐",
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  subtitle: Text(
-                                    showSecondTitle(song),
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.6),
+                                    title: song.title ?? '未知音乐',
+                                    subtitle: showSecondTitle(song),
+                                    onTap: () => navToSongPage(
+                                      originalIndex,
+                                      playListProvider,
                                     ),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.playlist_add,
-                                      color: Colors.white70,
-                                    ),
-                                    tooltip: '加入歌单',
-                                    onPressed: () =>
-                                        showAddToUserPlaylistsSheet(
-                                          context,
-                                          song,
-                                        ),
-                                  ),
-                                  onTap: () => navToSongPage(
-                                    originalIndex,
-                                    playListProvider,
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             ),
-                          ),
                     ),
                   ],
                 ),
@@ -439,28 +414,15 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
     return ScrollAwareListFrame(
       child: ListView.builder(
+        itemExtent: 80,
         itemCount: results.length,
         itemBuilder: (context, index) {
           final song = results[index];
-          return ListTile(
-            leading: SongListCover(
-              song: song,
-              size: 48,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            title: Text(
-              song.title ?? "未知音乐",
-              style: const TextStyle(color: Colors.white),
-            ),
-            subtitle: Text(
-              song.artist ?? song.album ?? '',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.playlist_add, color: Colors.white70),
-              tooltip: '加入歌单',
-              onPressed: () => showAddToUserPlaylistsSheet(context, song),
-            ),
+          return CompactSongListRow(
+            key: ValueKey('search_${song.path}'),
+            song: song,
+            title: song.title ?? '未知音乐',
+            subtitle: song.artist ?? song.album ?? '',
             onTap: () async {
               close(context, song);
               if (playbackContextQueue != null) {
