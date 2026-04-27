@@ -531,7 +531,9 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         SliverToBoxAdapter(child: SizedBox(height: _gapS)),
         SliverToBoxAdapter(
           child: _PlaylistCarousels(
+            play: widget.play,
             user: widget.user,
+            onOpenAllSongs: widget.onOpenLibrary,
             onOpenPlaylist: widget.onOpenUserPlaylist,
             onCreate: widget.onOpenStorage,
           ),
@@ -917,11 +919,15 @@ const _kMixGradients = <List<Color>>[
 
 class _PlaylistCarousels extends StatelessWidget {
   const _PlaylistCarousels({
+    required this.play,
     required this.user,
+    required this.onOpenAllSongs,
     required this.onOpenPlaylist,
     required this.onCreate,
   });
+  final PlayListProvider play;
   final UserPlaylistProvider user;
+  final VoidCallback onOpenAllSongs;
   final void Function(String id) onOpenPlaylist;
   final VoidCallback onCreate;
 
@@ -942,6 +948,19 @@ class _PlaylistCarousels extends StatelessWidget {
         ),
       );
     }
+    final allN = play.initialized ? play.libraryMergedSongs.length : 0;
+    final allSubtitle = !play.initialized
+        ? '加载中…'
+        : (allN == 0 ? '去扫描音乐目录' : '$allN 首');
+    const allC1 = Color(0xFF1565C0);
+    const allC2 = Color(0xFF0D47A1);
+    final allCard = _MixCard(
+      title: '全部歌曲',
+      subtitle: allSubtitle,
+      c1: allC1,
+      c2: allC2,
+      onTap: onOpenAllSongs,
+    );
     final list = user.playlists;
     if (list.isEmpty) {
       return SizedBox(
@@ -950,6 +969,8 @@ class _PlaylistCarousels extends StatelessWidget {
           padding: const EdgeInsets.only(left: 20, right: 8),
           scrollDirection: Axis.horizontal,
           children: [
+            allCard,
+            const SizedBox(width: 12),
             _MixCard(
               title: '创建歌单',
               subtitle: '集中收藏你喜欢的歌',
@@ -967,11 +988,13 @@ class _PlaylistCarousels extends StatelessWidget {
       child: ListView.separated(
         padding: const EdgeInsets.only(left: 20, right: 8),
         scrollDirection: Axis.horizontal,
-        itemCount: take,
+        itemCount: 1 + take,
         separatorBuilder: (context, i) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
-          final p = list[i];
-          final g = _kMixGradients[i % _kMixGradients.length];
+          if (i == 0) return allCard;
+          final pi = i - 1;
+          final p = list[pi];
+          final g = _kMixGradients[pi % _kMixGradients.length];
           final n = p.songPaths.length;
           return _MixCard(
             title: p.name,
