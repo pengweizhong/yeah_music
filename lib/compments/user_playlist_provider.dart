@@ -166,6 +166,15 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 批量删除歌单（仅移除歌单与路径引用，不删本地音乐文件）
+  Future<void> deletePlaylists(Iterable<String> playlistIds) async {
+    final idSet = playlistIds.toSet();
+    if (idSet.isEmpty) return;
+    _playlists.removeWhere((playlist) => idSet.contains(playlist.id));
+    await _save();
+    notifyListeners();
+  }
+
   Future<void> renamePlaylist(String playlistId, String name) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) return;
@@ -242,6 +251,24 @@ class UserPlaylistProvider extends ChangeNotifier {
       'exportedAt': DateTime.now().toIso8601String(),
       'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': _playlists.map((e) => e.toMap()).toList(),
+    };
+  }
+
+  /// 仅导出指定 [playlistIds] 中的歌单（按本地列表顺序，忽略未知 id）
+  Map<String, dynamic> buildExportMapForPlaylists(Iterable<String> playlistIds) {
+    final want = playlistIds.toSet();
+    final out = <Map<String, dynamic>>[];
+    for (final p in _playlists) {
+      if (want.contains(p.id)) {
+        out.add(p.toMap());
+      }
+    }
+    return {
+      'format': userPlaylistExportFormatId,
+      'version': userPlaylistExportVersion,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
+      'playlists': out,
     };
   }
 

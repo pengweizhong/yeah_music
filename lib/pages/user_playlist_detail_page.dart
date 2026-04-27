@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
@@ -9,6 +11,7 @@ import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
+import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
 
@@ -117,6 +120,41 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
     }
   }
 
+  Future<void> _exportThisPlaylist(
+    BuildContext context,
+    UserPlaylist playlist,
+    UserPlaylistProvider user,
+  ) async {
+    final map = user.buildExportMapForPlaylists([playlist.id]);
+    if ((map['playlists'] as List<dynamic>).isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('无法导出该歌单')),
+        );
+      }
+      return;
+    }
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(map);
+    final fileName = suggestedSubsetPlaylistsFileName(user, {playlist.id});
+    try {
+      final path = await pickSaveUserPlaylistJson(
+        jsonStr: jsonStr,
+        dialogTitle: '导出歌单',
+        fileName: fileName,
+      );
+      if (!context.mounted) return;
+      if (path != null && path.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已导出：$path')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消导出')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出失败：$e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<UserPlaylistProvider, PlayListProvider>(
@@ -185,12 +223,15 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage> {
                       onSelected: (value) async {
                         if (value == 'rename') {
                           await _renamePlaylist(context, pl, userPl);
+                        } else if (value == 'export') {
+                          await _exportThisPlaylist(context, pl, userPl);
                         } else if (value == 'delete') {
                           await _confirmDeletePlaylist(context, userPl);
                         }
                       },
                       itemBuilder: (context) => const [
                         PopupMenuItem(value: 'rename', child: Text('重命名')),
+                        PopupMenuItem(value: 'export', child: Text('导出本歌单…')),
                         PopupMenuItem(value: 'delete', child: Text('删除歌单')),
                       ],
                     ),
