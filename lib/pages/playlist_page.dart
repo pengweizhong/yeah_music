@@ -17,7 +17,10 @@ var log = Logger(printer: SimplePrinter());
 
 @immutable
 class PlayListPage extends StatefulWidget {
-  const PlayListPage({super.key});
+  const PlayListPage({super.key, this.openSearchOnOpen = false});
+
+  /// 为 true 时在进入页后自动打开搜索（如主页「发现/搜索」）
+  final bool openSearchOnOpen;
 
   @override
   State<PlayListPage> createState() => _PlayListProviderState();
@@ -44,7 +47,17 @@ class _PlayListProviderState extends State<PlayListPage> {
         log.d("初始化全部歌单列表");
         await playListProvider.init(folderProvider);
       }
+      if (!context.mounted) return;
       playListProvider.clearPlaybackQueueOverride();
+      if (!mounted) return;
+      if (widget.openSearchOnOpen) {
+        if (!context.mounted) return;
+        final sorted = _getFilteredAndSortedSongs(playListProvider.playList);
+        showSearch(
+          context: context,
+          delegate: SongSearchDelegate(sorted, playListProvider),
+        );
+      }
     });
   }
 

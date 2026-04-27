@@ -1592,7 +1592,7 @@ class _SongPageState extends State<SongPage> {
                         builder: (context, snapshot) {
                           final isPlayingNow = snapshot.data ?? false;
                           return GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               if (isPlayingNow) {
                                 MusicService().pause();
                               } else {
@@ -1605,8 +1605,10 @@ class _SongPageState extends State<SongPage> {
                                   MusicService().seek(_currentPosition);
                                   MusicService().resume();
                                 } else {
-                                  // 播放新歌曲
-                                  MusicService().playSong(currentSong);
+                                  // 播放新歌曲（不经过 [playAt] 时需补记最近播放）
+                                  await MusicService().playSong(currentSong);
+                                  if (!context.mounted) return;
+                                  await playListProvider.recordRecentForCurrent();
                                 }
                               }
                             },

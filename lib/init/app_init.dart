@@ -82,15 +82,18 @@ class AppInit {
       }
     }
     
-    try {
-      await Hive.openBox(Constant.hiveFolderBox);
-    } catch (e) {
-      log.w("打开 ${Constant.hiveFolderBox} box 失败，尝试删除并重新创建: $e");
+    // 与 FolderProvider 使用同一泛型，避免已打开时因类型再 close/reopen
+    if (!Hive.isBoxOpen(Constant.hiveFolderBox)) {
       try {
-        await Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
-        await Hive.openBox(Constant.hiveFolderBox);
-      } catch (_) {
-        // 忽略删除失败的错误
+        await Hive.openBox<Folder>(Constant.hiveFolderBox);
+      } catch (e) {
+        log.w("打开 ${Constant.hiveFolderBox} box 失败，尝试删除并重新创建: $e");
+        try {
+          await Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
+          await Hive.openBox<Folder>(Constant.hiveFolderBox);
+        } catch (_) {
+          // 忽略删除失败的错误
+        }
       }
     }
   }

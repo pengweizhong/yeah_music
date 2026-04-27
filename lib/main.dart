@@ -30,9 +30,10 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
   
-  AppInit appInit = AppInit();
+  final appInit = AppInit();
   appInit.initJustAudioKit();
-  appInit.initHive();
+  // 必须 await：否则 FolderProvider 等与 initHive 竞态，deleteBoxFromDisk 会关掉 Provider 已持有的 Box
+  await appInit.initHive();
   runApp(
     MultiProvider(
       providers: [

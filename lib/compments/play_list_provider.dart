@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -9,6 +8,7 @@ import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/models/constants.dart';
@@ -62,6 +62,46 @@ class PlayListProvider extends ChangeNotifier {
 
   bool get hasPlaybackQueueOverride => _playbackQueueOverride != null;
 
+  /// 本地已扫描目录的合并曲库（不受 [_playbackQueueOverride] 影响）
+  List<Song> get libraryMergedSongs {
+    return folderPlaylistMap.values.expand((l) => l).toList();
+  }
+
+  /// 在合并曲库中按路径查 [Song]（与当前播放队列是否被歌单覆盖无关）
+  Song? songInLibraryByPath(String path) {
+    for (final s in libraryMergedSongs) {
+      if (s.path == path) return s;
+    }
+    return null;
+  }
+
+  int indexInLibraryByPath(String path) {
+    return libraryMergedSongs.indexWhere((s) => s.path == path);
+  }
+
+  /// 将 [paths] 顺序解析为曲库 [Song]；严格保持 [paths] 的先后（即最近播放在服务中的顺序），不在此重排
+  /// [maxSongs] 为 null 时不截断
+  List<Song> resolveRecentSongsFromPaths(
+    List<String> paths, {
+    int? maxSongs,
+  }) {
+    if (!_initialized) return [];
+    if (maxSongs != null && maxSongs <= 0) return [];
+    final byPath = <String, Song>{};
+    for (final s in libraryMergedSongs) {
+      byPath[s.path] = s;
+    }
+    final out = <Song>[];
+    for (final path in paths) {
+      final s = byPath[path];
+      if (s != null) {
+        out.add(s);
+        if (maxSongs != null && out.length >= maxSongs) break;
+      }
+    }
+    return out;
+  }
+
   /// 把所有文件夹里的歌曲合并成一个大列表（使用缓存优化性能），
   /// 若已设置 [_playbackQueueOverride] 则返回覆盖队列。
   List<Song> get playList {
@@ -85,7 +125,10 @@ class PlayListProvider extends ChangeNotifier {
     _shuffledIndices = null;
     _shuffledPlayedIndices = [];
     notifyListeners();
-    await MusicService().playSong(_playbackQueueOverride![_currentIndex]);
+    final song = _playbackQueueOverride![_currentIndex];
+    await MusicService().playSong(song);
+    await RecentPlayService.recordPath(song.path);
+    notifyListeners();
   }
 
   /// 恢复为曲库合并队列；可选按当前播放曲目的路径在全库中定位索引。
@@ -305,16 +348,27 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 将当前曲目写入最近播放并通知（用于直调 [MusicService.playSong] 而未经过 [playAt] 的场景）
+  Future<void> recordRecentForCurrent() async {
+    final s = currentSong;
+    if (s == null) return;
+    await RecentPlayService.recordPath(s.path);
+    notifyListeners();
+  }
+
   /// 播放指定索引
   Future<void> playAt(int index) async {
     final list = playList;
     if (list.isEmpty) return;
     _currentIndex = index.clamp(0, list.length - 1);
     notifyListeners();
-    await MusicService().playSong(list[_currentIndex]);
+    final playing = list[_currentIndex];
+    await MusicService().playSong(playing);
+    await RecentPlayService.recordPath(playing.path);
     if (_playbackQueueOverride == null) {
       await _saveCurrentIndex();
     }
+    notifyListeners();
   }
 
   /// 设置播放模式

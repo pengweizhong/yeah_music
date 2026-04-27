@@ -21,16 +21,19 @@ class FolderProvider extends ChangeNotifier {
   late Box<Folder>? _box;
   bool _initialized = false;
 
-  List<Folder> get folders => _box?.values.toList() ?? [];
+  List<Folder> get folders {
+    if (_box == null || !_box!.isOpen) return [];
+    return _box!.values.toList();
+  }
 
   bool get initialized => _initialized;
 
   /// 初始化 Hive Box
   Future<void> init() async {
-    if (_initialized) {
+    if (_initialized && _box != null && _box!.isOpen) {
       return;
     }
-    _box = await HiveUtils.openBox(Constant.hiveFolderBox);
+    _box = await HiveUtils.openBox<Folder>(Constant.hiveFolderBox);
     _initialized = true;
     notifyListeners();
   }
