@@ -7,7 +7,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/models/constants.dart';
 
@@ -36,10 +38,15 @@ class PlayListProvider extends ChangeNotifier {
 
   PlaybackMode get playbackMode => _playbackMode;
 
-  /// 定时关闭时长（分钟）
+  /// 定时关闭时长（分钟，最近一次选择）
   int _timerDuration = 30;
 
   int get timerDuration => _timerDuration;
+
+  /// 应用级定时关闭（同一会话内离开播放页仍有效，进程退出后清除）
+  Timer? _sleepShutdownTimer;
+
+  bool get isSleepTimerActive => _sleepShutdownTimer != null;
 
   /// 随机播放时的已播放列表
   List<int> _shuffledPlayedIndices = [];
@@ -165,6 +172,7 @@ class PlayListProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _sleepShutdownTimer?.cancel();
     _playerCompletionSubscription?.cancel();
     super.dispose();
   }
@@ -325,9 +333,31 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 设置定时关闭时长
+  /// 设置定时关闭时长（仅更新数值，不启动计时）
   void setTimerDuration(int minutes) {
     _timerDuration = minutes;
+    notifyListeners();
+  }
+
+  /// 启动应用级定时关闭，到期暂停播放
+  void startSleepTimer(int minutes) {
+    _sleepShutdownTimer?.cancel();
+    _timerDuration = minutes;
+    SettingsService.saveTimerDuration(minutes);
+    _sleepShutdownTimer = Timer(Duration(minutes: minutes), () {
+      _sleepShutdownTimer = null;
+      MusicService().pause();
+      appScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text('定时关闭：已播放 $minutes 分钟')),
+      );
+      notifyListeners();
+    });
+    notifyListeners();
+  }
+
+  void cancelSleepTimer() {
+    _sleepShutdownTimer?.cancel();
+    _sleepShutdownTimer = null;
     notifyListeners();
   }
 

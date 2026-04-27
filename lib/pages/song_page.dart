@@ -63,10 +63,6 @@ class _SongPageState extends State<SongPage> {
   int _currentPage = 0; // 0=封皮，1=歌词
   bool _pageStateLoaded = false; // 标记页面状态是否已加载
 
-  // 定时关闭相关
-  Timer? _shutdownTimer;
-  bool _isTimerActive = false;
-
   // 手动滚动控制
   bool _isManualScrolling = false;
   Timer? _scrollTimer;
@@ -205,7 +201,6 @@ class _SongPageState extends State<SongPage> {
     _durationSubscription?.cancel();
     _scrollController.dispose();
     _pageController.dispose();
-    _shutdownTimer?.cancel();
     _scrollTimer?.cancel();
     _scrollTimer?.cancel();
     // 延迟保存设置，避免在dispose时访问已关闭的box
@@ -798,14 +793,72 @@ class _SongPageState extends State<SongPage> {
     );
   }
 
+  static const _presetTimerMinutes = [15, 30, 45, 60, 90, 120];
+  static const int _customTimerMinMinutes = 1;
+  static const int _customTimerMaxMinutes = 600;
+
+  /// 自定义定时分钟数（返回 null 表示取消）
+  Future<int?> _promptCustomTimerMinutes(
+    BuildContext dialogContext,
+    int initialMinutes,
+  ) {
+    final controller = TextEditingController(
+      text: initialMinutes > 0 ? '$initialMinutes' : '',
+    );
+    return showDialog<int>(
+      context: dialogContext,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('自定义时间'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: '分钟',
+              hintText: '$_customTimerMinMinutes–$_customTimerMaxMinutes',
+            ),
+            autofocus: true,
+            onSubmitted: (_) => _submitCustomTimer(ctx, controller),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => _submitCustomTimer(ctx, controller),
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    ).whenComplete(controller.dispose);
+  }
+
+  void _submitCustomTimer(BuildContext ctx, TextEditingController c) {
+    final v = int.tryParse(c.text.trim());
+    if (v == null || v < _customTimerMinMinutes || v > _customTimerMaxMinutes) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(
+          content: Text(
+            '请输入 $_customTimerMinMinutes–$_customTimerMaxMinutes 之间的整数',
+          ),
+        ),
+      );
+      return;
+    }
+    Navigator.pop(ctx, v);
+  }
+
   // 显示定时关闭弹窗
   void _showTimerSheet(BuildContext context, PlayListProvider provider) {
-    final durations = [15, 30, 45, 60, 90, 120];
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      builder: (_) {
+      builder: (sheetContext) {
+        final isCustom = provider.isSleepTimerActive &&
+            !_presetTimerMinutes.contains(provider.timerDuration);
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -821,29 +874,50 @@ class _SongPageState extends State<SongPage> {
                 child: ListView(
                   shrinkWrap: true,
                   children: [
-                    if (_isTimerActive)
+                    if (provider.isSleepTimerActive)
                       ListTile(
                         leading: const Icon(Icons.timer_off),
                         title: const Text('取消定时关闭'),
                         onTap: () {
-                          _cancelTimer();
-                          Navigator.pop(context);
+                          provider.cancelSleepTimer();
+                          Navigator.pop(sheetContext);
                         },
                       ),
-                    ...durations.map((minutes) {
+                    ..._presetTimerMinutes.map((minutes) {
                       return ListTile(
                         leading: const Icon(Icons.timer),
                         title: Text('$minutes 分钟'),
-                        trailing:
-                            provider.timerDuration == minutes && _isTimerActive
+                        trailing: provider.timerDuration == minutes &&
+                                provider.isSleepTimerActive
                             ? const Icon(Icons.check, color: Colors.blue)
                             : null,
                         onTap: () {
-                          _startTimer(minutes, provider);
-                          Navigator.pop(context);
+                          _startSleepTimer(minutes, provider);
+                          Navigator.pop(sheetContext);
                         },
                       );
                     }),
+                    ListTile(
+                      leading: const Icon(Icons.edit_outlined),
+                      title: const Text('自定义时间'),
+                      subtitle: isCustom
+                          ? Text('当前 ${provider.timerDuration} 分钟')
+                          : null,
+                      trailing: isCustom
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : null,
+                      onTap: () async {
+                        final minutes = await _promptCustomTimerMinutes(
+                          sheetContext,
+                          provider.timerDuration,
+                        );
+                        if (!mounted || minutes == null) return;
+                        _startSleepTimer(minutes, provider);
+                        if (sheetContext.mounted) {
+                          Navigator.pop(sheetContext);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -854,31 +928,9 @@ class _SongPageState extends State<SongPage> {
     );
   }
 
-  // 启动定时关闭
-  void _startTimer(int minutes, PlayListProvider provider) {
-    _cancelTimer();
-    provider.setTimerDuration(minutes);
-    SettingsService.saveTimerDuration(minutes);
-    _isTimerActive = true;
-    _shutdownTimer = Timer(Duration(minutes: minutes), () {
-      MusicService().pause();
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('定时关闭：已播放 $minutes 分钟')));
-      }
-      _isTimerActive = false;
-      setState(() {});
-    });
-    setState(() {});
-  }
-
-  // 取消定时关闭
-  void _cancelTimer() {
-    _shutdownTimer?.cancel();
-    _shutdownTimer = null;
-    _isTimerActive = false;
-    setState(() {});
+  /// 定时关闭由 [PlayListProvider] 持有，避免离开播放页后 [Timer] 被 dispose 取消
+  void _startSleepTimer(int minutes, PlayListProvider provider) {
+    provider.startSleepTimer(minutes);
   }
 
   Duration _effectivePosition() => _isSeeking ? _seekPreview : _currentPosition;
@@ -1531,15 +1583,19 @@ class _SongPageState extends State<SongPage> {
                       // 定时关闭按钮
                       IconButton(
                         icon: Icon(
-                          _isTimerActive ? Icons.timer_off : Icons.timer,
+                          playListProvider.isSleepTimerActive
+                              ? Icons.timer_off
+                              : Icons.timer,
                         ),
-                        color: _isTimerActive
+                        color: playListProvider.isSleepTimerActive
                             ? Theme.of(context).colorScheme.primary
                             : null,
                         onPressed: () {
                           _showTimerSheet(context, playListProvider);
                         },
-                        tooltip: _isTimerActive ? '取消定时关闭' : '定时关闭',
+                        tooltip: playListProvider.isSleepTimerActive
+                            ? '取消定时关闭'
+                            : '定时关闭',
                       ),
                       IconButton(
                         icon: const Icon(Icons.playlist_add),

@@ -7,6 +7,7 @@ import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
 
+import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
@@ -59,6 +60,7 @@ class YeahMusicApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: appScaffoldMessengerKey,
       // 去掉右上角的 "Debug" 标签
       debugShowCheckedModeBanner: false,
       // 设置应用的首页
