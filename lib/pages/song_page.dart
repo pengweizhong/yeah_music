@@ -20,8 +20,9 @@ var log = Logger(printer: SimplePrinter());
 
 class SongPage extends StatefulWidget {
   int index;
+  final int initialPage;
 
-  SongPage({super.key, required this.index});
+  SongPage({super.key, required this.index, this.initialPage = 0});
 
   @override
   State<StatefulWidget> createState() {
@@ -55,8 +56,7 @@ class _SongPageState extends State<SongPage> {
   DateTime? _ignoreStalePositionUntil;
   Duration _seekPreview = Duration.zero;
 
-  // 滑动视图：0=封皮，1=歌词（反转顺序，左滑显示封面，右滑显示歌词）
-  final PageController _pageController = PageController(initialPage: 0);
+  late final PageController _pageController;
   int _currentPage = 0; // 0=封皮，1=歌词
   bool _pageStateLoaded = false; // 标记页面状态是否已加载
 
@@ -72,6 +72,9 @@ class _SongPageState extends State<SongPage> {
   void initState() {
     super.initState();
     _settings = LyricSettings(); // 初始化默认设置
+    final initialPage = widget.initialPage.clamp(0, 1);
+    _currentPage = initialPage;
+    _pageController = PageController(initialPage: initialPage);
     _loadSettings();
     _listenToPlayer();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -115,6 +118,7 @@ class _SongPageState extends State<SongPage> {
       final savedPage = box.get('last_song_page', defaultValue: 0) as int?;
       if (savedPage != null && savedPage >= 0 && savedPage <= 1) {
         _pageStateLoaded = true;
+        if (savedPage == _currentPage) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _pageController.hasClients) {
             _pageController.jumpToPage(savedPage);

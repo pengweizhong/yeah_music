@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/hive_utils.dart';
 
 /// 迷你播放器组件 - 显示在底部的正在播放栏
 class MiniPlayer extends StatelessWidget {
@@ -17,9 +19,9 @@ class MiniPlayer extends StatelessWidget {
         if (!playListProvider.initialized) {
           return const SizedBox.shrink();
         }
-        
+
         final currentSong = playListProvider.currentSong;
-        
+
         // 如果没有歌曲，不显示
         if (currentSong == null || playListProvider.playList.isEmpty) {
           return const SizedBox.shrink();
@@ -30,7 +32,7 @@ class MiniPlayer extends StatelessWidget {
           initialData: MusicService.isPlaying,
           builder: (context, snapshot) {
             final isPlaying = snapshot.data ?? false;
-            
+
             return Container(
               height: 80,
               decoration: BoxDecoration(
@@ -46,17 +48,28 @@ class MiniPlayer extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {
-                    // 点击跳转到播放页面
+                  onTap: () async {
+                    final box = await HiveUtils.openBox<dynamic>(
+                      Constant.hiveRootPath,
+                    );
+                    final savedPage =
+                        box.get('last_song_page', defaultValue: 0) as int? ?? 0;
+                    if (!context.mounted) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SongPage(index: playListProvider.currentIndex),
+                        builder: (context) => SongPage(
+                          index: playListProvider.currentIndex,
+                          initialPage: savedPage.clamp(0, 1),
+                        ),
                       ),
                     );
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         // 封面
@@ -71,7 +84,9 @@ class MiniPlayer extends StatelessWidget {
                             ),
                             child: Image(
                               fit: BoxFit.cover,
-                              image: ApplicationUtils.getImageCoverProvider(currentSong),
+                              image: ApplicationUtils.getImageCoverProvider(
+                                currentSong,
+                              ),
                             ),
                           ),
                         ),
@@ -144,4 +159,3 @@ class MiniPlayer extends StatelessWidget {
     );
   }
 }
-
