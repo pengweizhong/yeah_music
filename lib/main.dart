@@ -21,6 +21,7 @@ import 'navigation/app_route_observer.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
 import 'compments/user_playlist_provider.dart';
+import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 
 void main() {
   appLog.i('应用正在启动');
@@ -240,6 +241,11 @@ class YeahMusicApp extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale.resolvedLocale,
+          builder: (context, child) {
+            return MacosMenuBarLyricsHost(
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: const WelcomeEntryPage(),
           theme: AppMaterialThemes.light,
           darkTheme: AppMaterialThemes.dark,

@@ -204,6 +204,30 @@ abstract class AppLocalizations {
   /// **'Sign in and set music root; files cache locally for playback'**
   String get settingsOneDriveDesc;
 
+  /// No description provided for @settingsMacosMenuBarLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu bar lyrics'**
+  String get settingsMacosMenuBarLyrics;
+
+  /// No description provided for @settingsMacosMenuBarLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show current track and lyrics in the macOS menu bar (single line)'**
+  String get settingsMacosMenuBarLyricsDesc;
+
+  /// No description provided for @menuBarLyricsIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yeah Music · Not playing'**
+  String get menuBarLyricsIdle;
+
+  /// No description provided for @menuBarLyricsNoLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics'**
+  String get menuBarLyricsNoLyrics;
+
   /// No description provided for @oneDriveSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -1253,6 +1277,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not add folder: {error}'**
   String folderAddErrorMessage(String error);
+
+  /// No description provided for @folderAddNoSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder was selected.'**
+  String get folderAddNoSelection;
 
   /// No description provided for @folderRenameDialogTitle.
   ///

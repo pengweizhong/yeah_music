@@ -60,6 +60,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsOneDriveDesc => '登录并设置音乐根目录；播放时缓存到本地';
 
   @override
+  String get settingsMacosMenuBarLyrics => '菜单栏歌词';
+
+  @override
+  String get settingsMacosMenuBarLyricsDesc =>
+      '在 macOS 菜单栏展示当前曲目与歌词（单行，类似桌面歌词精简版）';
+
+  @override
+  String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
+
+  @override
+  String get menuBarLyricsNoLyrics => '暂无歌词';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
@@ -623,6 +636,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String folderAddErrorMessage(String error) {
     return '加载文件夹失败：$error';
   }
+
+  @override
+  String get folderAddNoSelection => '未选择文件夹（已取消或关闭选择框）。';
 
   @override
   String get folderRenameDialogTitle => '重命名文件夹';
@@ -1055,6 +1071,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsOneDriveDesc => '登录并设置音乐根目录；播放时缓存到本地';
 
   @override
+  String get settingsMacosMenuBarLyrics => '菜单栏歌词';
+
+  @override
+  String get settingsMacosMenuBarLyricsDesc =>
+      '在 macOS 菜单栏展示当前曲目与歌词（单行，类似桌面歌词精简版）';
+
+  @override
+  String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
+
+  @override
+  String get menuBarLyricsNoLyrics => '暂无歌词';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
@@ -1620,6 +1649,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get folderAddNoSelection => '未选择文件夹（已取消或关闭选择框）。';
+
+  @override
   String get folderRenameDialogTitle => '重命名文件夹';
 
   @override
@@ -2048,6 +2080,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsOneDriveDesc => '登入並設定音樂根目錄；播放時快取到本機';
+
+  @override
+  String get settingsMacosMenuBarLyrics => '選單列歌詞';
+
+  @override
+  String get settingsMacosMenuBarLyricsDesc => '在 macOS 選單列顯示目前曲目與歌詞（單行）';
+
+  @override
+  String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
+
+  @override
+  String get menuBarLyricsNoLyrics => '無歌詞';
 
   @override
   String get oneDriveSettingsTitle => 'OneDrive';
@@ -2613,6 +2657,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String folderAddErrorMessage(String error) {
     return '載入資料夾失敗：$error';
   }
+
+  @override
+  String get folderAddNoSelection => '未選擇資料夾（已取消或關閉選擇框）。';
 
   @override
   String get folderRenameDialogTitle => '重新命名資料夾';

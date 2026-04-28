@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
@@ -300,8 +301,8 @@ class FolderPageSettings extends StatelessWidget {
             ),
             floatingActionButton: FloatingActionButton(
               child: const Icon(Icons.add),
-              onPressed: () {
-                _showAddFolderDialog(context, folderProvider);
+              onPressed: () async {
+                await _showAddFolderDialog(context, folderProvider);
               },
             ),
           ),
@@ -310,99 +311,127 @@ class FolderPageSettings extends StatelessWidget {
     );
   }
 
-  void _showAddFolderDialog(BuildContext context, FolderProvider provider) async {
+  Future<void> _showAddFolderDialog(
+    BuildContext context,
+    FolderProvider provider,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    // 打开系统文件夹选择器
+    // 打开系统文件夹选择器（async void + 漏注册 Channel 时会静默 MissingPluginException）
     String? selectedDirectory;
-    if (Platform.isMacOS) {
-      selectedDirectory = await BookmarkService.pickDirectory();
-    } else {
-      selectedDirectory = await FilePicker.platform.getDirectoryPath();
-    }
-    if (selectedDirectory != null) {
-      showFrostedDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        child: PopScope(
-          canPop: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.folderAddLoadingTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.folderScanningWait,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, height: 1.3),
-                ),
-              ],
-            ),
+    try {
+      if (Platform.isMacOS) {
+        selectedDirectory = await BookmarkService.pickDirectory();
+      } else {
+        selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      }
+    } on PlatformException catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${l10n.folderAddErrorTitle}: ${e.message ?? e.code}',
           ),
+          duration: const Duration(seconds: 4),
         ),
       );
+      return;
+    }
 
-      try {
-        // 这里可以从路径自动获取文件夹名称，也可以自己输入名称
-        Folder? addFolder = await provider.addFolder(selectedDirectory);
+    if (!context.mounted) return;
+    if (selectedDirectory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.folderAddNoSelection),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
 
-        // 关闭进度对话框
-        Navigator.of(context).pop();
-
-        if (addFolder == null) {
-          ApplicationUtils.alertDialog(
-            context,
-            l10n.folderDuplicateDialogTitle,
-            [Text(l10n.folderDuplicateMessage(selectedDirectory))],
-            [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.actionGotIt),
+    showFrostedDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      child: PopScope(
+        canPop: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.folderAddLoadingTitle,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                l10n.folderScanningWait,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, height: 1.3),
               ),
             ],
-          );
-        } else {
-          //通知歌单更新
-          final playListProvider = context.read<PlayListProvider>();
-          playListProvider.flushAddPlaylist(addFolder);
+          ),
+        ),
+      ),
+    );
 
-          // 显示成功提示
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.folderAddOk(addFolder.songList?.length ?? 0),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } catch (e) {
-        // 关闭进度对话框
-        Navigator.of(context).pop();
+    try {
+      // 这里可以从路径自动获取文件夹名称，也可以自己输入名称
+      final path = selectedDirectory;
+      Folder? addFolder = await provider.addFolder(path);
 
-        // 显示错误提示
+      // 关闭进度对话框
+      Navigator.of(context).pop();
+
+      if (addFolder == null) {
         ApplicationUtils.alertDialog(
           context,
-          l10n.folderAddErrorTitle,
-          [Text(l10n.folderAddErrorMessage('$e'))],
+          l10n.folderDuplicateDialogTitle,
+          [Text(l10n.folderDuplicateMessage(path))],
           [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(l10n.actionOK),
+              child: Text(l10n.actionGotIt),
             ),
           ],
         );
+      } else {
+        //通知歌单更新
+        final playListProvider = context.read<PlayListProvider>();
+        playListProvider.flushAddPlaylist(addFolder);
+
+        // 显示成功提示
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.folderAddOk(addFolder.songList?.length ?? 0),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
+    } catch (e) {
+      // 关闭进度对话框
+      Navigator.of(context).pop();
+
+      // 显示错误提示
+      ApplicationUtils.alertDialog(
+        context,
+        l10n.folderAddErrorTitle,
+        [Text(l10n.folderAddErrorMessage('$e'))],
+        [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.actionOK),
+          ),
+        ],
+      );
     }
   }
 

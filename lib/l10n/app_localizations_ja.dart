@@ -61,6 +61,19 @@ class AppLocalizationsJa extends AppLocalizations {
       'Microsoft にサインインし、音楽のルートを設定。再生時にローカルにキャッシュします。';
 
   @override
+  String get settingsMacosMenuBarLyrics => 'メニューバーに歌詞';
+
+  @override
+  String get settingsMacosMenuBarLyricsDesc =>
+      '現在の楽曲と歌詞を macOS メニューバーに表示します（1 行）。';
+
+  @override
+  String get menuBarLyricsIdle => 'Yeah Music · 再生していません';
+
+  @override
+  String get menuBarLyricsNoLyrics => '歌詞がありません';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
@@ -625,6 +638,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String folderAddErrorMessage(String error) {
     return 'フォルダを追加できませんでした：$error';
   }
+
+  @override
+  String get folderAddNoSelection => 'フォルダが選択されていません。';
 
   @override
   String get folderRenameDialogTitle => 'フォルダ名を変更';

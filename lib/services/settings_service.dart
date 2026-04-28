@@ -19,6 +19,9 @@ class SettingsService {
   static const String _oneDriveCloudSortTypeKey = 'onedrive_cloud_sort_type';
   static const String _oneDriveCloudSortAscKey = 'onedrive_cloud_sort_asc';
 
+  /// macOS 是否在菜单栏显示当前歌词。
+  static const String _macosMenuBarLyricsKey = 'macos_menu_bar_lyrics';
+
   /// OneDrive 云端曲库列表的排序偏好。
   static Future<({CloudTrackSortType type, bool asc})> loadOneDriveCloudListSort() async {
     try {
@@ -289,6 +292,28 @@ class SettingsService {
         } else {
           await box.put(_oneDriveIndexAtKey, t.toIso8601String());
         }
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadMacosMenuBarLyricsEnabled() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return box.get(_macosMenuBarLyricsKey, defaultValue: false) as bool? ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<void> saveMacosMenuBarLyricsEnabled(bool enabled) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_macosMenuBarLyricsKey, enabled);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_macosMenuBarLyricsKey, enabled);
       } catch (_) {}
     }
   }

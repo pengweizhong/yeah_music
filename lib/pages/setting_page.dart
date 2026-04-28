@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/disk_space.dart';
@@ -7,6 +10,8 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
+import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
+import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
@@ -63,6 +68,7 @@ class SettingPage extends StatelessWidget {
                     );
                   },
                 ),
+                if (!kIsWeb && Platform.isMacOS) const _MacosMenuBarLyricsSettingTile(),
                 ExpansionTile(
                   title: Text(l10n.settingsSystemInfo, style: TextStyle(color: context.gradFg())),
                   subtitle: Text(l10n.settingsSystemInfoDesc, style: TextStyle(color: context.gradFg(0.6))),
@@ -85,6 +91,60 @@ class SettingPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MacosMenuBarLyricsSettingTile extends StatefulWidget {
+  const _MacosMenuBarLyricsSettingTile();
+
+  @override
+  State<_MacosMenuBarLyricsSettingTile> createState() => _MacosMenuBarLyricsSettingTileState();
+}
+
+class _MacosMenuBarLyricsSettingTileState extends State<_MacosMenuBarLyricsSettingTile> {
+  bool _value = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final v = await SettingsService.loadMacosMenuBarLyricsEnabled();
+    if (!mounted) return;
+    setState(() {
+      _value = v;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _onChanged(bool v) async {
+    setState(() => _value = v);
+    await SettingsService.saveMacosMenuBarLyricsEnabled(v);
+    await MacosMenuBarLyricsGlue.reloadFromHive();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (!_loaded) {
+      return ListTile(
+        leading: Icon(Icons.more_horiz, color: context.gradFg()),
+        title: Text(l10n.settingsMacosMenuBarLyrics, style: TextStyle(color: context.gradFg())),
+        subtitle: Text(l10n.settingsMacosMenuBarLyricsDesc, style: TextStyle(color: context.gradFg(0.6))),
+      );
+    }
+    return SwitchListTile(
+      secondary: Icon(Icons.podcasts_rounded, color: context.gradFg()),
+      title: Text(l10n.settingsMacosMenuBarLyrics, style: TextStyle(color: context.gradFg())),
+      subtitle: Text(l10n.settingsMacosMenuBarLyricsDesc, style: TextStyle(color: context.gradFg(0.6))),
+      value: _value,
+      onChanged: MacosMenuBarLyrics.supported ? _onChanged : null,
+      activeThumbColor: context.gradFg(0.95),
+      activeTrackColor: context.gradFg(0.35),
     );
   }
 }

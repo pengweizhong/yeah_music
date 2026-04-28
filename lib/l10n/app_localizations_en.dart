@@ -62,6 +62,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in and set music root; files cache locally for playback';
 
   @override
+  String get settingsMacosMenuBarLyrics => 'Menu bar lyrics';
+
+  @override
+  String get settingsMacosMenuBarLyricsDesc =>
+      'Show current track and lyrics in the macOS menu bar (single line)';
+
+  @override
+  String get menuBarLyricsIdle => 'Yeah Music · Not playing';
+
+  @override
+  String get menuBarLyricsNoLyrics => 'No lyrics';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
@@ -642,6 +655,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String folderAddErrorMessage(String error) {
     return 'Could not add folder: $error';
   }
+
+  @override
+  String get folderAddNoSelection => 'No folder was selected.';
 
   @override
   String get folderRenameDialogTitle => 'Rename folder';
