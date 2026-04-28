@@ -61,9 +61,15 @@ class AppDelegate: FlutterAppDelegate {
             return false
         }
         let plugin = published as NSObject
-        let sel = NSSelectorFromString("handleGetURLEvent:withReplyEvent:")
-        guard plugin.responds(to: sel) else {
-            NSLog("YeahMusic: oauth forward skipped — plugin missing handleGetURLEvent:")
+        // Microsoft 等指标体系的授权码很长；经 Apple Event / stringValue 转发易被截断，改为直接投递 NSURL。
+        let selDirect = NSSelectorFromString("deliverOAuthRedirectURL:")
+        if plugin.responds(to: selDirect) {
+            plugin.perform(selDirect, with: url)
+            return true
+        }
+        let selAe = NSSelectorFromString("handleGetURLEvent:withReplyEvent:")
+        guard plugin.responds(to: selAe) else {
+            NSLog("YeahMusic: oauth forward skipped — plugin missing handlers")
             return false
         }
         let event = NSAppleEventDescriptor(
@@ -78,7 +84,7 @@ class AppDelegate: FlutterAppDelegate {
             forKeyword: AEKeyword(keyDirectObject)
         )
         let reply = NSAppleEventDescriptor.null()
-        plugin.perform(sel, with: event, with: reply)
+        plugin.perform(selAe, with: event, with: reply)
         return true
     }
 

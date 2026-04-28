@@ -19,6 +19,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_cached_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
@@ -232,6 +233,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _goOneDriveCachedPlaylist() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const OneDriveCachedPlaylistPage(),
+      ),
+    );
+  }
+
   void _goUserPlaylist(String playlistId) {
     Navigator.push(
       context,
@@ -318,6 +328,7 @@ class _HomePageState extends State<HomePage> {
                     onOpenRecent: _goRecentPlays,
                     onOpenCloudLibrary: _goCloudLibrary,
                     onOpenOneDrive: _goOneDrive,
+                    onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
                     onManageQuickEntry: _goQuickEntrySettings,
                     onOpenUserPlaylist: _goUserPlaylist,
                     songSubtitle: _songSecondaryLine,
@@ -364,6 +375,7 @@ class _HomeScrollBody extends StatefulWidget {
     required this.onOpenRecent,
     required this.onOpenCloudLibrary,
     required this.onOpenOneDrive,
+    required this.onOpenOneDriveCachedPlaylist,
     required this.onManageQuickEntry,
     required this.onOpenUserPlaylist,
     required this.songSubtitle,
@@ -384,6 +396,7 @@ class _HomeScrollBody extends StatefulWidget {
   final VoidCallback onOpenRecent;
   final VoidCallback onOpenCloudLibrary;
   final VoidCallback onOpenOneDrive;
+  final VoidCallback onOpenOneDriveCachedPlaylist;
   final VoidCallback onManageQuickEntry;
   final void Function(String playlistId) onOpenUserPlaylist;
   final String Function(Song) songSubtitle;
@@ -535,6 +548,16 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               Icons.cloud_rounded,
               const Color(0xFF0078D4),
               widget.onOpenOneDrive,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idOneDriveCachePlaylist:
+          entries.add(
+            _QuickItem(
+              l10n.homeEntryOneDriveCachePlaylist,
+              Icons.download_done_rounded,
+              const Color(0xFF00897B),
+              widget.onOpenOneDriveCachedPlaylist,
             ),
           );
           break;

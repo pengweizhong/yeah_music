@@ -22,6 +22,7 @@ import 'package:yeah_music/welcome/pre_hive_startup_view.dart';
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
 import 'compments/onedrive_controller.dart';
+import 'compments/onedrive_download_queue_controller.dart';
 import 'navigation/app_route_observer.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/playback_shortcut_controller.dart';
@@ -250,6 +251,14 @@ class _AppStartupGateState extends State<AppStartupGate>
             final c = OneDriveController();
             c.loadFromStorage();
             return c;
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (context) {
+            final od = context.read<OneDriveController>();
+            final q = OneDriveDownloadQueueController(oneDrive: od);
+            unawaited(q.restorePersistedTasks());
+            return q;
           },
         ),
         ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),

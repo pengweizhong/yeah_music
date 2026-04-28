@@ -73,7 +73,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsOneDriveDesc =>
-      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹（预留备份）与本地下载目录；云端曲库浏览不变，播放缓存仍在应用数据目录。';
+      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹与本地下载目录；点播时若自定义目录存在则写入该处，否则使用应用数据下的默认存储。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快捷键';
@@ -383,7 +383,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveLocalDownloadTitle => '本地下载目录';
 
   @override
-  String get oneDriveLocalDownloadSubtitle => '预留：从 OneDrive 整曲下载到设备。';
+  String get oneDriveLocalDownloadSubtitle =>
+      '从云端点播时：若此处路径存在则保存到该文件夹；未指定或路径不存在时使用下方默认存储空间。';
 
   @override
   String get oneDriveLocalDownloadUnset => '未设置（后续将使用默认路径）';
@@ -446,7 +447,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveRedirectCopied => '已复制';
 
   @override
-  String get oneDriveCacheNote => '播放时的音频缓存在应用数据目录（与上方本地下载目录不同）。';
+  String get oneDriveCacheNote =>
+      '默认存储为应用数据下的 onedrive_cache；仅当上方自定义文件夹存在且为目录时才写入该处。';
 
   @override
   String get oneDriveOpenBrowser => '打开 OneDrive';
@@ -467,6 +469,67 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDrivePreparing => '正在准备…';
 
   @override
+  String get oneDriveDownloadQueueTitle => 'OneDrive 下载队列';
+
+  @override
+  String get oneDriveDownloadPause => '暂停';
+
+  @override
+  String get oneDriveDownloadResume => '继续';
+
+  @override
+  String get oneDriveDownloadStopAll => '全部停止';
+
+  @override
+  String get oneDriveDownloadContinueAll => '全部继续';
+
+  @override
+  String get oneDriveDownloadAutoPlayWhenDone => '队列全部完成后自动播放';
+
+  @override
+  String get oneDriveDownloadPlayDownloaded => '播放已下载的歌曲';
+
+  @override
+  String get oneDriveDownloadStatusPending => '等待中';
+
+  @override
+  String get oneDriveDownloadStatusDownloading => '下载中';
+
+  @override
+  String get oneDriveDownloadStatusDone => '已完成';
+
+  @override
+  String get oneDriveDownloadStatusFailed => '失败';
+
+  @override
+  String get oneDriveDownloadStatusCancelled => '已取消';
+
+  @override
+  String get oneDriveDownloadCloseJustPanel => '关闭面板（下载继续在后台）';
+
+  @override
+  String get oneDriveDownloadQueueEmpty =>
+      '暂无批量下载任务。\n在云端曲库或 OneDrive 浏览器中使用「播放全部」即可在此查看；关闭抽屉不会中断下载。';
+
+  @override
+  String get oneDriveDownloadQueuePageHint => '在此暂停、继续或停止批量下载。关闭抽屉不会取消后台任务。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '查看与控制批量下载与播放';
+
+  @override
+  String get oneDriveDownloadQueueTooltip => '下载队列';
+
+  @override
+  String get oneDriveEnqueueBackground => '已加入下载队列，可继续使用应用；完成后请在下载队列中播放。';
+
+  @override
+  String get oneDriveDownloadViewQueue => '查看队列';
+
+  @override
+  String get oneDriveDownloadClearHistory => '清空记录';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive 错误：$message';
   }
@@ -479,11 +542,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
-      '添加的文件夹会递归扫描出音频列表；点曲目再从云端下载，已缓存的会直接本地播放。';
+      '添加的文件夹会递归扫描出音频列表；点曲目按需下载（自定义目录存在则用该目录，否则用默认缓存），已下载的可离线播放。';
 
   @override
   String get oneDriveCloudLibraryEmpty =>
       '还没有索引。\n请先点「在网盘中选择文件夹」，选好一个或多个音乐目录后，再点「重新扫描」。';
+
+  @override
+  String get oneDriveCachedPlaylistTitle => 'OneDrive · 缓存下载';
+
+  @override
+  String get oneDriveCachedPlaylistEmpty =>
+      '暂无从 OneDrive 下载到本机的曲目。请在云端曲库点播歌曲；文件会保存到应用缓存或你设置的本地下载目录。';
 
   @override
   String get oneDriveIndexRootsLabel => '已索引目录';
@@ -707,7 +777,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeSearchTooltip => '搜索';
 
   @override
-  String get homeQuickEntryEmpty => '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等';
+  String get homeQuickEntryEmpty => '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单、OneDrive 缓存歌单等';
 
   @override
   String get homeEntryLibrary => '本地曲库';
@@ -723,6 +793,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeEntryCloudLibrary => '云端曲库';
+
+  @override
+  String get homeEntryOneDriveCachePlaylist => '缓存歌单';
 
   @override
   String get homeSectionQuickEntry => '快捷入口';
@@ -1410,7 +1483,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get settingsOneDriveDesc =>
-      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹（预留备份）与本地下载目录；云端曲库浏览不变，播放缓存仍在应用数据目录。';
+      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹与本地下载目录；点播时若自定义目录存在则写入该处，否则使用应用数据下的默认存储。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快捷键';
@@ -1720,7 +1793,8 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveLocalDownloadTitle => '本地下载目录';
 
   @override
-  String get oneDriveLocalDownloadSubtitle => '预留：从 OneDrive 整曲下载到设备。';
+  String get oneDriveLocalDownloadSubtitle =>
+      '从云端点播时：若此处路径存在则保存到该文件夹；未指定或路径不存在时使用下方默认存储空间。';
 
   @override
   String get oneDriveLocalDownloadUnset => '未设置（后续将使用默认路径）';
@@ -1783,7 +1857,8 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveRedirectCopied => '已复制';
 
   @override
-  String get oneDriveCacheNote => '播放时的音频缓存在应用数据目录（与上方本地下载目录不同）。';
+  String get oneDriveCacheNote =>
+      '默认存储为应用数据下的 onedrive_cache；仅当上方自定义文件夹存在且为目录时才写入该处。';
 
   @override
   String get oneDriveOpenBrowser => '打开 OneDrive';
@@ -1804,6 +1879,67 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDrivePreparing => '正在准备…';
 
   @override
+  String get oneDriveDownloadQueueTitle => 'OneDrive 下载队列';
+
+  @override
+  String get oneDriveDownloadPause => '暂停';
+
+  @override
+  String get oneDriveDownloadResume => '继续';
+
+  @override
+  String get oneDriveDownloadStopAll => '全部停止';
+
+  @override
+  String get oneDriveDownloadContinueAll => '全部继续';
+
+  @override
+  String get oneDriveDownloadAutoPlayWhenDone => '队列全部完成后自动播放';
+
+  @override
+  String get oneDriveDownloadPlayDownloaded => '播放已下载的歌曲';
+
+  @override
+  String get oneDriveDownloadStatusPending => '等待中';
+
+  @override
+  String get oneDriveDownloadStatusDownloading => '下载中';
+
+  @override
+  String get oneDriveDownloadStatusDone => '已完成';
+
+  @override
+  String get oneDriveDownloadStatusFailed => '失败';
+
+  @override
+  String get oneDriveDownloadStatusCancelled => '已取消';
+
+  @override
+  String get oneDriveDownloadCloseJustPanel => '关闭面板（下载继续在后台）';
+
+  @override
+  String get oneDriveDownloadQueueEmpty =>
+      '暂无批量下载任务。\n在云端曲库或 OneDrive 浏览器中使用「播放全部」即可在此查看；关闭抽屉不会中断下载。';
+
+  @override
+  String get oneDriveDownloadQueuePageHint => '在此暂停、继续或停止批量下载。关闭抽屉不会取消后台任务。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '查看与控制批量下载与播放';
+
+  @override
+  String get oneDriveDownloadQueueTooltip => '下载队列';
+
+  @override
+  String get oneDriveEnqueueBackground => '已加入下载队列，可继续使用应用；完成后请在下载队列中播放。';
+
+  @override
+  String get oneDriveDownloadViewQueue => '查看队列';
+
+  @override
+  String get oneDriveDownloadClearHistory => '清空记录';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive 错误：$message';
   }
@@ -1816,11 +1952,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
-      '添加的文件夹会递归扫描出音频列表；点曲目再从云端下载，已缓存的会直接本地播放。';
+      '添加的文件夹会递归扫描出音频列表；点曲目按需下载（自定义目录存在则用该目录，否则用默认缓存），已下载的可离线播放。';
 
   @override
   String get oneDriveCloudLibraryEmpty =>
       '还没有索引。\n请先点「在网盘中选择文件夹」，选好一个或多个音乐目录后，再点「重新扫描」。';
+
+  @override
+  String get oneDriveCachedPlaylistTitle => 'OneDrive · 缓存下载';
+
+  @override
+  String get oneDriveCachedPlaylistEmpty =>
+      '暂无从 OneDrive 下载到本机的曲目。请在云端曲库点播歌曲；文件会保存到应用缓存或你设置的本地下载目录。';
 
   @override
   String get oneDriveIndexRootsLabel => '已索引目录';
@@ -2044,7 +2187,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get homeSearchTooltip => '搜索';
 
   @override
-  String get homeQuickEntryEmpty => '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单等';
+  String get homeQuickEntryEmpty => '暂无快捷入口，点击「管理」可显示本地曲库、我的歌单、OneDrive 缓存歌单等';
 
   @override
   String get homeEntryLibrary => '本地曲库';
@@ -2060,6 +2203,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get homeEntryCloudLibrary => '云端曲库';
+
+  @override
+  String get homeEntryOneDriveCachePlaylist => '缓存歌单';
 
   @override
   String get homeSectionQuickEntry => '快捷入口';
@@ -2747,7 +2893,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsOneDriveDesc =>
-      '使用 Microsoft 登入（正式版無需填寫用戶端 ID）。可選音樂瀏覽根目錄、雲端應用程式資料夾（預留備份）與本機下載目錄；雲端曲庫瀏覽不變，播放快取仍在應用程式資料目錄。';
+      '使用 Microsoft 登入（正式版無需填寫用戶端 ID）。可選音樂瀏覽根目錄、雲端應用程式資料夾與本機下載目錄；點播時若自訂目錄存在則寫入該處，否則使用應用程式資料下的預設儲存。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快速鍵';
@@ -3057,7 +3203,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveLocalDownloadTitle => '本機下載目錄';
 
   @override
-  String get oneDriveLocalDownloadSubtitle => '預留：從 OneDrive 下載完整曲目到裝置。';
+  String get oneDriveLocalDownloadSubtitle =>
+      '從雲端點播時：若此處路徑存在則儲存到該資料夾；未指定或路徑不存在時使用下方預設儲存空間。';
 
   @override
   String get oneDriveLocalDownloadUnset => '未設定（稍後將使用預設路徑）';
@@ -3120,7 +3267,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveRedirectCopied => '已複製';
 
   @override
-  String get oneDriveCacheNote => '播放時的音訊快取在應用程式資料目錄（與上方本機下載目錄不同）。';
+  String get oneDriveCacheNote =>
+      '預設儲存為應用程式資料下的 onedrive_cache；僅當上方自訂資料夾存在且為目錄時才寫入該處。';
 
   @override
   String get oneDriveOpenBrowser => '開啟 OneDrive';
@@ -3141,6 +3289,67 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDrivePreparing => '準備中…';
 
   @override
+  String get oneDriveDownloadQueueTitle => 'OneDrive 下載佇列';
+
+  @override
+  String get oneDriveDownloadPause => '暫停';
+
+  @override
+  String get oneDriveDownloadResume => '繼續';
+
+  @override
+  String get oneDriveDownloadStopAll => '全部停止';
+
+  @override
+  String get oneDriveDownloadContinueAll => '全部繼續';
+
+  @override
+  String get oneDriveDownloadAutoPlayWhenDone => '佇列全部完成後自動播放';
+
+  @override
+  String get oneDriveDownloadPlayDownloaded => '播放已下載的歌曲';
+
+  @override
+  String get oneDriveDownloadStatusPending => '等待中';
+
+  @override
+  String get oneDriveDownloadStatusDownloading => '下載中';
+
+  @override
+  String get oneDriveDownloadStatusDone => '已完成';
+
+  @override
+  String get oneDriveDownloadStatusFailed => '失敗';
+
+  @override
+  String get oneDriveDownloadStatusCancelled => '已取消';
+
+  @override
+  String get oneDriveDownloadCloseJustPanel => '關閉面板（下載繼續在背景）';
+
+  @override
+  String get oneDriveDownloadQueueEmpty =>
+      '尚無批量下載。\n在雲端曲庫或 OneDrive 瀏覽器使用「播放全部」後會顯示於此；關閉抽屜不會中斷下載。';
+
+  @override
+  String get oneDriveDownloadQueuePageHint => '在此暫停、繼續或停止批量下載。關閉抽屜不會取消背景任務。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '檢視與控制批量下載與播放';
+
+  @override
+  String get oneDriveDownloadQueueTooltip => '下載佇列';
+
+  @override
+  String get oneDriveEnqueueBackground => '已加入下載佇列，可繼續使用 App；完成後請在下載佇列中播放。';
+
+  @override
+  String get oneDriveDownloadViewQueue => '檢視佇列';
+
+  @override
+  String get oneDriveDownloadClearHistory => '清空紀錄';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive 錯誤：$message';
   }
@@ -3153,11 +3362,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
-      '加入的資料夾會遞迴掃描出音訊清單；點曲目再從雲端下載，已快取者將直接離線播放。';
+      '加入的資料夾會遞迴掃描出音訊清單；點曲目按需下載（自訂目錄存在則用該目錄，否則用預設快取），已下載者可離線播放。';
 
   @override
   String get oneDriveCloudLibraryEmpty =>
       '尚未建立索引。\n請先點「在網路磁碟選擇資料夾」，選好音樂目錄後再點「重新掃描」。';
+
+  @override
+  String get oneDriveCachedPlaylistTitle => 'OneDrive · 快取下載';
+
+  @override
+  String get oneDriveCachedPlaylistEmpty =>
+      '目前沒有從 OneDrive 下載到本機的歌曲。請在雲端曲庫播放；檔案會儲存在應用程式快取或你設定的本機下載目錄。';
 
   @override
   String get oneDriveIndexRootsLabel => '已索引目錄';
@@ -3381,7 +3597,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeSearchTooltip => '搜尋';
 
   @override
-  String get homeQuickEntryEmpty => '暫無捷徑，點「管理」可顯示本機曲庫、我的歌單等';
+  String get homeQuickEntryEmpty => '暫無捷徑，點「管理」可顯示本機曲庫、我的歌單、OneDrive 快取歌單等';
 
   @override
   String get homeEntryLibrary => '本機曲庫';
@@ -3397,6 +3613,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeEntryCloudLibrary => '雲端曲庫';
+
+  @override
+  String get homeEntryOneDriveCachePlaylist => '快取歌單';
 
   @override
   String get homeSectionQuickEntry => '捷徑';

@@ -548,7 +548,9 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                     await p.setPlaybackQueueAndPlay(
                       q,
                       idx,
-                      session: PlaybackSessionSurface.userPlaylist,
+                      session: userPlaylistIdForContext != null
+                          ? PlaybackSessionSurface.userPlaylist
+                          : PlaybackSessionSurface.adHoc,
                       userPlaylistId: userPlaylistIdForContext,
                     );
                     return;

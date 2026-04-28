@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
-import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
-import 'package:yeah_music/models/playback_session_surface.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
+import 'package:yeah_music/widgets/onedrive_bulk_download_sheet.dart';
 
 /// 从 [OneDriveBrowserPage] 退回时传给「添加到云端索引」的选中文件夹。
 class OneDriveFolderPickResult {
@@ -77,72 +78,63 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
   Future<void> _playFile(OneDriveGraphItem item) async {
     if (item.isFolder || !OneDriveConfig.isAudioFileName(item.name)) return;
     final l10n = AppLocalizations.of(context);
-    final od = context.read<OneDriveController>();
-    final play = context.read<PlayListProvider>();
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    final folderLabel =
+        _stack.isEmpty ? l10n.oneDriveBrowserTitle : _stack.map((e) => e.title).join(' / ');
+    await context.read<OneDriveDownloadQueueController>().enqueueGraphItems([
+      (item: item, title: item.name, subtitle: folderLabel),
+    ]);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.oneDriveEnqueueBackground),
+        action: SnackBarAction(
+          label: l10n.oneDriveDownloadViewQueue,
+          onPressed: () {
+            Navigator.push<void>(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const OneDriveDownloadQueuePage(),
+              ),
+            );
+          },
+        ),
+      ),
     );
-    try {
-      final song = await od.songForPlayableItem(item);
-      if (!mounted) return;
-      Navigator.pop(context);
-      await play.setPlaybackQueueAndPlay(
-        [song],
-        0,
-        session: PlaybackSessionSurface.adHoc,
-      );
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveError('$e'))),
-        );
-      }
-    }
   }
 
   Future<void> _playAllInFolder() async {
     final l10n = AppLocalizations.of(context);
-    final od = context.read<OneDriveController>();
-    final play = context.read<PlayListProvider>();
-    showDialog<void>(
+    final audioItems = _items
+        .where((e) => !e.isFolder && OneDriveConfig.isAudioFileName(e.name))
+        .toList();
+    if (audioItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveEmptyFolder)),
+      );
+      return;
+    }
+    final folderLabel =
+        _stack.isEmpty ? l10n.oneDriveBrowserTitle : _stack.map((e) => e.title).join(' / ');
+    final entries = audioItems
+        .map(
+          (e) => (
+            item: e,
+            title: e.name,
+            subtitle: folderLabel,
+          ),
+        )
+        .toList();
+    await showModalBottomSheet<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 16),
-            Expanded(child: Text(l10n.oneDrivePreparing)),
-          ],
-        ),
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF121418),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => OneDriveBulkDownloadSheet(
+        runBatch: (c) => c.runBatchFromGraphItems(entries),
       ),
     );
-    try {
-      final songs = await od.buildQueueForAudioItems(_items);
-      if (!mounted) return;
-      Navigator.pop(context);
-      if (songs.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveEmptyFolder)),
-        );
-        return;
-      }
-      await play.setPlaybackQueueAndPlay(
-        songs,
-        0,
-        session: PlaybackSessionSurface.adHoc,
-      );
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveError('$e'))),
-        );
-      }
-    }
   }
 
   @override
@@ -205,6 +197,19 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                 },
               ),
               actions: [
+                if (!widget.pickFolderForIndex)
+                  IconButton(
+                    tooltip: l10n.oneDriveDownloadQueueTooltip,
+                    icon: const Icon(Icons.download_for_offline_rounded),
+                    onPressed: () {
+                      Navigator.push<void>(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const OneDriveDownloadQueuePage(),
+                        ),
+                      );
+                    },
+                  ),
                 if (widget.pickFolderForIndex && _stack.isNotEmpty)
                   TextButton(
                     onPressed: _loading

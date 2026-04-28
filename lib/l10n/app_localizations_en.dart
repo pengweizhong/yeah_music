@@ -79,7 +79,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsOneDriveDesc =>
-      'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, set a local download directory for later use, and browse the cloud library. Playback still uses a private cache under app data.';
+      'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, and optionally a local folder for downloads while playing. If that folder is missing or unset, playback uses the default cache under app data.';
 
   @override
   String get settingsPlaybackShortcutsTitle => 'Keyboard shortcuts';
@@ -415,7 +415,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveLocalDownloadSubtitle =>
-      'Reserved for downloading full tracks from OneDrive.';
+      'While playing from OneDrive, files are saved here if this folder exists. If unset or the path is missing, the app uses its default cache under app data.';
 
   @override
   String get oneDriveLocalDownloadUnset =>
@@ -484,7 +484,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveCacheNote =>
-      'While playing, audio is cached in app data (separate from the download folder above).';
+      'Default storage is the private onedrive_cache folder under app data. A custom folder above is used only when it exists.';
 
   @override
   String get oneDriveOpenBrowser => 'Open OneDrive';
@@ -505,6 +505,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDrivePreparing => 'Preparing…';
 
   @override
+  String get oneDriveDownloadQueueTitle => 'OneDrive downloads';
+
+  @override
+  String get oneDriveDownloadPause => 'Pause';
+
+  @override
+  String get oneDriveDownloadResume => 'Resume';
+
+  @override
+  String get oneDriveDownloadStopAll => 'Stop all';
+
+  @override
+  String get oneDriveDownloadContinueAll => 'Continue all';
+
+  @override
+  String get oneDriveDownloadAutoPlayWhenDone =>
+      'Play automatically when the queue finishes';
+
+  @override
+  String get oneDriveDownloadPlayDownloaded => 'Play downloaded songs';
+
+  @override
+  String get oneDriveDownloadStatusPending => 'Waiting';
+
+  @override
+  String get oneDriveDownloadStatusDownloading => 'Downloading';
+
+  @override
+  String get oneDriveDownloadStatusDone => 'Done';
+
+  @override
+  String get oneDriveDownloadStatusFailed => 'Failed';
+
+  @override
+  String get oneDriveDownloadStatusCancelled => 'Cancelled';
+
+  @override
+  String get oneDriveDownloadCloseJustPanel =>
+      'Close panel (downloads continue)';
+
+  @override
+  String get oneDriveDownloadQueueEmpty =>
+      'No batch download yet.\nUse “Play all” in the cloud library or OneDrive browser — you can close this panel and downloads keep running.';
+
+  @override
+  String get oneDriveDownloadQueuePageHint =>
+      'Pause, resume, or stop downloads here. Closing the sheet does not cancel background downloads.';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle =>
+      'Batch downloads and playback controls';
+
+  @override
+  String get oneDriveDownloadQueueTooltip => 'Download queue';
+
+  @override
+  String get oneDriveEnqueueBackground =>
+      'Added to the download queue. You can keep using the app.';
+
+  @override
+  String get oneDriveDownloadViewQueue => 'View queue';
+
+  @override
+  String get oneDriveDownloadClearHistory => 'Clear history';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive error: $message';
   }
@@ -517,11 +583,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
-      'Folders you add are scanned recursively. Tap a song to download on demand; played files stay cached offline.';
+      'Folders you add are scanned recursively. Tap a song to fetch on demand (to your chosen download folder if it exists, otherwise the default cache); already-downloaded files play offline.';
 
   @override
   String get oneDriveCloudLibraryEmpty =>
       'No tracks indexed yet.\nTap “Choose folders”, pick one or more music folders in OneDrive, then “Rescan”.';
+
+  @override
+  String get oneDriveCachedPlaylistTitle => 'OneDrive · Cached downloads';
+
+  @override
+  String get oneDriveCachedPlaylistEmpty =>
+      'No tracks downloaded from OneDrive yet. Play from the cloud library — files are saved to your cache or chosen folder.';
 
   @override
   String get oneDriveIndexRootsLabel => 'Indexed folders';
@@ -755,7 +828,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeQuickEntryEmpty =>
-      'No shortcuts. Tap “Manage” to show library, playlists, and more.';
+      'No shortcuts. Tap “Manage” to show library, playlists, OneDrive cache, and more.';
 
   @override
   String get homeEntryLibrary => 'Library';
@@ -771,6 +844,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeEntryCloudLibrary => 'Cloud library';
+
+  @override
+  String get homeEntryOneDriveCachePlaylist => 'Cached playlist';
 
   @override
   String get homeSectionQuickEntry => 'Shortcuts';

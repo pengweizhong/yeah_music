@@ -231,7 +231,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsOneDriveDesc.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, set a local download directory for later use, and browse the cloud library. Playback still uses a private cache under app data.'**
+  /// **'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, and optionally a local folder for downloads while playing. If that folder is missing or unset, playback uses the default cache under app data.'**
   String get settingsOneDriveDesc;
 
   /// No description provided for @settingsPlaybackShortcutsTitle.
@@ -825,7 +825,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveLocalDownloadSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Reserved for downloading full tracks from OneDrive.'**
+  /// **'While playing from OneDrive, files are saved here if this folder exists. If unset or the path is missing, the app uses its default cache under app data.'**
   String get oneDriveLocalDownloadSubtitle;
 
   /// No description provided for @oneDriveLocalDownloadUnset.
@@ -945,7 +945,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveCacheNote.
   ///
   /// In en, this message translates to:
-  /// **'While playing, audio is cached in app data (separate from the download folder above).'**
+  /// **'Default storage is the private onedrive_cache folder under app data. A custom folder above is used only when it exists.'**
   String get oneDriveCacheNote;
 
   /// No description provided for @oneDriveOpenBrowser.
@@ -984,6 +984,126 @@ abstract class AppLocalizations {
   /// **'Preparing…'**
   String get oneDrivePreparing;
 
+  /// No description provided for @oneDriveDownloadQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive downloads'**
+  String get oneDriveDownloadQueueTitle;
+
+  /// No description provided for @oneDriveDownloadPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get oneDriveDownloadPause;
+
+  /// No description provided for @oneDriveDownloadResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get oneDriveDownloadResume;
+
+  /// No description provided for @oneDriveDownloadStopAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop all'**
+  String get oneDriveDownloadStopAll;
+
+  /// No description provided for @oneDriveDownloadContinueAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue all'**
+  String get oneDriveDownloadContinueAll;
+
+  /// No description provided for @oneDriveDownloadAutoPlayWhenDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Play automatically when the queue finishes'**
+  String get oneDriveDownloadAutoPlayWhenDone;
+
+  /// No description provided for @oneDriveDownloadPlayDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Play downloaded songs'**
+  String get oneDriveDownloadPlayDownloaded;
+
+  /// No description provided for @oneDriveDownloadStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get oneDriveDownloadStatusPending;
+
+  /// No description provided for @oneDriveDownloadStatusDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get oneDriveDownloadStatusDownloading;
+
+  /// No description provided for @oneDriveDownloadStatusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get oneDriveDownloadStatusDone;
+
+  /// No description provided for @oneDriveDownloadStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get oneDriveDownloadStatusFailed;
+
+  /// No description provided for @oneDriveDownloadStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get oneDriveDownloadStatusCancelled;
+
+  /// No description provided for @oneDriveDownloadCloseJustPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Close panel (downloads continue)'**
+  String get oneDriveDownloadCloseJustPanel;
+
+  /// No description provided for @oneDriveDownloadQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No batch download yet.\nUse “Play all” in the cloud library or OneDrive browser — you can close this panel and downloads keep running.'**
+  String get oneDriveDownloadQueueEmpty;
+
+  /// No description provided for @oneDriveDownloadQueuePageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause, resume, or stop downloads here. Closing the sheet does not cancel background downloads.'**
+  String get oneDriveDownloadQueuePageHint;
+
+  /// No description provided for @oneDriveDownloadQueueSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch downloads and playback controls'**
+  String get oneDriveDownloadQueueSubtitle;
+
+  /// No description provided for @oneDriveDownloadQueueTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Download queue'**
+  String get oneDriveDownloadQueueTooltip;
+
+  /// No description provided for @oneDriveEnqueueBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to the download queue. You can keep using the app.'**
+  String get oneDriveEnqueueBackground;
+
+  /// No description provided for @oneDriveDownloadViewQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'View queue'**
+  String get oneDriveDownloadViewQueue;
+
+  /// No description provided for @oneDriveDownloadClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get oneDriveDownloadClearHistory;
+
   /// No description provided for @oneDriveError.
   ///
   /// In en, this message translates to:
@@ -1005,7 +1125,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveCloudLibrarySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Folders you add are scanned recursively. Tap a song to download on demand; played files stay cached offline.'**
+  /// **'Folders you add are scanned recursively. Tap a song to fetch on demand (to your chosen download folder if it exists, otherwise the default cache); already-downloaded files play offline.'**
   String get oneDriveCloudLibrarySubtitle;
 
   /// No description provided for @oneDriveCloudLibraryEmpty.
@@ -1013,6 +1133,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No tracks indexed yet.\nTap “Choose folders”, pick one or more music folders in OneDrive, then “Rescan”.'**
   String get oneDriveCloudLibraryEmpty;
+
+  /// No description provided for @oneDriveCachedPlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive · Cached downloads'**
+  String get oneDriveCachedPlaylistTitle;
+
+  /// No description provided for @oneDriveCachedPlaylistEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks downloaded from OneDrive yet. Play from the cloud library — files are saved to your cache or chosen folder.'**
+  String get oneDriveCachedPlaylistEmpty;
 
   /// No description provided for @oneDriveIndexRootsLabel.
   ///
@@ -1437,7 +1569,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeQuickEntryEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No shortcuts. Tap “Manage” to show library, playlists, and more.'**
+  /// **'No shortcuts. Tap “Manage” to show library, playlists, OneDrive cache, and more.'**
   String get homeQuickEntryEmpty;
 
   /// No description provided for @homeEntryLibrary.
@@ -1469,6 +1601,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloud library'**
   String get homeEntryCloudLibrary;
+
+  /// No description provided for @homeEntryOneDriveCachePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached playlist'**
+  String get homeEntryOneDriveCachePlaylist;
 
   /// No description provided for @homeSectionQuickEntry.
   ///

@@ -10,6 +10,8 @@ class QuickEntryConfig {
   static const idDiscover = 'discover';
   static const idCloudLibrary = 'cloud_library';
   static const idOneDrive = 'onedrive';
+  /// OneDrive 点播下载到本地的曲目汇总（默认缓存目录与用户下载目录）。
+  static const idOneDriveCachePlaylist = 'onedrive_cache_playlist';
   static const allIds = [
     idLibrary,
     idPlaylists,
@@ -17,6 +19,7 @@ class QuickEntryConfig {
     idDiscover,
     idCloudLibrary,
     idOneDrive,
+    idOneDriveCachePlaylist,
   ];
 
   /// 全部门口的排列顺序（含被隐藏的，便于管理页排序）

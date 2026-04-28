@@ -10,6 +10,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 
 class OneDriveSettingsPage extends StatefulWidget {
   const OneDriveSettingsPage({super.key});
@@ -72,7 +73,25 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                   onSignIn: () => _signIn(context, l10n, od),
                   onSignOut: () => _signOut(context, l10n, od),
                 ),
-                const SizedBox(height: 8),
+                if (od.signedIn) ...[
+                  ListTile(
+                    leading: const Icon(Icons.download_for_offline_rounded, color: Colors.white70),
+                    title: Text(l10n.oneDriveDownloadQueueTitle, style: const TextStyle(color: Colors.white)),
+                    subtitle: Text(
+                      l10n.oneDriveDownloadQueueSubtitle,
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
+                    ),
+                    onTap: () {
+                      Navigator.push<void>(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => const OneDriveDownloadQueuePage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 _TroubleshootExpansion(l10n: l10n),
                 const SizedBox(height: 20),
                 _SectionLabel(text: l10n.oneDriveSectionPaths),

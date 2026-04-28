@@ -75,7 +75,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsOneDriveDesc =>
-      'Microsoft でサインイン（リリース版ではクライアント ID の入力は不要）。音楽の参照ルート、クラウドのアプリ用フォルダ（バックアップ予定）、ローカルのダウンロード先を設定できます。再生キャッシュはアプリデータ内に別途保存されます。';
+      'Microsoft でサインイン（リリース版ではクライアント ID の入力は不要）。音楽の参照ルート、クラウドのアプリ用フォルダ、ローカルの保存先を設定できます。再生を始めるとき、保存先フォルダーが存在すればそこへ、なければアプリデータ内の既定キャッシュに保存します。';
 
   @override
   String get settingsPlaybackShortcutsTitle => 'キーボードショートカット';
@@ -390,7 +390,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveLocalDownloadTitle => 'ローカルのダウンロード先';
 
   @override
-  String get oneDriveLocalDownloadSubtitle => 'OneDrive から曲を丸ごと保存する予定のフォルダ。';
+  String get oneDriveLocalDownloadSubtitle =>
+      'クラウドから再生するとき、このフォルダーが存在すればそこへ保存します。未設定またはパスが無いときは下の既定ストレージを使います。';
 
   @override
   String get oneDriveLocalDownloadUnset => '未設定（後で既定の場所を使います）';
@@ -455,7 +456,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveRedirectCopied => 'コピーしました';
 
   @override
-  String get oneDriveCacheNote => '再生中のキャッシュはアプリデータ内に保存されます（上のダウンロード先とは別です）。';
+  String get oneDriveCacheNote =>
+      '既定はアプリデータ内の onedrive_cache です。上で選んだフォルダーが存在し、かつフォルダーのときだけそこへ書き込みます。';
 
   @override
   String get oneDriveOpenBrowser => 'OneDrive を開く';
@@ -476,6 +478,69 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDrivePreparing => '準備中…';
 
   @override
+  String get oneDriveDownloadQueueTitle => 'OneDrive ダウンロード';
+
+  @override
+  String get oneDriveDownloadPause => '一時停止';
+
+  @override
+  String get oneDriveDownloadResume => '再開';
+
+  @override
+  String get oneDriveDownloadStopAll => 'すべて停止';
+
+  @override
+  String get oneDriveDownloadContinueAll => 'すべて再開';
+
+  @override
+  String get oneDriveDownloadAutoPlayWhenDone => 'キュー完了後に自動再生';
+
+  @override
+  String get oneDriveDownloadPlayDownloaded => 'ダウンロード済みを再生';
+
+  @override
+  String get oneDriveDownloadStatusPending => '待機';
+
+  @override
+  String get oneDriveDownloadStatusDownloading => 'ダウンロード中';
+
+  @override
+  String get oneDriveDownloadStatusDone => '完了';
+
+  @override
+  String get oneDriveDownloadStatusFailed => '失敗';
+
+  @override
+  String get oneDriveDownloadStatusCancelled => 'キャンセル';
+
+  @override
+  String get oneDriveDownloadCloseJustPanel => 'パネルを閉じる（ダウンロードは続行）';
+
+  @override
+  String get oneDriveDownloadQueueEmpty =>
+      'まだありません。\nクラウドライブラリまたはブラウザで「すべて再生」を使うとここに表示されます。パネルを閉じてもダウンロードは続きます。';
+
+  @override
+  String get oneDriveDownloadQueuePageHint =>
+      '一時停止・再開・停止はここで。パネルを閉じてもバックグラウンドのダウンロードは止まりません。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '一括ダウンロードと再生';
+
+  @override
+  String get oneDriveDownloadQueueTooltip => 'ダウンロードキュー';
+
+  @override
+  String get oneDriveEnqueueBackground =>
+      'キューに追加しました。このまま操作できます。完了後はキューから再生してください。';
+
+  @override
+  String get oneDriveDownloadViewQueue => 'キューを開く';
+
+  @override
+  String get oneDriveDownloadClearHistory => '履歴を消去';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive エラー：$message';
   }
@@ -488,11 +553,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
-      '追加したフォルダーを再帰的にスキャンしてリスト化。タップでオンデマンドダウンロード。再生済みはキャッシュを利用します。';
+      '追加したフォルダーを再帰的にスキャンしてリスト化。タップでオンデマンド取得（カスタム保存先があるときはそこへ、なければ既定キャッシュ）。取得済みはオフライン再生可能。';
 
   @override
   String get oneDriveCloudLibraryEmpty =>
       'まだありません。\nOneDrive でフォルダーを選んでから「再スキャン」してください。';
+
+  @override
+  String get oneDriveCachedPlaylistTitle => 'OneDrive · キャッシュ';
+
+  @override
+  String get oneDriveCachedPlaylistEmpty =>
+      'OneDrive からダウンロードされた曲がありません。クラウド曲庫から再生すると、アプリのキャッシュまたは設定したダウンロード先に保存されます。';
 
   @override
   String get oneDriveIndexRootsLabel => 'インデックス対象フォルダー';
@@ -717,7 +789,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeSearchTooltip => '検索';
 
   @override
-  String get homeQuickEntryEmpty => 'ショートカットはありません。「管理」からライブラリやプレイリストを表示できます。';
+  String get homeQuickEntryEmpty =>
+      'ショートカットはありません。「管理」からライブラリ・プレイリスト・OneDrive キャッシュなどを表示できます。';
 
   @override
   String get homeEntryLibrary => 'ライブラリ';
@@ -733,6 +806,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeEntryCloudLibrary => 'クラウド曲庫';
+
+  @override
+  String get homeEntryOneDriveCachePlaylist => 'キャッシュのプレイリスト';
 
   @override
   String get homeSectionQuickEntry => 'ショートカット';

@@ -4,13 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
-import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
-import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/services/settings_service.dart';
+import 'package:yeah_music/widgets/onedrive_bulk_download_sheet.dart';
 import 'package:yeah_music/utils/cloud_track_list_utils.dart';
 import 'package:yeah_music/widgets/cloud_track_search_delegate.dart';
 import 'package:yeah_music/widgets/cloud_track_sort_sheet.dart';
@@ -104,58 +105,46 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
 
   Future<void> _playAll(BuildContext context, OneDriveController od) async {
     final l10n = AppLocalizations.of(context);
-    final play = context.read<PlayListProvider>();
     final queue = sortCloudTracksCopy(od.cloudTracks, _sortType, _ascending);
-    showDialog<void>(
+    if (queue.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveEmptyFolder)),
+      );
+      return;
+    }
+    await showModalBottomSheet<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 16),
-            Expanded(child: Text(l10n.oneDrivePreparing)),
-          ],
-        ),
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF121418),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => OneDriveBulkDownloadSheet(
+        runBatch: (c) => c.runBatchFromCloudTracks(queue),
       ),
     );
-    try {
-      final songs = await od.buildQueueForCloudTracks(queue);
-      if (!context.mounted) return;
-      Navigator.pop(context);
-      if (songs.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.oneDriveEmptyFolder)));
-        return;
-      }
-      await play.setPlaybackQueueAndPlay(songs, 0, session: PlaybackSessionSurface.adHoc);
-    } catch (e) {
-      if (context.mounted) Navigator.pop(context);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.oneDriveError('$e'))));
-      }
-    }
   }
 
   Future<void> _tapTrack(BuildContext context, OneDriveCloudTrack t) async {
     final l10n = AppLocalizations.of(context);
-    final play = context.read<PlayListProvider>();
-    final od = context.read<OneDriveController>();
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    await context.read<OneDriveDownloadQueueController>().enqueueCloudTracks([t]);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.oneDriveEnqueueBackground),
+        action: SnackBarAction(
+          label: l10n.oneDriveDownloadViewQueue,
+          onPressed: () {
+            Navigator.push<void>(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const OneDriveDownloadQueuePage(),
+              ),
+            );
+          },
+        ),
+      ),
     );
-    try {
-      final song = await od.songForCloudTrack(t);
-      if (!context.mounted) return;
-      Navigator.pop(context);
-      await play.setPlaybackQueueAndPlay([song], 0, session: PlaybackSessionSurface.adHoc);
-    } catch (e) {
-      if (context.mounted) Navigator.pop(context);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.oneDriveError('$e'))));
-      }
-    }
   }
 
   @override
@@ -185,6 +174,20 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
               iconTheme: const IconThemeData(color: Colors.white),
               systemOverlayStyle: SystemUiOverlayStyle.light,
               actions: [
+                IconButton(
+                  tooltip: l10n.oneDriveDownloadQueueTooltip,
+                  icon: const Icon(Icons.download_for_offline_rounded),
+                  onPressed: od.signedIn
+                      ? () {
+                          Navigator.push<void>(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const OneDriveDownloadQueuePage(),
+                            ),
+                          );
+                        }
+                      : null,
+                ),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                   color: const Color(0xFF1E1E1E),

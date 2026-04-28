@@ -27,6 +27,7 @@ class SettingsService {
   static const String _oneDriveIndexAtKey = 'onedrive_index_at_iso';
   static const String _oneDriveCloudSortTypeKey = 'onedrive_cloud_sort_type';
   static const String _oneDriveCloudSortAscKey = 'onedrive_cloud_sort_asc';
+  static const String _oneDriveDownloadQueueHistoryKey = 'onedrive_download_queue_history_v2';
 
   /// macOS 是否在菜单栏显示当前歌词。
   static const String _macosMenuBarLyricsKey = 'macos_menu_bar_lyrics';
@@ -437,6 +438,34 @@ class SettingsService {
         } else {
           await box.put(_oneDriveIndexAtKey, t.toIso8601String());
         }
+      } catch (_) {}
+    }
+  }
+
+  /// OneDrive 下载队列记录（JSON 数组）。
+  static Future<List<Map<String, dynamic>>> loadOneDriveDownloadQueueHistory() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_oneDriveDownloadQueueHistoryKey);
+      if (raw is String && raw.isNotEmpty) {
+        final decoded = json.decode(raw) as List<dynamic>;
+        return decoded
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<void> saveOneDriveDownloadQueueHistory(List<Map<String, dynamic>> rows) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_oneDriveDownloadQueueHistoryKey, json.encode(rows));
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_oneDriveDownloadQueueHistoryKey, json.encode(rows));
       } catch (_) {}
     }
   }
