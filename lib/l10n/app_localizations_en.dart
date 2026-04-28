@@ -116,6 +116,55 @@ class AppLocalizationsEn extends AppLocalizations {
       'Press the key combination to use. Esc cancels.';
 
   @override
+  String get settingsWireRemoteTitle => 'Headset controls';
+
+  @override
+  String get settingsWireRemoteSubtitle =>
+      'Single, double, and triple press while the app is open';
+
+  @override
+  String get settingsWireRemoteSubtitleOtherPlatforms =>
+      'Customization works on the Android app in the foreground.';
+
+  @override
+  String get settingsWireRemoteUnavailableTitle => 'Not editable here';
+
+  @override
+  String get settingsWireRemoteUnavailableBody =>
+      'Wired headset mapping is only applied on Android. On desktop use Keyboard shortcuts; on iOS the system handles headset buttons.';
+
+  @override
+  String get settingsWireRemoteUseCustom => 'Custom headset mapping';
+
+  @override
+  String get settingsWireRemoteUseCustomSubtitle =>
+      'When off, wired buttons use the system default.';
+
+  @override
+  String get wireRemoteSingleTitle => 'Single press';
+
+  @override
+  String get wireRemoteDoubleTitle => 'Double press';
+
+  @override
+  String get wireRemoteTripleTitle => 'Triple press';
+
+  @override
+  String get wireRemoteActionPlayPause => 'Play / pause';
+
+  @override
+  String get wireRemoteActionNext => 'Next track';
+
+  @override
+  String get wireRemoteActionPrevious => 'Previous track';
+
+  @override
+  String get wireRemoteActionNone => 'None';
+
+  @override
+  String get wireRemotePickActionTitle => 'Choose action';
+
+  @override
   String get settingsMacosMenuBarLyrics => 'Menu bar lyrics';
 
   @override

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' show Platform;
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
@@ -31,6 +31,7 @@ import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
+import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -268,10 +269,25 @@ class _AppStartupGateState extends State<AppStartupGate>
 class YeahMusicApp extends StatelessWidget {
   const YeahMusicApp({super.key});
 
+  static bool _androidWireRemoteInited = false;
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<AppThemeModeProvider, AppLocaleProvider>(
       builder: (context, appearance, locale, _) {
+        if (!_androidWireRemoteInited && !kIsWeb && Platform.isAndroid) {
+          _androidWireRemoteInited = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            WireRemoteGestureHandler.ensureInitialized();
+            final shortcuts = Provider.of<PlaybackShortcutController>(
+              context,
+              listen: false,
+            );
+            unawaited(
+              WireRemoteGestureHandler.syncNativeFromController(shortcuts),
+            );
+          });
+        }
         return MaterialApp(
           scaffoldMessengerKey: appScaffoldMessengerKey,
           navigatorObservers: <NavigatorObserver>[appRouteObserver],

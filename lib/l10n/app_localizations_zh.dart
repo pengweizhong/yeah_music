@@ -109,6 +109,53 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
+  String get settingsWireRemoteTitle => '耳机线控';
+
+  @override
+  String get settingsWireRemoteSubtitle => '单击、双击、三击（应用在前台时生效）';
+
+  @override
+  String get settingsWireRemoteSubtitleOtherPlatforms =>
+      '自定义线控仅在 Android 版、应用位于前台时生效。';
+
+  @override
+  String get settingsWireRemoteUnavailableTitle => '此处不可编辑';
+
+  @override
+  String get settingsWireRemoteUnavailableBody =>
+      '有线耳机按键映射仅在 Android 客户端生效。桌面端请使用「快捷键」；iOS 由系统处理有线耳机。';
+
+  @override
+  String get settingsWireRemoteUseCustom => '使用自定义线控';
+
+  @override
+  String get settingsWireRemoteUseCustomSubtitle => '关闭后由系统按默认方式处理有线耳机按键。';
+
+  @override
+  String get wireRemoteSingleTitle => '单击';
+
+  @override
+  String get wireRemoteDoubleTitle => '双击';
+
+  @override
+  String get wireRemoteTripleTitle => '三击';
+
+  @override
+  String get wireRemoteActionPlayPause => '播放 / 暂停';
+
+  @override
+  String get wireRemoteActionNext => '下一曲';
+
+  @override
+  String get wireRemoteActionPrevious => '上一曲';
+
+  @override
+  String get wireRemoteActionNone => '无';
+
+  @override
+  String get wireRemotePickActionTitle => '选择动作';
+
+  @override
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
 
   @override
@@ -1288,6 +1335,53 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
+  String get settingsWireRemoteTitle => '耳机线控';
+
+  @override
+  String get settingsWireRemoteSubtitle => '单击、双击、三击（应用在前台时生效）';
+
+  @override
+  String get settingsWireRemoteSubtitleOtherPlatforms =>
+      '自定义线控仅在 Android 版、应用位于前台时生效。';
+
+  @override
+  String get settingsWireRemoteUnavailableTitle => '此处不可编辑';
+
+  @override
+  String get settingsWireRemoteUnavailableBody =>
+      '有线耳机按键映射仅在 Android 客户端生效。桌面端请使用「快捷键」；iOS 由系统处理有线耳机。';
+
+  @override
+  String get settingsWireRemoteUseCustom => '使用自定义线控';
+
+  @override
+  String get settingsWireRemoteUseCustomSubtitle => '关闭后由系统按默认方式处理有线耳机按键。';
+
+  @override
+  String get wireRemoteSingleTitle => '单击';
+
+  @override
+  String get wireRemoteDoubleTitle => '双击';
+
+  @override
+  String get wireRemoteTripleTitle => '三击';
+
+  @override
+  String get wireRemoteActionPlayPause => '播放 / 暂停';
+
+  @override
+  String get wireRemoteActionNext => '下一曲';
+
+  @override
+  String get wireRemoteActionPrevious => '上一曲';
+
+  @override
+  String get wireRemoteActionNone => '无';
+
+  @override
+  String get wireRemotePickActionTitle => '选择动作';
+
+  @override
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
 
   @override
@@ -2465,6 +2559,53 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsPlaybackShortcutsPressKeyHint => '請按下新的組合鍵。Esc 取消。';
+
+  @override
+  String get settingsWireRemoteTitle => '耳機線控';
+
+  @override
+  String get settingsWireRemoteSubtitle => '單擊、雙擊、三擊（應用程式在前景時生效）';
+
+  @override
+  String get settingsWireRemoteSubtitleOtherPlatforms =>
+      '自訂線控僅在 Android 版、應用程式在前景時生效。';
+
+  @override
+  String get settingsWireRemoteUnavailableTitle => '此處無法編輯';
+
+  @override
+  String get settingsWireRemoteUnavailableBody =>
+      '有線耳機按鍵對應僅在 Android 客戶端生效。桌面版請使用「快速鍵」；iOS 由系統處理有線耳機。';
+
+  @override
+  String get settingsWireRemoteUseCustom => '使用自訂線控';
+
+  @override
+  String get settingsWireRemoteUseCustomSubtitle => '關閉後由系統依預設方式處理有線耳機按鍵。';
+
+  @override
+  String get wireRemoteSingleTitle => '單擊';
+
+  @override
+  String get wireRemoteDoubleTitle => '雙擊';
+
+  @override
+  String get wireRemoteTripleTitle => '三擊';
+
+  @override
+  String get wireRemoteActionPlayPause => '播放 / 暫停';
+
+  @override
+  String get wireRemoteActionNext => '下一曲';
+
+  @override
+  String get wireRemoteActionPrevious => '上一曲';
+
+  @override
+  String get wireRemoteActionNone => '無';
+
+  @override
+  String get wireRemotePickActionTitle => '選擇動作';
 
   @override
   String get settingsMacosMenuBarLyrics => '選單列歌詞';

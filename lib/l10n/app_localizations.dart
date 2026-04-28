@@ -300,6 +300,96 @@ abstract class AppLocalizations {
   /// **'Press the key combination to use. Esc cancels.'**
   String get settingsPlaybackShortcutsPressKeyHint;
 
+  /// No description provided for @settingsWireRemoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Headset controls'**
+  String get settingsWireRemoteTitle;
+
+  /// No description provided for @settingsWireRemoteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Single, double, and triple press while the app is open'**
+  String get settingsWireRemoteSubtitle;
+
+  /// No description provided for @settingsWireRemoteSubtitleOtherPlatforms.
+  ///
+  /// In en, this message translates to:
+  /// **'Customization works on the Android app in the foreground.'**
+  String get settingsWireRemoteSubtitleOtherPlatforms;
+
+  /// No description provided for @settingsWireRemoteUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not editable here'**
+  String get settingsWireRemoteUnavailableTitle;
+
+  /// No description provided for @settingsWireRemoteUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired headset mapping is only applied on Android. On desktop use Keyboard shortcuts; on iOS the system handles headset buttons.'**
+  String get settingsWireRemoteUnavailableBody;
+
+  /// No description provided for @settingsWireRemoteUseCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom headset mapping'**
+  String get settingsWireRemoteUseCustom;
+
+  /// No description provided for @settingsWireRemoteUseCustomSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, wired buttons use the system default.'**
+  String get settingsWireRemoteUseCustomSubtitle;
+
+  /// No description provided for @wireRemoteSingleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Single press'**
+  String get wireRemoteSingleTitle;
+
+  /// No description provided for @wireRemoteDoubleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Double press'**
+  String get wireRemoteDoubleTitle;
+
+  /// No description provided for @wireRemoteTripleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple press'**
+  String get wireRemoteTripleTitle;
+
+  /// No description provided for @wireRemoteActionPlayPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Play / pause'**
+  String get wireRemoteActionPlayPause;
+
+  /// No description provided for @wireRemoteActionNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next track'**
+  String get wireRemoteActionNext;
+
+  /// No description provided for @wireRemoteActionPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous track'**
+  String get wireRemoteActionPrevious;
+
+  /// No description provided for @wireRemoteActionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get wireRemoteActionNone;
+
+  /// No description provided for @wireRemotePickActionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose action'**
+  String get wireRemotePickActionTitle;
+
   /// No description provided for @settingsMacosMenuBarLyrics.
   ///
   /// In en, this message translates to:

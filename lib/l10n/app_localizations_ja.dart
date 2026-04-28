@@ -112,6 +112,54 @@ class AppLocalizationsJa extends AppLocalizations {
       '使うキーの組み合わせを押してください。Esc でキャンセル。';
 
   @override
+  String get settingsWireRemoteTitle => 'ヘッドセット操作';
+
+  @override
+  String get settingsWireRemoteSubtitle => 'シングル / ダブル / トリプルクリック（アプリが手前のとき）';
+
+  @override
+  String get settingsWireRemoteSubtitleOtherPlatforms =>
+      'カスタム割り当ては Android アプリが手前のときのみ有効です。';
+
+  @override
+  String get settingsWireRemoteUnavailableTitle => 'この環境では編集できません';
+
+  @override
+  String get settingsWireRemoteUnavailableBody =>
+      '有線ヘッドセットの割り当ては Android 版のみです。デスクトップはキーボードショートカット、iOS は OS の既定動作になります。';
+
+  @override
+  String get settingsWireRemoteUseCustom => 'カスタム割り当て';
+
+  @override
+  String get settingsWireRemoteUseCustomSubtitle =>
+      'オフのときは有線ボタンは OS の既定の動作になります。';
+
+  @override
+  String get wireRemoteSingleTitle => 'シングルクリック';
+
+  @override
+  String get wireRemoteDoubleTitle => 'ダブルクリック';
+
+  @override
+  String get wireRemoteTripleTitle => 'トリプルクリック';
+
+  @override
+  String get wireRemoteActionPlayPause => '再生 / 一時停止';
+
+  @override
+  String get wireRemoteActionNext => '次の曲';
+
+  @override
+  String get wireRemoteActionPrevious => '前の曲';
+
+  @override
+  String get wireRemoteActionNone => 'なし';
+
+  @override
+  String get wireRemotePickActionTitle => '動作を選ぶ';
+
+  @override
   String get settingsMacosMenuBarLyrics => 'メニューバーに歌詞';
 
   @override
