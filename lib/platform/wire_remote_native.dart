@@ -16,18 +16,29 @@ class WireRemoteNative {
     } catch (_) {}
   }
 
-  /// 注册来自原生线控连击的回调（仅一次）。
-  static void attachHeadsetGestureHandler(
-    Future<void> Function(int clickCount) onHeadsetGesture,
-  ) {
+  /// 注册：线控连击 [onHeadsetGesture]、独立媒体键 [onMediaDiscrete]（`next` / `previous`）。
+  static void attachRemoteHandlers({
+    required Future<void> Function(int clickCount) onHeadsetGesture,
+    required Future<void> Function(String kind) onMediaDiscrete,
+  }) {
     if (kIsWeb || !Platform.isAndroid) return;
     if (_listenerAttached) return;
     _listenerAttached = true;
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'headsetGesture') {
-        final raw = call.arguments;
-        final n = raw is int ? raw : int.tryParse('$raw') ?? 1;
-        await onHeadsetGesture(n);
+      switch (call.method) {
+        case 'headsetGesture':
+          final raw = call.arguments;
+          final n = raw is int ? raw : int.tryParse('$raw') ?? 1;
+          await onHeadsetGesture(n);
+          break;
+        case 'mediaDiscrete':
+          final kind = call.arguments is String
+              ? call.arguments as String
+              : '${call.arguments}';
+          await onMediaDiscrete(kind);
+          break;
+        default:
+          break;
       }
     });
   }

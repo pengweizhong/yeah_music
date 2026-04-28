@@ -112,7 +112,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
-  String get settingsWireRemoteSubtitle => '单击、双击、三击（应用在前台时生效）';
+  String get settingsWireRemoteSubtitle => '有线连击与蓝牙独立下一曲/上一曲键（应用在前台时生效）';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -123,13 +123,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsWireRemoteUnavailableBody =>
-      '有线耳机按键映射仅在 Android 客户端生效。桌面端请使用「快捷键」；iOS 由系统处理有线耳机。';
+      '耳机按键自定义仅在 Android、应用位于前台时生效（含蓝牙独立键）。桌面端请使用「快捷键」；iOS 由系统处理。';
 
   @override
   String get settingsWireRemoteUseCustom => '使用自定义线控';
 
   @override
-  String get settingsWireRemoteUseCustomSubtitle => '关闭后由系统按默认方式处理有线耳机按键。';
+  String get settingsWireRemoteUseCustomSubtitle => '关闭后由系统按默认方式处理耳机按键。';
 
   @override
   String get wireRemoteSingleTitle => '单击';
@@ -139,6 +139,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wireRemoteTripleTitle => '三击';
+
+  @override
+  String get wireRemoteMediaNextTitle => '「下一曲」媒体键（蓝牙等）';
+
+  @override
+  String get wireRemoteMediaPreviousTitle => '「上一曲」媒体键（蓝牙等）';
 
   @override
   String get wireRemoteActionPlayPause => '播放 / 暂停';
@@ -1338,7 +1344,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
-  String get settingsWireRemoteSubtitle => '单击、双击、三击（应用在前台时生效）';
+  String get settingsWireRemoteSubtitle => '有线连击与蓝牙独立下一曲/上一曲键（应用在前台时生效）';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -1349,13 +1355,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get settingsWireRemoteUnavailableBody =>
-      '有线耳机按键映射仅在 Android 客户端生效。桌面端请使用「快捷键」；iOS 由系统处理有线耳机。';
+      '耳机按键自定义仅在 Android、应用位于前台时生效（含蓝牙独立键）。桌面端请使用「快捷键」；iOS 由系统处理。';
 
   @override
   String get settingsWireRemoteUseCustom => '使用自定义线控';
 
   @override
-  String get settingsWireRemoteUseCustomSubtitle => '关闭后由系统按默认方式处理有线耳机按键。';
+  String get settingsWireRemoteUseCustomSubtitle => '关闭后由系统按默认方式处理耳机按键。';
 
   @override
   String get wireRemoteSingleTitle => '单击';
@@ -1365,6 +1371,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get wireRemoteTripleTitle => '三击';
+
+  @override
+  String get wireRemoteMediaNextTitle => '「下一曲」媒体键（蓝牙等）';
+
+  @override
+  String get wireRemoteMediaPreviousTitle => '「上一曲」媒体键（蓝牙等）';
 
   @override
   String get wireRemoteActionPlayPause => '播放 / 暂停';
@@ -2564,7 +2576,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsWireRemoteTitle => '耳機線控';
 
   @override
-  String get settingsWireRemoteSubtitle => '單擊、雙擊、三擊（應用程式在前景時生效）';
+  String get settingsWireRemoteSubtitle => '有線連擊與藍牙獨立下一曲／上一曲鍵（應用程式在前景時生效）';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -2575,13 +2587,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsWireRemoteUnavailableBody =>
-      '有線耳機按鍵對應僅在 Android 客戶端生效。桌面版請使用「快速鍵」；iOS 由系統處理有線耳機。';
+      '耳機按鍵自訂僅在 Android、應用程式在前景時生效（含藍牙獨立鍵）。桌面版請使用「快速鍵」；iOS 由系統處理。';
 
   @override
   String get settingsWireRemoteUseCustom => '使用自訂線控';
 
   @override
-  String get settingsWireRemoteUseCustomSubtitle => '關閉後由系統依預設方式處理有線耳機按鍵。';
+  String get settingsWireRemoteUseCustomSubtitle => '關閉後由系統依預設方式處理耳機按鍵。';
 
   @override
   String get wireRemoteSingleTitle => '單擊';
@@ -2591,6 +2603,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get wireRemoteTripleTitle => '三擊';
+
+  @override
+  String get wireRemoteMediaNextTitle => '「下一曲」媒體鍵（藍牙等）';
+
+  @override
+  String get wireRemoteMediaPreviousTitle => '「上一曲」媒體鍵（藍牙等）';
 
   @override
   String get wireRemoteActionPlayPause => '播放 / 暫停';

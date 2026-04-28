@@ -309,7 +309,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsWireRemoteSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Single, double, and triple press while the app is open'**
+  /// **'Wired multi-press and Bluetooth next/prev keys while the app is open'**
   String get settingsWireRemoteSubtitle;
 
   /// No description provided for @settingsWireRemoteSubtitleOtherPlatforms.
@@ -327,7 +327,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsWireRemoteUnavailableBody.
   ///
   /// In en, this message translates to:
-  /// **'Wired headset mapping is only applied on Android. On desktop use Keyboard shortcuts; on iOS the system handles headset buttons.'**
+  /// **'Headset button mapping applies only on Android when the app is in the foreground (wired multi-press and Bluetooth media keys). On desktop use Keyboard shortcuts; on iOS the system handles headset buttons.'**
   String get settingsWireRemoteUnavailableBody;
 
   /// No description provided for @settingsWireRemoteUseCustom.
@@ -339,7 +339,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsWireRemoteUseCustomSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'When off, wired buttons use the system default.'**
+  /// **'When off, headset buttons use the system default.'**
   String get settingsWireRemoteUseCustomSubtitle;
 
   /// No description provided for @wireRemoteSingleTitle.
@@ -359,6 +359,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Triple press'**
   String get wireRemoteTripleTitle;
+
+  /// No description provided for @wireRemoteMediaNextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\"Next\" media key (Bluetooth, etc.)'**
+  String get wireRemoteMediaNextTitle;
+
+  /// No description provided for @wireRemoteMediaPreviousTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\"Previous\" media key (Bluetooth, etc.)'**
+  String get wireRemoteMediaPreviousTitle;
 
   /// No description provided for @wireRemoteActionPlayPause.
   ///

@@ -120,7 +120,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsWireRemoteSubtitle =>
-      'Single, double, and triple press while the app is open';
+      'Wired multi-press and Bluetooth next/prev keys while the app is open';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -131,14 +131,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsWireRemoteUnavailableBody =>
-      'Wired headset mapping is only applied on Android. On desktop use Keyboard shortcuts; on iOS the system handles headset buttons.';
+      'Headset button mapping applies only on Android when the app is in the foreground (wired multi-press and Bluetooth media keys). On desktop use Keyboard shortcuts; on iOS the system handles headset buttons.';
 
   @override
   String get settingsWireRemoteUseCustom => 'Custom headset mapping';
 
   @override
   String get settingsWireRemoteUseCustomSubtitle =>
-      'When off, wired buttons use the system default.';
+      'When off, headset buttons use the system default.';
 
   @override
   String get wireRemoteSingleTitle => 'Single press';
@@ -148,6 +148,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wireRemoteTripleTitle => 'Triple press';
+
+  @override
+  String get wireRemoteMediaNextTitle => '\"Next\" media key (Bluetooth, etc.)';
+
+  @override
+  String get wireRemoteMediaPreviousTitle =>
+      '\"Previous\" media key (Bluetooth, etc.)';
 
   @override
   String get wireRemoteActionPlayPause => 'Play / pause';

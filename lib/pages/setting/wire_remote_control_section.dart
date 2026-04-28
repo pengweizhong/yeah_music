@@ -149,6 +149,45 @@ class WireRemoteControlSection extends StatelessWidget {
                     })
                 : null,
           ),
+          ListTile(
+            title: Text(
+              l10n.wireRemoteMediaNextTitle,
+              style: TextStyle(color: context.gradFg()),
+            ),
+            subtitle: Text(
+              _actionLabel(l10n, cfg.mediaNextKeyAction),
+              style: subStyle,
+            ),
+            enabled: cfg.enabled,
+            onTap: cfg.enabled
+                ? () => _pickAction(context, l10n, cfg.mediaNextKeyAction, (a) {
+                      ctrl.setWireRemote(cfg.copyWith(mediaNextKeyAction: a));
+                    })
+                : null,
+          ),
+          ListTile(
+            title: Text(
+              l10n.wireRemoteMediaPreviousTitle,
+              style: TextStyle(color: context.gradFg()),
+            ),
+            subtitle: Text(
+              _actionLabel(l10n, cfg.mediaPreviousKeyAction),
+              style: subStyle,
+            ),
+            enabled: cfg.enabled,
+            onTap: cfg.enabled
+                ? () => _pickAction(
+                      context,
+                      l10n,
+                      cfg.mediaPreviousKeyAction,
+                      (a) {
+                        ctrl.setWireRemote(
+                          cfg.copyWith(mediaPreviousKeyAction: a),
+                        );
+                      },
+                    )
+                : null,
+          ),
         ],
       ],
     );

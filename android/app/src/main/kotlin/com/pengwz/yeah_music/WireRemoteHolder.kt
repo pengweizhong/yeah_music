@@ -10,7 +10,8 @@ import io.flutter.plugin.common.MethodChannel
  */
 object WireRemoteHolder {
     private const val CHANNEL = "yeah_music/wire_remote"
-    private const val GAP_MS = 520L
+    /// 略长于双击间隔，避免三击被拆成 2+1；蓝牙耳机连击若仍无反应，多为系统直接发 NEXT 键，见 [onMediaDiscreteKey]。
+    private const val GAP_MS = 700L
 
     @Volatile
     var enabled: Boolean = true
@@ -43,10 +44,27 @@ object WireRemoteHolder {
     }
 
     /**
-     * @return true 表示已消费事件（勿再交给系统默认处理）。
+     * 蓝牙耳机等常直接发 `MEDIA_NEXT` / `MEDIA_PREVIOUS`，不会走连击计数。
+     *
+     * @param kind 与 Flutter 约定：`next` | `previous`
+     * @return true 表示已消费。
      */
-    fun onHeadsetHookDown(): Boolean {
+    fun onMediaDiscreteKey(kind: String): Boolean {
         if (!enabled) return false
+        val m = messenger ?: return false
+        MethodChannel(m, CHANNEL).invokeMethod("mediaDiscrete", kind)
+        return true
+    }
+
+    /**
+     * 线控 / 部分设备的播放键连击。
+     *
+     * @param repeatCount [KeyEvent.getRepeatCount] 长按会产生重复 DOWN，不参与连击计数。
+     * @return true 表示已消费。
+     */
+    fun onHeadsetHookDown(repeatCount: Int): Boolean {
+        if (!enabled) return false
+        if (repeatCount > 0) return false
         hookCount++
         if (hookCount > 3) hookCount = 3
         handler.removeCallbacks(flushRunnable)

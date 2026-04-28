@@ -16,7 +16,10 @@ class WireRemoteGestureHandler {
   static void ensureInitialized() {
     if (_initialized) return;
     _initialized = true;
-    WireRemoteNative.attachHeadsetGestureHandler(_onHeadsetGesture);
+    WireRemoteNative.attachRemoteHandlers(
+      onHeadsetGesture: _onHeadsetGesture,
+      onMediaDiscrete: _onMediaDiscrete,
+    );
   }
 
   static Future<void> syncNativeFromController(
@@ -32,6 +35,22 @@ class WireRemoteGestureHandler {
     final cfg = ctrl.wireRemote;
     if (!cfg.enabled) return;
     final action = cfg.actionForClickCount(clickCount);
+    await _dispatch(ctx, action);
+  }
+
+  /// 蓝牙耳机等：`next` / `previous`。
+  static Future<void> _onMediaDiscrete(String kind) async {
+    final ctx = appScaffoldMessengerKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+    final ctrl = Provider.of<PlaybackShortcutController>(ctx, listen: false);
+    final cfg = ctrl.wireRemote;
+    if (!cfg.enabled) return;
+    final action = switch (kind) {
+      'next' => cfg.mediaNextKeyAction,
+      'previous' => cfg.mediaPreviousKeyAction,
+      _ => WireRemoteControlAction.none,
+    };
+    if (action == WireRemoteControlAction.none) return;
     await _dispatch(ctx, action);
   }
 

@@ -115,7 +115,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsWireRemoteTitle => 'ヘッドセット操作';
 
   @override
-  String get settingsWireRemoteSubtitle => 'シングル / ダブル / トリプルクリック（アプリが手前のとき）';
+  String get settingsWireRemoteSubtitle =>
+      '有線の連打と Bluetooth の次へ／戻るキー（アプリが手前のとき）';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -126,14 +127,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsWireRemoteUnavailableBody =>
-      '有線ヘッドセットの割り当ては Android 版のみです。デスクトップはキーボードショートカット、iOS は OS の既定動作になります。';
+      'ヘッドセットの割り当ては Android でアプリが手前のときのみ（有線の連打と Bluetooth のメディアキー）。デスクトップはキーボードショートカット、iOS は OS の既定動作です。';
 
   @override
   String get settingsWireRemoteUseCustom => 'カスタム割り当て';
 
   @override
   String get settingsWireRemoteUseCustomSubtitle =>
-      'オフのときは有線ボタンは OS の既定の動作になります。';
+      'オフのときはヘッドセットは OS の既定の動作になります。';
 
   @override
   String get wireRemoteSingleTitle => 'シングルクリック';
@@ -143,6 +144,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get wireRemoteTripleTitle => 'トリプルクリック';
+
+  @override
+  String get wireRemoteMediaNextTitle => '「次へ」メディアキー（Bluetooth など）';
+
+  @override
+  String get wireRemoteMediaPreviousTitle => '「戻る」メディアキー（Bluetooth など）';
 
   @override
   String get wireRemoteActionPlayPause => '再生 / 一時停止';
