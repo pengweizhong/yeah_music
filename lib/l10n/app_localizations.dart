@@ -2220,6 +2220,12 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get playlistCoverRgbPreview;
 
+  /// No description provided for @playlistCoverPreviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current appearance'**
+  String get playlistCoverPreviewLabel;
+
   /// No description provided for @playlistCoverMenuItem.
   ///
   /// In en, this message translates to:

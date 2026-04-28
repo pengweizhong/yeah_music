@@ -1151,6 +1151,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playlistCoverRgbPreview => 'プレビュー';
 
   @override
+  String get playlistCoverPreviewLabel => '現在の見え方';
+
+  @override
   String get playlistCoverMenuItem => 'カバー色…';
 
   @override

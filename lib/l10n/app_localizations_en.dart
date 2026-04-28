@@ -1193,6 +1193,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistCoverRgbPreview => 'Preview';
 
   @override
+  String get playlistCoverPreviewLabel => 'Current appearance';
+
+  @override
   String get playlistCoverMenuItem => 'Cover color…';
 
   @override

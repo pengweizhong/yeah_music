@@ -18,6 +18,7 @@ Future<void> showPlaylistCoverStyleSheet(
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: FrostedGlassBottomSheet(
+        showTopHandle: false,
         child: _PlaylistCoverStyleBody(playlist: playlist),
       ),
     ),
@@ -89,6 +90,37 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
     );
   }
 
+  int _fallbackIndex() =>
+      widget.playlist.id.hashCode.abs() %
+      kDefaultPlaylistCoverGradients.length;
+
+  bool _isCustomRgbSolid(UserPlaylistCoverStyle? d) {
+    if (d == null || !d.isSolid) return false;
+    final argb = d.solidColor.toARGB32();
+    for (final c in _presetSolidColors) {
+      if (c.toARGB32() == argb) return false;
+    }
+    return true;
+  }
+
+  String _previewSubtitle(AppLocalizations l10n, bool customRgb) {
+    final d = _draft;
+    if (d == null) return l10n.playlistCoverUseDefaultPalette;
+    if (d.isSolid) {
+      final c = d.solidColor;
+      final r = (c.r * 255.0).round().clamp(0, 255);
+      final g = (c.g * 255.0).round().clamp(0, 255);
+      final b = (c.b * 255.0).round().clamp(0, 255);
+      final hex =
+          (c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase();
+      if (customRgb) {
+        return '${l10n.playlistCoverRgbTitle} · #$hex · RGB($r,$g,$b)';
+      }
+      return '${l10n.playlistCoverSolidSection} · #$hex · RGB($r,$g,$b)';
+    }
+    return l10n.playlistCoverGradientSection;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -96,46 +128,106 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
       ...kDefaultPlaylistCoverGradients,
       ...kPlaylistCoverExtendedGradients,
     ];
+    final fb = _fallbackIndex();
+    final customRgb = _isCustomRgbSolid(_draft);
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final screenH = MediaQuery.sizeOf(context).height;
+    // Column(mainAxisSize: min) 子级里，无界 CustomScrollView 会算成零高；给视口一个有限高度。
+    final sheetHeight = (screenH * 0.72).clamp(280.0, screenH * 0.92);
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.playlistCoverStyleTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.playlistCoverStyleSubtitle,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
-                fontSize: 13,
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _draft = null),
-                icon: Icon(
-                  Icons.palette_outlined,
-                  color: _draft == null
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white54,
-                  size: 20,
+    return SizedBox(
+      height: sheetHeight,
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.playlistCoverStyleTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                label: Text(l10n.playlistCoverUseDefaultPalette),
-              ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.playlistCoverStyleSubtitle,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: AspectRatio(
+                    aspectRatio: 2.55,
+                    child: DecoratedBox(
+                      decoration: playlistCoverCardDecoration(
+                        coverStyle: _draft,
+                        fallbackGradientIndex: fb,
+                        radius: 14,
+                      ).copyWith(boxShadow: const []),
+                      child: Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 4, 10, 9),
+                          child: Text(
+                            l10n.playlistCoverPreviewLabel,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.94),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              shadows: const [
+                                Shadow(blurRadius: 8, color: Color(0x99000000)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _previewSubtitle(l10n, customRgb),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _draft = null),
+                    icon: Icon(
+                      Icons.palette_outlined,
+                      color: _draft == null
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.white54,
+                      size: 20,
+                    ),
+                    label: Text(l10n.playlistCoverUseDefaultPalette),
+                  ),
+                ),
+              ],
             ),
-            Text(
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: Text(
               l10n.playlistCoverSolidSection,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.72),
@@ -143,28 +235,50 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 fontSize: 13,
               ),
             ),
-            const SizedBox(height: 8),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 6,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1,
-              ),
-              itemCount: _presetSolidColors.length + 1,
-              itemBuilder: (context, i) {
-                if (i == _presetSolidColors.length) {
-                  return Material(
-                    color: Colors.white.withValues(alpha: 0.06),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final presetLen = _presetSolidColors.length;
+                if (i == presetLen) {
+                  final sel = customRgb;
+                  return InkWell(
+                    onTap: () => _pickRgb(context, l10n),
                     borderRadius: BorderRadius.circular(10),
-                    child: InkWell(
-                      onTap: () => _pickRgb(context, l10n),
-                      borderRadius: BorderRadius.circular(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: sel && _draft?.isSolid == true
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  _draft!.solidColor.withValues(alpha: 0.92),
+                                  _draft!.solidColor.withValues(alpha: 0.38),
+                                ],
+                              )
+                            : null,
+                        color: sel ? null : Colors.white.withValues(alpha: 0.06),
+                        border: Border.all(
+                          color: sel ? Colors.white : Colors.white24,
+                          width: sel ? 2.5 : 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
                       child: Icon(
-                        Icons.tune_rounded,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        sel ? Icons.check_rounded : Icons.tune_rounded,
+                        color: Colors.white.withValues(alpha: sel ? 1 : 0.85),
+                        size: sel ? 22 : 24,
                       ),
                     ),
                   );
@@ -173,7 +287,8 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 final sel = _draft?.isSolid == true &&
                     _draft!.solidColor.toARGB32() == col.toARGB32();
                 return InkWell(
-                  onTap: () => setState(() => _draft = UserPlaylistCoverStyle.solid(col)),
+                  onTap: () =>
+                      setState(() => _draft = UserPlaylistCoverStyle.solid(col)),
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 160),
@@ -188,9 +303,14 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                   ),
                 );
               },
+              childCount: _presetSolidColors.length + 1,
             ),
-            const SizedBox(height: 16),
-            Text(
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: Text(
               l10n.playlistCoverGradientSection,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.72),
@@ -198,21 +318,22 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 fontSize: 13,
               ),
             ),
-            const SizedBox(height: 8),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1.45,
-              ),
-              itemCount: gradients.length,
-              itemBuilder: (context, i) {
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.45,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
                 final g = gradients[i];
                 final picked = _draft != null &&
-                    _draft!.isSolid != true &&
+                    !_draft!.isSolid &&
                     _draft!.gradientColors[0].toARGB32() == g[0].toARGB32() &&
                     _draft!.gradientColors[1].toARGB32() == g[1].toARGB32();
                 return InkWell(
@@ -237,9 +358,14 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                   ),
                 );
               },
+              childCount: gradients.length,
             ),
-            const SizedBox(height: 20),
-            Row(
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, 20, 16, 12 + bottomPad),
+          sliver: SliverToBoxAdapter(
+            child: Row(
               children: [
                 Expanded(
                   child: TextButton(
@@ -255,9 +381,10 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
+    ),
     );
   }
 }
@@ -289,6 +416,14 @@ class _RgbPickDialogContentState extends State<_RgbPickDialogContent> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final sliderTheme = SliderTheme.of(context).copyWith(
+      activeTrackColor: scheme.primary.withValues(alpha: 0.95),
+      inactiveTrackColor: Colors.white.withValues(alpha: 0.22),
+      thumbColor: Colors.white,
+      trackHeight: 4,
+    );
+
     return AlertDialog(
       backgroundColor: const Color(0xFF2C3138),
       title: Text(
@@ -299,42 +434,59 @@ class _RgbPickDialogContentState extends State<_RgbPickDialogContent> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _RgbSlider(
-              label: l10n.playlistCoverRgbRed,
-              value: _c.r,
-              onChanged: (v) => setState(() => _c = _c.withValues(red: v)),
-            ),
-            _RgbSlider(
-              label: l10n.playlistCoverRgbGreen,
-              value: _c.g,
-              onChanged: (v) => setState(() => _c = _c.withValues(green: v)),
-            ),
-            _RgbSlider(
-              label: l10n.playlistCoverRgbBlue,
-              value: _c.b,
-              onChanged: (v) => setState(() => _c = _c.withValues(blue: v)),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.playlistCoverRgbPreview,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.65),
-                  fontSize: 12,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                height: 52,
+                width: double.infinity,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _c,
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Text(
+                        l10n.playlistCoverRgbPreview,
+                        style: TextStyle(
+                          color: _contrastingLabel(_c),
+                          fontWeight: FontWeight.w700,
+                          shadows: const [
+                            Shadow(blurRadius: 4, color: Color(0x66000000)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 44,
-              width: double.infinity,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: _c,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white24),
-                ),
+            const SizedBox(height: 14),
+            SliderTheme(
+              data: sliderTheme,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _RgbSlider(
+                    label: l10n.playlistCoverRgbRed,
+                    value: _c.r,
+                    onChanged: (v) => setState(() => _c = _c.withValues(red: v)),
+                  ),
+                  _RgbSlider(
+                    label: l10n.playlistCoverRgbGreen,
+                    value: _c.g,
+                    onChanged: (v) =>
+                        setState(() => _c = _c.withValues(green: v)),
+                  ),
+                  _RgbSlider(
+                    label: l10n.playlistCoverRgbBlue,
+                    value: _c.b,
+                    onChanged: (v) =>
+                        setState(() => _c = _c.withValues(blue: v)),
+                  ),
+                ],
               ),
             ),
           ],
@@ -354,6 +506,11 @@ class _RgbPickDialogContentState extends State<_RgbPickDialogContent> {
         ),
       ],
     );
+  }
+
+  Color _contrastingLabel(Color bg) {
+    final luminance = bg.computeLuminance();
+    return luminance > 0.55 ? const Color(0xFF111418) : Colors.white;
   }
 }
 

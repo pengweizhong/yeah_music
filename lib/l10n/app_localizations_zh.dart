@@ -1137,6 +1137,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistCoverRgbPreview => '预览';
 
   @override
+  String get playlistCoverPreviewLabel => '当前效果';
+
+  @override
   String get playlistCoverMenuItem => '封面颜色…';
 
   @override
@@ -2594,6 +2597,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get playlistCoverRgbPreview => '预览';
 
   @override
+  String get playlistCoverPreviewLabel => '当前效果';
+
+  @override
   String get playlistCoverMenuItem => '封面颜色…';
 
   @override
@@ -4049,6 +4055,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playlistCoverRgbPreview => '預覽';
+
+  @override
+  String get playlistCoverPreviewLabel => '目前效果';
 
   @override
   String get playlistCoverMenuItem => '封面顏色…';

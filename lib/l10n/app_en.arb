@@ -411,6 +411,7 @@
   "playlistCoverRgbGreen": "Green",
   "playlistCoverRgbBlue": "Blue",
   "playlistCoverRgbPreview": "Preview",
+  "playlistCoverPreviewLabel": "Current appearance",
   "playlistCoverMenuItem": "Cover color…",
   "exportCannot": "This playlist cannot be exported",
   "exportSaved": "Exported: {path}",

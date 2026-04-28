@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
 
@@ -951,6 +953,7 @@ class _ContinuePlayLive extends StatelessWidget {
             : 0.0;
         final l10n = AppLocalizations.of(context);
         return _ContinuePlayCard(
+          song: song,
           title: song.title ?? l10n.homeUnknownTitle,
           subtitle: _secondary(song, l10n),
           progress: p,
@@ -1328,105 +1331,207 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _ContinuePlayCard extends StatelessWidget {
+class _ContinuePlayCard extends StatefulWidget {
   const _ContinuePlayCard({
+    required this.song,
     required this.title,
     required this.subtitle,
     required this.progress,
     required this.onToggle,
   });
+
+  final Song song;
   final String title;
   final String subtitle;
   final double progress;
   final Future<void> Function() onToggle;
 
   @override
+  State<_ContinuePlayCard> createState() => _ContinuePlayCardState();
+}
+
+class _ContinuePlayCardState extends State<_ContinuePlayCard> {
+  Uint8List? _coverBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncBytesFromSong();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateCoverIfNeeded());
+  }
+
+  @override
+  void didUpdateWidget(_ContinuePlayCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.song.path != widget.song.path) {
+      setState(() {
+        _coverBytes = null;
+        _syncBytesFromSong();
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateCoverIfNeeded());
+    }
+  }
+
+  void _syncBytesFromSong() {
+    final b = widget.song.imageBytes;
+    _coverBytes = (b != null && b.isNotEmpty) ? b : null;
+  }
+
+  Future<void> _hydrateCoverIfNeeded() async {
+    if (_coverBytes != null && _coverBytes!.isNotEmpty) return;
+    await SongLibraryMetadataHydrator.hydrateIfNeeded(widget.song);
+    if (!mounted) return;
+    final b = widget.song.imageBytes;
+    if (b != null && b.isNotEmpty) {
+      setState(() => _coverBytes = b);
+    }
+  }
+
+  void _onCoverDecodeFailed() {
+    if (_coverBytes == null) return;
+    setState(() => _coverBytes = null);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final useCover = _coverBytes != null && _coverBytes!.isNotEmpty;
+
+    final badgeFill =
+        useCover ? Colors.white.withValues(alpha: 0.22) : context.gradBorder(0.2);
+    final progressBg =
+        useCover ? Colors.white.withValues(alpha: 0.28) : context.gradBorder(0.25);
+
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: badgeFill,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                l10n.homeContinuePlaying,
+                style: TextStyle(
+                  color: context.gradFg(0.9),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+            const Spacer(),
+            StreamBuilder<bool>(
+              stream: MusicService.playingStream,
+              initialData: MusicService.isPlaying,
+              builder: (context, snap) {
+                final playing = snap.data ?? false;
+                return Icon(
+                  playing
+                      ? Icons.pause_circle_filled_rounded
+                      : Icons.play_circle_fill_rounded,
+                  color: context.gradFg(0.95),
+                  size: 32,
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          widget.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.gradFg(),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          widget.subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.gradFg(0.8),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: widget.progress,
+            minHeight: 3,
+            backgroundColor: progressBg,
+            valueColor: AlwaysStoppedAnimation<Color>(context.gradFg()),
+          ),
+        ),
+      ],
+    );
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => onToggle(),
+        onTap: () => widget.onToggle(),
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: context.gradBorder(0.08),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: context.gradBorder(0.1),
+              color: useCover
+                  ? Colors.white.withValues(alpha: 0.22)
+                  : context.gradBorder(0.1),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: context.gradBorder(0.2),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      l10n.homeContinuePlaying,
-                      style: TextStyle(
-                        color: context.gradFg(0.9),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  StreamBuilder<bool>(
-                    stream: MusicService.playingStream,
-                    initialData: MusicService.isPlaying,
-                    builder: (context, snap) {
-                      final playing = snap.data ?? false;
-                      return Icon(
-                        playing
-                            ? Icons.pause_circle_filled_rounded
-                            : Icons.play_circle_fill_rounded,
-                        color: context.gradFg(0.95),
-                        size: 32,
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: context.gradFg(),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
+                Positioned.fill(
+                  child: useCover
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.memory(
+                              _coverBytes!,
+                              fit: BoxFit.cover,
+                              gaplessPlayback: true,
+                              errorBuilder: (context, error, stackTrace) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (mounted) _onCoverDecodeFailed();
+                                });
+                                return const ColoredBox(color: Colors.transparent);
+                              },
+                            ),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.42),
+                                    Colors.black.withValues(alpha: 0.74),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ColoredBox(color: context.gradBorder(0.08)),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: context.gradFg(0.8),
-                  fontSize: 14,
+                Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: column,
                 ),
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 3,
-                  backgroundColor: context.gradBorder(0.25),
-                  valueColor: AlwaysStoppedAnimation<Color>(context.gradFg()),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

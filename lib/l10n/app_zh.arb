@@ -411,6 +411,7 @@
   "playlistCoverRgbGreen": "绿",
   "playlistCoverRgbBlue": "蓝",
   "playlistCoverRgbPreview": "预览",
+  "playlistCoverPreviewLabel": "当前效果",
   "playlistCoverMenuItem": "封面颜色…",
   "exportCannot": "无法导出该歌单",
   "exportSaved": "已导出：{path}",

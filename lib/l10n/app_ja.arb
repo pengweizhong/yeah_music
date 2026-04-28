@@ -411,6 +411,7 @@
   "playlistCoverRgbGreen": "緑",
   "playlistCoverRgbBlue": "青",
   "playlistCoverRgbPreview": "プレビュー",
+  "playlistCoverPreviewLabel": "現在の見え方",
   "playlistCoverMenuItem": "カバー色…",
   "exportCannot": "このプレイリストはエクスポートできません",
   "exportSaved": "エクスポートしました：{path}",
