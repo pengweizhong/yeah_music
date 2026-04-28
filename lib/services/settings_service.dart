@@ -1,5 +1,6 @@
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
+import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
@@ -15,6 +16,48 @@ class SettingsService {
   static const String _oneDriveIndexFoldersKey = 'onedrive_index_folders';
   static const String _oneDriveIndexTracksKey = 'onedrive_index_tracks';
   static const String _oneDriveIndexAtKey = 'onedrive_index_at_iso';
+  static const String _oneDriveCloudSortTypeKey = 'onedrive_cloud_sort_type';
+  static const String _oneDriveCloudSortAscKey = 'onedrive_cloud_sort_asc';
+
+  /// OneDrive 云端曲库列表的排序偏好。
+  static Future<({CloudTrackSortType type, bool asc})> loadOneDriveCloudListSort() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_oneDriveCloudSortTypeKey) as String?;
+      final ascRaw = box.get(_oneDriveCloudSortAscKey, defaultValue: true);
+      var asc = true;
+      if (ascRaw is bool) {
+        asc = ascRaw;
+      }
+      var t = CloudTrackSortType.fileName;
+      if (raw != null) {
+        for (final v in CloudTrackSortType.values) {
+          if (v.name == raw) {
+            t = v;
+            break;
+          }
+        }
+      }
+      return (type: t, asc: asc);
+    } catch (_) {
+      return (type: CloudTrackSortType.fileName, asc: true);
+    }
+  }
+
+  static Future<void> saveOneDriveCloudListSort(CloudTrackSortType type, bool ascending) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_oneDriveCloudSortTypeKey, type.name);
+      await box.put(_oneDriveCloudSortAscKey, ascending);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_oneDriveCloudSortTypeKey, type.name);
+        await box.put(_oneDriveCloudSortAscKey, ascending);
+      } catch (_) {}
+    }
+  }
 
   /// 保存歌词设置
   static Future<void> saveLyricSettings(LyricSettings settings) async {

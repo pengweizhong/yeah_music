@@ -186,6 +186,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get oneDriveCloudSearchHint => 'ファイル名やパスを検索…';
+
+  @override
   String get oneDriveNoIndexRoots => 'フォルダーが未設定です。先に「フォルダーを選ぶ」から設定してください。';
 
   @override
@@ -383,6 +386,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeEntryDiscover => '見つける';
+
+  @override
+  String get homeEntryCloudLibrary => 'クラウド曲庫';
 
   @override
   String get homeSectionQuickEntry => 'ショートカット';
@@ -766,6 +772,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sortByName => '名前順';
+
+  @override
+  String get sortByPath => 'パス順';
 
   @override
   String get sortByCreated => '作成日時';

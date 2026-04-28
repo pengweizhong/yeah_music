@@ -1,3 +1,12 @@
+/// 云端曲库列表排序方式（与 [sortCloudTracksCopy] 一致）。
+enum CloudTrackSortType {
+  /// 仅比较文件名
+  fileName,
+
+  /// 比较展示路径（根标签/子路径/文件名）
+  fullPath,
+}
+
 /// 云端索引中的一条曲目（仅存 Graph item id 与路径展示，不包含音频字节）。
 class OneDriveIndexFolder {
   OneDriveIndexFolder({required this.itemId, required this.label});

@@ -191,6 +191,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get oneDriveCloudSearchHint => 'Search file names or paths…';
+
+  @override
   String get oneDriveNoIndexRoots =>
       'No folders configured. Tap “Choose folders” first.';
 
@@ -397,6 +400,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeEntryDiscover => 'Discover';
+
+  @override
+  String get homeEntryCloudLibrary => 'Cloud library';
 
   @override
   String get homeSectionQuickEntry => 'Shortcuts';
@@ -785,6 +791,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortByName => 'By name';
+
+  @override
+  String get sortByPath => 'By path';
 
   @override
   String get sortByCreated => 'By date created';

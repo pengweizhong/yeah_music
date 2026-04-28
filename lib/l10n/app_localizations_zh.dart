@@ -184,6 +184,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get oneDriveCloudSearchHint => '搜索文件名或路径…';
+
+  @override
   String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
 
   @override
@@ -381,6 +384,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeEntryDiscover => '发现';
+
+  @override
+  String get homeEntryCloudLibrary => '云端曲库';
 
   @override
   String get homeSectionQuickEntry => '快捷入口';
@@ -762,6 +768,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sortByName => '按名称';
+
+  @override
+  String get sortByPath => '按路径';
 
   @override
   String get sortByCreated => '按创建时间';
@@ -1170,6 +1179,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get oneDriveCloudSearchHint => '搜索文件名或路径…';
+
+  @override
   String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
 
   @override
@@ -1367,6 +1379,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get homeEntryDiscover => '发现';
+
+  @override
+  String get homeEntryCloudLibrary => '云端曲库';
 
   @override
   String get homeSectionQuickEntry => '快捷入口';
@@ -1748,6 +1763,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get sortByName => '按名称';
+
+  @override
+  String get sortByPath => '按路径';
 
   @override
   String get sortByCreated => '按创建时间';
@@ -2156,6 +2174,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String get oneDriveCloudSearchHint => '搜尋檔名或路徑…';
+
+  @override
   String get oneDriveNoIndexRoots => '尚未設定目錄，請先用「在網路磁碟選擇資料夾」。';
 
   @override
@@ -2353,6 +2374,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeEntryDiscover => '探索';
+
+  @override
+  String get homeEntryCloudLibrary => '雲端曲庫';
 
   @override
   String get homeSectionQuickEntry => '捷徑';
@@ -2734,6 +2758,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sortByName => '依名稱';
+
+  @override
+  String get sortByPath => '依路徑';
 
   @override
   String get sortByCreated => '依建立時間';

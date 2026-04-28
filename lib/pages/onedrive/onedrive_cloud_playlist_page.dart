@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
@@ -9,237 +10,77 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
+import 'package:yeah_music/services/settings_service.dart';
+import 'package:yeah_music/utils/cloud_track_list_utils.dart';
+import 'package:yeah_music/widgets/cloud_track_search_delegate.dart';
+import 'package:yeah_music/widgets/cloud_track_sort_sheet.dart';
 
-/// OneDrive：将用户配置的目录递归索引为曲目列表；点播再走按需下载。
-class OneDriveCloudPlaylistPage extends StatelessWidget {
+/// OneDrive：索引目录下的云端曲目；纯列表，支持搜索 / 排序；点播按需下载并读本地缓存。
+class OneDriveCloudPlaylistPage extends StatefulWidget {
   const OneDriveCloudPlaylistPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Consumer2<ThemeConfigProvider, OneDriveController>(
-      builder: (context, theme, od, _) {
-        final localeTag = Localizations.localeOf(context).toLanguageTag();
-        final lastIndexedFmt = od.cloudIndexAt != null
-            ? DateFormat.yMMMd(localeTag).add_jm().format(od.cloudIndexAt!)
-            : '';
+  State<OneDriveCloudPlaylistPage> createState() => _OneDriveCloudPlaylistPageState();
+}
 
-        return theme.buildThemedBackground(
-          context: context,
-          child: Scaffold(
-            extendBodyBehindAppBar: true,
-            extendBody: true,
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              title: Text(
-                l10n.oneDriveCloudLibraryTitle,
-                style: const TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-              actions: [
-                IconButton(
-                  tooltip: l10n.oneDriveBrowserTitle,
-                  icon: const Icon(Icons.folder_open_outlined),
-                  onPressed: () {
-                    Navigator.push<void>(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const OneDriveBrowserPage(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-            body: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    MediaQuery.paddingOf(context).top + kToolbarHeight + 8,
-                    20,
-                    8,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate.fixed([
-                      Text(
-                        l10n.oneDriveCloudLibrarySubtitle,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
-                          fontSize: 14,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 8,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: od.signedIn && !od.cloudIndexBuilding ? () => _browseAdd(context, od) : null,
-                            icon: const Icon(Icons.folder_copy_outlined),
-                            label: Text(l10n.oneDriveBrowseFolders),
-                          ),
-                          FilledButton.tonal(
-                            onPressed: od.signedIn && !od.cloudIndexBuilding && od.indexFolders.isNotEmpty
-                                ? () => _runRescan(context, od)
-                                : null,
-                            child: Text(l10n.oneDriveRescanIndex),
-                          ),
-                        ],
-                      ),
-                      if (od.cloudIndexError != null) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          l10n.oneDriveError(od.cloudIndexError!),
-                          style: const TextStyle(color: Color(0xFFFFAB91), fontSize: 13),
-                        ),
-                      ],
-                      if (od.cloudIndexBuilding) ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white54),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                l10n.oneDriveIndexingEllipsis,
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      if (od.cloudIndexAt != null && lastIndexedFmt.isNotEmpty && !od.cloudIndexBuilding) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          l10n.oneDriveLastIndexed(lastIndexedFmt),
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.oneDriveTracksCount(od.cloudTracks.length),
-                          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                      Text(
-                        l10n.oneDriveIndexRootsLabel,
-                        style:
-                            const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 15),
-                      ),
-                      const SizedBox(height: 8),
-                      if (od.indexFolders.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child:
-                              Text(l10n.oneDriveNoIndexRoots, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
-                        ),
-                      ...od.indexFolders.map(
-                        (f) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.22),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ListTile(
-                              leading: Icon(
-                                Icons.folder_special_rounded,
-                                color: Colors.orangeAccent.withValues(alpha: 0.9),
-                              ),
-                              title: Text(f.label, style: const TextStyle(color: Colors.white)),
-                              subtitle: Text(
-                                f.itemId,
-                                style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35)),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              trailing: IconButton(
-                                tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                                icon: Icon(Icons.delete_outline, color: Colors.white.withValues(alpha: 0.55)),
-                                onPressed:
-                                    od.cloudIndexBuilding ? null : () async => od.removeIndexFolder(f.itemId),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      if (od.cloudTracks.isNotEmpty && !od.cloudIndexBuilding)
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.tonalIcon(
-                            onPressed: od.signedIn ? () => _playAll(context, od) : null,
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            label: Text(l10n.oneDrivePlayAllTracks),
-                          ),
-                        ),
-                      if (od.cloudTracks.isEmpty && od.indexFolders.isNotEmpty && !od.cloudIndexBuilding && od.cloudIndexError == null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12, bottom: 8),
-                          child: Text(
-                            l10n.oneDriveCloudLibraryEmpty,
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.55), height: 1.5),
-                          ),
-                        ),
-                    ]),
-                  ),
-                ),
-                if (od.cloudTracks.isNotEmpty && !od.cloudIndexBuilding)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 120),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final t = od.cloudTracks[index];
-                          final isLast = index == od.cloudTracks.length - 1;
-                          return Column(
-                            children: [
-                              ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                                leading: const Icon(Icons.audiotrack_rounded, color: Color(0xFF81D4FA), size: 22),
-                                title: Text(
-                                  t.fileName,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  t.displayPath,
-                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                onTap:
-                                    od.cloudIndexBuilding ? null : () => _tapTrack(context, od, t),
-                              ),
-                              if (!isLast) const Divider(height: 1, color: Color(0x22FFFFFF)),
-                            ],
-                          );
-                        },
-                        childCount: od.cloudTracks.length,
-                      ),
-                    ),
-                  )
-                else
-                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
-              ],
-            ),
-            bottomNavigationBar: const MiniPlayer(),
-          ),
-        );
-      },
+class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
+  CloudTrackSortType _sortType = CloudTrackSortType.fileName;
+  bool _ascending = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSortPrefs();
+  }
+
+  Future<void> _loadSortPrefs() async {
+    final s = await SettingsService.loadOneDriveCloudListSort();
+    if (!mounted) return;
+    setState(() {
+      _sortType = s.type;
+      _ascending = s.asc;
+    });
+  }
+
+  List<OneDriveCloudTrack> _ordered(OneDriveController od) {
+    return sortCloudTracksCopy(od.cloudTracks, _sortType, _ascending);
+  }
+
+  Future<void> _applySort(CloudTrackSortType t, bool asc) async {
+    setState(() {
+      _sortType = t;
+      _ascending = asc;
+    });
+    await SettingsService.saveOneDriveCloudListSort(t, asc);
+  }
+
+  Future<void> _openSearch(
+    BuildContext context,
+    AppLocalizations l10n,
+    OneDriveController od,
+  ) async {
+    final ordered = _ordered(od);
+    final picked = await showSearch<OneDriveCloudTrack?>(
+      context: context,
+      delegate: CloudTrackSearchDelegate(
+        sortedTracks: ordered,
+        searchFieldLabelText: l10n.oneDriveCloudSearchHint,
+      ),
+    );
+    if (!context.mounted || picked == null) return;
+    await _tapTrack(context, picked);
+  }
+
+  void _showSortSheet(BuildContext context) {
+    showCloudTrackSortBottomSheet(
+      context,
+      sortType: _sortType,
+      isAscending: _ascending,
+      onApply: _applySort,
     );
   }
 
-  static Future<void> _browseAdd(BuildContext context, OneDriveController od) async {
+  Future<void> _browseAdd(BuildContext context, OneDriveController od) async {
     final picked = await Navigator.of(context).push<OneDriveFolderPickResult>(
       MaterialPageRoute(builder: (_) => const OneDriveBrowserPage(pickFolderForIndex: true)),
     );
@@ -249,7 +90,7 @@ class OneDriveCloudPlaylistPage extends StatelessWidget {
     await _runRescan(context, od);
   }
 
-  static Future<void> _runRescan(BuildContext context, OneDriveController od) async {
+  Future<void> _runRescan(BuildContext context, OneDriveController od) async {
     try {
       await od.rebuildCloudIndex();
     } catch (e) {
@@ -261,9 +102,10 @@ class OneDriveCloudPlaylistPage extends StatelessWidget {
     }
   }
 
-  static Future<void> _playAll(BuildContext context, OneDriveController od) async {
+  Future<void> _playAll(BuildContext context, OneDriveController od) async {
     final l10n = AppLocalizations.of(context);
     final play = context.read<PlayListProvider>();
+    final queue = sortCloudTracksCopy(od.cloudTracks, _sortType, _ascending);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -278,7 +120,7 @@ class OneDriveCloudPlaylistPage extends StatelessWidget {
       ),
     );
     try {
-      final songs = await od.buildQueueForCloudTracks(od.cloudTracks.toList(growable: false));
+      final songs = await od.buildQueueForCloudTracks(queue);
       if (!context.mounted) return;
       Navigator.pop(context);
       if (songs.isEmpty) {
@@ -294,9 +136,10 @@ class OneDriveCloudPlaylistPage extends StatelessWidget {
     }
   }
 
-  static Future<void> _tapTrack(BuildContext context, OneDriveController od, OneDriveCloudTrack t) async {
+  Future<void> _tapTrack(BuildContext context, OneDriveCloudTrack t) async {
     final l10n = AppLocalizations.of(context);
     final play = context.read<PlayListProvider>();
+    final od = context.read<OneDriveController>();
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -313,5 +156,183 @@ class OneDriveCloudPlaylistPage extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.oneDriveError('$e'))));
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Consumer2<ThemeConfigProvider, OneDriveController>(
+      builder: (context, theme, od, _) {
+        final localeTag = Localizations.localeOf(context).toLanguageTag();
+        final lastFmt = od.cloudIndexAt != null
+            ? DateFormat.yMMMd(localeTag).add_jm().format(od.cloudIndexAt!)
+            : '';
+        final tracks = _ordered(od);
+
+        return theme.buildThemedBackground(
+          context: context,
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              title: Text(
+                l10n.oneDriveCloudLibraryTitle,
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+              systemOverlayStyle: SystemUiOverlayStyle.light,
+              actions: [
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                  color: const Color(0xFF1E1E1E),
+                  onSelected: od.signedIn && !od.cloudIndexBuilding
+                      ? (value) async {
+                          if (value == 'rescan') {
+                            await _runRescan(context, od);
+                          } else if (value == 'add') {
+                            await _browseAdd(context, od);
+                          } else if (value == 'browse' && context.mounted) {
+                            await Navigator.push<void>(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => const OneDriveBrowserPage(),
+                              ),
+                            );
+                          }
+                        }
+                      : null,
+                  itemBuilder: (ctx) => [
+                    PopupMenuItem(value: 'rescan', enabled: od.indexFolders.isNotEmpty, child: Text(l10n.oneDriveRescanIndex)),
+                    PopupMenuItem(value: 'add', child: Text(l10n.oneDriveBrowseFolders)),
+                    PopupMenuItem(value: 'browse', child: Text(l10n.oneDriveBrowserTitle)),
+                  ],
+                ),
+                IconButton(
+                  tooltip: l10n.homeSearchTooltip,
+                  icon: const Icon(Icons.search_rounded),
+                  onPressed:
+                      od.signedIn && od.cloudTracks.isNotEmpty && !od.cloudIndexBuilding ? () => _openSearch(context, l10n, od) : null,
+                ),
+                IconButton(
+                  tooltip: l10n.tooltipSort,
+                  icon: const Icon(Icons.sort_rounded),
+                  onPressed: od.signedIn && od.cloudTracks.isNotEmpty && !od.cloudIndexBuilding ? () => _showSortSheet(context) : null,
+                ),
+              ],
+            ),
+            body: Column(
+              children: [
+                if (od.cloudIndexBuilding)
+                  const LinearProgressIndicator(
+                    minHeight: 2,
+                    backgroundColor: Color(0x22FFFFFF),
+                    color: Color(0xFF64B5F6),
+                  ),
+                if (od.cloudIndexError != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(l10n.oneDriveError(od.cloudIndexError!), style: const TextStyle(color: Color(0xFFFFAB91), fontSize: 13)),
+                  ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: MediaQuery.paddingOf(context).top + kToolbarHeight + (od.cloudIndexBuilding ? 8 : 12),
+                    bottom: 6,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (lastFmt.isNotEmpty && !od.cloudIndexBuilding) ...[
+                        Text(
+                          l10n.oneDriveLastIndexed(lastFmt),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(l10n.oneDriveTracksCount(tracks.length),
+                            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500, fontSize: 13)),
+                        const SizedBox(height: 10),
+                      ],
+                      if (tracks.isNotEmpty && !od.cloudIndexBuilding)
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.tonalIcon(
+                            onPressed: od.signedIn ? () => _playAll(context, od) : null,
+                            icon: const Icon(Icons.play_arrow_rounded),
+                            label: Text(l10n.oneDrivePlayAllTracks),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: _buildBodyList(context, theme, od, l10n, tracks),
+                ),
+              ],
+            ),
+            bottomNavigationBar: const MiniPlayer(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBodyList(
+    BuildContext context,
+    ThemeConfigProvider theme,
+    OneDriveController od,
+    AppLocalizations l10n,
+    List<OneDriveCloudTrack> tracks,
+  ) {
+    if (od.cloudIndexBuilding && tracks.isEmpty) {
+      return Center(
+        child: Text(l10n.oneDriveIndexingEllipsis, style: const TextStyle(color: Colors.white54)),
+      );
+    }
+    if (od.indexFolders.isEmpty && !od.cloudIndexBuilding) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(l10n.oneDriveNoIndexRoots, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.65), height: 1.45)),
+        ),
+      );
+    }
+    if (tracks.isEmpty && !od.cloudIndexBuilding) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(l10n.oneDriveCloudLibraryEmpty, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), height: 1.5)),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 120),
+      itemCount: tracks.length,
+      separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0x22FFFFFF)),
+      itemBuilder: (context, index) {
+        final t = tracks[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+          leading: const Icon(Icons.audiotrack_rounded, color: Color(0xFF81D4FA), size: 22),
+          title: Text(
+            t.fileName,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            t.displayPath,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onTap:
+              od.cloudIndexBuilding ? null : () => _tapTrack(context, t),
+        );
+      },
+    );
   }
 }

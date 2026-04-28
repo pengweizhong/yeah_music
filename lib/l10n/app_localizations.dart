@@ -432,6 +432,12 @@ abstract class AppLocalizations {
   /// **'{count} songs'**
   String oneDriveTracksCount(int count);
 
+  /// No description provided for @oneDriveCloudSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search file names or paths…'**
+  String get oneDriveCloudSearchHint;
+
   /// No description provided for @oneDriveNoIndexRoots.
   ///
   /// In en, this message translates to:
@@ -815,6 +821,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discover'**
   String get homeEntryDiscover;
+
+  /// No description provided for @homeEntryCloudLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud library'**
+  String get homeEntryCloudLibrary;
 
   /// No description provided for @homeSectionQuickEntry.
   ///
@@ -1499,6 +1511,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By name'**
   String get sortByName;
+
+  /// No description provided for @sortByPath.
+  ///
+  /// In en, this message translates to:
+  /// **'By path'**
+  String get sortByPath;
 
   /// No description provided for @sortByCreated.
   ///
