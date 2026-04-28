@@ -1,12 +1,15 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 
 /// 最近播放列表行（首页、最近播放页共用）。顺序由调用方传入的 [paths] 决定，不在此重排。
-class RecentPlayListRow extends StatelessWidget {
+class RecentPlayListRow extends StatefulWidget {
   const RecentPlayListRow({
     super.key,
     required this.song,
@@ -16,73 +19,133 @@ class RecentPlayListRow extends StatelessWidget {
   });
 
   final Song song;
+  /// 轻量占位；后台补全后以 [songListSecondaryLine] 为准。
   final String subtitle;
   final bool isCurrent;
   final VoidCallback onTap;
 
   @override
+  State<RecentPlayListRow> createState() => _RecentPlayListRowState();
+}
+
+class _RecentPlayListRowState extends State<RecentPlayListRow> {
+  Future<void>? _ongoingHydrate;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateAfterLayout());
+  }
+
+  @override
+  void didUpdateWidget(RecentPlayListRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.song.path != widget.song.path) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _hydrateAfterLayout());
+    }
+  }
+
+  void _onRowVisibilityChanged(VisibilityInfo info) {
+    if (!mounted || info.visibleFraction < 0.06) return;
+    _hydrateAfterLayout();
+  }
+
+  void _hydrateAfterLayout() {
+    if (!mounted) return;
+    final song = widget.song;
+    final fut = _ongoingHydrate ??=
+        SongLibraryMetadataHydrator.hydrateIfNeeded(song).whenComplete(() {
+      _ongoingHydrate = null;
+    });
+    fut.then((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
+  }
+
+  String _displayTitle() {
+    final t = widget.song.title;
+    if (t != null && t.trim().isNotEmpty) return t;
+    return '未知';
+  }
+
+  String _displaySubtitle() {
+    final line = songListSecondaryLine(widget.song);
+    if (line.trim().isNotEmpty) return line;
+    return widget.subtitle;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: isCurrent
-                ? Colors.white.withValues(alpha: 0.12)
-                : null,
-            border: isCurrent
-                ? Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1,
-                  )
-                : null,
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-          child: Row(
-            children: [
-              SongListCover(
-                song: song,
-                size: 48,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      song.title ?? '未知',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: isCurrent
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.95),
-                        fontSize: 15,
-                        fontWeight:
-                            isCurrent ? FontWeight.w700 : FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: isCurrent
-                            ? Colors.white.withValues(alpha: 0.7)
-                            : Colors.white.withValues(alpha: 0.5),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+    final titleStr = _displayTitle();
+    final subtitleStr = _displaySubtitle();
+    return VisibilityDetector(
+      key: ValueKey<String>('recent_row_vis_${widget.song.path}'),
+      onVisibilityChanged: _onRowVisibilityChanged,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: widget.isCurrent
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : null,
+              border: widget.isCurrent
+                  ? Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1,
+                    )
+                  : null,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            child: Row(
+              children: [
+                SongListCover(
+                  song: widget.song,
+                  size: 48,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-              _RecentPlayTrailingIcon(isCurrent: isCurrent),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titleStr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: widget.isCurrent
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.95),
+                          fontSize: 15,
+                          fontWeight: widget.isCurrent
+                              ? FontWeight.w700
+                              : FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitleStr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: widget.isCurrent
+                              ? Colors.white.withValues(alpha: 0.7)
+                              : Colors.white.withValues(alpha: 0.5),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _RecentPlayTrailingIcon(isCurrent: widget.isCurrent),
+              ],
+            ),
           ),
         ),
       ),

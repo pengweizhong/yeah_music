@@ -18,6 +18,7 @@ import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
@@ -131,16 +132,6 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
         _saveSort();
       },
     );
-  }
-
-  String _subtitle(Song song) {
-    if (song.artist == null || song.artist!.isEmpty) {
-      return song.album ?? '';
-    }
-    if (song.album == null || song.album!.isEmpty) {
-      return song.artist!;
-    }
-    return '${song.artist} · ${song.album}';
   }
 
   Future<void> _confirmDeletePlaylist(
@@ -482,6 +473,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                               itemExtent: 80,
                               playList: playList,
                               child: ScrollAwareListFrame(
+                                scrollController: _listScrollController,
                                 child: ListView.builder(
                                   controller: _listScrollController,
                                   itemExtent: 80,
@@ -521,7 +513,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                         ),
                                         song: song,
                                         title: song.title ?? l10n.pageUnknownTitle,
-                                        subtitle: _subtitle(song),
+                                        subtitle:
+                                            songListSecondaryLine(song),
                                         isCurrent: isRowCurrent,
                                         onTap: () async {
                                           final playListProv = context

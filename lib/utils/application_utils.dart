@@ -188,6 +188,13 @@ class ApplicationUtils {
   static final Map<String, ImageProvider> _coverProviderCache = {};
   static const int _coverProviderMax = 500;
 
+  /// 按需写入 [Song.imageBytes] 后调用，丢弃该曲路径下各尺寸缓存条目，避免继续用占位 [AssetImage]。
+  static void evictSongCoverProvidersForPath(String songPath) {
+    if (songPath.isEmpty) return;
+    final prefix = '$songPath#';
+    _coverProviderCache.removeWhere((k, _) => k.startsWith(prefix));
+  }
+
   /// 获取歌曲封面 [ImageProvider]。
   /// 内嵌封面使用 [ResizeImage] 按 [size]×[devicePixelRatio] 降采样解码，避免列表滚动时全尺寸解码进显存。
   static ImageProvider getImageCoverProvider(

@@ -262,9 +262,11 @@ class _ScrollToCurrentLocateLayerState extends State<ScrollToCurrentLocateLayer>
     final fabRight = widget.userActivityListScrollController != null
         ? 72.0
         : 16.0;
+    // 非 Positioned 子项在 Stack 中不会自动展开到父约束；未铺满时 Scrollbar 轨道会缩成
+    // 小块（看似「钉在右上」）且滑块无法拖动。必须填满再叠定位钮。
     return Stack(
       children: [
-        scrollHost,
+        Positioned.fill(child: scrollHost),
         if (_showFab)
           Positioned(
             right: fabRight,

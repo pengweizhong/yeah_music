@@ -203,6 +203,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                         itemExtent: 86,
                         playList: playList,
                         child: ScrollAwareListFrame(
+                          scrollController: _listScrollController,
                           child: ListView.builder(
                             controller: _listScrollController,
                             itemExtent: 86,

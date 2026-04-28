@@ -12,6 +12,7 @@ import '../compments/play_list_provider.dart';
 import '../models/playback_session_surface.dart';
 import '../navigation/app_route_observer.dart';
 import '../utils/scroll_list_to_current_song.dart';
+import '../utils/song_display_lines.dart';
 import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
 import '../widgets/compact_song_list_row.dart';
@@ -311,6 +312,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                               itemExtent: 80,
                               playList: playListProvider,
                               child: ScrollAwareListFrame(
+                                scrollController: _listScrollController,
                                 child: ListView.builder(
                                   controller: _listScrollController,
                                   itemExtent: 80,
@@ -330,7 +332,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                       key: ValueKey<String>(song.path),
                                       song: song,
                                       title: song.title ?? l10n.pageUnknownTitle,
-                                      subtitle: showSecondTitle(song),
+                                      subtitle: songListSecondaryLine(song),
                                       isCurrent: isRowCurrent,
                                       onTap: () async {
                                         if (isRowCurrent) {
@@ -368,16 +370,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         );
       },
     );
-  }
-
-  String showSecondTitle(Song song) {
-    if (song.artist == null || song.artist!.isEmpty) {
-      return song.album ?? "";
-    }
-    if (song.album == null || song.album!.isEmpty) {
-      return song.artist!;
-    }
-    return "${song.artist} - ${song.album}";
   }
 }
 
@@ -541,7 +533,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                 key: ValueKey('search_${song.path}'),
                 song: song,
                 title: song.title ?? l10n.pageUnknownTitle,
-                subtitle: song.artist ?? song.album ?? '',
+                subtitle: songListSecondaryLine(song),
                 isCurrent: isRowCurrent,
                 onTap: () async {
                   close(context, song);

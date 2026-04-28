@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
@@ -25,6 +26,8 @@ void main() {
   appLog.i('应用正在启动');
 
   WidgetsFlutterBinding.ensureInitialized();
+  VisibilityDetectorController.instance.updateInterval =
+      const Duration(milliseconds: 80);
   PaintingBinding.instance.imageCache
     ..maximumSize = 500
     ..maximumSizeBytes = 200 << 20;

@@ -1,19 +1,32 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:audio_metadata_reader/audio_metadata_reader.dart'
+    show AudioMetadata, readMetadata;
 import 'package:charset/charset.dart';
 import 'package:yeah_music/logging/app_log.dart';
 
 import '../models/song.dart';
 
 class FileUtils {
-  static Future<void> loadSongMeta(Song song) async {
-    final metadata;
-    String filename = song.path.split("/").last;
+  /// 读取音频元数据。
+  ///
+  /// - [loadEmbeddedAlbumArt]：若为 false（适合「整文件夹批量入库」），不解析内嵌大图，内存与 Hive 体积极大下降；
+  ///   列表等处可走 [SongLibraryMetadataHydrator] 后台补全封面与歌词等，或由 [ApplicationUtils.getImageCoverProvider] 占位。
+  /// - [storeLyricsWithTrack]：若为 false，不写入歌词（长文本占内存且扫描阶段不需要）。
+  /// - [maxEmbeddedArtBytes]：非 null 时，首帧内嵌图超过该字节则不写入封面（避免 FLAC 巨幅图撑爆内存/Hive）。
+  ///   不传则不对大小做裁剪（单次全量入库等场景）。
+  static Future<void> loadSongMeta(
+    Song song, {
+    bool loadEmbeddedAlbumArt = true,
+    bool storeLyricsWithTrack = true,
+    int? maxEmbeddedArtBytes,
+  }) async {
+    String filename = song.path.split('/').last;
     File file = File(song.path);
+    late final AudioMetadata metadata;
     try {
-      metadata = readMetadata(file, getImage: true);
+      metadata = readMetadata(file, getImage: loadEmbeddedAlbumArt);
     } catch (e) {
       song.title = filename;
       appLog.e('读取歌曲元信息失败', error: e);
@@ -27,12 +40,24 @@ class FileUtils {
     song.year = metadata.year;
     song.trackNumber = metadata.trackNumber;
     song.discNumber = metadata.discNumber;
-    song.lyrics = metadata.lyrics;
     song.sampleRate = metadata.sampleRate;
     song.bitrate = metadata.bitrate;
-    song.pictures = metadata.pictures;
-    if (song.pictures != null && song.pictures!.isNotEmpty) {
-      song.imageBytes = song.pictures![0].bytes;
+    song.lyrics = storeLyricsWithTrack ? metadata.lyrics : null;
+    song.pictures = loadEmbeddedAlbumArt ? metadata.pictures : null;
+    if (loadEmbeddedAlbumArt &&
+        song.pictures != null &&
+        song.pictures!.isNotEmpty) {
+      final raw = song.pictures![0].bytes;
+      final limit = maxEmbeddedArtBytes;
+      final tooBig = limit != null && raw.length > limit;
+      if (tooBig) {
+        song.pictures = null;
+        song.imageBytes = null;
+      } else {
+        song.imageBytes = raw;
+      }
+    } else {
+      song.imageBytes = null;
     }
     await loadFileStat(song);
   }

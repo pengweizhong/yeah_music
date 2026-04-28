@@ -28,6 +28,7 @@ abstract final class AppMaterialThemes {
           borderRadius: BorderRadius.circular(16),
         ),
       ),
+      scrollbarTheme: const ScrollbarThemeData(interactive: true),
     );
   }
 
@@ -49,6 +50,7 @@ abstract final class AppMaterialThemes {
           borderRadius: BorderRadius.circular(16),
         ),
       ),
+      scrollbarTheme: const ScrollbarThemeData(interactive: true),
     );
   }
 }

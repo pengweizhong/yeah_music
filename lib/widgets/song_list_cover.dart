@@ -56,8 +56,8 @@ class SongListCoverStaticShell extends StatelessWidget {
   }
 }
 
-/// 列表/迷你播放条用封面：按逻辑尺寸与设备 DPR 限制解码，减轻内存峰值；滑动中不卸 [Image]，
-/// 已解码资源由 [ImageCache] 与 [ApplicationUtils] 的 provider 缓存复用，避免整屏闪动。
+/// 列表/迷你播放条用封面；内嵌字节由列表行等处 [SongLibraryMetadataHydrator] 补全后展示。
+/// 解码按 [Song.path] 去重缓存，同路径多处共享字节。
 class SongListCover extends StatelessWidget {
   const SongListCover({
     super.key,
@@ -79,15 +79,16 @@ class SongListCover extends StatelessWidget {
       devicePixelRatio: dpr,
     );
 
-    // 不使用 frameBuilder 渐显：停滑/回收后再挂上 Image 时，缓存命中的图也会首帧
-    // frame==null 被做成 opacity:0 再 100ms 渐显，体感像“重新加载”。底层已有占位色。
     final img = Image(
+      key: ValueKey<Object>(
+        Object.hash(song.path, song.imageBytes?.length, song.imageBytes),
+      ),
       image: image,
       width: size,
       height: size,
       fit: BoxFit.cover,
       filterQuality: FilterQuality.low,
-      gaplessPlayback: true,
+      gaplessPlayback: false,
       errorBuilder: (context, error, stackTrace) {
         return ColoredBox(
           color: songListCoverPlaceholderColor(),

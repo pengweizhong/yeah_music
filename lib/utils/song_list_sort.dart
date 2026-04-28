@@ -53,7 +53,11 @@ List<Song> sortSongsCopy(
         }
         break;
     }
-    return ascending ? result : -result;
+    // 主键相同时用路径二次排序，次序稳定（不随升/降翻转路径比较）。
+    if (result != 0) {
+      return ascending ? result : -result;
+    }
+    return a.path.compareTo(b.path);
   });
   return out;
 }

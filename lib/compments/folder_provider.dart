@@ -125,21 +125,20 @@ class FolderProvider extends ChangeNotifier {
       final songFiles = await _listAudioFilesAsync(dir);
       appLog.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
       
-      // 批量处理歌曲，避免一次性加载过多导致内存溢出
+      // 批量处理：不解析内嵌封面（列表页 [SongListCover] 后台按需加载），不写歌词，降低内存/Hive
       List<Song> songlist = [];
-      const batchSize = 50; // 每批处理50首歌曲
-      
+      const batchSize = 28;
+
       for (int i = 0; i < songFiles.length; i += batchSize) {
-        final end = (i + batchSize < songFiles.length) ? i + batchSize : songFiles.length;
+        final end = (i + batchSize < songFiles.length)
+            ? i + batchSize
+            : songFiles.length;
         final batch = songFiles.sublist(i, end);
-        
-        // 批量加载元数据
+
         final batchSongs = await _loadSongBatch(batch);
         songlist.addAll(batchSongs);
-        
-        // 每处理一批后，让出控制权，避免阻塞UI
+
         await Future.delayed(Duration.zero);
-        
       }
       if (songFiles.isNotEmpty) {
         appLog.d('目录已扫描: ${dir.path} → ${songlist.length} 首');
@@ -193,28 +192,34 @@ class FolderProvider extends ChangeNotifier {
     return audioFiles;
   }
 
-  /// 批量加载歌曲元数据
+  /// 批量加载歌曲元数据（须 [await] 逐首完成）；不写内嵌封面（列表按需在 UI 层补全）。
   Future<List<Song>> _loadSongBatch(List<File> files) async {
     final List<Song> songs = [];
-    
-    for (var file in files) {
+    var n = 0;
+    for (final file in files) {
       try {
-        Song song = Song(file.path);
-        FileUtils.loadSongMeta(song);
+        final song = Song(file.path);
+        await FileUtils.loadSongMeta(
+          song,
+          loadEmbeddedAlbumArt: false,
+          storeLyricsWithTrack: false,
+        );
         songs.add(song);
       } catch (e) {
         appLog.w('歌曲元数据读取失败', error: e);
-        // 即使元数据加载失败，也添加基本信息
         try {
-          Song song = Song(file.path);
-          song.title = file.path.split('/').last.replaceAll(RegExp(r'\.\w+$'), '');
+          final song = Song(file.path);
+          song.title =
+              file.path.split('/').last.replaceAll(RegExp(r'\.\w+$'), '');
           songs.add(song);
-        } catch (_) {
-          // 完全失败，跳过这首歌
-        }
+        } catch (_) {}
+      }
+      n++;
+      // 分批内也会让出 UI，减轻大目录卡顿
+      if (n % 8 == 0) {
+        await Future<void>.delayed(Duration.zero);
       }
     }
-    
     return songs;
   }
 
