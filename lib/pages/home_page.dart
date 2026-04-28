@@ -33,6 +33,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/widgets/wave_progress_bar.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
 
@@ -948,15 +949,13 @@ class _ContinuePlayLive extends StatelessWidget {
       builder: (context, posSnap) {
         final pos = posSnap.data ?? Duration.zero;
         final dur = MusicService.duration;
-        final p = (dur != null && dur.inMilliseconds > 0)
-            ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
-            : 0.0;
         final l10n = AppLocalizations.of(context);
         return _ContinuePlayCard(
           song: song,
           title: song.title ?? l10n.homeUnknownTitle,
           subtitle: _secondary(song, l10n),
-          progress: p,
+          position: pos,
+          duration: dur,
           onToggle: () async {
             if (MusicService.isPlaying) {
               await MusicService().pause();
@@ -1336,14 +1335,16 @@ class _ContinuePlayCard extends StatefulWidget {
     required this.song,
     required this.title,
     required this.subtitle,
-    required this.progress,
+    required this.position,
+    required this.duration,
     required this.onToggle,
   });
 
   final Song song;
   final String title;
   final String subtitle;
-  final double progress;
+  final Duration position;
+  final Duration? duration;
   final Future<void> Function() onToggle;
 
   @override
@@ -1352,6 +1353,7 @@ class _ContinuePlayCard extends StatefulWidget {
 
 class _ContinuePlayCardState extends State<_ContinuePlayCard> {
   Uint8List? _coverBytes;
+  double? _dragFraction;
 
   @override
   void initState() {
@@ -1366,6 +1368,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
     if (oldWidget.song.path != widget.song.path) {
       setState(() {
         _coverBytes = null;
+        _dragFraction = null;
         _syncBytesFromSong();
       });
       WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateCoverIfNeeded());
@@ -1402,136 +1405,193 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
     final progressBg =
         useCover ? Colors.white.withValues(alpha: 0.28) : context.gradBorder(0.25);
 
-    final column = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeFill,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                l10n.homeContinuePlaying,
-                style: TextStyle(
-                  color: context.gradFg(0.9),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
+    final fg = context.gradFg();
+    final dur = widget.duration;
+    final canSeek = dur != null && dur.inMilliseconds > 0;
+
+    double effectiveFraction() {
+      final drag = _dragFraction;
+      if (drag != null) return drag.clamp(0.0, 1.0);
+      if (!canSeek) return 0.0;
+      return (widget.position.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0);
+    }
+
+    final titleBlock = InkWell(
+      onTap: () => widget.onToggle(),
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeFill,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  l10n.homeContinuePlaying,
+                  style: TextStyle(
+                    color: context.gradFg(0.9),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ),
+              const Spacer(),
+              StreamBuilder<bool>(
+                stream: MusicService.playingStream,
+                initialData: MusicService.isPlaying,
+                builder: (context, snap) {
+                  final playing = snap.data ?? false;
+                  return Icon(
+                    playing
+                        ? Icons.pause_circle_filled_rounded
+                        : Icons.play_circle_fill_rounded,
+                    color: context.gradFg(0.95),
+                    size: 32,
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            widget.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: context.gradFg(),
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
             ),
-            const Spacer(),
-            StreamBuilder<bool>(
-              stream: MusicService.playingStream,
-              initialData: MusicService.isPlaying,
-              builder: (context, snap) {
-                final playing = snap.data ?? false;
-                return Icon(
-                  playing
-                      ? Icons.pause_circle_filled_rounded
-                      : Icons.play_circle_fill_rounded,
-                  color: context.gradFg(0.95),
-                  size: 32,
-                );
-              },
+          ),
+          const SizedBox(height: 4),
+          Text(
+            widget.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: context.gradFg(0.8),
+              fontSize: 14,
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+
+    int playbackMsForWave() {
+      final drag = _dragFraction;
+      final d = widget.duration;
+      if (drag != null && d != null && d.inMilliseconds > 0) {
+        return (drag * d.inMilliseconds).round().clamp(0, d.inMilliseconds);
+      }
+      return widget.position.inMilliseconds;
+    }
+
+    final progressWave = WaveProgressBar(
+      value: effectiveFraction(),
+      playbackMs: playbackMsForWave(),
+      trackDurationMs: dur?.inMilliseconds ?? 0,
+      rhythmSeed: widget.song.path.hashCode,
+      activeColor: fg,
+      inactiveBaseColor: progressBg,
+      enabled: canSeek,
+      height: 28,
+      onChanged: canSeek
+          ? (v) => setState(() => _dragFraction = v)
+          : null,
+      onChangeStart: canSeek
+          ? () {
+              final d = widget.duration;
+              if (d == null || d.inMilliseconds <= 0) return;
+              setState(() {
+                _dragFraction =
+                    (widget.position.inMilliseconds / d.inMilliseconds)
+                        .clamp(0.0, 1.0);
+              });
+            }
+          : null,
+      onChangeEnd: canSeek
+          ? (v) async {
+              setState(() => _dragFraction = null);
+              final d = widget.duration;
+              if (d != null && d.inMilliseconds > 0) {
+                final ms =
+                    (v * d.inMilliseconds).round().clamp(0, d.inMilliseconds);
+                await MusicService().seek(Duration(milliseconds: ms));
+              }
+              if (mounted) setState(() {});
+            }
+          : null,
+    );
+
+    final cardBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        titleBlock,
         const SizedBox(height: 16),
-        Text(
-          widget.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: context.gradFg(),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          widget.subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: context.gradFg(0.8),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: widget.progress,
-            minHeight: 3,
-            backgroundColor: progressBg,
-            valueColor: AlwaysStoppedAnimation<Color>(context.gradFg()),
-          ),
-        ),
+        progressWave,
       ],
     );
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: () => widget.onToggle(),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: useCover
-                  ? Colors.white.withValues(alpha: 0.22)
-                  : context.gradBorder(0.1),
-            ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: useCover
+                ? Colors.white.withValues(alpha: 0.22)
+                : context.gradBorder(0.1),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Stack(
-              clipBehavior: Clip.hardEdge,
-              children: [
-                Positioned.fill(
-                  child: useCover
-                      ? Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.memory(
-                              _coverBytes!,
-                              fit: BoxFit.cover,
-                              gaplessPlayback: true,
-                              errorBuilder: (context, error, stackTrace) {
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  if (mounted) _onCoverDecodeFailed();
-                                });
-                                return const ColoredBox(color: Colors.transparent);
-                              },
-                            ),
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.42),
-                                    Colors.black.withValues(alpha: 0.74),
-                                  ],
-                                ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Positioned.fill(
+                child: useCover
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.memory(
+                            _coverBytes!,
+                            fit: BoxFit.cover,
+                            gaplessPlayback: true,
+                            errorBuilder: (context, error, stackTrace) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) _onCoverDecodeFailed();
+                              });
+                              return const ColoredBox(color: Colors.transparent);
+                            },
+                          ),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.42),
+                                  Colors.black.withValues(alpha: 0.74),
+                                ],
                               ),
                             ),
-                          ],
-                        )
-                      : ColoredBox(color: context.gradBorder(0.08)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: column,
-                ),
-              ],
-            ),
+                          ),
+                        ],
+                      )
+                    : ColoredBox(color: context.gradBorder(0.08)),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: cardBody,
+              ),
+            ],
           ),
         ),
       ),
