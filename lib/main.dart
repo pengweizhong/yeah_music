@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
+import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -21,12 +25,28 @@ import 'navigation/app_route_observer.dart';
 import 'compments/play_list_provider.dart';
 import 'compments/theme_config_provider.dart';
 import 'compments/user_playlist_provider.dart';
+import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
+import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 
-void main() {
+Future<void> main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+    try {
+      final wc = await WindowController.fromCurrentEngine();
+      if (wc.arguments.isNotEmpty) {
+        final dynamic j = jsonDecode(wc.arguments);
+        if (j is Map && j['role'] == 'desktop_lyrics') {
+          await runDesktopLyricsSubWindow();
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
   appLog.i('应用正在启动');
 
-  WidgetsFlutterBinding.ensureInitialized();
   AppStartupClock.ensureStarted();
   VisibilityDetectorController.instance.updateInterval =
       const Duration(milliseconds: 80);
@@ -242,8 +262,10 @@ class YeahMusicApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale.resolvedLocale,
           builder: (context, child) {
-            return MacosMenuBarLyricsHost(
-              child: child ?? const SizedBox.shrink(),
+            return DesktopFloatingLyricsHost(
+              child: MacosMenuBarLyricsHost(
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
           },
           home: const WelcomeEntryPage(),

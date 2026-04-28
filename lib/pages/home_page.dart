@@ -1026,6 +1026,9 @@ class _ContinueEmptyCard extends StatelessWidget {
 // 我的歌单横滑
 // ---------------------------------------------------------------------------
 
+/// 首页「我的歌单」混色卡宽度；快捷入口正方形边长应略小于此值。
+const double _kHomePlaylistMixCardWidth = 128;
+
 const _kMixGradients = <List<Color>>[
   [Color(0xFF1A237E), Color(0xFF3949AB)],
   [Color(0xFF004D40), Color(0xFF00695C)],
@@ -1084,47 +1087,63 @@ class _PlaylistCarousels extends StatelessWidget {
     if (list.isEmpty) {
       return SizedBox(
         height: 168,
-        child: ListView(
-          padding: const EdgeInsets.only(left: 20, right: 8),
-          scrollDirection: Axis.horizontal,
-          children: [
-            allCard,
-            const SizedBox(width: 12),
-            _MixCard(
-              title: l10n.homeCreatePlaylist,
-              subtitle: l10n.homeCreatePlaylistSub,
-              c1: const Color(0xFF37474F),
-              c2: const Color(0xFF455A64),
-              onTap: onCreate,
+        child: ScrollConfiguration(
+          behavior: const _HomeHorizontalScrollBehavior(),
+          child: ListView(
+            primary: false,
+            padding: const EdgeInsets.only(left: 20, right: 8),
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-          ],
+            clipBehavior: Clip.hardEdge,
+            children: [
+              allCard,
+              const SizedBox(width: 12),
+              _MixCard(
+                title: l10n.homeCreatePlaylist,
+                subtitle: l10n.homeCreatePlaylistSub,
+                c1: const Color(0xFF37474F),
+                c2: const Color(0xFF455A64),
+                onTap: onCreate,
+              ),
+            ],
+          ),
         ),
       );
     }
     final take = list.length > 4 ? 4 : list.length;
     return SizedBox(
       height: 168,
-      child: ListView.separated(
-        padding: const EdgeInsets.only(left: 20, right: 8),
-        scrollDirection: Axis.horizontal,
-        itemCount: 1 + take,
-        separatorBuilder: (context, i) => const SizedBox(width: 12),
-        itemBuilder: (context, i) {
-          if (i == 0) return allCard;
-          final pi = i - 1;
-          final p = list[pi];
-          final g = _kMixGradients[pi % _kMixGradients.length];
-          final n = p.songPaths.length;
-          return _MixCard(
-            title: p.name,
-            subtitle: n == 0
-                ? l10n.homeEmptyPlaylist
-                : l10n.homeTrackCount(n),
-            c1: g[0],
-            c2: g[1],
-            onTap: () => onOpenPlaylist(p.id),
-          );
-        },
+      child: ScrollConfiguration(
+        behavior: const _HomeHorizontalScrollBehavior(),
+        child: ListView.separated(
+          primary: false,
+          padding: const EdgeInsets.only(left: 20, right: 8),
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          clipBehavior: Clip.hardEdge,
+          itemCount: 1 + take,
+          separatorBuilder: (context, i) => const SizedBox(width: 12),
+          itemBuilder: (context, i) {
+            if (i == 0) return allCard;
+            final pi = i - 1;
+            final p = list[pi];
+            final g = _kMixGradients[pi % _kMixGradients.length];
+            final n = p.songPaths.length;
+            return _MixCard(
+              title: p.name,
+              subtitle: n == 0
+                  ? l10n.homeEmptyPlaylist
+                  : l10n.homeTrackCount(n),
+              c1: g[0],
+              c2: g[1],
+              onTap: () => onOpenPlaylist(p.id),
+            );
+          },
+        ),
       ),
     );
   }
@@ -1401,9 +1420,9 @@ class _QuickItem {
   final VoidCallback onTap;
 }
 
-/// 横向滑动：鼠标拖拽、触控板滑动、触屏滑动均参与滚动（默认 [MaterialScrollBehavior] 在部分平台不含鼠标）。
-class _QuickEntryHorizontalScrollBehavior extends MaterialScrollBehavior {
-  const _QuickEntryHorizontalScrollBehavior();
+/// 首页横向列表：鼠标拖拽、触控板、触屏均参与滚动（默认 [MaterialScrollBehavior] 在部分平台不含鼠标）。
+class _HomeHorizontalScrollBehavior extends MaterialScrollBehavior {
+  const _HomeHorizontalScrollBehavior();
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
@@ -1421,8 +1440,8 @@ class _QuickEntryStrip extends StatelessWidget {
   final List<_QuickItem> entries;
 
   static const double _gap = 10;
-  static const double _sideMin = 72;
-  static const double _sideMax = 118;
+  static const double _sideMin = 76;
+  static const double _sideMax = _kHomePlaylistMixCardWidth - 6;
   /// 极窄窗口下滚动时的下限，避免算不出布局。
   static const double _sideAbsMin = 48;
 
@@ -1471,7 +1490,7 @@ class _QuickEntryStrip extends StatelessWidget {
 
         if (!scroll) {
           return Align(
-            alignment: Alignment.center,
+            alignment: Alignment.centerLeft,
             child: SizedBox(
               width: contentW,
               height: side,
@@ -1481,7 +1500,7 @@ class _QuickEntryStrip extends StatelessWidget {
         }
 
         return ScrollConfiguration(
-          behavior: const _QuickEntryHorizontalScrollBehavior(),
+          behavior: const _HomeHorizontalScrollBehavior(),
           child: SizedBox(
             height: side,
             width: w,
@@ -1510,10 +1529,10 @@ class _QuickEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = (side * 0.14).clamp(10.0, 16.0);
-    final iconBox = (side * 0.38).clamp(28.0, 44.0);
-    final iconGlyph = (iconBox * 0.52).clamp(18.0, 26.0);
-    final labelSize = (side * 0.14).clamp(9.0, 12.0);
-    final pad = (side * 0.08).clamp(4.0, 10.0);
+    final iconBox = (side * 0.46).clamp(34.0, 58.0);
+    final iconGlyph = (iconBox * 0.56).clamp(22.0, 34.0);
+    final labelSize = (side * 0.15).clamp(10.0, 13.0);
+    final pad = (side * 0.07).clamp(4.0, 10.0);
 
     return Material(
       color: Colors.transparent,
@@ -1594,7 +1613,7 @@ class _MixCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          width: 128,
+          width: _kHomePlaylistMixCardWidth,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),

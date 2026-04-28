@@ -66,7 +66,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMacosMenuBarLyricsDesc =>
-      'Show current track and lyrics in the macOS menu bar (single line)';
+      'Single line in the macOS menu bar (compact)';
+
+  @override
+  String get settingsDesktopLyricsGroupTitle => 'Desktop lyrics';
+
+  @override
+  String get settingsDesktopLyricsGroupSubtitle =>
+      'Floating overlay and optional menu bar on macOS.';
+
+  @override
+  String get settingsDesktopFloatingLyrics => 'Floating lyrics';
+
+  @override
+  String get settingsDesktopFloatingLyricsDesc =>
+      'Draggable line over the app; follows lyric display settings on the now playing screen.';
+
+  @override
+  String get settingsDesktopFloatingBgOpacity => 'Background opacity';
+
+  @override
+  String get settingsDesktopFloatingBgOpacityDesc =>
+      'Panel fill behind lyrics. 0 means fully transparent (text only).';
+
+  @override
+  String get settingsDesktopFloatingLinesBefore => 'Lines before current';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeDesc =>
+      'How many timed lines to show above the active line.';
+
+  @override
+  String get settingsDesktopFloatingLinesAfter => 'Lines after current';
+
+  @override
+  String get settingsDesktopFloatingLinesAfterDesc =>
+      'How many timed lines to show below the active line.';
+
+  @override
+  String get settingsDesktopFloatingDragLock => 'Lock position';
+
+  @override
+  String get settingsDesktopFloatingDragLockDesc =>
+      'When on, the floating window cannot be dragged.';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · Not playing';

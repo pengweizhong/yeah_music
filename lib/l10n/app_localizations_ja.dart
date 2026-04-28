@@ -64,8 +64,48 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsMacosMenuBarLyrics => 'メニューバーに歌詞';
 
   @override
-  String get settingsMacosMenuBarLyricsDesc =>
-      '現在の楽曲と歌詞を macOS メニューバーに表示します（1 行）。';
+  String get settingsMacosMenuBarLyricsDesc => 'macOS メニューバーに 1 行で表示';
+
+  @override
+  String get settingsDesktopLyricsGroupTitle => 'デスクトップ歌詞';
+
+  @override
+  String get settingsDesktopLyricsGroupSubtitle => 'フローティングとメニューバー（macOS は任意）';
+
+  @override
+  String get settingsDesktopFloatingLyrics => 'フローティング歌詞';
+
+  @override
+  String get settingsDesktopFloatingLyricsDesc =>
+      '再生中画面の歌詞設定に合わせ、ウィンドウ上にドラッグ可能な 1 行を表示します。';
+
+  @override
+  String get settingsDesktopFloatingBgOpacity => '背景の不透明度';
+
+  @override
+  String get settingsDesktopFloatingBgOpacityDesc =>
+      '歌詞パネルの背景の濃さ。0 で背景なし（文字のみ）。';
+
+  @override
+  String get settingsDesktopFloatingLinesBefore => '現在行より上';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeDesc =>
+      'タイムライン上の現在行より上に、最大何行表示するか（現在行は含みません）。';
+
+  @override
+  String get settingsDesktopFloatingLinesAfter => '現在行より下';
+
+  @override
+  String get settingsDesktopFloatingLinesAfterDesc =>
+      'タイムライン上の現在行より下に、最大何行表示するか（現在行は含みません）。';
+
+  @override
+  String get settingsDesktopFloatingDragLock => '位置を固定';
+
+  @override
+  String get settingsDesktopFloatingDragLockDesc =>
+      'オンにするとフローティングウィンドウをドラッグできません。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 再生していません';

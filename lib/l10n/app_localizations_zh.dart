@@ -63,8 +63,47 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
 
   @override
-  String get settingsMacosMenuBarLyricsDesc =>
-      '在 macOS 菜单栏展示当前曲目与歌词（单行，类似桌面歌词精简版）';
+  String get settingsMacosMenuBarLyricsDesc => '在系统菜单栏显示单行歌词（macOS）';
+
+  @override
+  String get settingsDesktopLyricsGroupTitle => '桌面歌词';
+
+  @override
+  String get settingsDesktopLyricsGroupSubtitle => '悬浮歌词与菜单栏歌词（macOS 可选）';
+
+  @override
+  String get settingsDesktopFloatingLyrics => '悬浮歌词';
+
+  @override
+  String get settingsDesktopFloatingLyricsDesc =>
+      '在应用窗口上方显示可拖动的当前歌词，与播放页歌词样式设置一致。';
+
+  @override
+  String get settingsDesktopFloatingBgOpacity => '背景透明度';
+
+  @override
+  String get settingsDesktopFloatingBgOpacityDesc =>
+      '歌词面板背景的明暗程度；0 为完全无背景，仅显示文字。';
+
+  @override
+  String get settingsDesktopFloatingLinesBefore => '当前行之前';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeDesc =>
+      '以当前时间轴行为基准，向上允许显示多少行（不含当前行）。';
+
+  @override
+  String get settingsDesktopFloatingLinesAfter => '当前行之后';
+
+  @override
+  String get settingsDesktopFloatingLinesAfterDesc =>
+      '以当前时间轴行为基准，向下允许显示多少行（不含当前行）。';
+
+  @override
+  String get settingsDesktopFloatingDragLock => '锁定位置';
+
+  @override
+  String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
@@ -1086,8 +1125,47 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
 
   @override
-  String get settingsMacosMenuBarLyricsDesc =>
-      '在 macOS 菜单栏展示当前曲目与歌词（单行，类似桌面歌词精简版）';
+  String get settingsMacosMenuBarLyricsDesc => '在系统菜单栏显示单行歌词（macOS）';
+
+  @override
+  String get settingsDesktopLyricsGroupTitle => '桌面歌词';
+
+  @override
+  String get settingsDesktopLyricsGroupSubtitle => '悬浮歌词与菜单栏歌词（macOS 可选）';
+
+  @override
+  String get settingsDesktopFloatingLyrics => '悬浮歌词';
+
+  @override
+  String get settingsDesktopFloatingLyricsDesc =>
+      '在应用窗口上方显示可拖动的当前歌词，与播放页歌词样式设置一致。';
+
+  @override
+  String get settingsDesktopFloatingBgOpacity => '背景透明度';
+
+  @override
+  String get settingsDesktopFloatingBgOpacityDesc =>
+      '歌词面板背景的明暗程度；0 为完全无背景，仅显示文字。';
+
+  @override
+  String get settingsDesktopFloatingLinesBefore => '当前行之前';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeDesc =>
+      '以当前时间轴行为基准，向上允许显示多少行（不含当前行）。';
+
+  @override
+  String get settingsDesktopFloatingLinesAfter => '当前行之后';
+
+  @override
+  String get settingsDesktopFloatingLinesAfterDesc =>
+      '以当前时间轴行为基准，向下允许显示多少行（不含当前行）。';
+
+  @override
+  String get settingsDesktopFloatingDragLock => '锁定位置';
+
+  @override
+  String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
@@ -2109,7 +2187,47 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsMacosMenuBarLyrics => '選單列歌詞';
 
   @override
-  String get settingsMacosMenuBarLyricsDesc => '在 macOS 選單列顯示目前曲目與歌詞（單行）';
+  String get settingsMacosMenuBarLyricsDesc => '在系統選單列顯示單行歌詞（macOS）';
+
+  @override
+  String get settingsDesktopLyricsGroupTitle => '桌面歌詞';
+
+  @override
+  String get settingsDesktopLyricsGroupSubtitle => '懸浮歌詞與選單列歌詞（macOS 可選）';
+
+  @override
+  String get settingsDesktopFloatingLyrics => '懸浮歌詞';
+
+  @override
+  String get settingsDesktopFloatingLyricsDesc =>
+      '在應用視窗上方顯示可拖曳的目前歌詞，與播放頁歌詞樣式設定一致。';
+
+  @override
+  String get settingsDesktopFloatingBgOpacity => '背景透明度';
+
+  @override
+  String get settingsDesktopFloatingBgOpacityDesc =>
+      '歌詞面板背景的明暗程度；0 為完全無背景，僅顯示文字。';
+
+  @override
+  String get settingsDesktopFloatingLinesBefore => '目前列之前';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeDesc =>
+      '以目前時間軸行為基準，向上允許顯示多少列（不含目前列）。';
+
+  @override
+  String get settingsDesktopFloatingLinesAfter => '目前列之後';
+
+  @override
+  String get settingsDesktopFloatingLinesAfterDesc =>
+      '以目前時間軸行為基準，向下允許顯示多少列（不含目前列）。';
+
+  @override
+  String get settingsDesktopFloatingDragLock => '鎖定位置';
+
+  @override
+  String get settingsDesktopFloatingDragLockDesc => '開啟後懸浮歌詞視窗不可拖曳。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';

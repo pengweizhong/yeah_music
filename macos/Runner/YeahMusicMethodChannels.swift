@@ -178,6 +178,38 @@ enum YeahMusicMethodChannels {
     }
 }
 
+/// 悬浮歌词子窗口：锁定拖动时由 Dart 打开整窗鼠标穿透，点击落到下层应用。
+final class YeahMusicDesktopLyricsMousePlugin: NSObject, FlutterPlugin {
+    private weak var anchorView: NSView?
+
+    static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(
+            name: "yeah_music/desktop_lyrics_mouse",
+            binaryMessenger: registrar.messenger
+        )
+        let instance = YeahMusicDesktopLyricsMousePlugin()
+        instance.anchorView = registrar.view
+        registrar.addMethodCallDelegate(instance, channel: channel)
+    }
+
+    func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch call.method {
+        case "setIgnoresMouseEvents":
+            let ignore = (call.arguments as? [String: Any])?["ignore"] as? Bool ?? false
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, let window = self.anchorView?.window else {
+                    result(nil)
+                    return
+                }
+                window.ignoresMouseEvents = ignore
+                result(nil)
+            }
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
+}
+
 /// 经由 [FlutterPluginRegistrar] 注册，与 CocoaPods/Flutter 生成的插件共用同一 [FlutterBinaryMessenger]，避免 hand-rolled `engine.binaryMessenger` 与 Dart isolate 不一致。
 final class YeahMusicNativePlugin: NSObject, FlutterPlugin {
     static func register(with registrar: FlutterPluginRegistrar) {

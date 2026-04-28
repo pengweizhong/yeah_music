@@ -213,8 +213,80 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMacosMenuBarLyricsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Show current track and lyrics in the macOS menu bar (single line)'**
+  /// **'Single line in the macOS menu bar (compact)'**
   String get settingsMacosMenuBarLyricsDesc;
+
+  /// No description provided for @settingsDesktopLyricsGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop lyrics'**
+  String get settingsDesktopLyricsGroupTitle;
+
+  /// No description provided for @settingsDesktopLyricsGroupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating overlay and optional menu bar on macOS.'**
+  String get settingsDesktopLyricsGroupSubtitle;
+
+  /// No description provided for @settingsDesktopFloatingLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating lyrics'**
+  String get settingsDesktopFloatingLyrics;
+
+  /// No description provided for @settingsDesktopFloatingLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Draggable line over the app; follows lyric display settings on the now playing screen.'**
+  String get settingsDesktopFloatingLyricsDesc;
+
+  /// No description provided for @settingsDesktopFloatingBgOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Background opacity'**
+  String get settingsDesktopFloatingBgOpacity;
+
+  /// No description provided for @settingsDesktopFloatingBgOpacityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Panel fill behind lyrics. 0 means fully transparent (text only).'**
+  String get settingsDesktopFloatingBgOpacityDesc;
+
+  /// No description provided for @settingsDesktopFloatingLinesBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines before current'**
+  String get settingsDesktopFloatingLinesBefore;
+
+  /// No description provided for @settingsDesktopFloatingLinesBeforeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'How many timed lines to show above the active line.'**
+  String get settingsDesktopFloatingLinesBeforeDesc;
+
+  /// No description provided for @settingsDesktopFloatingLinesAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines after current'**
+  String get settingsDesktopFloatingLinesAfter;
+
+  /// No description provided for @settingsDesktopFloatingLinesAfterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'How many timed lines to show below the active line.'**
+  String get settingsDesktopFloatingLinesAfterDesc;
+
+  /// No description provided for @settingsDesktopFloatingDragLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock position'**
+  String get settingsDesktopFloatingDragLock;
+
+  /// No description provided for @settingsDesktopFloatingDragLockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'When on, the floating window cannot be dragged.'**
+  String get settingsDesktopFloatingDragLockDesc;
 
   /// No description provided for @menuBarLyricsIdle.
   ///

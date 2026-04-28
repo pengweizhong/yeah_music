@@ -11,6 +11,7 @@ import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
@@ -20,6 +21,7 @@ import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
+import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
@@ -230,6 +232,8 @@ class _SongPageState extends State<SongPage> {
     await SettingsService.saveLyricSettings(newSettings);
     // 更新当前设置对象
     _settings = newSettings;
+    unawaited(MacosMenuBarLyricsGlue.reloadFromHive());
+    unawaited(DesktopFloatingLyricsGlue.reloadFromHive());
   }
 
   /// 加载播放模式

@@ -22,6 +22,26 @@ class SettingsService {
   /// macOS 是否在菜单栏显示当前歌词。
   static const String _macosMenuBarLyricsKey = 'macos_menu_bar_lyrics';
 
+  /// 桌面端是否在应用内显示悬浮单行歌词（macOS / Windows / Linux）。
+  static const String _desktopFloatingLyricsKey = 'desktop_floating_lyrics';
+
+  static const String _desktopFloatingLyricsBgOpacityKey =
+      'desktop_floating_lyrics_bg_opacity';
+  static const String _desktopFloatingLyricsLinesBeforeKey =
+      'desktop_floating_lyrics_lines_before';
+  static const String _desktopFloatingLyricsLinesAfterKey =
+      'desktop_floating_lyrics_lines_after';
+  static const String _desktopFloatingLyricsLockedKey =
+      'desktop_floating_lyrics_locked';
+
+  static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
+  static const int desktopFloatingLyricsLinesBeforeDefault = 2;
+  static const int desktopFloatingLyricsLinesAfterDefault = 2;
+
+  static const double _desktopBgOpacityMin = 0.0;
+  static const double _desktopBgOpacityMax = 0.92;
+  static const int _desktopLinesRangeMax = 20;
+
   /// OneDrive 云端曲库列表的排序偏好。
   static Future<({CloudTrackSortType type, bool asc})> loadOneDriveCloudListSort() async {
     try {
@@ -314,6 +334,142 @@ class SettingsService {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_macosMenuBarLyricsKey, enabled);
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadDesktopFloatingLyricsEnabled() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return box.get(_desktopFloatingLyricsKey, defaultValue: false) as bool? ??
+          false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<void> saveDesktopFloatingLyricsEnabled(bool enabled) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_desktopFloatingLyricsKey, enabled);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_desktopFloatingLyricsKey, enabled);
+      } catch (_) {}
+    }
+  }
+
+  static Future<double> loadDesktopFloatingLyricsBgOpacity() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_desktopFloatingLyricsBgOpacityKey);
+      if (v is num) {
+        return v
+            .toDouble()
+            .clamp(_desktopBgOpacityMin, _desktopBgOpacityMax);
+      }
+      return desktopFloatingLyricsBgOpacityDefault;
+    } catch (_) {
+      return desktopFloatingLyricsBgOpacityDefault;
+    }
+  }
+
+  static Future<void> saveDesktopFloatingLyricsBgOpacity(double opacity) async {
+    final o = opacity.clamp(_desktopBgOpacityMin, _desktopBgOpacityMax);
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_desktopFloatingLyricsBgOpacityKey, o);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_desktopFloatingLyricsBgOpacityKey, o);
+      } catch (_) {}
+    }
+  }
+
+  static Future<int> loadDesktopFloatingLyricsLinesBefore() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_desktopFloatingLyricsLinesBeforeKey);
+      if (v is int) {
+        return v.clamp(0, _desktopLinesRangeMax);
+      }
+      if (v is num) {
+        return v.toInt().clamp(0, _desktopLinesRangeMax);
+      }
+      return desktopFloatingLyricsLinesBeforeDefault;
+    } catch (_) {
+      return desktopFloatingLyricsLinesBeforeDefault;
+    }
+  }
+
+  static Future<void> saveDesktopFloatingLyricsLinesBefore(int n) async {
+    final v = n.clamp(0, _desktopLinesRangeMax);
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_desktopFloatingLyricsLinesBeforeKey, v);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_desktopFloatingLyricsLinesBeforeKey, v);
+      } catch (_) {}
+    }
+  }
+
+  static Future<int> loadDesktopFloatingLyricsLinesAfter() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_desktopFloatingLyricsLinesAfterKey);
+      if (v is int) {
+        return v.clamp(0, _desktopLinesRangeMax);
+      }
+      if (v is num) {
+        return v.toInt().clamp(0, _desktopLinesRangeMax);
+      }
+      return desktopFloatingLyricsLinesAfterDefault;
+    } catch (_) {
+      return desktopFloatingLyricsLinesAfterDefault;
+    }
+  }
+
+  static Future<void> saveDesktopFloatingLyricsLinesAfter(int n) async {
+    final v = n.clamp(0, _desktopLinesRangeMax);
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_desktopFloatingLyricsLinesAfterKey, v);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_desktopFloatingLyricsLinesAfterKey, v);
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadDesktopFloatingLyricsDragLocked() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return box.get(_desktopFloatingLyricsLockedKey, defaultValue: false)
+              as bool? ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> saveDesktopFloatingLyricsDragLocked(bool locked) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_desktopFloatingLyricsLockedKey, locked);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_desktopFloatingLyricsLockedKey, locked);
       } catch (_) {}
     }
   }
