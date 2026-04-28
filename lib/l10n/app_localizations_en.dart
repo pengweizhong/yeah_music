@@ -74,11 +74,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => 'Sign in, music folder, local cache';
+  String get settingsOneDriveSubtitle =>
+      'Microsoft account, folders, downloads';
 
   @override
   String get settingsOneDriveDesc =>
-      'Sign in with Microsoft, choose your music root on OneDrive, and browse files. Audio is cached locally while playing so playback stays smooth offline after first load.';
+      'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, set a local download directory for later use, and browse the cloud library. Playback still uses a private cache under app data.';
 
   @override
   String get settingsPlaybackShortcutsTitle => 'Keyboard shortcuts';
@@ -317,17 +318,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
-  String get oneDriveClientIdLabel => 'Application (client) ID';
+  String get oneDriveSectionAccount => 'Account';
 
   @override
-  String get oneDriveClientIdHint => 'From Azure Portal → your app → Overview';
+  String get oneDriveSectionPaths => 'Folders & storage';
 
   @override
-  String get oneDriveMusicRootIdLabel => 'Music root folder (optional)';
+  String get oneDriveSectionSync => 'Cloud sync';
+
+  @override
+  String get oneDriveSyncMasterTitle => 'Sync to OneDrive';
+
+  @override
+  String get oneDriveSyncMasterSubtitle =>
+      'Back up playlists and app settings on a schedule. Requires sign-in and a cloud app folder. Automatic sync will be enabled in a future update.';
+
+  @override
+  String get oneDriveSyncItemPlaylists => 'Playlists';
+
+  @override
+  String get oneDriveSyncItemPlaylistsSubtitle =>
+      'Include playlist data when syncing.';
+
+  @override
+  String get oneDriveSyncItemSettings => 'App settings';
+
+  @override
+  String get oneDriveSyncItemSettingsSubtitle =>
+      'Theme, shortcuts, lyrics options, and other preferences.';
+
+  @override
+  String get oneDriveSyncFrequencyLabel => 'Sync frequency';
+
+  @override
+  String get oneDriveSyncFreqManual => 'Manual only';
+
+  @override
+  String get oneDriveSyncFreq1h => 'Every hour';
+
+  @override
+  String get oneDriveSyncFreq6h => 'Every 6 hours';
+
+  @override
+  String get oneDriveSyncFreq12h => 'Every 12 hours';
+
+  @override
+  String get oneDriveSyncFreq24h => 'Every 24 hours';
+
+  @override
+  String get oneDriveSyncNow => 'Sync now';
+
+  @override
+  String get oneDriveSyncNowDescription =>
+      'Push the latest playlists and settings without waiting for the timer. (Cloud upload is still on the way—this lets you trigger it early once it’s live.)';
+
+  @override
+  String get oneDriveSyncNowNeedLogin => 'Sign in with Microsoft first.';
+
+  @override
+  String get oneDriveSyncNowNeedCloudFolder =>
+      'Pick a cloud app folder above first, so we know where to put your backup.';
+
+  @override
+  String get oneDriveSyncNowFinished =>
+      'All set—we’ll use this the moment cloud backup is ready.';
+
+  @override
+  String get oneDriveMusicRootIdLabel => 'Music browse root (optional)';
 
   @override
   String get oneDriveMusicRootHint =>
-      'OneDrive item id, or leave empty for drive root. Children of this folder are shown first.';
+      'OneDrive item id, or leave empty for drive root.';
+
+  @override
+  String get oneDriveMusicRootTileTitle => 'Music browse root';
+
+  @override
+  String get oneDriveMusicRootTileSubtitle =>
+      'Optional folder id. The file browser starts here instead of the drive root.';
+
+  @override
+  String get oneDriveMusicRootSummaryRoot => 'Drive root';
+
+  @override
+  String get oneDriveCloudAppDataTitle => 'Cloud app folder';
+
+  @override
+  String get oneDriveCloudAppDataSubtitle =>
+      'Reserved for settings backup, playlists, and sync.';
+
+  @override
+  String get oneDriveCloudAppFolderUnset => 'Not set';
+
+  @override
+  String get oneDriveLocalDownloadTitle => 'Local download folder';
+
+  @override
+  String get oneDriveLocalDownloadSubtitle =>
+      'Reserved for downloading full tracks from OneDrive.';
+
+  @override
+  String get oneDriveLocalDownloadUnset =>
+      'Not set — a default will be used later';
+
+  @override
+  String get oneDriveChooseCloudFolder => 'Choose in OneDrive';
+
+  @override
+  String get oneDriveChooseLocalFolder => 'Choose folder…';
+
+  @override
+  String get oneDrivePickFolderForAppData =>
+      'Pick a folder for app data and future backups.';
+
+  @override
+  String get oneDriveTroubleshootTitle => 'Having trouble signing in?';
+
+  @override
+  String get oneDriveAppMissingClientConfig =>
+      'Microsoft sign-in isn’t available in this copy of the app. Grab the version from the store or check for an update.';
+
+  @override
+  String get oneDriveNeedSignInForPicker =>
+      'Sign in first to pick a OneDrive folder.';
+
+  @override
+  String get oneDriveClear => 'Clear';
 
   @override
   String get oneDriveSignIn => 'Sign in with Microsoft';
@@ -349,26 +465,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'OneDrive sign-in is not available on this platform yet.';
 
   @override
-  String get oneDriveNeedClientId =>
-      'Set the Azure application client ID first.';
-
-  @override
   String get oneDriveSignInFailed =>
-      'Couldn\'t sign in. Check the client ID, redirect URI in Azure, and try again.';
+      'Couldn’t finish signing in—check your connection and try again, or skim the tips under “Having trouble signing in?”';
 
   @override
   String get oneDriveAzureRedirectIntro =>
-      'If you see redirect_uri invalid: Azure Portal → your app registration → Authentication → Add a platform → Mobile and desktop applications (not SPA or Web) → paste the URI below into Custom redirect URIs. It must match character-for-character.';
+      'Nine times out of ten it’s the network: switch Wi‑Fi, pause VPN for a moment, or update the app. If the page says the link is invalid or you keep bouncing back without finishing, keep the line below—you might need it for your own troubleshooting or if you report the issue somewhere.';
 
   @override
-  String get oneDriveRedirectCopyTooltip => 'Copy redirect URI';
+  String get oneDriveAzureRedirectUriCaption =>
+      'Technical link (only for deeper troubleshooting):';
 
   @override
-  String get oneDriveRedirectCopied => 'Redirect URI copied';
+  String get oneDriveRedirectCopyTooltip => 'Copy link';
+
+  @override
+  String get oneDriveRedirectCopied => 'Copied';
 
   @override
   String get oneDriveCacheNote =>
-      'Audio is cached under the app data folder when you play.';
+      'While playing, audio is cached in app data (separate from the download folder above).';
 
   @override
   String get oneDriveOpenBrowser => 'Open OneDrive';

@@ -266,10 +266,37 @@ class _AppStartupGateState extends State<AppStartupGate>
   }
 }
 
-class YeahMusicApp extends StatelessWidget {
+class YeahMusicApp extends StatefulWidget {
   const YeahMusicApp({super.key});
 
+  @override
+  State<YeahMusicApp> createState() => _YeahMusicAppState();
+}
+
+class _YeahMusicAppState extends State<YeahMusicApp>
+    with WidgetsBindingObserver {
   static bool _androidWireRemoteInited = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    // macOS 浏览器 OAuth 回跳后，偶发需等 resumed 再读 token，界面才与登录态一致。
+    if (kIsWeb || !Platform.isMacOS) return;
+    final od = context.read<OneDriveController>();
+    unawaited(od.loadFromStorage());
+  }
 
   @override
   Widget build(BuildContext context) {

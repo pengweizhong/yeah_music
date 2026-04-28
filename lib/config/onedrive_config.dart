@@ -1,19 +1,33 @@
 /// Microsoft 身份与 Graph 配置。
 ///
-/// 1. 在 [Azure Portal](https://portal.azure.com/) 注册应用 → 「移动和桌面应用程序」。
-/// 2. 「身份验证」中添加与 [redirectUrl] 完全一致的重定向 URI（须与各平台 manifest 一致）。
-/// 3. 「API 权限」中 Microsoft Graph **委托**：`offline_access`、`User.Read`、读文件权限（如
-///    `Files.Read.All`）。请求范围见 [scopes]（不含 `openid`/`profile`，见类注释）。
-/// 4. 将应用（客户端）ID 填入应用内「OneDrive 设置」，或通过编译参数
-///    `--dart-define=ONEDRIVE_CLIENT_ID=你的GUID` 作为默认值。
+/// **正式发布**：在 Azure 注册「公共客户端 / 移动和桌面」应用，将应用程序（客户端）ID 填入
+/// [embeddedApplicationClientId]（可嵌入应用，与常见消费级 App 一致）；或通过 CI 传入
+/// `--dart-define=ONEDRIVE_CLIENT_ID=...` 覆盖。
+///
+/// 1. 「身份验证」平台：**移动和桌面应用程序**，重定向 URI 与 [redirectUrl] **逐字一致**。
+/// 2. 「API 权限」Microsoft Graph 委托：`offline_access`、`User.Read`、`Files.Read.All`
+///    （后续若需云端备份写入再增加 `Files.ReadWrite` 等）。请求范围见 [scopes]。
 abstract final class OneDriveConfig {
-  /// 编译时默认 Client ID；应用内设置可覆盖。
-  static const String defaultClientIdFromEnv = String.fromEnvironment(
+  /// 商店包内置的 Azure 应用程序（客户端）ID。开源仓库可留空，改用 dart-define。
+  static const String embeddedApplicationClientId = '';
+
+  /// 编译参数覆盖（优先于 [embeddedApplicationClientId]）。
+  static const String _clientIdFromEnvironment = String.fromEnvironment(
     'ONEDRIVE_CLIENT_ID',
     defaultValue: '',
   );
 
+  /// 实际用于 OAuth 的 Client ID。
+  static String get applicationClientId {
+    if (_clientIdFromEnvironment.isNotEmpty) {
+      return _clientIdFromEnvironment;
+    }
+    return embeddedApplicationClientId;
+  }
+
   /// 与 Azure 中「重定向 URI」完全一致（各平台 manifest 已注册此 scheme）。
+  /// 注意：除 Android 外，在 **应用注册 → 身份验证 → 移动和桌面应用程序** 中须**再添加同一条**
+  /// `com.pengwz.yeahmusic://oauthredirect`（与 Android 包名无关）；仅配 Android 时 macOS/Windows 会无法完成授权。
   static const String redirectUrl = 'com.pengwz.yeahmusic://oauthredirect';
 
   /// OAuth 2.0 所用 scope。**不包含** `openid`/`profile`：若走 OIDC 发现并重验 id_token，

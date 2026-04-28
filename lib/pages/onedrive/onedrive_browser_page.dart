@@ -23,10 +23,17 @@ class _NavFrame {
 }
 
 class OneDriveBrowserPage extends StatefulWidget {
-  const OneDriveBrowserPage({super.key, this.pickFolderForIndex = false});
+  const OneDriveBrowserPage({
+    super.key,
+    this.pickFolderForIndex = false,
+    this.folderPickSubtitle,
+  });
 
   /// `true` 时用于云端曲库：仅选文件夹返回 [OneDriveFolderPickResult]，点播文件被禁用。
   final bool pickFolderForIndex;
+
+  /// 选文件夹模式下的说明文案；为 `null` 时用默认「云端曲库」提示。
+  final String? folderPickSubtitle;
 
   @override
   State<OneDriveBrowserPage> createState() => _OneDriveBrowserPageState();
@@ -165,7 +172,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          l10n.oneDrivePickFolderForIndex,
+                          widget.folderPickSubtitle ?? l10n.oneDrivePickFolderForIndex,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style:

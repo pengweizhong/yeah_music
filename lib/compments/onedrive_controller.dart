@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
+import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/onedrive/onedrive_auth.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
@@ -22,8 +23,12 @@ class OneDriveController extends ChangeNotifier {
   final OneDriveAuth _auth;
   final OneDriveGraphClient _graph;
 
-  String _clientId = '';
+  /// 旧版在设置中保存的 Client ID；仅当 [OneDriveConfig.applicationClientId] 为空时作为回退。
+  String _legacyClientId = '';
   String? _musicRootItemId;
+  String? _cloudAppDataFolderId;
+  String _cloudAppDataFolderLabel = '';
+  String? _localDownloadDir;
   bool _signedIn = false;
   String? _accountHint;
 
@@ -33,8 +38,17 @@ class OneDriveController extends ChangeNotifier {
   bool _cloudIndexBuilding = false;
   String? _cloudIndexError;
 
-  String get clientId => _clientId;
+  OneDriveSyncSettings _syncSettings = OneDriveSyncSettings.defaults;
+
   String? get musicRootItemId => _musicRootItemId;
+
+  /// 云端「应用数据」目录（设置/歌单备份等预留），Graph driveItem id。
+  String? get cloudAppDataFolderId => _cloudAppDataFolderId;
+
+  String get cloudAppDataFolderLabel => _cloudAppDataFolderLabel;
+
+  /// 本地下载目录（预留：整曲下载到设备）。
+  String? get localDownloadDir => _localDownloadDir;
   bool get signedIn => _signedIn;
   String? get accountHint => _accountHint;
   bool get isLinuxUnsupported => Platform.isLinux;
@@ -49,14 +63,23 @@ class OneDriveController extends ChangeNotifier {
 
   String? get cloudIndexError => _cloudIndexError;
 
+  OneDriveSyncSettings get syncSettings => _syncSettings;
+
   String get effectiveClientId {
-    if (_clientId.isNotEmpty) return _clientId;
-    return OneDriveConfig.defaultClientIdFromEnv;
+    final builtIn = OneDriveConfig.applicationClientId;
+    if (builtIn.isNotEmpty) return builtIn;
+    if (_legacyClientId.isNotEmpty) return _legacyClientId;
+    return '';
   }
 
   Future<void> loadFromStorage() async {
-    _clientId = (await SettingsService.loadOneDriveClientId()) ?? '';
+    _legacyClientId = (await SettingsService.loadOneDriveClientId()) ?? '';
     _musicRootItemId = await SettingsService.loadOneDriveMusicRootId();
+    final appFolder = await SettingsService.loadOneDriveCloudAppFolder();
+    _cloudAppDataFolderId = appFolder.$1;
+    _cloudAppDataFolderLabel = appFolder.$2;
+    _localDownloadDir = await SettingsService.loadOneDriveLocalDownloadDir();
+    _syncSettings = await SettingsService.loadOneDriveSyncSettings();
     await _loadCloudIndexFromDisk();
     if (effectiveClientId.isEmpty) {
       _signedIn = false;
@@ -230,12 +253,29 @@ class OneDriveController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 将 [clientId] 一并写入设置（可来自输入框或编译默认）。
-  Future<void> saveClientIdText(String text) async {
-    final v = text.trim();
-    _clientId = v;
-    await SettingsService.saveOneDriveClientId(v.isEmpty ? null : v);
+  Future<void> setCloudAppDataFolder(String? itemId, {String label = ''}) async {
+    _cloudAppDataFolderId = itemId;
+    _cloudAppDataFolderLabel = label;
+    await SettingsService.saveOneDriveCloudAppFolder(itemId, label);
     notifyListeners();
+  }
+
+  Future<void> setLocalDownloadDir(String? path) async {
+    final v = path?.trim();
+    _localDownloadDir = (v == null || v.isEmpty) ? null : v;
+    await SettingsService.saveOneDriveLocalDownloadDir(_localDownloadDir);
+    notifyListeners();
+  }
+
+  Future<void> setSyncSettings(OneDriveSyncSettings value) async {
+    _syncSettings = value;
+    await SettingsService.saveOneDriveSyncSettings(_syncSettings);
+    notifyListeners();
+  }
+
+  /// 立即同步占位：后续在此调用实际上传/下载。
+  Future<void> performSyncNow() async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
   }
 
   Future<String?> getAccessToken() {

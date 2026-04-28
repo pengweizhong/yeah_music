@@ -225,13 +225,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsOneDriveSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in, music folder, local cache'**
+  /// **'Microsoft account, folders, downloads'**
   String get settingsOneDriveSubtitle;
 
   /// No description provided for @settingsOneDriveDesc.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with Microsoft, choose your music root on OneDrive, and browse files. Audio is cached locally while playing so playback stays smooth offline after first load.'**
+  /// **'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, set a local download directory for later use, and browse the cloud library. Playback still uses a private cache under app data.'**
   String get settingsOneDriveDesc;
 
   /// No description provided for @settingsPlaybackShortcutsTitle.
@@ -648,29 +648,233 @@ abstract class AppLocalizations {
   /// **'OneDrive'**
   String get oneDriveSettingsTitle;
 
-  /// No description provided for @oneDriveClientIdLabel.
+  /// No description provided for @oneDriveSectionAccount.
   ///
   /// In en, this message translates to:
-  /// **'Application (client) ID'**
-  String get oneDriveClientIdLabel;
+  /// **'Account'**
+  String get oneDriveSectionAccount;
 
-  /// No description provided for @oneDriveClientIdHint.
+  /// No description provided for @oneDriveSectionPaths.
   ///
   /// In en, this message translates to:
-  /// **'From Azure Portal → your app → Overview'**
-  String get oneDriveClientIdHint;
+  /// **'Folders & storage'**
+  String get oneDriveSectionPaths;
+
+  /// No description provided for @oneDriveSectionSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync'**
+  String get oneDriveSectionSync;
+
+  /// No description provided for @oneDriveSyncMasterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync to OneDrive'**
+  String get oneDriveSyncMasterTitle;
+
+  /// No description provided for @oneDriveSyncMasterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up playlists and app settings on a schedule. Requires sign-in and a cloud app folder. Automatic sync will be enabled in a future update.'**
+  String get oneDriveSyncMasterSubtitle;
+
+  /// No description provided for @oneDriveSyncItemPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get oneDriveSyncItemPlaylists;
+
+  /// No description provided for @oneDriveSyncItemPlaylistsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Include playlist data when syncing.'**
+  String get oneDriveSyncItemPlaylistsSubtitle;
+
+  /// No description provided for @oneDriveSyncItemSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings'**
+  String get oneDriveSyncItemSettings;
+
+  /// No description provided for @oneDriveSyncItemSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, shortcuts, lyrics options, and other preferences.'**
+  String get oneDriveSyncItemSettingsSubtitle;
+
+  /// No description provided for @oneDriveSyncFrequencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync frequency'**
+  String get oneDriveSyncFrequencyLabel;
+
+  /// No description provided for @oneDriveSyncFreqManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual only'**
+  String get oneDriveSyncFreqManual;
+
+  /// No description provided for @oneDriveSyncFreq1h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour'**
+  String get oneDriveSyncFreq1h;
+
+  /// No description provided for @oneDriveSyncFreq6h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 hours'**
+  String get oneDriveSyncFreq6h;
+
+  /// No description provided for @oneDriveSyncFreq12h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 12 hours'**
+  String get oneDriveSyncFreq12h;
+
+  /// No description provided for @oneDriveSyncFreq24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 24 hours'**
+  String get oneDriveSyncFreq24h;
+
+  /// No description provided for @oneDriveSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get oneDriveSyncNow;
+
+  /// No description provided for @oneDriveSyncNowDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Push the latest playlists and settings without waiting for the timer. (Cloud upload is still on the way—this lets you trigger it early once it’s live.)'**
+  String get oneDriveSyncNowDescription;
+
+  /// No description provided for @oneDriveSyncNowNeedLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Microsoft first.'**
+  String get oneDriveSyncNowNeedLogin;
+
+  /// No description provided for @oneDriveSyncNowNeedCloudFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a cloud app folder above first, so we know where to put your backup.'**
+  String get oneDriveSyncNowNeedCloudFolder;
+
+  /// No description provided for @oneDriveSyncNowFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'All set—we’ll use this the moment cloud backup is ready.'**
+  String get oneDriveSyncNowFinished;
 
   /// No description provided for @oneDriveMusicRootIdLabel.
   ///
   /// In en, this message translates to:
-  /// **'Music root folder (optional)'**
+  /// **'Music browse root (optional)'**
   String get oneDriveMusicRootIdLabel;
 
   /// No description provided for @oneDriveMusicRootHint.
   ///
   /// In en, this message translates to:
-  /// **'OneDrive item id, or leave empty for drive root. Children of this folder are shown first.'**
+  /// **'OneDrive item id, or leave empty for drive root.'**
   String get oneDriveMusicRootHint;
+
+  /// No description provided for @oneDriveMusicRootTileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music browse root'**
+  String get oneDriveMusicRootTileTitle;
+
+  /// No description provided for @oneDriveMusicRootTileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional folder id. The file browser starts here instead of the drive root.'**
+  String get oneDriveMusicRootTileSubtitle;
+
+  /// No description provided for @oneDriveMusicRootSummaryRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive root'**
+  String get oneDriveMusicRootSummaryRoot;
+
+  /// No description provided for @oneDriveCloudAppDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud app folder'**
+  String get oneDriveCloudAppDataTitle;
+
+  /// No description provided for @oneDriveCloudAppDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved for settings backup, playlists, and sync.'**
+  String get oneDriveCloudAppDataSubtitle;
+
+  /// No description provided for @oneDriveCloudAppFolderUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get oneDriveCloudAppFolderUnset;
+
+  /// No description provided for @oneDriveLocalDownloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local download folder'**
+  String get oneDriveLocalDownloadTitle;
+
+  /// No description provided for @oneDriveLocalDownloadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved for downloading full tracks from OneDrive.'**
+  String get oneDriveLocalDownloadSubtitle;
+
+  /// No description provided for @oneDriveLocalDownloadUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — a default will be used later'**
+  String get oneDriveLocalDownloadUnset;
+
+  /// No description provided for @oneDriveChooseCloudFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose in OneDrive'**
+  String get oneDriveChooseCloudFolder;
+
+  /// No description provided for @oneDriveChooseLocalFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose folder…'**
+  String get oneDriveChooseLocalFolder;
+
+  /// No description provided for @oneDrivePickFolderForAppData.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a folder for app data and future backups.'**
+  String get oneDrivePickFolderForAppData;
+
+  /// No description provided for @oneDriveTroubleshootTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Having trouble signing in?'**
+  String get oneDriveTroubleshootTitle;
+
+  /// No description provided for @oneDriveAppMissingClientConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Microsoft sign-in isn’t available in this copy of the app. Grab the version from the store or check for an update.'**
+  String get oneDriveAppMissingClientConfig;
+
+  /// No description provided for @oneDriveNeedSignInForPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in first to pick a OneDrive folder.'**
+  String get oneDriveNeedSignInForPicker;
+
+  /// No description provided for @oneDriveClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get oneDriveClear;
 
   /// No description provided for @oneDriveSignIn.
   ///
@@ -708,40 +912,40 @@ abstract class AppLocalizations {
   /// **'OneDrive sign-in is not available on this platform yet.'**
   String get oneDriveLinuxUnsupported;
 
-  /// No description provided for @oneDriveNeedClientId.
-  ///
-  /// In en, this message translates to:
-  /// **'Set the Azure application client ID first.'**
-  String get oneDriveNeedClientId;
-
   /// No description provided for @oneDriveSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t sign in. Check the client ID, redirect URI in Azure, and try again.'**
+  /// **'Couldn’t finish signing in—check your connection and try again, or skim the tips under “Having trouble signing in?”'**
   String get oneDriveSignInFailed;
 
   /// No description provided for @oneDriveAzureRedirectIntro.
   ///
   /// In en, this message translates to:
-  /// **'If you see redirect_uri invalid: Azure Portal → your app registration → Authentication → Add a platform → Mobile and desktop applications (not SPA or Web) → paste the URI below into Custom redirect URIs. It must match character-for-character.'**
+  /// **'Nine times out of ten it’s the network: switch Wi‑Fi, pause VPN for a moment, or update the app. If the page says the link is invalid or you keep bouncing back without finishing, keep the line below—you might need it for your own troubleshooting or if you report the issue somewhere.'**
   String get oneDriveAzureRedirectIntro;
+
+  /// No description provided for @oneDriveAzureRedirectUriCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical link (only for deeper troubleshooting):'**
+  String get oneDriveAzureRedirectUriCaption;
 
   /// No description provided for @oneDriveRedirectCopyTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Copy redirect URI'**
+  /// **'Copy link'**
   String get oneDriveRedirectCopyTooltip;
 
   /// No description provided for @oneDriveRedirectCopied.
   ///
   /// In en, this message translates to:
-  /// **'Redirect URI copied'**
+  /// **'Copied'**
   String get oneDriveRedirectCopied;
 
   /// No description provided for @oneDriveCacheNote.
   ///
   /// In en, this message translates to:
-  /// **'Audio is cached under the app data folder when you play.'**
+  /// **'While playing, audio is cached in app data (separate from the download folder above).'**
   String get oneDriveCacheNote;
 
   /// No description provided for @oneDriveOpenBrowser.

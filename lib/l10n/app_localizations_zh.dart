@@ -69,11 +69,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => '登录、音乐目录与本地缓存';
+  String get settingsOneDriveSubtitle => '微软账号、目录与下载位置';
 
   @override
   String get settingsOneDriveDesc =>
-      '使用 Microsoft 登录，在 OneDrive 上选定音乐根目录并浏览文件；播放时会缓存到本地，首次加载后离线也可流畅播放。';
+      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹（预留备份）与本地下载目录；云端曲库浏览不变，播放缓存仍在应用数据目录。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快捷键';
@@ -294,17 +294,121 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
-  String get oneDriveClientIdLabel => '应用程序(客户端) ID';
+  String get oneDriveSectionAccount => '账户';
 
   @override
-  String get oneDriveClientIdHint => '在 Azure 门户 → 应用 → 概述 中复制';
+  String get oneDriveSectionPaths => '目录与存储';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音乐根文件夹（可选）';
+  String get oneDriveSectionSync => '云端同步';
 
   @override
-  String get oneDriveMusicRootHint =>
-      '填 OneDrive 文件项 id，留空则从网盘根目录进入。将优先显示该文件夹下的内容。';
+  String get oneDriveSyncMasterTitle => '同步到 OneDrive';
+
+  @override
+  String get oneDriveSyncMasterSubtitle =>
+      '按计划在云端备份歌单与应用设置。需已登录并选择云端应用数据文件夹。自动同步能力将在后续版本接入。';
+
+  @override
+  String get oneDriveSyncItemPlaylists => '歌单';
+
+  @override
+  String get oneDriveSyncItemPlaylistsSubtitle => '同步时包含歌单数据。';
+
+  @override
+  String get oneDriveSyncItemSettings => '应用配置';
+
+  @override
+  String get oneDriveSyncItemSettingsSubtitle => '主题、快捷键、歌词选项等偏好设置。';
+
+  @override
+  String get oneDriveSyncFrequencyLabel => '同步频率';
+
+  @override
+  String get oneDriveSyncFreqManual => '仅手动';
+
+  @override
+  String get oneDriveSyncFreq1h => '每 1 小时';
+
+  @override
+  String get oneDriveSyncFreq6h => '每 6 小时';
+
+  @override
+  String get oneDriveSyncFreq12h => '每 12 小时';
+
+  @override
+  String get oneDriveSyncFreq24h => '每 24 小时';
+
+  @override
+  String get oneDriveSyncNow => '立即同步';
+
+  @override
+  String get oneDriveSyncNowDescription =>
+      '不等定时器，马上把歌单和设置推上去。（云端上传还在路上，功能就绪后会接上这次操作。）';
+
+  @override
+  String get oneDriveSyncNowNeedLogin => '请先登录微软账号。';
+
+  @override
+  String get oneDriveSyncNowNeedCloudFolder => '请先在上方选好「云端应用数据文件夹」，才知道备份往哪儿放。';
+
+  @override
+  String get oneDriveSyncNowFinished => '好，已记下。云端备份就绪后会自动处理。';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
+
+  @override
+  String get oneDriveMusicRootHint => 'OneDrive 文件项 id，留空则从网盘根目录进入。';
+
+  @override
+  String get oneDriveMusicRootTileTitle => '音乐浏览根目录';
+
+  @override
+  String get oneDriveMusicRootTileSubtitle => '可选。文件浏览器从此文件夹开始，而不是网盘根目录。';
+
+  @override
+  String get oneDriveMusicRootSummaryRoot => '网盘根目录';
+
+  @override
+  String get oneDriveCloudAppDataTitle => '云端应用数据文件夹';
+
+  @override
+  String get oneDriveCloudAppDataSubtitle => '预留：设置备份、歌单与同步等。';
+
+  @override
+  String get oneDriveCloudAppFolderUnset => '未设置';
+
+  @override
+  String get oneDriveLocalDownloadTitle => '本地下载目录';
+
+  @override
+  String get oneDriveLocalDownloadSubtitle => '预留：从 OneDrive 整曲下载到设备。';
+
+  @override
+  String get oneDriveLocalDownloadUnset => '未设置（后续将使用默认路径）';
+
+  @override
+  String get oneDriveChooseCloudFolder => '在 OneDrive 中选择';
+
+  @override
+  String get oneDriveChooseLocalFolder => '选择本地文件夹…';
+
+  @override
+  String get oneDrivePickFolderForAppData => '选择用于应用数据与未来备份的文件夹。';
+
+  @override
+  String get oneDriveTroubleshootTitle => '登录不顺利？';
+
+  @override
+  String get oneDriveAppMissingClientConfig =>
+      '这一版暂时还不能用微软账号登录，试试应用商店的正式版或更新到最新。';
+
+  @override
+  String get oneDriveNeedSignInForPicker => '请先登录后再选择 OneDrive 文件夹。';
+
+  @override
+  String get oneDriveClear => '清除';
 
   @override
   String get oneDriveSignIn => '使用 Microsoft 登录';
@@ -325,23 +429,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
 
   @override
-  String get oneDriveNeedClientId => '请先填写 Azure 应用的客户端 ID。';
-
-  @override
-  String get oneDriveSignInFailed => '登录失败：请核对客户端 ID、Azure 中的重定向 URI，或稍后重试。';
+  String get oneDriveSignInFailed => '这次没登录成功，看看网络或稍后再试；也可以翻翻下面「登录不顺利」里的小提示。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
-      '若提示 redirect_uri 无效：请在 Azure「应用注册」→「身份验证」→「添加平台」中选「移动和桌面应用程序」（不要选 Web 或单页应用程序），在「自定义重定向 URI」中粘贴下方地址，须与您在门户中配置的条目逐字完全一致。';
+      '多半是网络或小限制：换个 Wi‑Fi、暂时关掉 VPN、把系统和应用更新到最新，往往就好了。如果页面提示链接无效、或者一直跳回却登不上，可以把下面整行复制留着，自己排查或发反馈时也许用得上。';
 
   @override
-  String get oneDriveRedirectCopyTooltip => '复制重定向 URI';
+  String get oneDriveAzureRedirectUriCaption =>
+      '下面的链接一般用不上，只有需要核对「重定向地址」、或自己深入排障时再复制：';
 
   @override
-  String get oneDriveRedirectCopied => '重定向 URI 已复制';
+  String get oneDriveRedirectCopyTooltip => '复制';
 
   @override
-  String get oneDriveCacheNote => '播放时音频会缓存在应用数据目录。';
+  String get oneDriveRedirectCopied => '已复制';
+
+  @override
+  String get oneDriveCacheNote => '播放时的音频缓存在应用数据目录（与上方本地下载目录不同）。';
 
   @override
   String get oneDriveOpenBrowser => '打开 OneDrive';
@@ -1301,11 +1406,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => '登录、音乐目录与本地缓存';
+  String get settingsOneDriveSubtitle => '微软账号、目录与下载位置';
 
   @override
   String get settingsOneDriveDesc =>
-      '使用 Microsoft 登录，在 OneDrive 上选定音乐根目录并浏览文件；播放时会缓存到本地，首次加载后离线也可流畅播放。';
+      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹（预留备份）与本地下载目录；云端曲库浏览不变，播放缓存仍在应用数据目录。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快捷键';
@@ -1526,17 +1631,121 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
-  String get oneDriveClientIdLabel => '应用程序(客户端) ID';
+  String get oneDriveSectionAccount => '账户';
 
   @override
-  String get oneDriveClientIdHint => '在 Azure 门户 → 应用 → 概述 中复制';
+  String get oneDriveSectionPaths => '目录与存储';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音乐根文件夹（可选）';
+  String get oneDriveSectionSync => '云端同步';
 
   @override
-  String get oneDriveMusicRootHint =>
-      '填 OneDrive 文件项 id，留空则从网盘根目录进入。将优先显示该文件夹下的内容。';
+  String get oneDriveSyncMasterTitle => '同步到 OneDrive';
+
+  @override
+  String get oneDriveSyncMasterSubtitle =>
+      '按计划在云端备份歌单与应用设置。需已登录并选择云端应用数据文件夹。自动同步能力将在后续版本接入。';
+
+  @override
+  String get oneDriveSyncItemPlaylists => '歌单';
+
+  @override
+  String get oneDriveSyncItemPlaylistsSubtitle => '同步时包含歌单数据。';
+
+  @override
+  String get oneDriveSyncItemSettings => '应用配置';
+
+  @override
+  String get oneDriveSyncItemSettingsSubtitle => '主题、快捷键、歌词选项等偏好设置。';
+
+  @override
+  String get oneDriveSyncFrequencyLabel => '同步频率';
+
+  @override
+  String get oneDriveSyncFreqManual => '仅手动';
+
+  @override
+  String get oneDriveSyncFreq1h => '每 1 小时';
+
+  @override
+  String get oneDriveSyncFreq6h => '每 6 小时';
+
+  @override
+  String get oneDriveSyncFreq12h => '每 12 小时';
+
+  @override
+  String get oneDriveSyncFreq24h => '每 24 小时';
+
+  @override
+  String get oneDriveSyncNow => '立即同步';
+
+  @override
+  String get oneDriveSyncNowDescription =>
+      '不等定时器，马上把歌单和设置推上去。（云端上传还在路上，功能就绪后会接上这次操作。）';
+
+  @override
+  String get oneDriveSyncNowNeedLogin => '请先登录微软账号。';
+
+  @override
+  String get oneDriveSyncNowNeedCloudFolder => '请先在上方选好「云端应用数据文件夹」，才知道备份往哪儿放。';
+
+  @override
+  String get oneDriveSyncNowFinished => '好，已记下。云端备份就绪后会自动处理。';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
+
+  @override
+  String get oneDriveMusicRootHint => 'OneDrive 文件项 id，留空则从网盘根目录进入。';
+
+  @override
+  String get oneDriveMusicRootTileTitle => '音乐浏览根目录';
+
+  @override
+  String get oneDriveMusicRootTileSubtitle => '可选。文件浏览器从此文件夹开始，而不是网盘根目录。';
+
+  @override
+  String get oneDriveMusicRootSummaryRoot => '网盘根目录';
+
+  @override
+  String get oneDriveCloudAppDataTitle => '云端应用数据文件夹';
+
+  @override
+  String get oneDriveCloudAppDataSubtitle => '预留：设置备份、歌单与同步等。';
+
+  @override
+  String get oneDriveCloudAppFolderUnset => '未设置';
+
+  @override
+  String get oneDriveLocalDownloadTitle => '本地下载目录';
+
+  @override
+  String get oneDriveLocalDownloadSubtitle => '预留：从 OneDrive 整曲下载到设备。';
+
+  @override
+  String get oneDriveLocalDownloadUnset => '未设置（后续将使用默认路径）';
+
+  @override
+  String get oneDriveChooseCloudFolder => '在 OneDrive 中选择';
+
+  @override
+  String get oneDriveChooseLocalFolder => '选择本地文件夹…';
+
+  @override
+  String get oneDrivePickFolderForAppData => '选择用于应用数据与未来备份的文件夹。';
+
+  @override
+  String get oneDriveTroubleshootTitle => '登录不顺利？';
+
+  @override
+  String get oneDriveAppMissingClientConfig =>
+      '这一版暂时还不能用微软账号登录，试试应用商店的正式版或更新到最新。';
+
+  @override
+  String get oneDriveNeedSignInForPicker => '请先登录后再选择 OneDrive 文件夹。';
+
+  @override
+  String get oneDriveClear => '清除';
 
   @override
   String get oneDriveSignIn => '使用 Microsoft 登录';
@@ -1557,23 +1766,24 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
 
   @override
-  String get oneDriveNeedClientId => '请先填写 Azure 应用的客户端 ID。';
-
-  @override
-  String get oneDriveSignInFailed => '登录失败：请核对客户端 ID、Azure 中的重定向 URI，或稍后重试。';
+  String get oneDriveSignInFailed => '这次没登录成功，看看网络或稍后再试；也可以翻翻下面「登录不顺利」里的小提示。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
-      '若提示 redirect_uri 无效：请在 Azure「应用注册」→「身份验证」→「添加平台」中选「移动和桌面应用程序」（不要选 Web 或单页应用程序），在「自定义重定向 URI」中粘贴下方地址，须与您在门户中配置的条目逐字完全一致。';
+      '多半是网络或小限制：换个 Wi‑Fi、暂时关掉 VPN、把系统和应用更新到最新，往往就好了。如果页面提示链接无效、或者一直跳回却登不上，可以把下面整行复制留着，自己排查或发反馈时也许用得上。';
 
   @override
-  String get oneDriveRedirectCopyTooltip => '复制重定向 URI';
+  String get oneDriveAzureRedirectUriCaption =>
+      '下面的链接一般用不上，只有需要核对「重定向地址」、或自己深入排障时再复制：';
 
   @override
-  String get oneDriveRedirectCopied => '重定向 URI 已复制';
+  String get oneDriveRedirectCopyTooltip => '复制';
 
   @override
-  String get oneDriveCacheNote => '播放时音频会缓存在应用数据目录。';
+  String get oneDriveRedirectCopied => '已复制';
+
+  @override
+  String get oneDriveCacheNote => '播放时的音频缓存在应用数据目录（与上方本地下载目录不同）。';
 
   @override
   String get oneDriveOpenBrowser => '打开 OneDrive';
@@ -2533,11 +2743,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => '登入、音樂目錄與本機快取';
+  String get settingsOneDriveSubtitle => '微軟帳戶、目錄與下載位置';
 
   @override
   String get settingsOneDriveDesc =>
-      '使用 Microsoft 登入，在 OneDrive 上選定音樂根目錄並瀏覽檔案；播放時會快取到本機，首次載入後離線也可順暢播放。';
+      '使用 Microsoft 登入（正式版無需填寫用戶端 ID）。可選音樂瀏覽根目錄、雲端應用程式資料夾（預留備份）與本機下載目錄；雲端曲庫瀏覽不變，播放快取仍在應用程式資料目錄。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快速鍵';
@@ -2758,17 +2968,121 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
-  String get oneDriveClientIdLabel => '應用程式 (用戶端) ID';
+  String get oneDriveSectionAccount => '帳戶';
 
   @override
-  String get oneDriveClientIdHint => '在 Azure 入口網站 → 應用程式 → 概觀 複製';
+  String get oneDriveSectionPaths => '目錄與儲存空間';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音樂根資料夾（選填）';
+  String get oneDriveSectionSync => '雲端同步';
 
   @override
-  String get oneDriveMusicRootHint =>
-      '填 OneDrive 項目 id，留空則從雲端根目錄進入。會優先顯示此資料夾下的內容。';
+  String get oneDriveSyncMasterTitle => '同步到 OneDrive';
+
+  @override
+  String get oneDriveSyncMasterSubtitle =>
+      '依排程在雲端備份歌單與應用程式設定。需已登入並選擇雲端應用程式資料夾。自動同步將於後續版本提供。';
+
+  @override
+  String get oneDriveSyncItemPlaylists => '歌單';
+
+  @override
+  String get oneDriveSyncItemPlaylistsSubtitle => '同步時包含歌單資料。';
+
+  @override
+  String get oneDriveSyncItemSettings => '應用程式設定';
+
+  @override
+  String get oneDriveSyncItemSettingsSubtitle => '主題、快速鍵、歌詞選項等偏好。';
+
+  @override
+  String get oneDriveSyncFrequencyLabel => '同步頻率';
+
+  @override
+  String get oneDriveSyncFreqManual => '僅手動';
+
+  @override
+  String get oneDriveSyncFreq1h => '每 1 小時';
+
+  @override
+  String get oneDriveSyncFreq6h => '每 6 小時';
+
+  @override
+  String get oneDriveSyncFreq12h => '每 12 小時';
+
+  @override
+  String get oneDriveSyncFreq24h => '每 24 小時';
+
+  @override
+  String get oneDriveSyncNow => '立即同步';
+
+  @override
+  String get oneDriveSyncNowDescription =>
+      '不必等排程，立刻上傳歌單與設定。（雲端上傳仍在準備中，上線後會接續這次操作。）';
+
+  @override
+  String get oneDriveSyncNowNeedLogin => '請先登入 Microsoft 帳戶。';
+
+  @override
+  String get oneDriveSyncNowNeedCloudFolder => '請先在上方選好「雲端應用程式資料夾」，我們才知道備份位置。';
+
+  @override
+  String get oneDriveSyncNowFinished => '好的，已記下。雲端備份就緒後會自動處理。';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音樂瀏覽根目錄（選填）';
+
+  @override
+  String get oneDriveMusicRootHint => 'OneDrive 項目 id，留空則從雲端根目錄進入。';
+
+  @override
+  String get oneDriveMusicRootTileTitle => '音樂瀏覽根目錄';
+
+  @override
+  String get oneDriveMusicRootTileSubtitle => '選填。檔案瀏覽器從此資料夾開始，而非雲端根目錄。';
+
+  @override
+  String get oneDriveMusicRootSummaryRoot => '雲端根目錄';
+
+  @override
+  String get oneDriveCloudAppDataTitle => '雲端應用程式資料夾';
+
+  @override
+  String get oneDriveCloudAppDataSubtitle => '預留：設定備份、歌單與同步等。';
+
+  @override
+  String get oneDriveCloudAppFolderUnset => '未設定';
+
+  @override
+  String get oneDriveLocalDownloadTitle => '本機下載目錄';
+
+  @override
+  String get oneDriveLocalDownloadSubtitle => '預留：從 OneDrive 下載完整曲目到裝置。';
+
+  @override
+  String get oneDriveLocalDownloadUnset => '未設定（稍後將使用預設路徑）';
+
+  @override
+  String get oneDriveChooseCloudFolder => '在 OneDrive 中選擇';
+
+  @override
+  String get oneDriveChooseLocalFolder => '選擇本機資料夾…';
+
+  @override
+  String get oneDrivePickFolderForAppData => '選擇應用程式資料與未來備份要用的資料夾。';
+
+  @override
+  String get oneDriveTroubleshootTitle => '登入不順利？';
+
+  @override
+  String get oneDriveAppMissingClientConfig =>
+      '這一版暫時無法使用 Microsoft 登入，請試試商店正式版或更新到最新。';
+
+  @override
+  String get oneDriveNeedSignInForPicker => '請先登入後再選擇 OneDrive 資料夾。';
+
+  @override
+  String get oneDriveClear => '清除';
 
   @override
   String get oneDriveSignIn => '使用 Microsoft 登入';
@@ -2789,23 +3103,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveLinuxUnsupported => '此平台尚不支援 OneDrive 登入。';
 
   @override
-  String get oneDriveNeedClientId => '請先填寫 Azure 應用程式的用戶端 ID。';
-
-  @override
-  String get oneDriveSignInFailed => '登入失敗：請核對用戶端 ID、Azure 中的重新導向 URI，或稍後再試。';
+  String get oneDriveSignInFailed => '這次沒登入成功，檢查網路或稍後再試；也可看看下方「登入不順利」的提示。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
-      '若出現 redirect_uri 無效：請在 Azure「應用程式註冊」→「驗證」→「新增平台」選「行動應用程式及傳統型應用程式」（請勿選 Web 或單頁應用程式），在「自訂重新導向 URI」貼上下方位址，且須與入口網站的設定完全一致。';
+      '多半是網路或小限制：換個 Wi‑Fi、暫時關閉 VPN、把系統與 App 更新到最新，通常就沒問題。若頁面說連結無效、或一直跳回卻無法完成，可把下面整行複製留著，自行排查或回報問題時也許用得上。';
 
   @override
-  String get oneDriveRedirectCopyTooltip => '複製重新導向 URI';
+  String get oneDriveAzureRedirectUriCaption =>
+      '下面的連結一般用不到，只有要核對「重新導向網址」、或自行深入除錯時再複製：';
 
   @override
-  String get oneDriveRedirectCopied => '已複製重新導向 URI';
+  String get oneDriveRedirectCopyTooltip => '複製';
 
   @override
-  String get oneDriveCacheNote => '播放時音訊會快取在應用程式資料目錄。';
+  String get oneDriveRedirectCopied => '已複製';
+
+  @override
+  String get oneDriveCacheNote => '播放時的音訊快取在應用程式資料目錄（與上方本機下載目錄不同）。';
 
   @override
   String get oneDriveOpenBrowser => '開啟 OneDrive';

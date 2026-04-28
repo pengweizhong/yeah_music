@@ -71,11 +71,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => 'サインイン・フォルダ・キャッシュ';
+  String get settingsOneDriveSubtitle => 'Microsoft アカウント・フォルダ・ダウンロード先';
 
   @override
   String get settingsOneDriveDesc =>
-      'Microsoft にサインインし、OneDrive 上の音楽ルートを選んで閲覧します。再生時にローカルへキャッシュするため、一度取得すればオフラインでもスムーズに再生できます。';
+      'Microsoft でサインイン（リリース版ではクライアント ID の入力は不要）。音楽の参照ルート、クラウドのアプリ用フォルダ（バックアップ予定）、ローカルのダウンロード先を設定できます。再生キャッシュはアプリデータ内に別途保存されます。';
 
   @override
   String get settingsPlaybackShortcutsTitle => 'キーボードショートカット';
@@ -299,16 +299,124 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
-  String get oneDriveClientIdLabel => 'アプリケーション (クライアント) ID';
+  String get oneDriveSectionAccount => 'アカウント';
 
   @override
-  String get oneDriveClientIdHint => 'Azure ポータル → アプリの概要';
+  String get oneDriveSectionPaths => 'フォルダとストレージ';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音楽のルートフォルダ（任意）';
+  String get oneDriveSectionSync => 'クラウド同期';
+
+  @override
+  String get oneDriveSyncMasterTitle => 'OneDrive に同期';
+
+  @override
+  String get oneDriveSyncMasterSubtitle =>
+      'プレイリストとアプリ設定をスケジュールに合わせてバックアップします。サインインとクラウドのアプリ用フォルダが必要です。自動同期は今後の更新で有効化予定です。';
+
+  @override
+  String get oneDriveSyncItemPlaylists => 'プレイリスト';
+
+  @override
+  String get oneDriveSyncItemPlaylistsSubtitle => '同期にプレイリストを含めます。';
+
+  @override
+  String get oneDriveSyncItemSettings => 'アプリ設定';
+
+  @override
+  String get oneDriveSyncItemSettingsSubtitle => 'テーマ・ショートカット・歌詞設定などの環境設定。';
+
+  @override
+  String get oneDriveSyncFrequencyLabel => '同期の間隔';
+
+  @override
+  String get oneDriveSyncFreqManual => '手動のみ';
+
+  @override
+  String get oneDriveSyncFreq1h => '1 時間ごと';
+
+  @override
+  String get oneDriveSyncFreq6h => '6 時間ごと';
+
+  @override
+  String get oneDriveSyncFreq12h => '12 時間ごと';
+
+  @override
+  String get oneDriveSyncFreq24h => '24 時間ごと';
+
+  @override
+  String get oneDriveSyncNow => '今すぐ同期';
+
+  @override
+  String get oneDriveSyncNowDescription =>
+      'タイマーを待たず、プレイリストと設定をすぐ反映。（クラウド側の転送は準備中です。準備ができ次第、この操作に続けます。）';
+
+  @override
+  String get oneDriveSyncNowNeedLogin => '先に Microsoft にサインインしてください。';
+
+  @override
+  String get oneDriveSyncNowNeedCloudFolder =>
+      '上の「クラウドのアプリ用フォルダ」を選ぶと、バックアップ先が分かります。';
+
+  @override
+  String get oneDriveSyncNowFinished => '了解です。クラウドの準備が整い次第、処理します。';
+
+  @override
+  String get oneDriveMusicRootIdLabel => '音楽ブラウズのルート（任意）';
 
   @override
   String get oneDriveMusicRootHint => 'OneDrive のアイテム ID。空欄の場合はドライブのルートから。';
+
+  @override
+  String get oneDriveMusicRootTileTitle => '音楽ブラウズのルート';
+
+  @override
+  String get oneDriveMusicRootTileSubtitle =>
+      '任意。ファイル一覧はこのフォルダから開きます（ルートではなく）。';
+
+  @override
+  String get oneDriveMusicRootSummaryRoot => 'ドライブのルート';
+
+  @override
+  String get oneDriveCloudAppDataTitle => 'クラウドのアプリ用フォルダ';
+
+  @override
+  String get oneDriveCloudAppDataSubtitle => '設定バックアップ・プレイリスト・同期などに予定。';
+
+  @override
+  String get oneDriveCloudAppFolderUnset => '未設定';
+
+  @override
+  String get oneDriveLocalDownloadTitle => 'ローカルのダウンロード先';
+
+  @override
+  String get oneDriveLocalDownloadSubtitle => 'OneDrive から曲を丸ごと保存する予定のフォルダ。';
+
+  @override
+  String get oneDriveLocalDownloadUnset => '未設定（後で既定の場所を使います）';
+
+  @override
+  String get oneDriveChooseCloudFolder => 'OneDrive で選ぶ';
+
+  @override
+  String get oneDriveChooseLocalFolder => 'フォルダを選ぶ…';
+
+  @override
+  String get oneDrivePickFolderForAppData => 'アプリデータと今後のバックアップ用フォルダを選びます。';
+
+  @override
+  String get oneDriveTroubleshootTitle => 'サインインがうまくいかないとき';
+
+  @override
+  String get oneDriveAppMissingClientConfig =>
+      'この版ではまだ Microsoft サインインが使えません。ストア版に更新するか、最新版を入れ直してみてください。';
+
+  @override
+  String get oneDriveNeedSignInForPicker =>
+      '先にサインインしてから OneDrive のフォルダを選んでください。';
+
+  @override
+  String get oneDriveClear => 'クリア';
 
   @override
   String get oneDriveSignIn => 'Microsoft でサインイン';
@@ -329,24 +437,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveLinuxUnsupported => 'このプラットフォームでは OneDrive サインインに未対応です。';
 
   @override
-  String get oneDriveNeedClientId => '先に Azure のクライアント ID を入力してください。';
-
-  @override
   String get oneDriveSignInFailed =>
-      'サインインに失敗しました。クライアント ID と Azure のリダイレクト URI を確認するか、しばらくしてから試してください。';
+      '今回はサインインできませんでした。通信を確認して再試行するか、下のヒントも見てみてください。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
-      'redirect_uri が無効となる場合は、Azure アプリの登録 → 認証 → プラットフォームを追加から「モバイル アプリケーションとデスクトップ アプリケーション」（Web／SPA は不可）を選び、カスタム リダイレクト URI に次の値を完全一致で追加してください。';
+      'だいたいは通信か環境のせいです。Wi‑Fi に切り替える、VPN を少しオフにする、アプリと OS を最新にする、で直ることが多いです。リンクが無効と出たり、何度も戻されて終わらないときは、下の行をコピーしておくと自分で調べたり、不具合を書き留めたりするときに便利です。';
 
   @override
-  String get oneDriveRedirectCopyTooltip => 'リダイレクト URI をコピー';
+  String get oneDriveAzureRedirectUriCaption =>
+      '普段は不要です。うまくいかないときの確認用で、必要ならこの「リダイレクト URL」を控えてください。';
 
   @override
-  String get oneDriveRedirectCopied => 'リダイレクト URI をコピーしました';
+  String get oneDriveRedirectCopyTooltip => 'コピー';
 
   @override
-  String get oneDriveCacheNote => '再生時、音声はアプリのデータ領域に保存されます。';
+  String get oneDriveRedirectCopied => 'コピーしました';
+
+  @override
+  String get oneDriveCacheNote => '再生中のキャッシュはアプリデータ内に保存されます（上のダウンロード先とは別です）。';
 
   @override
   String get oneDriveOpenBrowser => 'OneDrive を開く';

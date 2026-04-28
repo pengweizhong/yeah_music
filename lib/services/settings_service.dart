@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
+import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/models/wire_remote_control_config.dart';
@@ -17,6 +18,10 @@ class SettingsService {
   static const String _quickEntryHiddenKey = 'quick_entry_hidden';
   static const String _oneDriveClientIdKey = 'onedrive_client_id';
   static const String _oneDriveMusicRootIdKey = 'onedrive_music_root_id';
+  static const String _oneDriveCloudAppFolderIdKey = 'onedrive_cloud_app_folder_id';
+  static const String _oneDriveCloudAppFolderLabelKey = 'onedrive_cloud_app_folder_label';
+  static const String _oneDriveLocalDownloadDirKey = 'onedrive_local_download_dir';
+  static const String _oneDriveSyncSettingsKey = 'onedrive_sync_settings_v1';
   static const String _oneDriveIndexFoldersKey = 'onedrive_index_folders';
   static const String _oneDriveIndexTracksKey = 'onedrive_index_tracks';
   static const String _oneDriveIndexAtKey = 'onedrive_index_at_iso';
@@ -249,6 +254,109 @@ class SettingsService {
         } else {
           await box.put(_oneDriveMusicRootIdKey, itemId.trim());
         }
+      } catch (_) {}
+    }
+  }
+
+  /// 云端应用数据目录（设置/歌单备份等预留）：Graph driveItem id 与展示名。
+  static Future<(String?, String)> loadOneDriveCloudAppFolder() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final idRaw = box.get(_oneDriveCloudAppFolderIdKey) as String?;
+      final labelRaw = box.get(_oneDriveCloudAppFolderLabelKey) as String?;
+      final id = idRaw?.trim();
+      final label = labelRaw?.trim() ?? '';
+      if (id == null || id.isEmpty) {
+        return (null, '');
+      }
+      return (id, label);
+    } catch (_) {
+      return (null, '');
+    }
+  }
+
+  static Future<void> saveOneDriveCloudAppFolder(String? itemId, String label) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (itemId == null || itemId.trim().isEmpty) {
+        await box.delete(_oneDriveCloudAppFolderIdKey);
+        await box.delete(_oneDriveCloudAppFolderLabelKey);
+      } else {
+        await box.put(_oneDriveCloudAppFolderIdKey, itemId.trim());
+        await box.put(_oneDriveCloudAppFolderLabelKey, label.trim());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (itemId == null || itemId.trim().isEmpty) {
+          await box.delete(_oneDriveCloudAppFolderIdKey);
+          await box.delete(_oneDriveCloudAppFolderLabelKey);
+        } else {
+          await box.put(_oneDriveCloudAppFolderIdKey, itemId.trim());
+          await box.put(_oneDriveCloudAppFolderLabelKey, label.trim());
+        }
+      } catch (_) {}
+    }
+  }
+
+  /// 本地下载目录（预留：从 OneDrive 整曲下载到设备）。
+  static Future<String?> loadOneDriveLocalDownloadDir() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_oneDriveLocalDownloadDirKey) as String?;
+      final t = v?.trim();
+      return (t == null || t.isEmpty) ? null : t;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveOneDriveLocalDownloadDir(String? path) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (path == null || path.trim().isEmpty) {
+        await box.delete(_oneDriveLocalDownloadDirKey);
+      } else {
+        await box.put(_oneDriveLocalDownloadDirKey, path.trim());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (path == null || path.trim().isEmpty) {
+          await box.delete(_oneDriveLocalDownloadDirKey);
+        } else {
+          await box.put(_oneDriveLocalDownloadDirKey, path.trim());
+        }
+      } catch (_) {}
+    }
+  }
+
+  static Future<OneDriveSyncSettings> loadOneDriveSyncSettings() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_oneDriveSyncSettingsKey) as String?;
+      if (raw == null || raw.trim().isEmpty) {
+        return OneDriveSyncSettings.defaults;
+      }
+      final decoded = jsonDecode(raw) as Map<String, dynamic>?;
+      if (decoded == null) return OneDriveSyncSettings.defaults;
+      return OneDriveSyncSettings.fromJson(decoded);
+    } catch (_) {
+      return OneDriveSyncSettings.defaults;
+    }
+  }
+
+  static Future<void> saveOneDriveSyncSettings(OneDriveSyncSettings s) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_oneDriveSyncSettingsKey, jsonEncode(s.toJson()));
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_oneDriveSyncSettingsKey, jsonEncode(s.toJson()));
       } catch (_) {}
     }
   }
