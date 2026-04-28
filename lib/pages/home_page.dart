@@ -1132,7 +1132,6 @@ class _PlaylistCarousels extends StatelessWidget {
         ),
       );
     }
-    final take = list.length > 4 ? 4 : list.length;
     return SizedBox(
       height: 168,
       child: ScrollConfiguration(
@@ -1145,7 +1144,7 @@ class _PlaylistCarousels extends StatelessWidget {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           clipBehavior: Clip.hardEdge,
-          itemCount: 1 + take,
+          itemCount: 1 + list.length,
           separatorBuilder: (context, i) => const SizedBox(width: 12),
           itemBuilder: (context, i) {
             if (i == 0) return allCard;
