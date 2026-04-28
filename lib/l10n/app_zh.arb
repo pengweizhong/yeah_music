@@ -165,7 +165,18 @@
   "oneDriveDownloadQueuePageHint": "在此暂停、继续或停止批量下载。关闭抽屉不会取消后台任务。",
   "oneDriveDownloadQueueSubtitle": "查看与控制批量下载与播放",
   "oneDriveDownloadQueueTooltip": "下载队列",
-  "oneDriveEnqueueBackground": "已加入下载队列，可继续使用应用；完成后请在下载队列中播放。",
+  "oneDriveEnqueueAddedSingle": "已将「{name}」添加到下载队列",
+  "@oneDriveEnqueueAddedSingle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "oneDriveEnqueueAddedMany": "已将 {count} 首添加到下载队列",
+  "@oneDriveEnqueueAddedMany": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "oneDriveDownloadViewQueue": "查看队列",
   "oneDriveDownloadClearHistory": "清空记录",
   "oneDriveError": "OneDrive 错误：{message}",

@@ -561,8 +561,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveDownloadQueueTooltip => 'Download queue';
 
   @override
-  String get oneDriveEnqueueBackground =>
-      'Added to the download queue. You can keep using the app.';
+  String oneDriveEnqueueAddedSingle(String name) {
+    return 'Added \"$name\" to the download queue.';
+  }
+
+  @override
+  String oneDriveEnqueueAddedMany(int count) {
+    return 'Added $count tracks to the download queue.';
+  }
 
   @override
   String get oneDriveDownloadViewQueue => 'View queue';

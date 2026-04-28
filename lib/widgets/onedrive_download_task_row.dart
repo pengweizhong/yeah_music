@@ -27,6 +27,10 @@ class OneDriveDownloadTaskRow extends StatelessWidget {
     final prog = task.progress;
     final total = task.totalBytes;
 
+    final progressBarColor = task.status == OneDriveDownloadStatus.completed
+        ? const Color(0xFF66BB6A)
+        : const Color(0xFF4FC3F7);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Column(
@@ -67,13 +71,13 @@ class OneDriveDownloadTaskRow extends StatelessWidget {
                 value: prog.clamp(0, 1),
                 minHeight: 4,
                 backgroundColor: const Color(0x22FFFFFF),
-                color: const Color(0xFF4FC3F7),
+                color: progressBarColor,
               )
             else
-              const LinearProgressIndicator(
+              LinearProgressIndicator(
                 minHeight: 4,
-                backgroundColor: Color(0x22FFFFFF),
-                color: Color(0xFF4FC3F7),
+                backgroundColor: const Color(0x22FFFFFF),
+                color: progressBarColor,
               ),
             const SizedBox(height: 4),
             Text(

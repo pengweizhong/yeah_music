@@ -1086,11 +1086,17 @@ abstract class AppLocalizations {
   /// **'Download queue'**
   String get oneDriveDownloadQueueTooltip;
 
-  /// No description provided for @oneDriveEnqueueBackground.
+  /// No description provided for @oneDriveEnqueueAddedSingle.
   ///
   /// In en, this message translates to:
-  /// **'Added to the download queue. You can keep using the app.'**
-  String get oneDriveEnqueueBackground;
+  /// **'Added \"{name}\" to the download queue.'**
+  String oneDriveEnqueueAddedSingle(String name);
+
+  /// No description provided for @oneDriveEnqueueAddedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} tracks to the download queue.'**
+  String oneDriveEnqueueAddedMany(int count);
 
   /// No description provided for @oneDriveDownloadViewQueue.
   ///

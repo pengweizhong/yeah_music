@@ -531,8 +531,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveDownloadQueueTooltip => 'ダウンロードキュー';
 
   @override
-  String get oneDriveEnqueueBackground =>
-      'キューに追加しました。このまま操作できます。完了後はキューから再生してください。';
+  String oneDriveEnqueueAddedSingle(String name) {
+    return '「$name」をキューに追加しました。';
+  }
+
+  @override
+  String oneDriveEnqueueAddedMany(int count) {
+    return '$count 曲をキューに追加しました。';
+  }
 
   @override
   String get oneDriveDownloadViewQueue => 'キューを開く';

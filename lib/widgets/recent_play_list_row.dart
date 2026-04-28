@@ -2,13 +2,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 
-/// 最近播放列表行（首页、最近播放页共用）。顺序由调用方传入的 [paths] 决定，不在此重排。
+/// 最近播放列表行（首页等）。顺序由调用方传入决定，不在此重排。
+///
+/// [trailingPlayCount] 非空时（如首页「最多播放」）：副标题为「艺人 · 专辑」补全后与播放次数合并，不会因 hydrate 丢掉次数。
 class RecentPlayListRow extends StatefulWidget {
   const RecentPlayListRow({
     super.key,
@@ -16,14 +19,18 @@ class RecentPlayListRow extends StatefulWidget {
     required this.subtitle,
     required this.isCurrent,
     required this.onTap,
+    this.trailingPlayCount,
   });
 
   final Song song;
 
-  /// 轻量占位；后台补全后以 [songListSecondaryLine] 为准。
+  /// 轻量占位；后台补全后以 [songListSecondaryLine] 为准（除非 [trailingPlayCount] 已设置）。
   final String subtitle;
   final bool isCurrent;
   final VoidCallback onTap;
+
+  /// 非空时在副标题末尾保留「已播放 N 次」（与 hydrate 后的元数据合并）。
+  final int? trailingPlayCount;
 
   @override
   State<RecentPlayListRow> createState() => _RecentPlayListRowState();
@@ -72,7 +79,15 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
     return '未知';
   }
 
-  String _displaySubtitle() {
+  String _displaySubtitle(AppLocalizations l10n) {
+    final pc = widget.trailingPlayCount;
+    if (pc != null) {
+      final line = songListSecondaryLine(widget.song).trim();
+      if (line.isEmpty) {
+        return l10n.homePlayCount(pc);
+      }
+      return l10n.homePlayCountWithBase(line, pc);
+    }
     final line = songListSecondaryLine(widget.song);
     if (line.trim().isNotEmpty) return line;
     return widget.subtitle;
@@ -80,8 +95,9 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final titleStr = _displayTitle();
-    final subtitleStr = _displaySubtitle();
+    final subtitleStr = _displaySubtitle(l10n);
     return VisibilityDetector(
       key: ValueKey<String>('recent_row_vis_${widget.song.path}'),
       onVisibilityChanged: _onRowVisibilityChanged,
@@ -180,8 +196,11 @@ class _RecentPlayTrailingIcon extends StatelessWidget {
             size: 26,
           );
         }
-        // 暂停时不展示“播放中”态，与曲库行一致
-        return const SizedBox(width: 26, height: 26);
+        return const Icon(
+          Icons.pause_rounded,
+          color: Color(0xFF7C4DFF),
+          size: 26,
+        );
       },
     );
   }

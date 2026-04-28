@@ -139,7 +139,7 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.oneDriveEnqueueBackground),
+        content: Text(l10n.oneDriveEnqueueAddedSingle(t.fileName)),
         action: SnackBarAction(
           label: l10n.oneDriveDownloadViewQueue,
           onPressed: () {

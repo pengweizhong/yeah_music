@@ -280,3 +280,12 @@ Future<T?> showFrostedDialog<T>({
     ),
   );
 }
+
+/// 在 [showDialog] / [showFrostedDialog] 的 Future 完成后勿立刻调用 [TextEditingController.dispose]；
+/// 对话框路由的子树可能仍在卸载，过早 dispose 可能触发 `_dependents.isEmpty` 断言。
+/// 在 `await showFrostedDialog(...)` 之后改用本函数，延后到下一帧再 dispose。
+void scheduleDisposeTextEditingController(TextEditingController controller) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    controller.dispose();
+  });
+}

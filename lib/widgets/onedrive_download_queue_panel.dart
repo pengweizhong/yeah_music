@@ -39,7 +39,7 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
 
     return Consumer<OneDriveDownloadQueueController>(
       builder: (context, ctrl, _) {
-        final tasks = ctrl.tasks;
+        final tasks = ctrl.tasksSortedForDisplay;
 
         Widget buildList() {
           if (tasks.isEmpty) {

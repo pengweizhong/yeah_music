@@ -15,11 +15,19 @@ class OneDriveDownloadTask {
     required this.graphItem,
     required this.title,
     required this.subtitle,
-  });
+    DateTime? enqueuedAt,
+    this.startedDownloadingAt,
+  }) : enqueuedAt = enqueuedAt ?? DateTime.now();
 
   final OneDriveGraphItem graphItem;
   final String title;
   final String subtitle;
+
+  /// 加入队列时刻（界面排序：同优先级内倒序）。
+  final DateTime enqueuedAt;
+
+  /// 本次进入 [OneDriveDownloadStatus.downloading] 的时刻（可选，用于排序）。
+  DateTime? startedDownloadingAt;
 
   OneDriveDownloadStatus status = OneDriveDownloadStatus.pending;
 

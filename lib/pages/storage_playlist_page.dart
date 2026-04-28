@@ -124,7 +124,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         },
       ),
     );
-    controller.dispose();
+    scheduleDisposeTextEditingController(controller);
     if (name != null && name.isNotEmpty && context.mounted) {
       await user.createPlaylist(name);
     }

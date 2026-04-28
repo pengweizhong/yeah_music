@@ -88,7 +88,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.oneDriveEnqueueBackground),
+        content: Text(l10n.oneDriveEnqueueAddedSingle(item.name)),
         action: SnackBarAction(
           label: l10n.oneDriveDownloadViewQueue,
           onPressed: () {

@@ -521,7 +521,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveDownloadQueueTooltip => '下载队列';
 
   @override
-  String get oneDriveEnqueueBackground => '已加入下载队列，可继续使用应用；完成后请在下载队列中播放。';
+  String oneDriveEnqueueAddedSingle(String name) {
+    return '已将「$name」添加到下载队列';
+  }
+
+  @override
+  String oneDriveEnqueueAddedMany(int count) {
+    return '已将 $count 首添加到下载队列';
+  }
 
   @override
   String get oneDriveDownloadViewQueue => '查看队列';
@@ -1937,7 +1944,14 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveDownloadQueueTooltip => '下载队列';
 
   @override
-  String get oneDriveEnqueueBackground => '已加入下载队列，可继续使用应用；完成后请在下载队列中播放。';
+  String oneDriveEnqueueAddedSingle(String name) {
+    return '已将「$name」添加到下载队列';
+  }
+
+  @override
+  String oneDriveEnqueueAddedMany(int count) {
+    return '已将 $count 首添加到下载队列';
+  }
 
   @override
   String get oneDriveDownloadViewQueue => '查看队列';
@@ -3353,7 +3367,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveDownloadQueueTooltip => '下載佇列';
 
   @override
-  String get oneDriveEnqueueBackground => '已加入下載佇列，可繼續使用 App；完成後請在下載佇列中播放。';
+  String oneDriveEnqueueAddedSingle(String name) {
+    return '已將「$name」加入下載佇列';
+  }
+
+  @override
+  String oneDriveEnqueueAddedMany(int count) {
+    return '已將 $count 首加入下載佇列';
+  }
 
   @override
   String get oneDriveDownloadViewQueue => '檢視佇列';

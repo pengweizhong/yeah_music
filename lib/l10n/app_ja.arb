@@ -165,7 +165,18 @@
   "oneDriveDownloadQueuePageHint": "一時停止・再開・停止はここで。パネルを閉じてもバックグラウンドのダウンロードは止まりません。",
   "oneDriveDownloadQueueSubtitle": "一括ダウンロードと再生",
   "oneDriveDownloadQueueTooltip": "ダウンロードキュー",
-  "oneDriveEnqueueBackground": "キューに追加しました。このまま操作できます。完了後はキューから再生してください。",
+  "oneDriveEnqueueAddedSingle": "「{name}」をキューに追加しました。",
+  "@oneDriveEnqueueAddedSingle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "oneDriveEnqueueAddedMany": "{count} 曲をキューに追加しました。",
+  "@oneDriveEnqueueAddedMany": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "oneDriveDownloadViewQueue": "キューを開く",
   "oneDriveDownloadClearHistory": "履歴を消去",
   "oneDriveError": "OneDrive エラー：{message}",

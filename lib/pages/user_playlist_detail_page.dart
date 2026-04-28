@@ -260,7 +260,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
         },
       ),
     );
-    controller.dispose();
+    scheduleDisposeTextEditingController(controller);
     if (name != null && name.isNotEmpty && context.mounted) {
       await user.renamePlaylist(widget.playlistId, name);
     }

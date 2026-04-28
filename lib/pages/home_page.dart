@@ -812,10 +812,6 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                     final c = item.playCount;
                     final isCurrent =
                         widget.play.currentSong?.path == song.path;
-                    final base = widget.songSubtitle(song);
-                    final subtitle = base.isEmpty
-                        ? l10n.homePlayCount(c)
-                        : l10n.homePlayCountWithBase(base, c);
                     return Padding(
                       key: ValueKey<String>(
                         'home_most_${song.path}_$c',
@@ -823,7 +819,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: RecentPlayListRow(
                         song: song,
-                        subtitle: subtitle,
+                        subtitle: '',
+                        trailingPlayCount: c,
                         isCurrent: isCurrent,
                         onTap: () async {
                           if (isCurrent) {

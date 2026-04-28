@@ -38,6 +38,36 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
 
   List<OneDriveDownloadTask> get tasks => List.unmodifiable(_tasks);
 
+  /// 下载队列界面：「下载中」置顶，其余按入队时间从新到旧。
+  List<OneDriveDownloadTask> get tasksSortedForDisplay {
+    int tier(OneDriveDownloadTask t) {
+      switch (t.status) {
+        case OneDriveDownloadStatus.downloading:
+          return 0;
+        case OneDriveDownloadStatus.pending:
+          return 1;
+        case OneDriveDownloadStatus.completed:
+        case OneDriveDownloadStatus.failed:
+        case OneDriveDownloadStatus.cancelled:
+          return 2;
+      }
+    }
+
+    final list = List<OneDriveDownloadTask>.from(_tasks);
+    list.sort((a, b) {
+      final ta = tier(a);
+      final tb = tier(b);
+      if (ta != tb) return ta.compareTo(tb);
+      if (ta == 0) {
+        final sa = a.startedDownloadingAt ?? a.enqueuedAt;
+        final sb = b.startedDownloadingAt ?? b.enqueuedAt;
+        return sb.compareTo(sa);
+      }
+      return b.enqueuedAt.compareTo(a.enqueuedAt);
+    });
+    return list;
+  }
+
   bool get sessionPaused => _sessionPaused;
 
   bool get workerRunning => _workerRunning;
@@ -163,7 +193,19 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         final title = (m['title'] as String?) ?? name;
         final subtitle = (m['subtitle'] as String?) ?? '';
         final gi = OneDriveGraphItem(id: id, name: name, isFolder: false);
-        final task = OneDriveDownloadTask(graphItem: gi, title: title, subtitle: subtitle);
+        final eqMillis = m['enqueuedAt'];
+        final sdMillis = m['startedDownloadingAt'];
+        final task = OneDriveDownloadTask(
+          graphItem: gi,
+          title: title,
+          subtitle: subtitle,
+          enqueuedAt: eqMillis is num
+              ? DateTime.fromMillisecondsSinceEpoch((eqMillis as num).toInt())
+              : null,
+          startedDownloadingAt: sdMillis is num
+              ? DateTime.fromMillisecondsSinceEpoch((sdMillis as num).toInt())
+              : null,
+        );
         final st = m['status'] as String?;
         task.status = OneDriveDownloadStatus.values.firstWhere(
           (e) => e.name == st,
@@ -235,6 +277,8 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       'totalBytes': t.totalBytes,
       'localPath': t.song?.path,
       'error': t.error?.toString(),
+      'enqueuedAt': t.enqueuedAt.millisecondsSinceEpoch,
+      'startedDownloadingAt': t.startedDownloadingAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -470,6 +514,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     }
 
     task.status = OneDriveDownloadStatus.downloading;
+    task.startedDownloadingAt = DateTime.now();
     notifyListeners();
 
     try {

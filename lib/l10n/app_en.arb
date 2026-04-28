@@ -164,7 +164,18 @@
   "oneDriveDownloadQueuePageHint": "Pause, resume, or stop downloads here. Closing the sheet does not cancel background downloads.",
   "oneDriveDownloadQueueSubtitle": "Batch downloads and playback controls",
   "oneDriveDownloadQueueTooltip": "Download queue",
-  "oneDriveEnqueueBackground": "Added to the download queue. You can keep using the app.",
+  "oneDriveEnqueueAddedSingle": "Added \"{name}\" to the download queue.",
+  "@oneDriveEnqueueAddedSingle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "oneDriveEnqueueAddedMany": "Added {count} tracks to the download queue.",
+  "@oneDriveEnqueueAddedMany": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "oneDriveDownloadViewQueue": "View queue",
   "oneDriveDownloadClearHistory": "Clear history",
   "oneDriveError": "OneDrive error: {message}",
