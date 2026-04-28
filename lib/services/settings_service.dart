@@ -12,6 +12,9 @@ class SettingsService {
   static const String _quickEntryHiddenKey = 'quick_entry_hidden';
   static const String _oneDriveClientIdKey = 'onedrive_client_id';
   static const String _oneDriveMusicRootIdKey = 'onedrive_music_root_id';
+  static const String _oneDriveIndexFoldersKey = 'onedrive_index_folders';
+  static const String _oneDriveIndexTracksKey = 'onedrive_index_tracks';
+  static const String _oneDriveIndexAtKey = 'onedrive_index_at_iso';
 
   /// 保存歌词设置
   static Future<void> saveLyricSettings(LyricSettings settings) async {
@@ -162,6 +165,86 @@ class SettingsService {
           await box.delete(_oneDriveMusicRootIdKey);
         } else {
           await box.put(_oneDriveMusicRootIdKey, itemId.trim());
+        }
+      } catch (_) {}
+    }
+  }
+
+  /// 参与云端曲库索引的根文件夹（Graph item id + 展示名）。
+  static Future<List<Map<dynamic, dynamic>>> loadOneDriveIndexFolders() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_oneDriveIndexFoldersKey);
+      if (raw is! List) return [];
+      return raw.whereType<Map>().map((e) => Map<dynamic, dynamic>.from(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<void> saveOneDriveIndexFolders(List<Map<String, dynamic>> folders) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_oneDriveIndexFoldersKey, folders);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_oneDriveIndexFoldersKey, folders);
+      } catch (_) {}
+    }
+  }
+
+  static Future<List<Map<dynamic, dynamic>>> loadOneDriveIndexTracks() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_oneDriveIndexTracksKey);
+      if (raw is! List) return [];
+      return raw.whereType<Map>().map((e) => Map<dynamic, dynamic>.from(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<void> saveOneDriveIndexTracks(List<Map<String, dynamic>> tracks) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_oneDriveIndexTracksKey, tracks);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_oneDriveIndexTracksKey, tracks);
+      } catch (_) {}
+    }
+  }
+
+  static Future<DateTime?> loadOneDriveIndexCompletedAt() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final s = box.get(_oneDriveIndexAtKey) as String?;
+      return s == null ? null : DateTime.tryParse(s.trim());
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> saveOneDriveIndexCompletedAt(DateTime? t) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (t == null) {
+        await box.delete(_oneDriveIndexAtKey);
+      } else {
+        await box.put(_oneDriveIndexAtKey, t.toIso8601String());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (t == null) {
+          await box.delete(_oneDriveIndexAtKey);
+        } else {
+          await box.put(_oneDriveIndexAtKey, t.toIso8601String());
         }
       } catch (_) {}
     }

@@ -139,6 +139,54 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveUp => '上级';
 
   @override
+  String get oneDriveCloudLibraryTitle => 'OneDrive · 云端曲库';
+
+  @override
+  String get oneDriveCloudLibrarySubtitle =>
+      '添加的文件夹会递归扫描出音频列表；点曲目再从云端下载，已缓存的会直接本地播放。';
+
+  @override
+  String get oneDriveCloudLibraryEmpty =>
+      '还没有索引。\n请先点「在网盘中选择文件夹」，选好一个或多个音乐目录后，再点「重新扫描」。';
+
+  @override
+  String get oneDriveIndexRootsLabel => '已索引目录';
+
+  @override
+  String get oneDriveRescanIndex => '重新扫描';
+
+  @override
+  String get oneDriveBrowseFolders => '在网盘中选择文件夹';
+
+  @override
+  String get oneDrivePickFolderForIndex => '点文件夹右侧的 +，或进入文件夹后点「使用此文件夹」。';
+
+  @override
+  String get oneDriveUseCurrentFolder => '使用此文件夹';
+
+  @override
+  String get oneDriveAddFolderTooltip => '加入云端曲库';
+
+  @override
+  String get oneDriveIndexingEllipsis => '正在扫描目录…';
+
+  @override
+  String oneDriveLastIndexed(String time) {
+    return '上次扫描：$time';
+  }
+
+  @override
+  String get oneDrivePlayAllTracks => '播放全部';
+
+  @override
+  String oneDriveTracksCount(int count) {
+    return '$count 首';
+  }
+
+  @override
+  String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
+
+  @override
   String get languageSettingsTitle => '语言';
 
   @override
@@ -1077,6 +1125,54 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveUp => '上级';
 
   @override
+  String get oneDriveCloudLibraryTitle => 'OneDrive · 云端曲库';
+
+  @override
+  String get oneDriveCloudLibrarySubtitle =>
+      '添加的文件夹会递归扫描出音频列表；点曲目再从云端下载，已缓存的会直接本地播放。';
+
+  @override
+  String get oneDriveCloudLibraryEmpty =>
+      '还没有索引。\n请先点「在网盘中选择文件夹」，选好一个或多个音乐目录后，再点「重新扫描」。';
+
+  @override
+  String get oneDriveIndexRootsLabel => '已索引目录';
+
+  @override
+  String get oneDriveRescanIndex => '重新扫描';
+
+  @override
+  String get oneDriveBrowseFolders => '在网盘中选择文件夹';
+
+  @override
+  String get oneDrivePickFolderForIndex => '点文件夹右侧的 +，或进入文件夹后点「使用此文件夹」。';
+
+  @override
+  String get oneDriveUseCurrentFolder => '使用此文件夹';
+
+  @override
+  String get oneDriveAddFolderTooltip => '加入云端曲库';
+
+  @override
+  String get oneDriveIndexingEllipsis => '正在扫描目录…';
+
+  @override
+  String oneDriveLastIndexed(String time) {
+    return '上次扫描：$time';
+  }
+
+  @override
+  String get oneDrivePlayAllTracks => '播放全部';
+
+  @override
+  String oneDriveTracksCount(int count) {
+    return '$count 首';
+  }
+
+  @override
+  String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
+
+  @override
   String get languageSettingsTitle => '语言';
 
   @override
@@ -2013,6 +2109,54 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveUp => '上層';
+
+  @override
+  String get oneDriveCloudLibraryTitle => 'OneDrive · 雲端曲庫';
+
+  @override
+  String get oneDriveCloudLibrarySubtitle =>
+      '加入的資料夾會遞迴掃描出音訊清單；點曲目再從雲端下載，已快取者將直接離線播放。';
+
+  @override
+  String get oneDriveCloudLibraryEmpty =>
+      '尚未建立索引。\n請先點「在網路磁碟選擇資料夾」，選好音樂目錄後再點「重新掃描」。';
+
+  @override
+  String get oneDriveIndexRootsLabel => '已索引目錄';
+
+  @override
+  String get oneDriveRescanIndex => '重新掃描';
+
+  @override
+  String get oneDriveBrowseFolders => '在網路磁碟選擇資料夾';
+
+  @override
+  String get oneDrivePickFolderForIndex => '點資料夾右側 +，或進入資料夾後點「使用此資料夾」。';
+
+  @override
+  String get oneDriveUseCurrentFolder => '使用此資料夾';
+
+  @override
+  String get oneDriveAddFolderTooltip => '加入雲端曲庫';
+
+  @override
+  String get oneDriveIndexingEllipsis => '正在掃描目錄…';
+
+  @override
+  String oneDriveLastIndexed(String time) {
+    return '上次掃描：$time';
+  }
+
+  @override
+  String get oneDrivePlayAllTracks => '播放全部';
+
+  @override
+  String oneDriveTracksCount(int count) {
+    return '$count 曲';
+  }
+
+  @override
+  String get oneDriveNoIndexRoots => '尚未設定目錄，請先用「在網路磁碟選擇資料夾」。';
 
   @override
   String get languageSettingsTitle => '語言';

@@ -9,6 +9,13 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
 
+/// 从 [OneDriveBrowserPage] 退回时传给「添加到云端索引」的选中文件夹。
+class OneDriveFolderPickResult {
+  OneDriveFolderPickResult({required this.itemId, required this.name});
+  final String itemId;
+  final String name;
+}
+
 class _NavFrame {
   _NavFrame({this.parentItemId, required this.title});
   final String? parentItemId;
@@ -16,7 +23,10 @@ class _NavFrame {
 }
 
 class OneDriveBrowserPage extends StatefulWidget {
-  const OneDriveBrowserPage({super.key});
+  const OneDriveBrowserPage({super.key, this.pickFolderForIndex = false});
+
+  /// `true` 时用于云端曲库：仅选文件夹返回 [OneDriveFolderPickResult]，点播文件被禁用。
+  final bool pickFolderForIndex;
 
   @override
   State<OneDriveBrowserPage> createState() => _OneDriveBrowserPageState();
@@ -140,14 +150,37 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
-              title: Text(
-                _stack.isEmpty
-                    ? l10n.oneDriveBrowserTitle
-                    : _stack.map((e) => e.title).join(' / '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-              ),
+              title: widget.pickFolderForIndex
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _stack.isEmpty
+                              ? l10n.oneDriveBrowserTitle
+                              : _stack.map((e) => e.title).join(' / '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.oneDrivePickFolderForIndex,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(color: Colors.white.withValues(alpha: 0.62), fontSize: 11, height: 1.25),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      _stack.isEmpty
+                          ? l10n.oneDriveBrowserTitle
+                          : _stack.map((e) => e.title).join(' / '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
@@ -165,9 +198,28 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                 },
               ),
               actions: [
-                if (_items.any(
-                  (e) => !e.isFolder && OneDriveConfig.isAudioFileName(e.name),
-                ))
+                if (widget.pickFolderForIndex && _stack.isNotEmpty)
+                  TextButton(
+                    onPressed: _loading
+                        ? null
+                        : () {
+                            final frame = _stack.last;
+                            final id = frame.parentItemId;
+                            if (id == null) return;
+                            Navigator.pop(
+                              context,
+                              OneDriveFolderPickResult(itemId: id, name: frame.title),
+                            );
+                          },
+                    child: Text(
+                      l10n.oneDriveUseCurrentFolder,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                if (!widget.pickFolderForIndex &&
+                    _items.any(
+                      (e) => !e.isFolder && OneDriveConfig.isAudioFileName(e.name),
+                    ))
                   TextButton(
                     onPressed: _loading ? null : _playAllInFolder,
                     child: Text(
@@ -204,7 +256,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                               100,
                             ),
                             itemCount: _items.length,
-                            separatorBuilder: (_, __) => const Divider(
+                            separatorBuilder: (_, _) => const Divider(
                               height: 1,
                               color: Color(0x22FFFFFF),
                             ),
@@ -223,6 +275,18 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                                   it.name,
                                   style: const TextStyle(color: Colors.white),
                                 ),
+                                trailing: it.isFolder && widget.pickFolderForIndex
+                                    ? IconButton(
+                                        icon: const Icon(Icons.playlist_add, color: Color(0xFFB0BEC5)),
+                                        tooltip: l10n.oneDriveAddFolderTooltip,
+                                        onPressed: () {
+                                          Navigator.pop(
+                                            context,
+                                            OneDriveFolderPickResult(itemId: it.id, name: it.name),
+                                          );
+                                        },
+                                      )
+                                    : null,
                                 onTap: () {
                                   if (it.isFolder) {
                                     setState(() {
@@ -235,6 +299,9 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                                     });
                                     _reload();
                                   } else {
+                                    if (widget.pickFolderForIndex) {
+                                      return;
+                                    }
                                     _playFile(it);
                                   }
                                 },

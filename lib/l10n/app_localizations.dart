@@ -354,6 +354,90 @@ abstract class AppLocalizations {
   /// **'Up'**
   String get oneDriveUp;
 
+  /// No description provided for @oneDriveCloudLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive · Cloud library'**
+  String get oneDriveCloudLibraryTitle;
+
+  /// No description provided for @oneDriveCloudLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders you add are scanned recursively. Tap a song to download on demand; played files stay cached offline.'**
+  String get oneDriveCloudLibrarySubtitle;
+
+  /// No description provided for @oneDriveCloudLibraryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks indexed yet.\nTap “Choose folders”, pick one or more music folders in OneDrive, then “Rescan”.'**
+  String get oneDriveCloudLibraryEmpty;
+
+  /// No description provided for @oneDriveIndexRootsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexed folders'**
+  String get oneDriveIndexRootsLabel;
+
+  /// No description provided for @oneDriveRescanIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get oneDriveRescanIndex;
+
+  /// No description provided for @oneDriveBrowseFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose folders'**
+  String get oneDriveBrowseFolders;
+
+  /// No description provided for @oneDrivePickFolderForIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a folder’s + icon, or enter a folder and use “Use this folder”.'**
+  String get oneDrivePickFolderForIndex;
+
+  /// No description provided for @oneDriveUseCurrentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this folder'**
+  String get oneDriveUseCurrentFolder;
+
+  /// No description provided for @oneDriveAddFolderTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add folder to cloud library'**
+  String get oneDriveAddFolderTooltip;
+
+  /// No description provided for @oneDriveIndexingEllipsis.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning folders…'**
+  String get oneDriveIndexingEllipsis;
+
+  /// No description provided for @oneDriveLastIndexed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scanned: {time}'**
+  String oneDriveLastIndexed(String time);
+
+  /// No description provided for @oneDrivePlayAllTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all'**
+  String get oneDrivePlayAllTracks;
+
+  /// No description provided for @oneDriveTracksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} songs'**
+  String oneDriveTracksCount(int count);
+
+  /// No description provided for @oneDriveNoIndexRoots.
+  ///
+  /// In en, this message translates to:
+  /// **'No folders configured. Tap “Choose folders” first.'**
+  String get oneDriveNoIndexRoots;
+
   /// No description provided for @languageSettingsTitle.
   ///
   /// In en, this message translates to:

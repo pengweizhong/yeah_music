@@ -140,6 +140,55 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveUp => '上へ';
 
   @override
+  String get oneDriveCloudLibraryTitle => 'OneDrive · クラウドライブラリ';
+
+  @override
+  String get oneDriveCloudLibrarySubtitle =>
+      '追加したフォルダーを再帰的にスキャンしてリスト化。タップでオンデマンドダウンロード。再生済みはキャッシュを利用します。';
+
+  @override
+  String get oneDriveCloudLibraryEmpty =>
+      'まだありません。\nOneDrive でフォルダーを選んでから「再スキャン」してください。';
+
+  @override
+  String get oneDriveIndexRootsLabel => 'インデックス対象フォルダー';
+
+  @override
+  String get oneDriveRescanIndex => '再スキャン';
+
+  @override
+  String get oneDriveBrowseFolders => 'フォルダーを選ぶ';
+
+  @override
+  String get oneDrivePickFolderForIndex =>
+      'フォルダーの「+」、またはフォルダー内で「このフォルダーを使う」を押します。';
+
+  @override
+  String get oneDriveUseCurrentFolder => 'このフォルダーを使う';
+
+  @override
+  String get oneDriveAddFolderTooltip => 'クラウドライブラリに追加';
+
+  @override
+  String get oneDriveIndexingEllipsis => 'スキャン中…';
+
+  @override
+  String oneDriveLastIndexed(String time) {
+    return '最終スキャン: $time';
+  }
+
+  @override
+  String get oneDrivePlayAllTracks => 'すべて再生';
+
+  @override
+  String oneDriveTracksCount(int count) {
+    return '$count 曲';
+  }
+
+  @override
+  String get oneDriveNoIndexRoots => 'フォルダーが未設定です。先に「フォルダーを選ぶ」から設定してください。';
+
+  @override
   String get languageSettingsTitle => '言語';
 
   @override

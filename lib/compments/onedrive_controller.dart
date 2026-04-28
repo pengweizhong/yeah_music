@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
+import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/onedrive/onedrive_auth.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
@@ -26,11 +27,27 @@ class OneDriveController extends ChangeNotifier {
   bool _signedIn = false;
   String? _accountHint;
 
+  List<OneDriveIndexFolder> _indexFolders = [];
+  List<OneDriveCloudTrack> _cloudTracks = [];
+  DateTime? _cloudIndexAt;
+  bool _cloudIndexBuilding = false;
+  String? _cloudIndexError;
+
   String get clientId => _clientId;
   String? get musicRootItemId => _musicRootItemId;
   bool get signedIn => _signedIn;
   String? get accountHint => _accountHint;
   bool get isLinuxUnsupported => Platform.isLinux;
+
+  List<OneDriveIndexFolder> get indexFolders => List.unmodifiable(_indexFolders);
+
+  List<OneDriveCloudTrack> get cloudTracks => List.unmodifiable(_cloudTracks);
+
+  DateTime? get cloudIndexAt => _cloudIndexAt;
+
+  bool get cloudIndexBuilding => _cloudIndexBuilding;
+
+  String? get cloudIndexError => _cloudIndexError;
 
   String get effectiveClientId {
     if (_clientId.isNotEmpty) return _clientId;
@@ -40,6 +57,7 @@ class OneDriveController extends ChangeNotifier {
   Future<void> loadFromStorage() async {
     _clientId = (await SettingsService.loadOneDriveClientId()) ?? '';
     _musicRootItemId = await SettingsService.loadOneDriveMusicRootId();
+    await _loadCloudIndexFromDisk();
     if (effectiveClientId.isEmpty) {
       _signedIn = false;
       notifyListeners();
@@ -51,6 +69,159 @@ class OneDriveController extends ChangeNotifier {
       _accountHint = 'Microsoft';
     }
     notifyListeners();
+  }
+
+  Future<void> _loadCloudIndexFromDisk() async {
+    final foldersRaw = await SettingsService.loadOneDriveIndexFolders();
+    _indexFolders =
+        foldersRaw.map(OneDriveIndexFolder.fromMap).where((e) => e.itemId.isNotEmpty).toList();
+    final tracksRaw = await SettingsService.loadOneDriveIndexTracks();
+    _cloudTracks =
+        tracksRaw.map(OneDriveCloudTrack.fromMap).where((e) => e.itemId.isNotEmpty).toList();
+    _cloudTracks.sort((a, b) => a.sortKey.compareTo(b.sortKey));
+    _cloudIndexAt = await SettingsService.loadOneDriveIndexCompletedAt();
+  }
+
+  Future<void> _persistCloudIndex() async {
+    await SettingsService.saveOneDriveIndexFolders(
+      _indexFolders.map((e) => e.toMap()).toList(),
+    );
+    await SettingsService.saveOneDriveIndexTracks(
+      _cloudTracks.map((e) => e.toMap()).toList(),
+    );
+    await SettingsService.saveOneDriveIndexCompletedAt(_cloudIndexAt);
+  }
+
+  /// 将 [itemId] 加入索引目录根列表（不会去重扫描，需调用 [rebuildCloudIndex]）。
+  Future<void> addIndexFolder(String itemId, String label) async {
+    final id = itemId.trim();
+    if (id.isEmpty) return;
+    if (_indexFolders.any((e) => e.itemId == id)) return;
+    final raw = label.trim();
+    _indexFolders.add(OneDriveIndexFolder(itemId: id, label: raw.isEmpty ? 'Folder' : raw));
+    await SettingsService.saveOneDriveIndexFolders(
+      _indexFolders.map((e) => e.toMap()).toList(),
+    );
+    notifyListeners();
+  }
+
+  Future<void> removeIndexFolder(String itemId) async {
+    _indexFolders.removeWhere((e) => e.itemId == itemId);
+    await SettingsService.saveOneDriveIndexFolders(
+      _indexFolders.map((e) => e.toMap()).toList(),
+    );
+    notifyListeners();
+    if (_indexFolders.isEmpty) {
+      _cloudTracks = [];
+      _cloudIndexAt = null;
+      await _persistCloudIndex();
+      notifyListeners();
+      return;
+    }
+    await rebuildCloudIndex();
+  }
+
+  /// 递归扫描 [indexFolders] 下所有音频，写入 [cloudTracks] 并持久化。
+  Future<void> rebuildCloudIndex() async {
+    if (_indexFolders.isEmpty) {
+      _cloudTracks = [];
+      _cloudIndexAt = null;
+      _cloudIndexError = null;
+      await _persistCloudIndex();
+      notifyListeners();
+      return;
+    }
+    final token = await getAccessToken();
+    if (token == null) {
+      throw StateError('not signed in');
+    }
+    _cloudIndexBuilding = true;
+    _cloudIndexError = null;
+    notifyListeners();
+    try {
+      final dedupe = <String>{};
+      final collected = <OneDriveCloudTrack>[];
+      for (final root in _indexFolders) {
+        await _crawlCollectAudio(
+          accessToken: token,
+          folderItemId: root.itemId,
+          rootLabel: root.label.isEmpty ? 'Music' : root.label,
+          pathSegments: const [],
+          dedupe: dedupe,
+          out: collected,
+        );
+      }
+      collected.sort((a, b) => a.sortKey.compareTo(b.sortKey));
+      _cloudTracks = collected;
+      _cloudIndexAt = DateTime.now();
+      await _persistCloudIndex();
+    } catch (e) {
+      _cloudIndexError = '$e';
+    } finally {
+      _cloudIndexBuilding = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _crawlCollectAudio({
+    required String accessToken,
+    required String folderItemId,
+    required String rootLabel,
+    required List<String> pathSegments,
+    required Set<String> dedupe,
+    required List<OneDriveCloudTrack> out,
+  }) async {
+    final children = await _graph.listChildren(
+      accessToken: accessToken,
+      parentId: folderItemId,
+    );
+    for (final child in children) {
+      if (child.isFolder) {
+        await _crawlCollectAudio(
+          accessToken: accessToken,
+          folderItemId: child.id,
+          rootLabel: rootLabel,
+          pathSegments: [...pathSegments, child.name],
+          dedupe: dedupe,
+          out: out,
+        );
+      } else if (OneDriveConfig.isAudioFileName(child.name)) {
+        if (dedupe.add(child.id)) {
+          final subs = [...pathSegments, child.name];
+          final display = [rootLabel, ...subs].join('/');
+          out.add(
+            OneDriveCloudTrack(
+              itemId: child.id,
+              fileName: child.name,
+              displayPath: display,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  /// 由索引条目还原为可下载的 Graph 占位项。
+  OneDriveGraphItem graphItemForCloudTrack(OneDriveCloudTrack t) {
+    return OneDriveGraphItem(
+      id: t.itemId,
+      name: t.fileName,
+      isFolder: false,
+      downloadUrl: null,
+    );
+  }
+
+  /// 点播云端曲目：按需下载，`songForPlayableItem` 内已按 item id 缓存。
+  Future<Song> songForCloudTrack(OneDriveCloudTrack t) {
+    return songForPlayableItem(graphItemForCloudTrack(t));
+  }
+
+  Future<List<Song>> buildQueueForCloudTracks(List<OneDriveCloudTrack> slice) async {
+    final out = <Song>[];
+    for (final t in slice) {
+      out.add(await songForCloudTrack(t));
+    }
+    return out;
   }
 
   Future<void> setMusicRootItemId(String? id) async {

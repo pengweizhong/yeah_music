@@ -15,7 +15,7 @@ import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
-import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/quick_entry_settings_page.dart';
@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
       Navigator.push<void>(
         context,
         MaterialPageRoute<void>(
-          builder: (context) => const OneDriveBrowserPage(),
+          builder: (context) => const OneDriveCloudPlaylistPage(),
         ),
       );
     } else {

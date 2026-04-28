@@ -6,7 +6,7 @@ import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
-import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 
 class OneDriveSettingsPage extends StatefulWidget {
   const OneDriveSettingsPage({super.key});
@@ -66,7 +66,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                       Navigator.push<void>(
                         context,
                         MaterialPageRoute<void>(
-                          builder: (context) => const OneDriveBrowserPage(),
+                          builder: (context) => const OneDriveCloudPlaylistPage(),
                         ),
                       );
                     },
@@ -249,7 +249,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                             );
                             await Navigator.of(context).push<void>(
                               MaterialPageRoute<void>(
-                                builder: (_) => const OneDriveBrowserPage(),
+                                builder: (_) => const OneDriveCloudPlaylistPage(),
                               ),
                             );
                           },

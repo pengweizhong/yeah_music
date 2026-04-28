@@ -145,6 +145,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveUp => 'Up';
 
   @override
+  String get oneDriveCloudLibraryTitle => 'OneDrive · Cloud library';
+
+  @override
+  String get oneDriveCloudLibrarySubtitle =>
+      'Folders you add are scanned recursively. Tap a song to download on demand; played files stay cached offline.';
+
+  @override
+  String get oneDriveCloudLibraryEmpty =>
+      'No tracks indexed yet.\nTap “Choose folders”, pick one or more music folders in OneDrive, then “Rescan”.';
+
+  @override
+  String get oneDriveIndexRootsLabel => 'Indexed folders';
+
+  @override
+  String get oneDriveRescanIndex => 'Rescan';
+
+  @override
+  String get oneDriveBrowseFolders => 'Choose folders';
+
+  @override
+  String get oneDrivePickFolderForIndex =>
+      'Tap a folder’s + icon, or enter a folder and use “Use this folder”.';
+
+  @override
+  String get oneDriveUseCurrentFolder => 'Use this folder';
+
+  @override
+  String get oneDriveAddFolderTooltip => 'Add folder to cloud library';
+
+  @override
+  String get oneDriveIndexingEllipsis => 'Scanning folders…';
+
+  @override
+  String oneDriveLastIndexed(String time) {
+    return 'Last scanned: $time';
+  }
+
+  @override
+  String get oneDrivePlayAllTracks => 'Play all';
+
+  @override
+  String oneDriveTracksCount(int count) {
+    return '$count songs';
+  }
+
+  @override
+  String get oneDriveNoIndexRoots =>
+      'No folders configured. Tap “Choose folders” first.';
+
+  @override
   String get languageSettingsTitle => 'Language';
 
   @override
