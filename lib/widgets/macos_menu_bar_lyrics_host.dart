@@ -33,6 +33,7 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
 
   bool _registered = false;
   bool _enabled = false;
+  Locale? _lastSyncedLocale;
 
   final ExternalLyricLineFormatter _formatter =
       ExternalLyricLineFormatter(lyricStyle: LyricSettings());
@@ -116,6 +117,23 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!kIsWeb &&
+        Platform.isMacOS &&
+        MacosMenuBarLyrics.supported &&
+        _registered &&
+        _enabled) {
+      final loc = Localizations.localeOf(context);
+      if (_lastSyncedLocale != loc) {
+        _lastSyncedLocale = loc;
+        final l10n = AppLocalizations.of(context);
+        unawaited(_syncToNative(l10n));
+      }
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     if (!kIsWeb && Platform.isMacOS) {
@@ -150,6 +168,8 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
       final l10n = AppLocalizations.of(context);
       unawaited(_syncToNative(l10n));
     });
+
+    _lastSyncedLocale = Localizations.localeOf(context);
 
     MacosMenuBarLyrics.setNativeCommandHandler((call) async {
       final playList = Provider.of<PlayListProvider>(context, listen: false);

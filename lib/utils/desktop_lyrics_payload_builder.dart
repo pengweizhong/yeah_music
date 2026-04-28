@@ -155,18 +155,13 @@ abstract final class DesktopLyricsPayloadBuilder {
     };
   }
 
-  static Map<String, dynamic>? _rowForIndex({
-    required List<LyricEntry> parsed,
-    required int index,
-    required Duration effectivePos,
+  /// 与播放页「多行歌词」模式一致：当前时间轴行应展示的文本（原文 / 单条翻译 / 全部）。
+  static List<String> linesToShowForLyricLine({
+    required LyricEntry line,
     required LyricSettings settings,
     required int? lineSpecificMode,
     required int globalDisplayMode,
   }) {
-    final line = parsed[index];
-    final ts = line.timestamp;
-    final played = ts != null && ts <= effectivePos;
-    final active = line.isActive;
     final displayMode = lineSpecificMode ?? globalDisplayMode;
     final linesToShow = <String>[];
 
@@ -188,9 +183,33 @@ abstract final class DesktopLyricsPayloadBuilder {
       }
     }
 
+    return linesToShow;
+  }
+
+  static Map<String, dynamic>? _rowForIndex({
+    required List<LyricEntry> parsed,
+    required int index,
+    required Duration effectivePos,
+    required LyricSettings settings,
+    required int? lineSpecificMode,
+    required int globalDisplayMode,
+  }) {
+    final line = parsed[index];
+    final ts = line.timestamp;
+    final played = ts != null && ts <= effectivePos;
+    final active = line.isActive;
+    final linesToShow = linesToShowForLyricLine(
+      line: line,
+      settings: settings,
+      lineSpecificMode: lineSpecificMode,
+      globalDisplayMode: globalDisplayMode,
+    );
+
     if (linesToShow.isEmpty) {
       return null;
     }
+
+    final displayMode = lineSpecificMode ?? globalDisplayMode;
 
     final isShowingAll = displayMode == -1;
     final isShowingSingleLine =

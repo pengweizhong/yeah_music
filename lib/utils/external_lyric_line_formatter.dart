@@ -3,6 +3,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/utils/desktop_lyrics_payload_builder.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 
 /// 菜单栏、桌面悬浮等外部展示用的单行歌词（与 [LyricSettings] 翻译行开关一致）。
@@ -64,16 +65,17 @@ class ExternalLyricLineFormatter {
       return sanitizeExternalLyricLine('…');
     }
 
-    final lines = _parsed[idx].lines;
-    final parts = <String>[];
-    if (lyricStyle.showOriginal && lines.isNotEmpty) {
-      parts.add(lines[0]);
-    }
-    if (lyricStyle.showTranslations && lines.length > 1) {
-      parts.addAll(lines.sublist(1));
-    }
-    if (parts.isEmpty && lines.isNotEmpty) {
-      parts.add(lines[0]);
+    lyricStyle.normalizeLayoutFields();
+    final modeMap = lyricStyle.lyricDisplayMode;
+    final globalMode = lyricStyle.resolvedGlobalLyricDisplayMode;
+    final parts = DesktopLyricsPayloadBuilder.linesToShowForLyricLine(
+      line: _parsed[idx],
+      settings: lyricStyle,
+      lineSpecificMode: modeMap[idx],
+      globalDisplayMode: globalMode,
+    );
+    if (parts.isEmpty && _parsed[idx].lines.isNotEmpty) {
+      parts.add(_parsed[idx].lines[0]);
     }
 
     final lyricLine = parts.join(' · ');

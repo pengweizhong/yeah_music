@@ -89,6 +89,13 @@ class LyricSettings extends HiveObject {
     lyricDisplayModeList = value.entries.map((e) => '${e.key}:${e.value}').toList();
   }
 
+  /// 与播放页从 Hive 恢复后的「全局多行模式」一致：map 为空为全部行（-1），否则取存盘代表值。
+  int get resolvedGlobalLyricDisplayMode {
+    final m = lyricDisplayMode;
+    if (m.isEmpty) return -1;
+    return m.values.first;
+  }
+
   // Convert Color to int for storage
   static int colorToInt(int color) => color;
 
