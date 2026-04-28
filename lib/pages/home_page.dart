@@ -16,6 +16,7 @@ import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
@@ -1046,15 +1047,8 @@ class _ContinueEmptyCard extends StatelessWidget {
 // 我的歌单横滑
 // ---------------------------------------------------------------------------
 
-/// 首页「我的歌单」混色卡宽度；快捷入口正方形边长应略小于此值。
+/// 首页「我的歌单」混色卡宽度；快捷入口正方形边长上限略小于此值（视觉上仍一眼小于歌单卡）。
 const double _kHomePlaylistMixCardWidth = 128;
-
-const _kMixGradients = <List<Color>>[
-  [Color(0xFF1A237E), Color(0xFF3949AB)],
-  [Color(0xFF004D40), Color(0xFF00695C)],
-  [Color(0xFF4A148C), Color(0xFF6A1B9A)],
-  [Color(0xFFBF360C), Color(0xFFE64A19)],
-];
 
 class _PlaylistCarousels extends StatelessWidget {
   const _PlaylistCarousels({
@@ -1094,13 +1088,16 @@ class _PlaylistCarousels extends StatelessWidget {
         : (allN == 0
             ? l10n.homeScanMusicFolder
             : l10n.homeTrackCount(allN));
-    const allC1 = Color(0xFF1565C0);
-    const allC2 = Color(0xFF0D47A1);
     final allCard = _MixCard(
       title: l10n.homeAllSongs,
       subtitle: allSubtitle,
-      c1: allC1,
-      c2: allC2,
+      decoration: playlistCoverCardDecoration(
+        coverStyle: UserPlaylistCoverStyle.gradient(
+          const Color(0xFF1565C0),
+          const Color(0xFF0D47A1),
+        ),
+        fallbackGradientIndex: 0,
+      ),
       onTap: onOpenAllSongs,
     );
     final list = user.playlists;
@@ -1123,8 +1120,13 @@ class _PlaylistCarousels extends StatelessWidget {
               _MixCard(
                 title: l10n.homeCreatePlaylist,
                 subtitle: l10n.homeCreatePlaylistSub,
-                c1: const Color(0xFF37474F),
-                c2: const Color(0xFF455A64),
+                decoration: playlistCoverCardDecoration(
+                  coverStyle: UserPlaylistCoverStyle.gradient(
+                    const Color(0xFF37474F),
+                    const Color(0xFF455A64),
+                  ),
+                  fallbackGradientIndex: 0,
+                ),
                 onTap: onCreate,
               ),
             ],
@@ -1150,15 +1152,16 @@ class _PlaylistCarousels extends StatelessWidget {
             if (i == 0) return allCard;
             final pi = i - 1;
             final p = list[pi];
-            final g = _kMixGradients[pi % _kMixGradients.length];
             final n = p.songPaths.length;
             return _MixCard(
               title: p.name,
               subtitle: n == 0
                   ? l10n.homeEmptyPlaylist
                   : l10n.homeTrackCount(n),
-              c1: g[0],
-              c2: g[1],
+              decoration: playlistCoverCardDecoration(
+                coverStyle: p.coverStyle,
+                fallbackGradientIndex: pi,
+              ),
               onTap: () => onOpenPlaylist(p.id),
             );
           },
@@ -1459,8 +1462,8 @@ class _QuickEntryStrip extends StatelessWidget {
   final List<_QuickItem> entries;
 
   static const double _gap = 10;
-  static const double _sideMin = 76;
-  static const double _sideMax = _kHomePlaylistMixCardWidth - 6;
+  static const double _sideMin = 88;
+  static const double _sideMax = _kHomePlaylistMixCardWidth - 4;
   /// 极窄窗口下滚动时的下限，避免算不出布局。
   static const double _sideAbsMin = 48;
 
@@ -1547,10 +1550,10 @@ class _QuickEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = (side * 0.14).clamp(10.0, 16.0);
-    final iconBox = (side * 0.46).clamp(34.0, 58.0);
-    final iconGlyph = (iconBox * 0.56).clamp(22.0, 34.0);
-    final labelSize = (side * 0.15).clamp(10.0, 13.0);
+    final radius = (side * 0.14).clamp(11.0, 17.0);
+    final iconBox = (side * 0.46).clamp(38.0, 62.0);
+    final iconGlyph = (iconBox * 0.56).clamp(24.0, 36.0);
+    final labelSize = (side * 0.155).clamp(11.0, 14.5);
     final pad = (side * 0.07).clamp(4.0, 10.0);
 
     return Material(
@@ -1614,14 +1617,12 @@ class _MixCard extends StatelessWidget {
   const _MixCard({
     required this.title,
     required this.subtitle,
-    required this.c1,
-    required this.c2,
+    required this.decoration,
     required this.onTap,
   });
   final String title;
   final String subtitle;
-  final Color c1;
-  final Color c2;
+  final BoxDecoration decoration;
   final VoidCallback onTap;
 
   @override
@@ -1634,21 +1635,7 @@ class _MixCard extends StatelessWidget {
         child: Container(
           width: _kHomePlaylistMixCardWidth,
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [c1, c2],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          decoration: decoration,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,

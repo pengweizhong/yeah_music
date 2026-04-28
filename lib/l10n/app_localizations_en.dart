@@ -1162,6 +1162,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistRenameTitle => 'Rename playlist';
 
   @override
+  String get playlistCoverStyleTitle => 'Cover color';
+
+  @override
+  String get playlistCoverStyleSubtitle =>
+      'Solid or gradient for playlist cards on Home and in the library list. Choose rotating presets to match list order automatically.';
+
+  @override
+  String get playlistCoverUseDefaultPalette => 'Use rotating preset colors';
+
+  @override
+  String get playlistCoverSolidSection => 'Solid';
+
+  @override
+  String get playlistCoverGradientSection => 'Gradient';
+
+  @override
+  String get playlistCoverRgbTitle => 'Custom RGB color';
+
+  @override
+  String get playlistCoverRgbRed => 'Red';
+
+  @override
+  String get playlistCoverRgbGreen => 'Green';
+
+  @override
+  String get playlistCoverRgbBlue => 'Blue';
+
+  @override
+  String get playlistCoverRgbPreview => 'Preview';
+
+  @override
+  String get playlistCoverMenuItem => 'Cover color…';
+
+  @override
   String get exportCannot => 'This playlist cannot be exported';
 
   @override

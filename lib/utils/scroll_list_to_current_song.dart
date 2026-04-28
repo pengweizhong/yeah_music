@@ -43,9 +43,12 @@ bool isCurrentSongInDisplayList(PlayListProvider playList, List<Song> songs) {
 /// 在 [ListView]（固定 [itemExtent]）中滚到当前播放行；多帧重试直到 [ScrollController.hasClients]，
 /// 避免首屏 [ListView] 尚未挂接时静默失败。
 ///
-/// [onScrollApplied] 仅在 [jumpTo] 真正执行时调用；若多帧后仍无 [ScrollController] 挂接、
-/// 无当前歌或曲不在 [songs] 中，则改调 [onScrollFailed]（若提供），便于调用方在**成功**后再
-/// 记「已对齐过」，避免首次进入时误记导致再也不重试。
+/// [onScrollApplied] 仅在「执行过对齐滚动」或「当前行已在视窗内故跳过滚动」时调用（后者同样计入已对齐，
+/// 避免反复排队）；若多帧后仍无 [ScrollController] 挂接、无当前歌或曲不在 [songs] 中，则改调
+/// [onScrollFailed]（若提供）。
+///
+/// [forceAlign] 为 `true` 时（如用户点「定位到当前」）始终按 [alignBias] 对齐；为 `false` 时（切歌、
+/// 进入页面等自动行为）若当前行已完整落在可见视窗内则**不** [jumpTo]，避免点击已可见行播放时的「瞬移」感。
 void scheduleScrollListToCurrentSong({
   required BuildContext context,
   required ScrollController controller,
@@ -54,6 +57,8 @@ void scheduleScrollListToCurrentSong({
   required PlayListProvider playList,
   double alignBias = 0.22,
   int maxFrames = 16,
+  /// 为 `true` 时无视「已在屏幕内」判断，始终滚动到对齐位置（手动定位按钮）。
+  bool forceAlign = false,
   void Function(String appliedPathNorm)? onScrollApplied,
   VoidCallback? onScrollFailed,
 }) {
@@ -94,6 +99,19 @@ void scheduleScrollListToCurrentSong({
     final pos = controller.position;
     final rowTop = i * itemExtent;
     final viewH = pos.viewportDimension;
+    final rowBottom = rowTop + itemExtent;
+    final viewTop = pos.pixels;
+    final viewBottom = pos.pixels + viewH;
+    const tol = 1.0;
+
+    if (!forceAlign &&
+        rowTop >= viewTop - tol &&
+        rowBottom <= viewBottom + tol) {
+      didComplete = true;
+      onScrollApplied?.call(normSongPath(current.path));
+      return;
+    }
+
     final target =
         (rowTop - viewH * alignBias).clamp(0.0, pos.maxScrollExtent);
     _markListProgrammaticJump(controller);

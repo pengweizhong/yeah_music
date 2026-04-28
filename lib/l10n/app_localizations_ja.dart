@@ -1120,6 +1120,40 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playlistRenameTitle => '名前を変更';
 
   @override
+  String get playlistCoverStyleTitle => 'カバー色';
+
+  @override
+  String get playlistCoverStyleSubtitle =>
+      'ホームのカードと一覧のサムネイルに使います。「プリセット順」では並びに沿って自動配色します。';
+
+  @override
+  String get playlistCoverUseDefaultPalette => 'プリセットを順に使う';
+
+  @override
+  String get playlistCoverSolidSection => '単色';
+
+  @override
+  String get playlistCoverGradientSection => 'グラデーション';
+
+  @override
+  String get playlistCoverRgbTitle => 'RGB を指定';
+
+  @override
+  String get playlistCoverRgbRed => '赤';
+
+  @override
+  String get playlistCoverRgbGreen => '緑';
+
+  @override
+  String get playlistCoverRgbBlue => '青';
+
+  @override
+  String get playlistCoverRgbPreview => 'プレビュー';
+
+  @override
+  String get playlistCoverMenuItem => 'カバー色…';
+
+  @override
   String get exportCannot => 'このプレイリストはエクスポートできません';
 
   @override

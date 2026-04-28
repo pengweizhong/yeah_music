@@ -333,6 +333,7 @@ class SongListScrollToCurrentLocate extends StatelessWidget {
           songs: songs,
           itemExtent: itemExtent,
           playList: playList,
+          forceAlign: true,
         );
       },
       child: child,

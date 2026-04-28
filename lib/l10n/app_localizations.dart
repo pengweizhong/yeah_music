@@ -2160,6 +2160,72 @@ abstract class AppLocalizations {
   /// **'Rename playlist'**
   String get playlistRenameTitle;
 
+  /// No description provided for @playlistCoverStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover color'**
+  String get playlistCoverStyleTitle;
+
+  /// No description provided for @playlistCoverStyleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid or gradient for playlist cards on Home and in the library list. Choose rotating presets to match list order automatically.'**
+  String get playlistCoverStyleSubtitle;
+
+  /// No description provided for @playlistCoverUseDefaultPalette.
+  ///
+  /// In en, this message translates to:
+  /// **'Use rotating preset colors'**
+  String get playlistCoverUseDefaultPalette;
+
+  /// No description provided for @playlistCoverSolidSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid'**
+  String get playlistCoverSolidSection;
+
+  /// No description provided for @playlistCoverGradientSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient'**
+  String get playlistCoverGradientSection;
+
+  /// No description provided for @playlistCoverRgbTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom RGB color'**
+  String get playlistCoverRgbTitle;
+
+  /// No description provided for @playlistCoverRgbRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get playlistCoverRgbRed;
+
+  /// No description provided for @playlistCoverRgbGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get playlistCoverRgbGreen;
+
+  /// No description provided for @playlistCoverRgbBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get playlistCoverRgbBlue;
+
+  /// No description provided for @playlistCoverRgbPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get playlistCoverRgbPreview;
+
+  /// No description provided for @playlistCoverMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover color…'**
+  String get playlistCoverMenuItem;
+
   /// No description provided for @exportCannot.
   ///
   /// In en, this message translates to:

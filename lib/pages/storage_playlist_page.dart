@@ -10,6 +10,7 @@ import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
@@ -842,21 +843,18 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                 Container(
                                                   width: 44,
                                                   height: 44,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                    color: Colors.white
-                                                        .withValues(
-                                                          alpha: 0.08,
-                                                        ),
+                                                  decoration:
+                                                      playlistCoverPreviewDecoration(
+                                                    coverStyle: pl.coverStyle,
+                                                    fallbackGradientIndex:
+                                                        index,
                                                   ),
+                                                  alignment: Alignment.center,
                                                   child: Icon(
                                                     Icons.queue_music_rounded,
                                                     color: Colors.white
                                                         .withValues(
-                                                          alpha: 0.88,
+                                                          alpha: 0.92,
                                                         ),
                                                     size: 22,
                                                   ),

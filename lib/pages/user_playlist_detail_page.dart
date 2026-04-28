@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
+import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -415,7 +416,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.white),
                 onSelected: (value) async {
-                  if (value == 'rename') {
+                  if (value == 'cover') {
+                    await showPlaylistCoverStyleSheet(context, pl);
+                  } else if (value == 'rename') {
                     await _renamePlaylist(context, pl, userPl);
                   } else if (value == 'export') {
                     await _exportThisPlaylist(context, pl, userPl);
@@ -424,6 +427,10 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   }
                 },
                 itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'cover',
+                    child: Text(l10n.playlistCoverMenuItem),
+                  ),
                   PopupMenuItem(
                     value: 'rename',
                     child: Text(l10n.menuRename),

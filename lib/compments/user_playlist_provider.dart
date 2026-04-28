@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class UserPlaylist {
@@ -11,11 +12,15 @@ class UserPlaylist {
   final DateTime createdAt;
   final List<String> songPaths;
 
+  /// `null`：首页「我的歌单」按序号轮换预设渐变；非空则为自定义纯色或渐变。
+  UserPlaylistCoverStyle? coverStyle;
+
   UserPlaylist({
     required this.id,
     required this.name,
     required this.createdAt,
     List<String>? songPaths,
+    this.coverStyle,
   }) : songPaths = songPaths ?? [];
 
   factory UserPlaylist.fromMap(Map<dynamic, dynamic> map) {
@@ -26,6 +31,7 @@ class UserPlaylist {
       songPaths: _uniquePathsInOrder(
         (map['songPaths'] as List<dynamic>? ?? const <dynamic>[]).whereType<String>().toList(),
       ),
+      coverStyle: UserPlaylistCoverStyle.tryParse(map['coverStyle']),
     );
   }
 
@@ -35,6 +41,7 @@ class UserPlaylist {
       'name': name,
       'createdAt': createdAt.toIso8601String(),
       'songPaths': _uniquePathsInOrder(songPaths),
+      if (coverStyle != null) 'coverStyle': coverStyle!.toMap(),
     };
   }
 
@@ -85,6 +92,7 @@ List<UserPlaylist> _coalesceImportedPlaylists(List<UserPlaylist> items) {
         name: p.name,
         createdAt: p.createdAt,
         songPaths: List<String>.from(p.songPaths),
+        coverStyle: p.coverStyle,
       );
     } else {
       final merged = _mergePathsExistingFirst(existing.songPaths, p.songPaths);
@@ -93,6 +101,7 @@ List<UserPlaylist> _coalesceImportedPlaylists(List<UserPlaylist> items) {
         name: existing.name,
         createdAt: existing.createdAt,
         songPaths: merged,
+        coverStyle: existing.coverStyle ?? p.coverStyle,
       );
     }
   }
@@ -147,17 +156,32 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<UserPlaylist> createPlaylist(String name) async {
+  Future<UserPlaylist> createPlaylist(
+    String name, {
+    UserPlaylistCoverStyle? coverStyle,
+  }) async {
     final trimmedName = name.trim();
     final playlist = UserPlaylist(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       name: trimmedName.isEmpty ? '新建歌单' : trimmedName,
       createdAt: DateTime.now(),
+      coverStyle: coverStyle,
     );
     _playlists.add(playlist);
     await _save();
     notifyListeners();
     return playlist;
+  }
+
+  Future<void> setPlaylistCoverStyle(
+    String playlistId,
+    UserPlaylistCoverStyle? style,
+  ) async {
+    final playlist = _playlistById(playlistId);
+    if (playlist == null) return;
+    playlist.coverStyle = style;
+    await _save();
+    notifyListeners();
   }
 
   Future<void> deletePlaylist(String playlistId) async {
@@ -310,6 +334,7 @@ class UserPlaylistProvider extends ChangeNotifier {
               name: p.name,
               createdAt: p.createdAt,
               songPaths: _uniquePathsInOrder(p.songPaths),
+              coverStyle: p.coverStyle,
             ),
           ),
         );
@@ -321,6 +346,9 @@ class UserPlaylistProvider extends ChangeNotifier {
           existing.songPaths
             ..clear()
             ..addAll(merged);
+          if (imp.coverStyle != null) {
+            existing.coverStyle = imp.coverStyle;
+          }
         } else {
           _playlists.add(
             UserPlaylist(
@@ -328,6 +356,7 @@ class UserPlaylistProvider extends ChangeNotifier {
               name: imp.name,
               createdAt: imp.createdAt,
               songPaths: _uniquePathsInOrder(imp.songPaths),
+              coverStyle: imp.coverStyle,
             ),
           );
         }

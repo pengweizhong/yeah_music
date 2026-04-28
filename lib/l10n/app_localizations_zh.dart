@@ -1106,6 +1106,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistRenameTitle => '重命名歌单';
 
   @override
+  String get playlistCoverStyleTitle => '歌单封面颜色';
+
+  @override
+  String get playlistCoverStyleSubtitle =>
+      '应用于首页横滑卡片与音乐源歌单列表左侧预览；选择轮换预设则按列表顺序自动配色。';
+
+  @override
+  String get playlistCoverUseDefaultPalette => '使用轮换预设配色';
+
+  @override
+  String get playlistCoverSolidSection => '单色';
+
+  @override
+  String get playlistCoverGradientSection => '渐变';
+
+  @override
+  String get playlistCoverRgbTitle => '自定义 RGB';
+
+  @override
+  String get playlistCoverRgbRed => '红';
+
+  @override
+  String get playlistCoverRgbGreen => '绿';
+
+  @override
+  String get playlistCoverRgbBlue => '蓝';
+
+  @override
+  String get playlistCoverRgbPreview => '预览';
+
+  @override
+  String get playlistCoverMenuItem => '封面颜色…';
+
+  @override
   String get exportCannot => '无法导出该歌单';
 
   @override
@@ -2529,6 +2563,40 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get playlistRenameTitle => '重命名歌单';
 
   @override
+  String get playlistCoverStyleTitle => '歌单封面颜色';
+
+  @override
+  String get playlistCoverStyleSubtitle =>
+      '应用于首页横滑卡片与音乐源歌单列表左侧预览；选择轮换预设则按列表顺序自动配色。';
+
+  @override
+  String get playlistCoverUseDefaultPalette => '使用轮换预设配色';
+
+  @override
+  String get playlistCoverSolidSection => '单色';
+
+  @override
+  String get playlistCoverGradientSection => '渐变';
+
+  @override
+  String get playlistCoverRgbTitle => '自定义 RGB';
+
+  @override
+  String get playlistCoverRgbRed => '红';
+
+  @override
+  String get playlistCoverRgbGreen => '绿';
+
+  @override
+  String get playlistCoverRgbBlue => '蓝';
+
+  @override
+  String get playlistCoverRgbPreview => '预览';
+
+  @override
+  String get playlistCoverMenuItem => '封面颜色…';
+
+  @override
   String get exportCannot => '无法导出该歌单';
 
   @override
@@ -3950,6 +4018,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playlistRenameTitle => '重新命名歌單';
+
+  @override
+  String get playlistCoverStyleTitle => '歌單封面顏色';
+
+  @override
+  String get playlistCoverStyleSubtitle =>
+      '套用於首頁橫滑卡片與音樂來源歌單列表左側預覽；選擇輪換預設則依列表順序自動配色。';
+
+  @override
+  String get playlistCoverUseDefaultPalette => '使用輪換預設配色';
+
+  @override
+  String get playlistCoverSolidSection => '單色';
+
+  @override
+  String get playlistCoverGradientSection => '漸層';
+
+  @override
+  String get playlistCoverRgbTitle => '自訂 RGB';
+
+  @override
+  String get playlistCoverRgbRed => '紅';
+
+  @override
+  String get playlistCoverRgbGreen => '綠';
+
+  @override
+  String get playlistCoverRgbBlue => '藍';
+
+  @override
+  String get playlistCoverRgbPreview => '預覽';
+
+  @override
+  String get playlistCoverMenuItem => '封面顏色…';
 
   @override
   String get exportCannot => '無法匯出此歌單';
