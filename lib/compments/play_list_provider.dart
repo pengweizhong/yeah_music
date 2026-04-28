@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io' show Platform;
 
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:yeah_music/logging/app_log.dart';
@@ -9,6 +12,7 @@ import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/services/android_car_lyrics_sync.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -34,6 +38,7 @@ class PlayListProvider extends ChangeNotifier {
   bool _initialized = false;
 
   StreamSubscription<PlayerState>? _playerCompletionSubscription;
+  StreamSubscription<int?>? _playerIndexSubscription;
 
   bool get initialized => _initialized;
 
@@ -227,7 +232,10 @@ class PlayListProvider extends ChangeNotifier {
     _shuffledPlayedIndices = [];
     notifyListeners();
     final song = _playbackQueueOverride![_currentIndex];
-    await MusicService().playSong(song);
+    await MusicService().playCurrentFromPlaylist(
+      queue: _playbackQueueOverride!,
+      currentIndex: _currentIndex,
+    );
     await RecentPlayService.recordPath(
       song.path,
       updateRecentList: recordRecent,
@@ -297,7 +305,37 @@ class PlayListProvider extends ChangeNotifier {
       _currentIndex = 0;
     }
     _attachPlaybackCompletionListener();
+    _attachPlayerIndexListener();
+    if (!kIsWeb && Platform.isAndroid) {
+      AndroidCarLyricsSync.attach(this);
+    }
     notifyListeners();
+  }
+
+  Future<void> _syncAndroidCarMediaSession() async {
+    if (!Platform.isAndroid) return;
+    try {
+      if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
+      if (_playbackMode == PlaybackMode.singleLoop) {
+        await AudioService.setRepeatMode(AudioServiceRepeatMode.one);
+      } else {
+        await AudioService.setRepeatMode(AudioServiceRepeatMode.none);
+      }
+    } catch (_) {}
+  }
+
+  void _attachPlayerIndexListener() {
+    if (!Platform.isAndroid) return;
+    _playerIndexSubscription?.cancel();
+    _playerIndexSubscription =
+        MusicService.currentMediaIndexStream.listen((i) {
+      if (i == null || i < 0) return;
+      if (!MusicService.androidCarQueueActive) return;
+      if (i == _currentIndex) return;
+      _currentIndex = i;
+      notifyListeners();
+      unawaited(_saveCurrentIndex());
+    });
   }
 
   /// 播放结束切下一首 / 单曲循环；挂在 Provider 上，避免仅 SongPage 订阅时在退出页面后失效
@@ -324,6 +362,8 @@ class PlayListProvider extends ChangeNotifier {
   void dispose() {
     _sleepShutdownTimer?.cancel();
     _playerCompletionSubscription?.cancel();
+    _playerIndexSubscription?.cancel();
+    AndroidCarLyricsSync.detach();
     super.dispose();
   }
 
@@ -472,7 +512,10 @@ class PlayListProvider extends ChangeNotifier {
     _currentIndex = index.clamp(0, list.length - 1);
     notifyListeners();
     final playing = list[_currentIndex];
-    await MusicService().playSong(playing);
+    await MusicService().playCurrentFromPlaylist(
+      queue: list,
+      currentIndex: _currentIndex,
+    );
     await RecentPlayService.recordPath(
       playing.path,
       updateRecentList: _statsRecordRecent,
@@ -496,7 +539,8 @@ class PlayListProvider extends ChangeNotifier {
     } else {
       MusicService().setLoopMode(LoopMode.off);
     }
-    
+
+    unawaited(_syncAndroidCarMediaSession());
     notifyListeners();
   }
 

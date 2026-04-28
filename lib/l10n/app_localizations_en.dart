@@ -33,36 +33,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsBackgroundTheme => 'Background & theme';
 
   @override
+  String get settingsBackgroundThemeSubtitle =>
+      'Solid color, custom color, or wallpaper';
+
+  @override
   String get settingsBackgroundThemeDesc =>
-      'Solid color, custom color, or image';
+      'Choose a solid color, pick a custom accent, or set a full-screen background image. Options are adjusted on the next screen.';
 
   @override
   String get settingsSystemInfo => 'System information';
 
   @override
-  String get settingsSystemInfoDesc => 'Device and storage';
+  String get settingsSystemInfoSubtitle => 'Device and storage space';
+
+  @override
+  String get settingsSystemInfoDesc =>
+      'View device-related details and how much disk space is available. Expanded section shows a per-folder breakdown.';
 
   @override
   String get settingsAbout => 'About';
 
   @override
-  String get settingsAboutDesc => 'App info, version, licenses';
+  String get settingsAboutSubtitle => 'Version, credits, licenses';
+
+  @override
+  String get settingsAboutDesc =>
+      'App name and version, acknowledgements, and open-source license texts.';
 
   @override
   String get settingsLanguage => 'Language';
 
   @override
-  String get settingsLanguageDesc => 'Interface language';
+  String get settingsLanguageSubtitle => 'Interface language';
+
+  @override
+  String get settingsLanguageDesc =>
+      'Choose the language used for menus, settings, and in-app messages. Some content still follows track metadata language.';
 
   @override
   String get settingsOneDrive => 'OneDrive';
 
   @override
+  String get settingsOneDriveSubtitle => 'Sign in, music folder, local cache';
+
+  @override
   String get settingsOneDriveDesc =>
-      'Sign in and set music root; files cache locally for playback';
+      'Sign in with Microsoft, choose your music root on OneDrive, and browse files. Audio is cached locally while playing so playback stays smooth offline after first load.';
 
   @override
   String get settingsMacosMenuBarLyrics => 'Menu bar lyrics';
+
+  @override
+  String get settingsMacosMenuBarLyricsSubtitle =>
+      'Compact line in the menu bar';
 
   @override
   String get settingsMacosMenuBarLyricsDesc =>
@@ -73,17 +96,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDesktopLyricsGroupSubtitle =>
-      'Floating overlay and optional menu bar on macOS.';
+      'Floating line and optional macOS menu bar';
+
+  @override
+  String get settingsDesktopLyricsGroupDetail =>
+      'Desktop lyrics include a floating, draggable line above other windows and—on macOS—an optional compact line in the menu bar.\n\nFloating lyrics use the same lyric styling (colors, multi-line mode, translations) as the now playing screen. You can lock the window position, tune background opacity, and choose how many timed lines appear before and after the current line.\n\nMenu bar lyrics (macOS only) show a single compact line; enable the toggle when you want lyrics always visible without the floating window.';
 
   @override
   String get settingsDesktopFloatingLyrics => 'Floating lyrics';
 
   @override
+  String get settingsDesktopFloatingLyricsSubtitle => 'Draggable overlay line';
+
+  @override
   String get settingsDesktopFloatingLyricsDesc =>
-      'Draggable line over the app; follows lyric display settings on the now playing screen.';
+      'Shows the current lyric line in a small window you can drag over other apps. Styling matches the now playing lyric panel.';
 
   @override
   String get settingsDesktopFloatingBgOpacity => 'Background opacity';
+
+  @override
+  String get settingsDesktopFloatingBgOpacitySubtitle =>
+      'How solid the panel behind text is';
 
   @override
   String get settingsDesktopFloatingBgOpacityDesc =>
@@ -93,11 +127,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDesktopFloatingLinesBefore => 'Lines before current';
 
   @override
+  String get settingsDesktopFloatingLinesBeforeSubtitle =>
+      'Timed lines above the active line';
+
+  @override
   String get settingsDesktopFloatingLinesBeforeDesc =>
       'How many timed lines to show above the active line.';
 
   @override
   String get settingsDesktopFloatingLinesAfter => 'Lines after current';
+
+  @override
+  String get settingsDesktopFloatingLinesAfterSubtitle =>
+      'Timed lines below the active line';
 
   @override
   String get settingsDesktopFloatingLinesAfterDesc =>
@@ -107,8 +149,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDesktopFloatingDragLock => 'Lock position';
 
   @override
+  String get settingsDesktopFloatingDragLockSubtitle =>
+      'Disable dragging the floating window';
+
+  @override
   String get settingsDesktopFloatingDragLockDesc =>
       'When on, the floating window cannot be dragged.';
+
+  @override
+  String get settingsCarLyricsGroupTitle => 'Car & lock screen';
+
+  @override
+  String get settingsCarLyricsGroupSubtitle =>
+      'Media notification, Bluetooth & Android Auto';
+
+  @override
+  String get settingsCarLyricsGroupDetail =>
+      'Uses the Android media session so lock screen, Bluetooth accessories, and Android Auto can show what is playing and offer transport controls.\n\nEnable: builds a full playback queue in the player so previous/next in the notification and on car units skip real tracks; play/pause and single-track repeat stay aligned with the app where supported.\n\nArtwork: sends embedded cover art to the notification and to head units that display it.\n\nLyrics: periodically updates the media item subtitle with the current lyric line on systems that show it, using the same lyric line rules as elsewhere in the app.\n\nShuffle, play-once, and other modes are still driven from the app; hardware “repeat all/shuffle” may not mirror every in-app mode.';
+
+  @override
+  String get settingsCarLyricsEnabled => 'Enable car lyrics';
+
+  @override
+  String get settingsCarLyricsEnabledSubtitle =>
+      'Notification, queue, prev/next';
+
+  @override
+  String get settingsCarLyricsEnabledDesc =>
+      'Show a playback notification with queue, previous/next, play/pause, and repeat (single-loop) aligned with the app.';
+
+  @override
+  String get settingsCarLyricsShowCover => 'Show artwork';
+
+  @override
+  String get settingsCarLyricsShowCoverSubtitle =>
+      'Cover in notification & car display';
+
+  @override
+  String get settingsCarLyricsShowCoverDesc =>
+      'Use embedded cover art in the notification and on supported head units.';
+
+  @override
+  String get settingsCarLyricsSyncLyrics => 'Sync current lyric line';
+
+  @override
+  String get settingsCarLyricsSyncLyricsSubtitle =>
+      'Subtitle shows active lyric';
+
+  @override
+  String get settingsCarLyricsSyncLyricsDesc =>
+      'Update the subtitle with the active line where the system supports it.';
+
+  @override
+  String get settingsCarLyricsOnlyAndroidHint =>
+      'Only configurable on Android. Switches show saved values and are disabled on this device.';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · Not playing';
@@ -635,6 +729,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionOK => 'OK';
+
+  @override
+  String get settingsRowHelpTooltip => 'Details';
 
   @override
   String get fieldName => 'Name';

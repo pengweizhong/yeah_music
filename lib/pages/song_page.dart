@@ -1726,8 +1726,6 @@ class _SongPageState extends State<SongPage> {
                                 MusicService().pause();
                               } else {
                                 // 如果当前没有播放，检查是否需要从当前位置继续
-                                final currentSong =
-                                    playListProvider.currentSong ?? song;
                                 if (MusicService.duration != null &&
                                     _currentPosition.inMilliseconds > 0) {
                                   // 从当前位置继续播放
@@ -1735,7 +1733,10 @@ class _SongPageState extends State<SongPage> {
                                   MusicService().resume();
                                 } else {
                                   // 播放新歌曲（不经过 [playAt] 时需补记最近播放）
-                                  await MusicService().playSong(currentSong);
+                                  await MusicService().playCurrentFromPlaylist(
+                                    queue: playListProvider.playList,
+                                    currentIndex: playListProvider.currentIndex,
+                                  );
                                   if (!context.mounted) return;
                                   await playListProvider.recordRecentForCurrent();
                                 }

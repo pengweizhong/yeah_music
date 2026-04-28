@@ -34,6 +34,13 @@ class SettingsService {
   static const String _desktopFloatingLyricsLockedKey =
       'desktop_floating_lyrics_locked';
 
+  /// Android：车载 / 锁屏 / 蓝牙等媒体会话增强（封面、歌词行、队列切歌）。
+  static const String _androidCarLyricsEnabledKey = 'android_car_lyrics_enabled';
+  static const String _androidCarLyricsShowCoverKey =
+      'android_car_lyrics_show_cover';
+  static const String _androidCarLyricsSyncLyricsKey =
+      'android_car_lyrics_sync_lyrics';
+
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
   static const int desktopFloatingLyricsLinesAfterDefault = 2;
@@ -470,6 +477,75 @@ class SettingsService {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_desktopFloatingLyricsLockedKey, locked);
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadAndroidCarLyricsEnabled() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return box.get(_androidCarLyricsEnabledKey, defaultValue: false) as bool? ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> saveAndroidCarLyricsEnabled(bool enabled) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_androidCarLyricsEnabledKey, enabled);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_androidCarLyricsEnabledKey, enabled);
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadAndroidCarLyricsShowCover() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return box.get(_androidCarLyricsShowCoverKey, defaultValue: true) as bool? ??
+          true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  static Future<void> saveAndroidCarLyricsShowCover(bool show) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_androidCarLyricsShowCoverKey, show);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_androidCarLyricsShowCoverKey, show);
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadAndroidCarLyricsSyncLyrics() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return box.get(_androidCarLyricsSyncLyricsKey, defaultValue: true) as bool? ??
+          true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  static Future<void> saveAndroidCarLyricsSyncLyrics(bool sync) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_androidCarLyricsSyncLyricsKey, sync);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_androidCarLyricsSyncLyricsKey, sync);
       } catch (_) {}
     }
   }

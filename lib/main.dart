@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter/services.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,14 @@ import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && Platform.isAndroid) {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.pengwz.yeah_music.channel.audio',
+      androidNotificationChannelName: 'Yeah Music',
+      androidNotificationOngoing: true,
+    );
+  }
 
   if (!kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
     try {

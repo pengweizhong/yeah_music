@@ -33,35 +33,55 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsBackgroundTheme => '背景とテーマ';
 
   @override
-  String get settingsBackgroundThemeDesc => '単色、カスタム色、背景画像';
+  String get settingsBackgroundThemeSubtitle => '単色・色・アートワーク';
+
+  @override
+  String get settingsBackgroundThemeDesc =>
+      '単色、アクセント色、または全画面の背景画像を選べます。詳細は次の画面で設定します。';
 
   @override
   String get settingsSystemInfo => 'システム情報';
 
   @override
-  String get settingsSystemInfoDesc => '端末とストレージ';
+  String get settingsSystemInfoSubtitle => '端末と空き容量';
+
+  @override
+  String get settingsSystemInfoDesc =>
+      '端末情報とストレージの空きを確認できます。展開するとフォルダ別の使用状況も表示されます。';
 
   @override
   String get settingsAbout => 'アプリについて';
 
   @override
-  String get settingsAboutDesc => 'アプリ情報、バージョン、ライセンス';
+  String get settingsAboutSubtitle => 'バージョンとライセンス';
+
+  @override
+  String get settingsAboutDesc => 'アプリ名とバージョン、クレジット、オープンソースライセンスの全文です。';
 
   @override
   String get settingsLanguage => '言語';
 
   @override
-  String get settingsLanguageDesc => '表示言語';
+  String get settingsLanguageSubtitle => 'UI の表示言語';
+
+  @override
+  String get settingsLanguageDesc => 'メニューや画面の言語を選びます。曲情報はファイルのタグに従います。';
 
   @override
   String get settingsOneDrive => 'OneDrive';
 
   @override
+  String get settingsOneDriveSubtitle => 'サインイン・フォルダ・キャッシュ';
+
+  @override
   String get settingsOneDriveDesc =>
-      'Microsoft にサインインし、音楽のルートを設定。再生時にローカルにキャッシュします。';
+      'Microsoft にサインインし、OneDrive 上の音楽ルートを選んで閲覧します。再生時にローカルへキャッシュするため、一度取得すればオフラインでもスムーズに再生できます。';
 
   @override
   String get settingsMacosMenuBarLyrics => 'メニューバーに歌詞';
+
+  @override
+  String get settingsMacosMenuBarLyricsSubtitle => 'メニューバーの 1 行表示';
 
   @override
   String get settingsMacosMenuBarLyricsDesc => 'macOS メニューバーに 1 行で表示';
@@ -70,10 +90,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsDesktopLyricsGroupTitle => 'デスクトップ歌詞';
 
   @override
-  String get settingsDesktopLyricsGroupSubtitle => 'フローティングとメニューバー（macOS は任意）';
+  String get settingsDesktopLyricsGroupSubtitle => 'フローティングと macOS メニューバー';
+
+  @override
+  String get settingsDesktopLyricsGroupDetail =>
+      'デスクトップ歌詞には、他のウィンドウの上に表示できるフローティング歌詞と、macOS では任意のメニューバー 1 行表示があります。\n\nフローティングは再生中画面と同じ歌詞スタイル（色・複数行・翻訳など）を使います。位置の固定、背景の不透明度、現在行の前後に表示する行数を調整できます。\n\nメニューバー歌詞（macOS のみ）はコンパクトな 1 行で、フローティングなしで常に表示したいときに使います。';
 
   @override
   String get settingsDesktopFloatingLyrics => 'フローティング歌詞';
+
+  @override
+  String get settingsDesktopFloatingLyricsSubtitle => 'ドラッグできる現在行';
 
   @override
   String get settingsDesktopFloatingLyricsDesc =>
@@ -83,11 +110,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsDesktopFloatingBgOpacity => '背景の不透明度';
 
   @override
+  String get settingsDesktopFloatingBgOpacitySubtitle => '文字の後ろのパネルの濃さ';
+
+  @override
   String get settingsDesktopFloatingBgOpacityDesc =>
       '歌詞パネルの背景の濃さ。0 で背景なし（文字のみ）。';
 
   @override
   String get settingsDesktopFloatingLinesBefore => '現在行より上';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeSubtitle => '現在行の上のタイムド行数';
 
   @override
   String get settingsDesktopFloatingLinesBeforeDesc =>
@@ -97,6 +130,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsDesktopFloatingLinesAfter => '現在行より下';
 
   @override
+  String get settingsDesktopFloatingLinesAfterSubtitle => '現在行の下のタイムド行数';
+
+  @override
   String get settingsDesktopFloatingLinesAfterDesc =>
       'タイムライン上の現在行より下に、最大何行表示するか（現在行は含みません）。';
 
@@ -104,8 +140,53 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsDesktopFloatingDragLock => '位置を固定';
 
   @override
+  String get settingsDesktopFloatingDragLockSubtitle => 'フローティングをドラッグ不可に';
+
+  @override
   String get settingsDesktopFloatingDragLockDesc =>
       'オンにするとフローティングウィンドウをドラッグできません。';
+
+  @override
+  String get settingsCarLyricsGroupTitle => '車載・ロック画面';
+
+  @override
+  String get settingsCarLyricsGroupSubtitle => '通知・Bluetooth・Android Auto';
+
+  @override
+  String get settingsCarLyricsGroupDetail =>
+      'Android のメディアセッションを使い、ロック画面・Bluetooth・Android Auto などに再生情報と操作を提供します。\n\n有効化：プレイヤーにキューを構築し、通知や車載の前後曲が実際の曲送りに対応します。再生／一時停止や 1 曲リピートは環境が許す範囲でアプリと揃います。\n\nアートワーク：通知や対応ヘッドユニットに埋め込みジャケットを送ります。\n\n歌詞：対応端末では副題を現在の歌詞行に更新します。ルールはアプリ内の他の歌詞表示と同じです。\n\nシャッフルや 1 回だけ再生などはアプリ側の再生モードが優先されます。車載のリストリピート／シャッフルがすべてのモードと一致するとは限りません。';
+
+  @override
+  String get settingsCarLyricsEnabled => '車載歌詞を有効化';
+
+  @override
+  String get settingsCarLyricsEnabledSubtitle => '通知のキューと前後曲';
+
+  @override
+  String get settingsCarLyricsEnabledDesc =>
+      '通知にキューと前後曲・再生／一時停止を表示。単曲ループはシステムのリピートと同期します。';
+
+  @override
+  String get settingsCarLyricsShowCover => 'アートワークを表示';
+
+  @override
+  String get settingsCarLyricsShowCoverSubtitle => '通知・車載にジャケット';
+
+  @override
+  String get settingsCarLyricsShowCoverDesc => '通知や対応ヘッドユニットに埋め込みジャケットを表示します。';
+
+  @override
+  String get settingsCarLyricsSyncLyrics => '現在の歌詞行を同期';
+
+  @override
+  String get settingsCarLyricsSyncLyricsSubtitle => '副題に現在の歌詞行';
+
+  @override
+  String get settingsCarLyricsSyncLyricsDesc => '対応環境では副題を現在の歌詞行に更新します。';
+
+  @override
+  String get settingsCarLyricsOnlyAndroidHint =>
+      'Android でのみ変更・反映できます。この端末ではスイッチは読み取り専用で、保存済みの内容を表示します。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 再生していません';
@@ -616,6 +697,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get actionOK => 'OK';
+
+  @override
+  String get settingsRowHelpTooltip => '詳細';
 
   @override
   String get fieldName => '名前';

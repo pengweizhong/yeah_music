@@ -150,10 +150,16 @@ abstract class AppLocalizations {
   /// **'Background & theme'**
   String get settingsBackgroundTheme;
 
+  /// No description provided for @settingsBackgroundThemeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid color, custom color, or wallpaper'**
+  String get settingsBackgroundThemeSubtitle;
+
   /// No description provided for @settingsBackgroundThemeDesc.
   ///
   /// In en, this message translates to:
-  /// **'Solid color, custom color, or image'**
+  /// **'Choose a solid color, pick a custom accent, or set a full-screen background image. Options are adjusted on the next screen.'**
   String get settingsBackgroundThemeDesc;
 
   /// No description provided for @settingsSystemInfo.
@@ -162,10 +168,16 @@ abstract class AppLocalizations {
   /// **'System information'**
   String get settingsSystemInfo;
 
+  /// No description provided for @settingsSystemInfoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device and storage space'**
+  String get settingsSystemInfoSubtitle;
+
   /// No description provided for @settingsSystemInfoDesc.
   ///
   /// In en, this message translates to:
-  /// **'Device and storage'**
+  /// **'View device-related details and how much disk space is available. Expanded section shows a per-folder breakdown.'**
   String get settingsSystemInfoDesc;
 
   /// No description provided for @settingsAbout.
@@ -174,10 +186,16 @@ abstract class AppLocalizations {
   /// **'About'**
   String get settingsAbout;
 
+  /// No description provided for @settingsAboutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Version, credits, licenses'**
+  String get settingsAboutSubtitle;
+
   /// No description provided for @settingsAboutDesc.
   ///
   /// In en, this message translates to:
-  /// **'App info, version, licenses'**
+  /// **'App name and version, acknowledgements, and open-source license texts.'**
   String get settingsAboutDesc;
 
   /// No description provided for @settingsLanguage.
@@ -186,10 +204,16 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get settingsLanguage;
 
-  /// No description provided for @settingsLanguageDesc.
+  /// No description provided for @settingsLanguageSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Interface language'**
+  String get settingsLanguageSubtitle;
+
+  /// No description provided for @settingsLanguageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the language used for menus, settings, and in-app messages. Some content still follows track metadata language.'**
   String get settingsLanguageDesc;
 
   /// No description provided for @settingsOneDrive.
@@ -198,10 +222,16 @@ abstract class AppLocalizations {
   /// **'OneDrive'**
   String get settingsOneDrive;
 
+  /// No description provided for @settingsOneDriveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in, music folder, local cache'**
+  String get settingsOneDriveSubtitle;
+
   /// No description provided for @settingsOneDriveDesc.
   ///
   /// In en, this message translates to:
-  /// **'Sign in and set music root; files cache locally for playback'**
+  /// **'Sign in with Microsoft, choose your music root on OneDrive, and browse files. Audio is cached locally while playing so playback stays smooth offline after first load.'**
   String get settingsOneDriveDesc;
 
   /// No description provided for @settingsMacosMenuBarLyrics.
@@ -209,6 +239,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Menu bar lyrics'**
   String get settingsMacosMenuBarLyrics;
+
+  /// No description provided for @settingsMacosMenuBarLyricsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact line in the menu bar'**
+  String get settingsMacosMenuBarLyricsSubtitle;
 
   /// No description provided for @settingsMacosMenuBarLyricsDesc.
   ///
@@ -225,8 +261,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDesktopLyricsGroupSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Floating overlay and optional menu bar on macOS.'**
+  /// **'Floating line and optional macOS menu bar'**
   String get settingsDesktopLyricsGroupSubtitle;
+
+  /// No description provided for @settingsDesktopLyricsGroupDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop lyrics include a floating, draggable line above other windows and—on macOS—an optional compact line in the menu bar.\n\nFloating lyrics use the same lyric styling (colors, multi-line mode, translations) as the now playing screen. You can lock the window position, tune background opacity, and choose how many timed lines appear before and after the current line.\n\nMenu bar lyrics (macOS only) show a single compact line; enable the toggle when you want lyrics always visible without the floating window.'**
+  String get settingsDesktopLyricsGroupDetail;
 
   /// No description provided for @settingsDesktopFloatingLyrics.
   ///
@@ -234,10 +276,16 @@ abstract class AppLocalizations {
   /// **'Floating lyrics'**
   String get settingsDesktopFloatingLyrics;
 
+  /// No description provided for @settingsDesktopFloatingLyricsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Draggable overlay line'**
+  String get settingsDesktopFloatingLyricsSubtitle;
+
   /// No description provided for @settingsDesktopFloatingLyricsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Draggable line over the app; follows lyric display settings on the now playing screen.'**
+  /// **'Shows the current lyric line in a small window you can drag over other apps. Styling matches the now playing lyric panel.'**
   String get settingsDesktopFloatingLyricsDesc;
 
   /// No description provided for @settingsDesktopFloatingBgOpacity.
@@ -245,6 +293,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Background opacity'**
   String get settingsDesktopFloatingBgOpacity;
+
+  /// No description provided for @settingsDesktopFloatingBgOpacitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How solid the panel behind text is'**
+  String get settingsDesktopFloatingBgOpacitySubtitle;
 
   /// No description provided for @settingsDesktopFloatingBgOpacityDesc.
   ///
@@ -258,6 +312,12 @@ abstract class AppLocalizations {
   /// **'Lines before current'**
   String get settingsDesktopFloatingLinesBefore;
 
+  /// No description provided for @settingsDesktopFloatingLinesBeforeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed lines above the active line'**
+  String get settingsDesktopFloatingLinesBeforeSubtitle;
+
   /// No description provided for @settingsDesktopFloatingLinesBeforeDesc.
   ///
   /// In en, this message translates to:
@@ -269,6 +329,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lines after current'**
   String get settingsDesktopFloatingLinesAfter;
+
+  /// No description provided for @settingsDesktopFloatingLinesAfterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed lines below the active line'**
+  String get settingsDesktopFloatingLinesAfterSubtitle;
 
   /// No description provided for @settingsDesktopFloatingLinesAfterDesc.
   ///
@@ -282,11 +348,95 @@ abstract class AppLocalizations {
   /// **'Lock position'**
   String get settingsDesktopFloatingDragLock;
 
+  /// No description provided for @settingsDesktopFloatingDragLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable dragging the floating window'**
+  String get settingsDesktopFloatingDragLockSubtitle;
+
   /// No description provided for @settingsDesktopFloatingDragLockDesc.
   ///
   /// In en, this message translates to:
   /// **'When on, the floating window cannot be dragged.'**
   String get settingsDesktopFloatingDragLockDesc;
+
+  /// No description provided for @settingsCarLyricsGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Car & lock screen'**
+  String get settingsCarLyricsGroupTitle;
+
+  /// No description provided for @settingsCarLyricsGroupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Media notification, Bluetooth & Android Auto'**
+  String get settingsCarLyricsGroupSubtitle;
+
+  /// No description provided for @settingsCarLyricsGroupDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the Android media session so lock screen, Bluetooth accessories, and Android Auto can show what is playing and offer transport controls.\n\nEnable: builds a full playback queue in the player so previous/next in the notification and on car units skip real tracks; play/pause and single-track repeat stay aligned with the app where supported.\n\nArtwork: sends embedded cover art to the notification and to head units that display it.\n\nLyrics: periodically updates the media item subtitle with the current lyric line on systems that show it, using the same lyric line rules as elsewhere in the app.\n\nShuffle, play-once, and other modes are still driven from the app; hardware “repeat all/shuffle” may not mirror every in-app mode.'**
+  String get settingsCarLyricsGroupDetail;
+
+  /// No description provided for @settingsCarLyricsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable car lyrics'**
+  String get settingsCarLyricsEnabled;
+
+  /// No description provided for @settingsCarLyricsEnabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification, queue, prev/next'**
+  String get settingsCarLyricsEnabledSubtitle;
+
+  /// No description provided for @settingsCarLyricsEnabledDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a playback notification with queue, previous/next, play/pause, and repeat (single-loop) aligned with the app.'**
+  String get settingsCarLyricsEnabledDesc;
+
+  /// No description provided for @settingsCarLyricsShowCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Show artwork'**
+  String get settingsCarLyricsShowCover;
+
+  /// No description provided for @settingsCarLyricsShowCoverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover in notification & car display'**
+  String get settingsCarLyricsShowCoverSubtitle;
+
+  /// No description provided for @settingsCarLyricsShowCoverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use embedded cover art in the notification and on supported head units.'**
+  String get settingsCarLyricsShowCoverDesc;
+
+  /// No description provided for @settingsCarLyricsSyncLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync current lyric line'**
+  String get settingsCarLyricsSyncLyrics;
+
+  /// No description provided for @settingsCarLyricsSyncLyricsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle shows active lyric'**
+  String get settingsCarLyricsSyncLyricsSubtitle;
+
+  /// No description provided for @settingsCarLyricsSyncLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the subtitle with the active line where the system supports it.'**
+  String get settingsCarLyricsSyncLyricsDesc;
+
+  /// No description provided for @settingsCarLyricsOnlyAndroidHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only configurable on Android. Switches show saved values and are disabled on this device.'**
+  String get settingsCarLyricsOnlyAndroidHint;
 
   /// No description provided for @menuBarLyricsIdle.
   ///
@@ -1253,6 +1403,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OK'**
   String get actionOK;
+
+  /// No description provided for @settingsRowHelpTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get settingsRowHelpTooltip;
 
   /// No description provided for @fieldName.
   ///

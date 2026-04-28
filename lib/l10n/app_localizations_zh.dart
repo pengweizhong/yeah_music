@@ -33,34 +33,53 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsBackgroundTheme => '背景主题';
 
   @override
-  String get settingsBackgroundThemeDesc => '纯色、自定义颜色、背景图片';
+  String get settingsBackgroundThemeSubtitle => '纯色、自定义颜色或背景图';
+
+  @override
+  String get settingsBackgroundThemeDesc => '可选择纯色、自定义强调色或全屏背景图，具体项在下一页调整。';
 
   @override
   String get settingsSystemInfo => '系统信息';
 
   @override
-  String get settingsSystemInfoDesc => '设备信息、存储空间';
+  String get settingsSystemInfoSubtitle => '本机与存储空间';
+
+  @override
+  String get settingsSystemInfoDesc => '查看设备相关信息与磁盘剩余空间；展开后可查看各目录占用。';
 
   @override
   String get settingsAbout => '关于';
 
   @override
-  String get settingsAboutDesc => '应用信息、版本、开源协议';
+  String get settingsAboutSubtitle => '版本与开源许可';
+
+  @override
+  String get settingsAboutDesc => '应用名称与版本、致谢与开源协议全文。';
 
   @override
   String get settingsLanguage => '语言';
 
   @override
-  String get settingsLanguageDesc => '界面语言';
+  String get settingsLanguageSubtitle => '界面显示语言';
+
+  @override
+  String get settingsLanguageDesc => '设置菜单与界面文案语言；曲目信息仍以文件内嵌元数据为准。';
 
   @override
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveDesc => '登录并设置音乐根目录；播放时缓存到本地';
+  String get settingsOneDriveSubtitle => '登录、音乐目录与本地缓存';
+
+  @override
+  String get settingsOneDriveDesc =>
+      '使用 Microsoft 登录，在 OneDrive 上选定音乐根目录并浏览文件；播放时会缓存到本地，首次加载后离线也可流畅播放。';
 
   @override
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
+
+  @override
+  String get settingsMacosMenuBarLyricsSubtitle => '菜单栏单行紧凑歌词';
 
   @override
   String get settingsMacosMenuBarLyricsDesc => '在系统菜单栏显示单行歌词（macOS）';
@@ -69,10 +88,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDesktopLyricsGroupTitle => '桌面歌词';
 
   @override
-  String get settingsDesktopLyricsGroupSubtitle => '悬浮歌词与菜单栏歌词（macOS 可选）';
+  String get settingsDesktopLyricsGroupSubtitle => '悬浮窗与 macOS 菜单栏歌词';
+
+  @override
+  String get settingsDesktopLyricsGroupDetail =>
+      '桌面歌词包含可拖动的悬浮歌词窗，以及 macOS 上可选的菜单栏单行歌词。\n\n悬浮窗与播放页使用同一套歌词样式（颜色、多行模式、翻译等）。可锁定位置、调节背景透明度，并设置当前时间轴行上下各显示多少行。\n\n菜单栏歌词（仅 macOS）为紧凑单行，不需要悬浮窗时可在菜单栏常驻查看。';
 
   @override
   String get settingsDesktopFloatingLyrics => '悬浮歌词';
+
+  @override
+  String get settingsDesktopFloatingLyricsSubtitle => '可拖动的当前歌词浮窗';
 
   @override
   String get settingsDesktopFloatingLyricsDesc =>
@@ -82,11 +108,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDesktopFloatingBgOpacity => '背景透明度';
 
   @override
+  String get settingsDesktopFloatingBgOpacitySubtitle => '歌词板背景的透明程度';
+
+  @override
   String get settingsDesktopFloatingBgOpacityDesc =>
       '歌词面板背景的明暗程度；0 为完全无背景，仅显示文字。';
 
   @override
   String get settingsDesktopFloatingLinesBefore => '当前行之前';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeSubtitle => '当前行上方时间轴行数';
 
   @override
   String get settingsDesktopFloatingLinesBeforeDesc =>
@@ -96,6 +128,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDesktopFloatingLinesAfter => '当前行之后';
 
   @override
+  String get settingsDesktopFloatingLinesAfterSubtitle => '当前行下方时间轴行数';
+
+  @override
   String get settingsDesktopFloatingLinesAfterDesc =>
       '以当前时间轴行为基准，向下允许显示多少行（不含当前行）。';
 
@@ -103,7 +138,53 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDesktopFloatingDragLock => '锁定位置';
 
   @override
+  String get settingsDesktopFloatingDragLockSubtitle => '禁止拖动悬浮窗';
+
+  @override
   String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
+
+  @override
+  String get settingsCarLyricsGroupTitle => '车载歌词';
+
+  @override
+  String get settingsCarLyricsGroupSubtitle => '媒体通知、蓝牙与 Android Auto';
+
+  @override
+  String get settingsCarLyricsGroupDetail =>
+      '使用 Android 媒体会话，让锁屏、蓝牙耳机与 Android Auto 等显示正在播放内容并提供控制。\n\n开启：在播放器中构建完整队列，通知与车机上的上一首/下一首对应真实切歌；播放/暂停与单曲循环在支持范围内与 App 一致。\n\n封面：将内嵌封面送到通知与支持显示封面车机。\n\n歌词：在支持的系统上把媒体副标题更新为当前歌词行，规则与 App 内其它歌词展示一致。\n\n随机、仅播一次等模式仍以 App 内「播放模式」为准；车机上的列表循环/随机可能与部分模式不完全一致。';
+
+  @override
+  String get settingsCarLyricsEnabled => '启用车载歌词';
+
+  @override
+  String get settingsCarLyricsEnabledSubtitle => '通知栏队列与切歌';
+
+  @override
+  String get settingsCarLyricsEnabledDesc =>
+      '显示媒体通知与队列，支持车机/耳机切歌；单曲循环与系统重复模式同步。';
+
+  @override
+  String get settingsCarLyricsShowCover => '显示封面';
+
+  @override
+  String get settingsCarLyricsShowCoverSubtitle => '通知与车机展示封面';
+
+  @override
+  String get settingsCarLyricsShowCoverDesc => '在通知与支持的车机上展示内嵌封面图。';
+
+  @override
+  String get settingsCarLyricsSyncLyrics => '同步当前歌词行';
+
+  @override
+  String get settingsCarLyricsSyncLyricsSubtitle => '副标题显示当前歌词';
+
+  @override
+  String get settingsCarLyricsSyncLyricsDesc =>
+      '在支持的系统上将副标题更新为当前歌词（与播放页歌词样式一致）。';
+
+  @override
+  String get settingsCarLyricsOnlyAndroidHint =>
+      '仅 Android 可生效与修改；当前设备上开关为只读，仅展示已保存的选项。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
@@ -613,6 +694,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get actionOK => '确定';
+
+  @override
+  String get settingsRowHelpTooltip => '说明';
 
   @override
   String get fieldName => '名称';
@@ -1095,34 +1179,53 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsBackgroundTheme => '背景主题';
 
   @override
-  String get settingsBackgroundThemeDesc => '纯色、自定义颜色、背景图片';
+  String get settingsBackgroundThemeSubtitle => '纯色、自定义颜色或背景图';
+
+  @override
+  String get settingsBackgroundThemeDesc => '可选择纯色、自定义强调色或全屏背景图，具体项在下一页调整。';
 
   @override
   String get settingsSystemInfo => '系统信息';
 
   @override
-  String get settingsSystemInfoDesc => '设备信息、存储空间';
+  String get settingsSystemInfoSubtitle => '本机与存储空间';
+
+  @override
+  String get settingsSystemInfoDesc => '查看设备相关信息与磁盘剩余空间；展开后可查看各目录占用。';
 
   @override
   String get settingsAbout => '关于';
 
   @override
-  String get settingsAboutDesc => '应用信息、版本、开源协议';
+  String get settingsAboutSubtitle => '版本与开源许可';
+
+  @override
+  String get settingsAboutDesc => '应用名称与版本、致谢与开源协议全文。';
 
   @override
   String get settingsLanguage => '语言';
 
   @override
-  String get settingsLanguageDesc => '界面语言';
+  String get settingsLanguageSubtitle => '界面显示语言';
+
+  @override
+  String get settingsLanguageDesc => '设置菜单与界面文案语言；曲目信息仍以文件内嵌元数据为准。';
 
   @override
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveDesc => '登录并设置音乐根目录；播放时缓存到本地';
+  String get settingsOneDriveSubtitle => '登录、音乐目录与本地缓存';
+
+  @override
+  String get settingsOneDriveDesc =>
+      '使用 Microsoft 登录，在 OneDrive 上选定音乐根目录并浏览文件；播放时会缓存到本地，首次加载后离线也可流畅播放。';
 
   @override
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
+
+  @override
+  String get settingsMacosMenuBarLyricsSubtitle => '菜单栏单行紧凑歌词';
 
   @override
   String get settingsMacosMenuBarLyricsDesc => '在系统菜单栏显示单行歌词（macOS）';
@@ -1131,10 +1234,17 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsDesktopLyricsGroupTitle => '桌面歌词';
 
   @override
-  String get settingsDesktopLyricsGroupSubtitle => '悬浮歌词与菜单栏歌词（macOS 可选）';
+  String get settingsDesktopLyricsGroupSubtitle => '悬浮窗与 macOS 菜单栏歌词';
+
+  @override
+  String get settingsDesktopLyricsGroupDetail =>
+      '桌面歌词包含可拖动的悬浮歌词窗，以及 macOS 上可选的菜单栏单行歌词。\n\n悬浮窗与播放页使用同一套歌词样式（颜色、多行模式、翻译等）。可锁定位置、调节背景透明度，并设置当前时间轴行上下各显示多少行。\n\n菜单栏歌词（仅 macOS）为紧凑单行，不需要悬浮窗时可在菜单栏常驻查看。';
 
   @override
   String get settingsDesktopFloatingLyrics => '悬浮歌词';
+
+  @override
+  String get settingsDesktopFloatingLyricsSubtitle => '可拖动的当前歌词浮窗';
 
   @override
   String get settingsDesktopFloatingLyricsDesc =>
@@ -1144,11 +1254,17 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsDesktopFloatingBgOpacity => '背景透明度';
 
   @override
+  String get settingsDesktopFloatingBgOpacitySubtitle => '歌词板背景的透明程度';
+
+  @override
   String get settingsDesktopFloatingBgOpacityDesc =>
       '歌词面板背景的明暗程度；0 为完全无背景，仅显示文字。';
 
   @override
   String get settingsDesktopFloatingLinesBefore => '当前行之前';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeSubtitle => '当前行上方时间轴行数';
 
   @override
   String get settingsDesktopFloatingLinesBeforeDesc =>
@@ -1158,6 +1274,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsDesktopFloatingLinesAfter => '当前行之后';
 
   @override
+  String get settingsDesktopFloatingLinesAfterSubtitle => '当前行下方时间轴行数';
+
+  @override
   String get settingsDesktopFloatingLinesAfterDesc =>
       '以当前时间轴行为基准，向下允许显示多少行（不含当前行）。';
 
@@ -1165,7 +1284,53 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsDesktopFloatingDragLock => '锁定位置';
 
   @override
+  String get settingsDesktopFloatingDragLockSubtitle => '禁止拖动悬浮窗';
+
+  @override
   String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
+
+  @override
+  String get settingsCarLyricsGroupTitle => '车载歌词';
+
+  @override
+  String get settingsCarLyricsGroupSubtitle => '媒体通知、蓝牙与 Android Auto';
+
+  @override
+  String get settingsCarLyricsGroupDetail =>
+      '使用 Android 媒体会话，让锁屏、蓝牙耳机与 Android Auto 等显示正在播放内容并提供控制。\n\n开启：在播放器中构建完整队列，通知与车机上的上一首/下一首对应真实切歌；播放/暂停与单曲循环在支持范围内与 App 一致。\n\n封面：将内嵌封面送到通知与支持显示封面车机。\n\n歌词：在支持的系统上把媒体副标题更新为当前歌词行，规则与 App 内其它歌词展示一致。\n\n随机、仅播一次等模式仍以 App 内「播放模式」为准；车机上的列表循环/随机可能与部分模式不完全一致。';
+
+  @override
+  String get settingsCarLyricsEnabled => '启用车载歌词';
+
+  @override
+  String get settingsCarLyricsEnabledSubtitle => '通知栏队列与切歌';
+
+  @override
+  String get settingsCarLyricsEnabledDesc =>
+      '显示媒体通知与队列，支持车机/耳机切歌；单曲循环与系统重复模式同步。';
+
+  @override
+  String get settingsCarLyricsShowCover => '显示封面';
+
+  @override
+  String get settingsCarLyricsShowCoverSubtitle => '通知与车机展示封面';
+
+  @override
+  String get settingsCarLyricsShowCoverDesc => '在通知与支持的车机上展示内嵌封面图。';
+
+  @override
+  String get settingsCarLyricsSyncLyrics => '同步当前歌词行';
+
+  @override
+  String get settingsCarLyricsSyncLyricsSubtitle => '副标题显示当前歌词';
+
+  @override
+  String get settingsCarLyricsSyncLyricsDesc =>
+      '在支持的系统上将副标题更新为当前歌词（与播放页歌词样式一致）。';
+
+  @override
+  String get settingsCarLyricsOnlyAndroidHint =>
+      '仅 Android 可生效与修改；当前设备上开关为只读，仅展示已保存的选项。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
@@ -1677,6 +1842,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get actionOK => '确定';
 
   @override
+  String get settingsRowHelpTooltip => '说明';
+
+  @override
   String get fieldName => '名称';
 
   @override
@@ -2157,34 +2325,53 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsBackgroundTheme => '背景主題';
 
   @override
-  String get settingsBackgroundThemeDesc => '純色、自訂顏色、背景圖片';
+  String get settingsBackgroundThemeSubtitle => '純色、自訂顏色或背景圖';
+
+  @override
+  String get settingsBackgroundThemeDesc => '可選擇純色、自訂強調色或全螢幕背景圖，細項在下一頁調整。';
 
   @override
   String get settingsSystemInfo => '系統資訊';
 
   @override
-  String get settingsSystemInfoDesc => '裝置與儲存空間';
+  String get settingsSystemInfoSubtitle => '本機與儲存空間';
+
+  @override
+  String get settingsSystemInfoDesc => '檢視裝置相關資訊與磁碟剩餘空間；展開後可檢視各目錄占用。';
 
   @override
   String get settingsAbout => '關於';
 
   @override
-  String get settingsAboutDesc => '應用程式資訊、版本、授權';
+  String get settingsAboutSubtitle => '版本與開源授權';
+
+  @override
+  String get settingsAboutDesc => '應用程式名稱與版本、致謝與開源授權全文。';
 
   @override
   String get settingsLanguage => '語言';
 
   @override
-  String get settingsLanguageDesc => '介面語言';
+  String get settingsLanguageSubtitle => '介面顯示語言';
+
+  @override
+  String get settingsLanguageDesc => '設定選單與介面文案語言；曲目資訊仍以檔案內嵌詮釋資料為準。';
 
   @override
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveDesc => '登入並設定音樂根目錄；播放時快取到本機';
+  String get settingsOneDriveSubtitle => '登入、音樂目錄與本機快取';
+
+  @override
+  String get settingsOneDriveDesc =>
+      '使用 Microsoft 登入，在 OneDrive 上選定音樂根目錄並瀏覽檔案；播放時會快取到本機，首次載入後離線也可順暢播放。';
 
   @override
   String get settingsMacosMenuBarLyrics => '選單列歌詞';
+
+  @override
+  String get settingsMacosMenuBarLyricsSubtitle => '選單列單行精簡歌詞';
 
   @override
   String get settingsMacosMenuBarLyricsDesc => '在系統選單列顯示單行歌詞（macOS）';
@@ -2193,10 +2380,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDesktopLyricsGroupTitle => '桌面歌詞';
 
   @override
-  String get settingsDesktopLyricsGroupSubtitle => '懸浮歌詞與選單列歌詞（macOS 可選）';
+  String get settingsDesktopLyricsGroupSubtitle => '懸浮視窗與 macOS 選單列歌詞';
+
+  @override
+  String get settingsDesktopLyricsGroupDetail =>
+      '桌面歌詞包含可拖曳的懸浮歌詞視窗，以及 macOS 上可選的選單列單行歌詞。\n\n懸浮視窗與播放頁使用同一套歌詞樣式（顏色、多行模式、翻譯等）。可鎖定位置、調節背景透明度，並設定目前時間軸列上下各顯示多少列。\n\n選單列歌詞（僅 macOS）為精簡單行，不需要懸浮視窗時可在選單列常駐查看。';
 
   @override
   String get settingsDesktopFloatingLyrics => '懸浮歌詞';
+
+  @override
+  String get settingsDesktopFloatingLyricsSubtitle => '可拖曳的目前歌詞浮窗';
 
   @override
   String get settingsDesktopFloatingLyricsDesc =>
@@ -2206,11 +2400,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDesktopFloatingBgOpacity => '背景透明度';
 
   @override
+  String get settingsDesktopFloatingBgOpacitySubtitle => '歌詞板背景的透明程度';
+
+  @override
   String get settingsDesktopFloatingBgOpacityDesc =>
       '歌詞面板背景的明暗程度；0 為完全無背景，僅顯示文字。';
 
   @override
   String get settingsDesktopFloatingLinesBefore => '目前列之前';
+
+  @override
+  String get settingsDesktopFloatingLinesBeforeSubtitle => '目前列上方時間軸列數';
 
   @override
   String get settingsDesktopFloatingLinesBeforeDesc =>
@@ -2220,6 +2420,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDesktopFloatingLinesAfter => '目前列之後';
 
   @override
+  String get settingsDesktopFloatingLinesAfterSubtitle => '目前列下方時間軸列數';
+
+  @override
   String get settingsDesktopFloatingLinesAfterDesc =>
       '以目前時間軸行為基準，向下允許顯示多少列（不含目前列）。';
 
@@ -2227,7 +2430,53 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDesktopFloatingDragLock => '鎖定位置';
 
   @override
+  String get settingsDesktopFloatingDragLockSubtitle => '禁止拖曳懸浮視窗';
+
+  @override
   String get settingsDesktopFloatingDragLockDesc => '開啟後懸浮歌詞視窗不可拖曳。';
+
+  @override
+  String get settingsCarLyricsGroupTitle => '車載歌詞';
+
+  @override
+  String get settingsCarLyricsGroupSubtitle => '媒體通知、藍牙與 Android Auto';
+
+  @override
+  String get settingsCarLyricsGroupDetail =>
+      '使用 Android 媒體工作階段，讓鎖屏、藍牙耳機與 Android Auto 等顯示正在播放內容並提供控制。\n\n開啟：在播放器中建立完整佇列，通知與車機上的上一首／下一首對應真實切歌；播放／暫停與單曲循環在支援範圍內與 App 一致。\n\n封面：將內嵌封面送到通知與支援顯示封面的車機。\n\n歌詞：在支援的系統上把媒體副標題更新為目前歌詞行，規則與 App 內其它歌詞展示一致。\n\n隨機、僅播一次等模式仍以 App 內「播放模式」為準；車機上的列表循環／隨機可能與部分模式不完全一致。';
+
+  @override
+  String get settingsCarLyricsEnabled => '啟用車載歌詞';
+
+  @override
+  String get settingsCarLyricsEnabledSubtitle => '通知列佇列與切歌';
+
+  @override
+  String get settingsCarLyricsEnabledDesc =>
+      '顯示媒體通知與佇列，支援車機／耳機切歌；單曲循環與系統重複模式同步。';
+
+  @override
+  String get settingsCarLyricsShowCover => '顯示封面';
+
+  @override
+  String get settingsCarLyricsShowCoverSubtitle => '通知與車機展示封面';
+
+  @override
+  String get settingsCarLyricsShowCoverDesc => '在通知與支援的車機上展示內嵌封面圖。';
+
+  @override
+  String get settingsCarLyricsSyncLyrics => '同步目前歌詞行';
+
+  @override
+  String get settingsCarLyricsSyncLyricsSubtitle => '副標題顯示目前歌詞';
+
+  @override
+  String get settingsCarLyricsSyncLyricsDesc =>
+      '在支援的系統上將副標題更新為目前歌詞（與播放頁歌詞樣式一致）。';
+
+  @override
+  String get settingsCarLyricsOnlyAndroidHint =>
+      '僅 Android 可生效與修改；目前裝置上開關為唯讀，僅顯示已儲存的選項。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
@@ -2737,6 +2986,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get actionOK => '確定';
+
+  @override
+  String get settingsRowHelpTooltip => '說明';
 
   @override
   String get fieldName => '名稱';
