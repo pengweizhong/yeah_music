@@ -239,7 +239,7 @@ class SettingPage extends StatelessWidget {
         return themeConfig.buildThemedBackground(
           context: context,
           child: Scaffold(
-            extendBodyBehindAppBar: true,
+            extendBodyBehindAppBar: false,
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
@@ -263,10 +263,7 @@ class SettingPage extends StatelessWidget {
                     (showMini ? MiniPlayer.barHeight : 0.0);
                 return ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.paddingOf(context).top + kToolbarHeight,
-                    bottom: bottomPad,
-                  ),
+                  padding: EdgeInsets.only(bottom: bottomPad),
                   children: [
                     ListTile(
                       title: Text(
