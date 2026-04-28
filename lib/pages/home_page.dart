@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
@@ -537,7 +540,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           break;
       }
     }
-    return _QuickEntryRow(entries: entries);
+    return _QuickEntryStrip(entries: entries);
   }
 
   /// 单一吸顶条：显示「最近」时叠在列表上为毛玻璃；切到「最多」后同逻辑以「最多」分节为界
@@ -1398,75 +1401,170 @@ class _QuickItem {
   final VoidCallback onTap;
 }
 
-class _QuickEntryRow extends StatelessWidget {
-  const _QuickEntryRow({required this.entries});
+/// 横向滑动：鼠标拖拽、触控板滑动、触屏滑动均参与滚动（默认 [MaterialScrollBehavior] 在部分平台不含鼠标）。
+class _QuickEntryHorizontalScrollBehavior extends MaterialScrollBehavior {
+  const _QuickEntryHorizontalScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
+}
+
+/// 快捷入口：每项为正方形；边长在 [_sideMin]～[_sideMax] 内随窗口平滑变化；排不下时横滑且单屏约 3 个。
+class _QuickEntryStrip extends StatelessWidget {
+  const _QuickEntryStrip({required this.entries});
+
   final List<_QuickItem> entries;
+
+  static const double _gap = 10;
+  static const double _sideMin = 72;
+  static const double _sideMax = 118;
+  /// 极窄窗口下滚动时的下限，避免算不出布局。
+  static const double _sideAbsMin = 48;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (var i = 0; i < entries.length; i++) ...[
-          Expanded(
-            child: _QuickEntryTile(
-              item: entries[i],
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.maxWidth;
+        final n = entries.length;
+        if (n == 0) {
+          return const SizedBox.shrink();
+        }
+
+        final rawIdeal = (w - (n - 1) * _gap) / n;
+        final ideal = rawIdeal.clamp(_sideMin, _sideMax);
+        final contentIdeal = n * ideal + (n - 1) * _gap;
+
+        late final double side;
+        late final bool scroll;
+
+        if (contentIdeal <= w + 0.5) {
+          side = ideal;
+          scroll = false;
+        } else {
+          final cap3 = (w - 2 * _gap) / 3;
+          side = math.min(ideal, cap3).clamp(_sideAbsMin, _sideMax);
+          final total = n * side + (n - 1) * _gap;
+          scroll = total > w + 0.5;
+        }
+
+        final row = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < n; i++) ...[
+              SizedBox(
+                width: side,
+                height: side,
+                child: _QuickEntryTile(side: side, item: entries[i]),
+              ),
+              if (i < n - 1) const SizedBox(width: _gap),
+            ],
+          ],
+        );
+
+        final contentW = n * side + (n - 1) * _gap;
+
+        if (!scroll) {
+          return Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: contentW,
+              height: side,
+              child: row,
+            ),
+          );
+        }
+
+        return ScrollConfiguration(
+          behavior: const _QuickEntryHorizontalScrollBehavior(),
+          child: SizedBox(
+            height: side,
+            width: w,
+            child: SingleChildScrollView(
+              primary: false,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: row,
             ),
           ),
-          if (i < entries.length - 1) const SizedBox(width: 10),
-        ],
-      ],
+        );
+      },
     );
   }
 }
 
 class _QuickEntryTile extends StatelessWidget {
-  const _QuickEntryTile({required this.item});
+  const _QuickEntryTile({required this.side, required this.item});
+
+  final double side;
   final _QuickItem item;
 
   @override
   Widget build(BuildContext context) {
+    final radius = (side * 0.14).clamp(10.0, 16.0);
+    final iconBox = (side * 0.38).clamp(28.0, 44.0);
+    final iconGlyph = (iconBox * 0.52).clamp(18.0, 26.0);
+    final labelSize = (side * 0.14).clamp(9.0, 12.0);
+    final pad = (side * 0.08).clamp(4.0, 10.0);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: item.onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+        borderRadius: BorderRadius.circular(radius),
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: context.gradBorder(0.08),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(radius),
             border: Border.all(
               color: context.gradBorder(0.1),
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: item.tint.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(pad, pad, pad, pad * 0.85),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: iconBox,
+                      height: iconBox,
+                      decoration: BoxDecoration(
+                        color: item.tint.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        item.icon,
+                        color: item.tint.withValues(alpha: 0.95),
+                        size: iconGlyph,
+                      ),
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: item.tint.withValues(alpha: 0.95),
-                  size: 24,
+                SizedBox(height: (side * 0.04).clamp(2.0, 6.0)),
+                Text(
+                  item.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.gradFg(0.9),
+                    fontSize: labelSize,
+                    fontWeight: FontWeight.w600,
+                    height: 1.1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: context.gradFg(0.9),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
