@@ -69,14 +69,6 @@ class SettingPage extends StatelessWidget {
                   },
                 ),
                 if (!kIsWeb && Platform.isMacOS) const _MacosMenuBarLyricsSettingTile(),
-                ExpansionTile(
-                  title: Text(l10n.settingsSystemInfo, style: TextStyle(color: context.gradFg())),
-                  subtitle: Text(l10n.settingsSystemInfoDesc, style: TextStyle(color: context.gradFg(0.6))),
-                  leading: Icon(Icons.info_outline, color: context.gradFg()),
-                  iconColor: context.gradFg(),
-                  collapsedIconColor: context.gradFg(),
-                  children: const [DiskSpaceView()],
-                ),
                 ListTile(
                   title: Text(l10n.settingsAbout, style: TextStyle(color: context.gradFg())),
                   subtitle: Text(l10n.settingsAboutDesc, style: TextStyle(color: context.gradFg(0.6))),
@@ -84,6 +76,14 @@ class SettingPage extends StatelessWidget {
                   onTap: () {
                     ApplicationUtils.showAboutDialog(context);
                   },
+                ),
+                ExpansionTile(
+                  title: Text(l10n.settingsSystemInfo, style: TextStyle(color: context.gradFg())),
+                  subtitle: Text(l10n.settingsSystemInfoDesc, style: TextStyle(color: context.gradFg(0.6))),
+                  leading: Icon(Icons.info_outline, color: context.gradFg()),
+                  iconColor: context.gradFg(),
+                  collapsedIconColor: context.gradFg(),
+                  children: const [DiskSpaceView()],
                 ),
               ],
             ),

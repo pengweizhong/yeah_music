@@ -22,6 +22,36 @@ abstract final class MacosMenuBarLyrics {
       await _ch.invokeMethod<void>('setText', text);
     } catch (_) {}
   }
+
+  /// 同步右键菜单：播放状态、曲目信息、控件文案（由 [AppLocalizations] 提供）。
+  static Future<void> setMenuBarState({
+    required bool isPlaying,
+    required String trackTitle,
+    required String trackArtist,
+    required String playPauseTitle,
+    required String previousTitle,
+    required String nextTitle,
+  }) async {
+    if (!supported) return;
+    try {
+      await _ch.invokeMethod<void>('setMenuBarState', <String, Object?>{
+        'isPlaying': isPlaying,
+        'trackTitle': trackTitle,
+        'trackArtist': trackArtist,
+        'playPauseTitle': playPauseTitle,
+        'previousTitle': previousTitle,
+        'nextTitle': nextTitle,
+      });
+    } catch (_) {}
+  }
+
+  /// 原生右键菜单触发：播放/暂停、切歌。由 [MacosMenuBarLyricsHost] 注册。
+  static void setNativeCommandHandler(
+    Future<dynamic> Function(MethodCall call)? handler,
+  ) {
+    if (!supported) return;
+    _ch.setMethodCallHandler(handler);
+  }
 }
 
 /// 注册 [reloadFromHive] / [notifySongOrLyricsMaybeChanged] 使用的刷新入口。

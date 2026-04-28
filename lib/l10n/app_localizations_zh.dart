@@ -73,6 +73,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuBarLyricsNoLyrics => '暂无歌词';
 
   @override
+  String get menuBarContextPlay => '播放';
+
+  @override
+  String get menuBarContextPause => '暂停';
+
+  @override
+  String get menuBarContextPrevious => '上一曲';
+
+  @override
+  String get menuBarContextNext => '下一曲';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
@@ -1084,6 +1096,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get menuBarLyricsNoLyrics => '暂无歌词';
 
   @override
+  String get menuBarContextPlay => '播放';
+
+  @override
+  String get menuBarContextPause => '暂停';
+
+  @override
+  String get menuBarContextPrevious => '上一曲';
+
+  @override
+  String get menuBarContextNext => '下一曲';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override
@@ -2092,6 +2116,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get menuBarLyricsNoLyrics => '無歌詞';
+
+  @override
+  String get menuBarContextPlay => '播放';
+
+  @override
+  String get menuBarContextPause => '暫停';
+
+  @override
+  String get menuBarContextPrevious => '上一曲';
+
+  @override
+  String get menuBarContextNext => '下一曲';
 
   @override
   String get oneDriveSettingsTitle => 'OneDrive';

@@ -74,6 +74,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuBarLyricsNoLyrics => '歌詞がありません';
 
   @override
+  String get menuBarContextPlay => '再生';
+
+  @override
+  String get menuBarContextPause => '一時停止';
+
+  @override
+  String get menuBarContextPrevious => '前の曲';
+
+  @override
+  String get menuBarContextNext => '次の曲';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override

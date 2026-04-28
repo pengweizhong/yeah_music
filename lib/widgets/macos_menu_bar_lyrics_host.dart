@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +16,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:path/path.dart' as p;
 
 /// 发往原生的安全防护；视觉固定宽度与「…」由 macOS [NSStatusItem] 侧完成。
 const int _kMenuBarLyricsSafetyMaxGraphemes = 512;
@@ -39,6 +41,7 @@ class MacosMenuBarLyricsHost extends StatefulWidget {
 
 class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
   StreamSubscription<Duration>? _posSub;
+  StreamSubscription<bool>? _playingSub;
 
   bool _registered = false;
   bool _enabled = false;
@@ -87,6 +90,33 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
 
     final line = _formatLineForMenuBar(song: song, position: pos, l10n: l10n);
     await MacosMenuBarLyrics.setText(line);
+
+    final playing = MusicService.isPlaying;
+    await MacosMenuBarLyrics.setMenuBarState(
+      isPlaying: playing,
+      trackTitle: _trackTitleForMenu(song, l10n),
+      trackArtist: _trackArtistForMenu(song, l10n),
+      playPauseTitle: playing
+          ? (l10n?.menuBarContextPause ?? 'Pause')
+          : (l10n?.menuBarContextPlay ?? 'Play'),
+      previousTitle: l10n?.menuBarContextPrevious ?? 'Previous Track',
+      nextTitle: l10n?.menuBarContextNext ?? 'Next Track',
+    );
+  }
+
+  String _trackTitleForMenu(Song? song, AppLocalizations? l10n) {
+    final idle = l10n?.menuBarLyricsIdle ?? 'Yeah Music';
+    if (song == null) return idle;
+    final t = song.title?.trim();
+    if (t != null && t.isNotEmpty) return t;
+    return p.basename(song.path);
+  }
+
+  String _trackArtistForMenu(Song? song, AppLocalizations? l10n) {
+    if (song == null) return '';
+    final a = song.artist?.trim();
+    if (a != null && a.isNotEmpty) return a;
+    return l10n?.homeUnknownTitle ?? '—';
   }
 
   String _formatLineForMenuBar({
@@ -187,6 +217,38 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
       unawaited(_syncToNative(l10n));
     });
 
+    _playingSub = MusicService.playingStream.listen((_) {
+      if (!_enabled) return;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      unawaited(_syncToNative(l10n));
+    });
+
+    MacosMenuBarLyrics.setNativeCommandHandler((call) async {
+      final playList = Provider.of<PlayListProvider>(context, listen: false);
+      switch (call.method) {
+        case 'menuPlayPause':
+          if (MusicService.isPlaying) {
+            await MusicService().pause();
+          } else {
+            if (!MusicService.canUseResumeToPlay) {
+              await playList.playAt(playList.currentIndex);
+            } else {
+              MusicService().resume();
+            }
+          }
+          return null;
+        case 'menuPrevious':
+          await playList.playPrev();
+          return null;
+        case 'menuNext':
+          await playList.playNext();
+          return null;
+        default:
+          throw PlatformException(code: 'UNIMPLEMENTED', message: call.method);
+      }
+    });
+
     Provider.of<PlayListProvider>(context, listen: false)
         .addListener(_playlistChanged);
     _registered = true;
@@ -201,6 +263,8 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
             .removeListener(_playlistChanged);
       } catch (_) {}
       _posSub?.cancel();
+      _playingSub?.cancel();
+      MacosMenuBarLyrics.setNativeCommandHandler(null);
       unawaited(MacosMenuBarLyrics.setVisible(false));
     }
     super.dispose();

@@ -75,6 +75,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuBarLyricsNoLyrics => 'No lyrics';
 
   @override
+  String get menuBarContextPlay => 'Play';
+
+  @override
+  String get menuBarContextPause => 'Pause';
+
+  @override
+  String get menuBarContextPrevious => 'Previous Track';
+
+  @override
+  String get menuBarContextNext => 'Next Track';
+
+  @override
   String get oneDriveSettingsTitle => 'OneDrive';
 
   @override

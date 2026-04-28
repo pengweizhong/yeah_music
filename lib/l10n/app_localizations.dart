@@ -228,6 +228,30 @@ abstract class AppLocalizations {
   /// **'No lyrics'**
   String get menuBarLyricsNoLyrics;
 
+  /// No description provided for @menuBarContextPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get menuBarContextPlay;
+
+  /// No description provided for @menuBarContextPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get menuBarContextPause;
+
+  /// No description provided for @menuBarContextPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Track'**
+  String get menuBarContextPrevious;
+
+  /// No description provided for @menuBarContextNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Track'**
+  String get menuBarContextNext;
+
   /// No description provided for @oneDriveSettingsTitle.
   ///
   /// In en, this message translates to:
