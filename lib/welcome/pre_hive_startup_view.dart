@@ -9,46 +9,43 @@ class PreHiveStartupView extends StatefulWidget {
   const PreHiveStartupView({
     super.key,
     required this.glow,
-    required this.secondsLeft,
   });
 
   final AnimationController glow;
-  final int secondsLeft;
 
   @override
   State<PreHiveStartupView> createState() => _PreHiveStartupViewState();
 }
 
 class _PreHiveStartupViewState extends State<PreHiveStartupView> {
-  WelcomeFakeStatusRotator? _fake;
+  late final WelcomeFakeStatusRotator _fake;
+
+  @override
+  void initState() {
+    super.initState();
+    _fake = WelcomeFakeStatusRotator(
+      List<String>.from(kWelcomeFakeHintsPlaceholder),
+    )..start();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final l10n = AppLocalizations.of(context);
     final hints = welcomeFakeLoadHintsList(l10n);
-    if (_fake == null) {
-      _fake = WelcomeFakeStatusRotator(hints)..start();
-    } else {
-      _fake!.setHintsIfChanged(hints);
-    }
+    _fake.setHintsIfChanged(hints);
   }
 
   @override
   void dispose() {
-    _fake?.dispose();
+    _fake.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final fake = _fake;
-    if (fake == null) {
-      return const SizedBox.shrink();
-    }
     return WelcomeCountdownView(
-      statusListenable: fake.hint,
-      secondsLeft: widget.secondsLeft,
+      statusListenable: _fake.hint,
       dataReady: false,
       glow: widget.glow,
       showEnterButton: false,

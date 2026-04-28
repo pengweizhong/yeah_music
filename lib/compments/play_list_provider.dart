@@ -360,10 +360,10 @@ class PlayListProvider extends ChangeNotifier {
     for (var value in folders) {
       putFolder(value);
       i++;
-      // 让出控制权，避免阻塞主线程上的启动转场
+      // 让出控制权，避免阻塞主线程上的启动转场；大目录时更频繁Yield
       await Future<void>.delayed(Duration.zero);
-      if (i % 4 == 0) {
-        await Future<void>.delayed(const Duration(milliseconds: 1));
+      if (i % 3 == 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 2));
       }
     }
     if (folders.isNotEmpty) {

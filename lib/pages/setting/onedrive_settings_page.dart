@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 
@@ -90,6 +92,63 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                     fontSize: 14,
                     height: 1.35,
                   ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.oneDriveAzureRedirectIntro,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          child: SelectableText(
+                            OneDriveConfig.redirectUrl,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              fontSize: 13,
+                              height: 1.35,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: l10n.oneDriveRedirectCopyTooltip,
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: OneDriveConfig.redirectUrl),
+                        );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.oneDriveRedirectCopied)),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.copy_outlined,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -181,11 +240,18 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                             if (!context.mounted) return;
                             if (!ok) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.oneDriveError('sign in failed')),
-                                ),
+                                SnackBar(content: Text(l10n.oneDriveSignInFailed)),
                               );
+                              return;
                             }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.oneDriveSignedIn)),
+                            );
+                            await Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const OneDriveBrowserPage(),
+                              ),
+                            );
                           },
                     child: Text(l10n.oneDriveSignIn),
                   ),

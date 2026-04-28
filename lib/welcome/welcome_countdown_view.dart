@@ -1,18 +1,18 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/welcome/app_startup_clock.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
-/// 欢迎页/启动门控共用的倒计时刻度起点（与欢迎页 [WelcomeEntryPage] 一致）
-const int kWelcomeCountdownStart = 5;
-
-/// 与欢迎页相同的渐变 + 标题 + 假状态文案 + 倒计时 + 底栏。
-class WelcomeCountdownView extends StatelessWidget {
+/// 与欢迎页相同的渐变 + 话术 + **[启动耗时]**（帧级平滑累加）+ 底栏。
+class WelcomeCountdownView extends StatefulWidget {
   const WelcomeCountdownView({
     super.key,
     required this.statusListenable,
-    required this.secondsLeft,
     required this.dataReady,
     required this.glow,
     this.onEnter,
@@ -20,11 +20,61 @@ class WelcomeCountdownView extends StatelessWidget {
   });
 
   final ValueListenable<String> statusListenable;
-  final int secondsLeft;
   final bool dataReady;
   final AnimationController glow;
   final VoidCallback? onEnter;
   final bool showEnterButton;
+
+  @override
+  State<WelcomeCountdownView> createState() => _WelcomeCountdownViewState();
+}
+
+class _WelcomeCountdownViewState extends State<WelcomeCountdownView>
+    with SingleTickerProviderStateMixin {
+  late Ticker _elapsedTicker;
+
+  /// 与实际 [AppStartupClock] 解耦，主线程卡顿后仍「丝滑」步进追上，避免直接从 1s 跳到 7s。
+  double _displaySec = 0;
+  Duration? _prevTickerElapsed;
+
+  @override
+  void initState() {
+    super.initState();
+    AppStartupClock.ensureStarted();
+    _elapsedTicker = createTicker(_onElapsedTick)..start();
+  }
+
+  void _onElapsedTick(Duration elapsed) {
+    var dt = (_prevTickerElapsed == null)
+        ? (1 / 172)
+        : (elapsed - _prevTickerElapsed!).inMicroseconds / 1e6;
+    _prevTickerElapsed = elapsed;
+    if (dt <= 0 || dt.isNaN) return;
+    // 长时间无帧后再调度：别把整段时差吞进一格，仍能分帧逼近
+    if (dt > 0.22) dt = 0.22;
+
+    final target = AppStartupClock.elapsed.inMicroseconds / 1e6;
+    final gap = target - _displaySec;
+
+    double move =
+        gap * (1 - math.exp(-26 * dt)); // 指数靠拢，卡住后也不一步跳到底
+    // 单帧最多前进约 72ms「表显」，读秒匀速累加视感；再卡也会多帧追平
+    const maxPerFrame = 0.072;
+    if (move.abs() > maxPerFrame) move = move.sign * maxPerFrame;
+
+    setState(() {
+      _displaySec += move;
+      if ((target - _displaySec).abs() < 0.006 || gap.abs() < 0.002) {
+        _displaySec = target;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _elapsedTicker.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +105,7 @@ class WelcomeCountdownView extends StatelessWidget {
               children: [
                 const Spacer(flex: 2),
                 AnimatedBuilder(
-                  animation: glow,
+                  animation: widget.glow,
                   builder: (context, child) {
                     return Container(
                       width: 88,
@@ -67,7 +117,7 @@ class WelcomeCountdownView extends StatelessWidget {
                             color: Color.lerp(
                               const Color(0x403D8BFF),
                               const Color(0x55667EEA),
-                              glow.value,
+                              widget.glow.value,
                             )!,
                             blurRadius: 28,
                             spreadRadius: 2,
@@ -114,7 +164,7 @@ class WelcomeCountdownView extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 ValueListenableBuilder<String>(
-                  valueListenable: statusListenable,
+                  valueListenable: widget.statusListenable,
                   builder: (context, value, child) {
                     return Text(
                       value,
@@ -128,39 +178,39 @@ class WelcomeCountdownView extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 32),
-                _CountdownCard(
-                  secondsLeft: secondsLeft,
-                  dataReady: dataReady,
+                _ElapsedCard(
+                  dataReady: widget.dataReady,
+                  secondsFormatted: _displaySec.toStringAsFixed(2),
                 ),
                 const SizedBox(height: 28),
                 const RepaintBoundary(
                   child: _SplashIndeterminateControl(),
                 ),
                 const Spacer(flex: 2),
-                if (showEnterButton) ...[
+                if (widget.showEnterButton) ...[
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: onEnter,
+                      onPressed: widget.onEnter,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: dataReady
+                        backgroundColor: widget.dataReady
                             ? const Color(0xFFE8EAFF).withValues(alpha: 0.12)
                             : Colors.white.withValues(alpha: 0.08),
                         foregroundColor: Colors.white.withValues(
-                          alpha: dataReady ? 0.95 : 0.4,
+                          alpha: widget.dataReady ? 0.95 : 0.4,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                           side: BorderSide(
-                            color: dataReady
+                            color: widget.dataReady
                                 ? Colors.white.withValues(alpha: 0.2)
                                 : Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                       ),
                       child: Text(
-                        dataReady
+                        widget.dataReady
                             ? l10n.welcomeEnter
                             : l10n.welcomeEnterWait,
                         style: const TextStyle(
@@ -172,7 +222,7 @@ class WelcomeCountdownView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    dataReady
+                    widget.dataReady
                         ? l10n.welcomeHintWhenReady
                         : l10n.welcomeHintWhenNotReady,
                     textAlign: TextAlign.center,
@@ -183,7 +233,7 @@ class WelcomeCountdownView extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (!showEnterButton)
+                if (!widget.showEnterButton)
                   Text(
                     l10n.welcomePreparing,
                     textAlign: TextAlign.center,
@@ -203,20 +253,18 @@ class WelcomeCountdownView extends StatelessWidget {
   }
 }
 
-class _CountdownCard extends StatelessWidget {
-  const _CountdownCard({
-    required this.secondsLeft,
+class _ElapsedCard extends StatelessWidget {
+  const _ElapsedCard({
     required this.dataReady,
+    required this.secondsFormatted,
   });
 
-  final int secondsLeft;
   final bool dataReady;
+  final String secondsFormatted;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final s = secondsLeft.clamp(0, 99);
-    final done = s <= 0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
@@ -237,48 +285,43 @@ class _CountdownCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.welcomeCountdownLabel,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 13,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.welcomeCountdownLabel,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                done
-                    ? (dataReady
-                        ? l10n.welcomeCountdownSubDoneReady
-                        : l10n.welcomeCountdownSubDoneWait)
-                    : l10n.welcomeCountdownSubNotDone(kWelcomeCountdownStart),
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.32),
-                  fontSize: 11.5,
-                  height: 1.3,
+                const SizedBox(height: 6),
+                Text(
+                  dataReady
+                      ? l10n.welcomeCountdownSubDoneReady
+                      : l10n.welcomeStartupSubLoading,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.34),
+                    fontSize: 11.5,
+                    height: 1.35,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           Text(
-            done ? '0' : s.toString().padLeft(2, '0'),
+            secondsFormatted,
             style: TextStyle(
-              color: done
-                  ? (dataReady
-                      ? const Color(0xFF8BE38B)
-                      : Colors.white38)
-                  : Colors.white,
-              fontSize: 36,
+              color: dataReady ? const Color(0xFF8BE38B) : Colors.white,
+              fontSize: 34,
               fontWeight: FontWeight.w300,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 10),
             child: Text(
               l10n.secondsUnit,
               style: TextStyle(

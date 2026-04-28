@@ -97,6 +97,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveNeedClientId => '先に Azure のクライアント ID を入力してください。';
 
   @override
+  String get oneDriveSignInFailed =>
+      'サインインに失敗しました。クライアント ID と Azure のリダイレクト URI を確認するか、しばらくしてから試してください。';
+
+  @override
+  String get oneDriveAzureRedirectIntro =>
+      'redirect_uri が無効となる場合は、Azure アプリの登録 → 認証 → プラットフォームを追加から「モバイル アプリケーションとデスクトップ アプリケーション」（Web／SPA は不可）を選び、カスタム リダイレクト URI に次の値を完全一致で追加してください。';
+
+  @override
+  String get oneDriveRedirectCopyTooltip => 'リダイレクト URI をコピー';
+
+  @override
+  String get oneDriveRedirectCopied => 'リダイレクト URI をコピーしました';
+
+  @override
   String get oneDriveCacheNote => '再生時、音声はアプリのデータ領域に保存されます。';
 
   @override
@@ -245,27 +259,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get welcomeEnterWait => 'はじめる（読み込みが終わるまで待つ）';
 
   @override
-  String get welcomeHintWhenReady => '読み込みは完了しています。今すぐ開くか、カウントダウンを待てます。';
+  String get welcomeHintWhenReady => '読み込みが完了しました。すぐホームへ入れます。';
 
   @override
-  String get welcomeHintWhenNotReady => 'カウントダウンと読み込みが完了すると自動的に開きます。';
+  String get welcomeHintWhenNotReady => '起動が完了すると自動的にホームが開きます。';
 
   @override
   String get welcomePreparing => '起動の準備を完了しています…';
 
   @override
-  String get welcomeCountdownLabel => '開始までのカウントダウン';
+  String get welcomeCountdownLabel => '起動時間';
 
   @override
-  String get welcomeCountdownSubDoneReady => '入れます';
+  String get welcomeCountdownSubDoneReady => 'ホームの準備ができました — 入室できます';
 
   @override
-  String get welcomeCountdownSubDoneWait => 'データの準備をお待ちください';
-
-  @override
-  String welcomeCountdownSubNotDone(int n) {
-    return '既定 $n 秒後に自動的にはじまります';
-  }
+  String get welcomeStartupSubLoading => 'ホーム画面のデータを読み込んでいます — 準備できたら自動で開きます';
 
   @override
   String get secondsUnit => '秒';

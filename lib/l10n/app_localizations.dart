@@ -276,6 +276,30 @@ abstract class AppLocalizations {
   /// **'Set the Azure application client ID first.'**
   String get oneDriveNeedClientId;
 
+  /// No description provided for @oneDriveSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign in. Check the client ID, redirect URI in Azure, and try again.'**
+  String get oneDriveSignInFailed;
+
+  /// No description provided for @oneDriveAzureRedirectIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'If you see redirect_uri invalid: Azure Portal → your app registration → Authentication → Add a platform → Mobile and desktop applications (not SPA or Web) → paste the URI below into Custom redirect URIs. It must match character-for-character.'**
+  String get oneDriveAzureRedirectIntro;
+
+  /// No description provided for @oneDriveRedirectCopyTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy redirect URI'**
+  String get oneDriveRedirectCopyTooltip;
+
+  /// No description provided for @oneDriveRedirectCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Redirect URI copied'**
+  String get oneDriveRedirectCopied;
+
   /// No description provided for @oneDriveCacheNote.
   ///
   /// In en, this message translates to:
@@ -561,13 +585,13 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeHintWhenReady.
   ///
   /// In en, this message translates to:
-  /// **'Loading is done. You can enter now, or wait for the countdown to finish.'**
+  /// **'Loading is done — tap to enter, or we open automatically.'**
   String get welcomeHintWhenReady;
 
   /// No description provided for @welcomeHintWhenNotReady.
   ///
   /// In en, this message translates to:
-  /// **'The app will open when the countdown ends and loading has finished.'**
+  /// **'Opens automatically once startup completes.'**
   String get welcomeHintWhenNotReady;
 
   /// No description provided for @welcomePreparing.
@@ -579,26 +603,20 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeCountdownLabel.
   ///
   /// In en, this message translates to:
-  /// **'Countdown to enter'**
+  /// **'Startup time'**
   String get welcomeCountdownLabel;
 
   /// No description provided for @welcomeCountdownSubDoneReady.
   ///
   /// In en, this message translates to:
-  /// **'You can enter now'**
+  /// **'Home screen is ready — you can enter'**
   String get welcomeCountdownSubDoneReady;
 
-  /// No description provided for @welcomeCountdownSubDoneWait.
+  /// No description provided for @welcomeStartupSubLoading.
   ///
   /// In en, this message translates to:
-  /// **'Please wait for data to be ready'**
-  String get welcomeCountdownSubDoneWait;
-
-  /// No description provided for @welcomeCountdownSubNotDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Default: {n} s, then auto enter'**
-  String welcomeCountdownSubNotDone(int n);
+  /// **'Loading home resources — auto-enter when done'**
+  String get welcomeStartupSubLoading;
 
   /// No description provided for @secondsUnit.
   ///

@@ -7,6 +7,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
@@ -55,10 +56,14 @@ class _HomePageState extends State<HomePage> {
       _mostPlayedRaw = pre.mostPlayedRaw;
       _quickEntry = pre.quickEntry;
       _recentReady = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         _play = context.read<PlayListProvider>();
         _play!.addListener(_onPlayListChange);
+        // 首页首帧画出后再合并曲库，避免启动门控结束前长时间阻塞在同一动画段内。
+        await Future<void>.delayed(const Duration(milliseconds: 52));
+        if (!mounted) return;
+        await _bootstrapPlayAfterSplash();
       });
       return;
     }
@@ -78,6 +83,24 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _play?.removeListener(_onPlayListChange);
     super.dispose();
+  }
+
+  /// 欢迎页预载后补跑；与无 [initial] 时的 [_bootstrap] 共用合并逻辑。
+  Future<void> _bootstrapPlayAfterSplash() async {
+    if (!mounted) return;
+    final folder = context.read<FolderProvider>();
+    final play = context.read<PlayListProvider>();
+    if (play.initialized) {
+      return;
+    }
+    try {
+      await play.init(folder);
+    } catch (e, st) {
+      appLog.e('曲库合并（PlayListProvider）初始化失败', error: e, stackTrace: st);
+      return;
+    }
+    if (!mounted) return;
+    setState(() {});
   }
 
   Future<void> _bootstrap() async {

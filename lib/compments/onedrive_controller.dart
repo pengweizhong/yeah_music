@@ -79,14 +79,18 @@ class OneDriveController extends ChangeNotifier {
     if (effectiveClientId.isEmpty) {
       return false;
     }
-    final res = await _auth.signIn(effectiveClientId);
-    if (res == null) {
+    try {
+      final res = await _auth.signIn(effectiveClientId);
+      if (res == null) {
+        return false;
+      }
+      _signedIn = true;
+      _accountHint = 'Microsoft';
+      notifyListeners();
+      return true;
+    } catch (_) {
       return false;
     }
-    _signedIn = true;
-    _accountHint = 'Microsoft';
-    notifyListeners();
-    return true;
   }
 
   Future<void> signOut() async {

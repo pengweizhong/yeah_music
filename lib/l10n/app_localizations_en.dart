@@ -101,6 +101,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set the Azure application client ID first.';
 
   @override
+  String get oneDriveSignInFailed =>
+      'Couldn\'t sign in. Check the client ID, redirect URI in Azure, and try again.';
+
+  @override
+  String get oneDriveAzureRedirectIntro =>
+      'If you see redirect_uri invalid: Azure Portal → your app registration → Authentication → Add a platform → Mobile and desktop applications (not SPA or Web) → paste the URI below into Custom redirect URIs. It must match character-for-character.';
+
+  @override
+  String get oneDriveRedirectCopyTooltip => 'Copy redirect URI';
+
+  @override
+  String get oneDriveRedirectCopied => 'Redirect URI copied';
+
+  @override
   String get oneDriveCacheNote =>
       'Audio is cached under the app data folder when you play.';
 
@@ -253,28 +267,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get welcomeHintWhenReady =>
-      'Loading is done. You can enter now, or wait for the countdown to finish.';
+      'Loading is done — tap to enter, or we open automatically.';
 
   @override
   String get welcomeHintWhenNotReady =>
-      'The app will open when the countdown ends and loading has finished.';
+      'Opens automatically once startup completes.';
 
   @override
   String get welcomePreparing => 'Preparing the app…';
 
   @override
-  String get welcomeCountdownLabel => 'Countdown to enter';
+  String get welcomeCountdownLabel => 'Startup time';
 
   @override
-  String get welcomeCountdownSubDoneReady => 'You can enter now';
+  String get welcomeCountdownSubDoneReady =>
+      'Home screen is ready — you can enter';
 
   @override
-  String get welcomeCountdownSubDoneWait => 'Please wait for data to be ready';
-
-  @override
-  String welcomeCountdownSubNotDone(int n) {
-    return 'Default: $n s, then auto enter';
-  }
+  String get welcomeStartupSubLoading =>
+      'Loading home resources — auto-enter when done';
 
   @override
   String get secondsUnit => 's';

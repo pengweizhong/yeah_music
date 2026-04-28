@@ -2,7 +2,14 @@ import 'dart:io';
 
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/services/onedrive/onedrive_token_store.dart';
+
+/// Microsoft OAuth2（common）终结点；显式配置，避免 OIDC 发现与 id_token `iss` 不一致。
+final AuthorizationServiceConfiguration _msOAuth2 = AuthorizationServiceConfiguration(
+  authorizationEndpoint: OneDriveConfig.authorizationEndpoint,
+  tokenEndpoint: OneDriveConfig.tokenEndpoint,
+);
 
 /// Microsoft 登录与刷新（需 [clientId] 非空）。
 class OneDriveAuth {
@@ -20,18 +27,43 @@ class OneDriveAuth {
     if (clientId.trim().isEmpty) return null;
     if (Platform.isLinux) return null;
 
-    final AuthorizationTokenResponse? res = await _appAuth.authorizeAndExchangeCode(
-      AuthorizationTokenRequest(
-        clientId.trim(),
-        OneDriveConfig.redirectUrl,
-        discoveryUrl: OneDriveConfig.discoveryUrl,
-        scopes: OneDriveConfig.scopes,
-      ),
-    );
-    if (res == null) return null;
+    late final AuthorizationTokenResponse res;
+    try {
+      res = await _appAuth.authorizeAndExchangeCode(
+        AuthorizationTokenRequest(
+          clientId.trim(),
+          OneDriveConfig.redirectUrl,
+          serviceConfiguration: _msOAuth2,
+          scopes: OneDriveConfig.scopes,
+        ),
+      );
+    } on FlutterAppAuthUserCancelledException {
+      appLog.d('OneDrive OAuth: 用户取消登录');
+      return null;
+    } on FlutterAppAuthPlatformException catch (e, st) {
+      final d = e.platformErrorDetails;
+      appLog.e(
+        'OneDrive OAuth: ${d.error} ${d.errorDescription} (type=${d.type} code=${d.code})',
+        error: e,
+        stackTrace: st,
+      );
+      return null;
+    } catch (e, st) {
+      appLog.e('OneDrive OAuth: authorizeAndExchangeCode 异常', error: e, stackTrace: st);
+      return null;
+    }
     final access = res.accessToken;
     final refresh = res.refreshToken;
-    if (access == null || refresh == null) return null;
+    if (access == null) {
+      appLog.w('OneDrive OAuth: 响应缺少 access_token');
+      return null;
+    }
+    if (refresh == null || refresh.isEmpty) {
+      appLog.w(
+        'OneDrive OAuth: 缺少 refresh_token（需确认 Microsoft 已授予 offline_access）；无法长期续期令牌',
+      );
+      return null;
+    }
     final expiry = res.accessTokenExpirationDateTime ??
         DateTime.now().add(const Duration(hours: 1));
     await _store.save(
@@ -52,19 +84,19 @@ class OneDriveAuth {
       return access;
     }
     if (Platform.isLinux) return null;
-    final TokenResponse? tr = await _appAuth.token(
+    final tr = await _appAuth.token(
       TokenRequest(
         clientId.trim(),
         OneDriveConfig.redirectUrl,
         refreshToken: refresh,
-        discoveryUrl: OneDriveConfig.discoveryUrl,
+        serviceConfiguration: _msOAuth2,
         scopes: OneDriveConfig.scopes,
       ),
     );
-    final newAccess = tr?.accessToken;
-    final newRefresh = tr?.refreshToken ?? refresh;
+    final newAccess = tr.accessToken;
+    final newRefresh = tr.refreshToken ?? refresh;
     if (newAccess == null) return null;
-    final newExp = tr?.accessTokenExpirationDateTime ??
+    final newExp = tr.accessTokenExpirationDateTime ??
         DateTime.now().add(const Duration(hours: 1));
     await _store.save(
       accessToken: newAccess,

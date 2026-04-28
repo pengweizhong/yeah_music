@@ -97,6 +97,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveNeedClientId => '请先填写 Azure 应用的客户端 ID。';
 
   @override
+  String get oneDriveSignInFailed => '登录失败：请核对客户端 ID、Azure 中的重定向 URI，或稍后重试。';
+
+  @override
+  String get oneDriveAzureRedirectIntro =>
+      '若提示 redirect_uri 无效：请在 Azure「应用注册」→「身份验证」→「添加平台」中选「移动和桌面应用程序」（不要选 Web 或单页应用程序），在「自定义重定向 URI」中粘贴下方地址，须与您在门户中配置的条目逐字完全一致。';
+
+  @override
+  String get oneDriveRedirectCopyTooltip => '复制重定向 URI';
+
+  @override
+  String get oneDriveRedirectCopied => '重定向 URI 已复制';
+
+  @override
   String get oneDriveCacheNote => '播放时音频会缓存在应用数据目录。';
 
   @override
@@ -245,27 +258,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get welcomeEnterWait => '进入应用（需等待加载完成）';
 
   @override
-  String get welcomeHintWhenReady => '加载已完成，可立即进入，也可等待倒计时结束自动进入。';
+  String get welcomeHintWhenReady => '加载已完成，可随时进入主页。';
 
   @override
-  String get welcomeHintWhenNotReady => '倒计时结束且加载完成后，将自动进入应用。';
+  String get welcomeHintWhenNotReady => '启动完成后将自动进入主页。';
 
   @override
   String get welcomePreparing => '正在完成启动准备…';
 
   @override
-  String get welcomeCountdownLabel => '进入倒计时';
+  String get welcomeCountdownLabel => '启动时间';
 
   @override
-  String get welcomeCountdownSubDoneReady => '可以进入了';
+  String get welcomeCountdownSubDoneReady => '首页资源已就绪，可立即进入';
 
   @override
-  String get welcomeCountdownSubDoneWait => '请等待数据就绪';
-
-  @override
-  String welcomeCountdownSubNotDone(int n) {
-    return '默认 $n 秒，结束后自动进入';
-  }
+  String get welcomeStartupSubLoading => '正在加载首页所需数据…完成后自动进入';
 
   @override
   String get secondsUnit => '秒';
@@ -1027,6 +1035,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveNeedClientId => '请先填写 Azure 应用的客户端 ID。';
 
   @override
+  String get oneDriveSignInFailed => '登录失败：请核对客户端 ID、Azure 中的重定向 URI，或稍后重试。';
+
+  @override
+  String get oneDriveAzureRedirectIntro =>
+      '若提示 redirect_uri 无效：请在 Azure「应用注册」→「身份验证」→「添加平台」中选「移动和桌面应用程序」（不要选 Web 或单页应用程序），在「自定义重定向 URI」中粘贴下方地址，须与您在门户中配置的条目逐字完全一致。';
+
+  @override
+  String get oneDriveRedirectCopyTooltip => '复制重定向 URI';
+
+  @override
+  String get oneDriveRedirectCopied => '重定向 URI 已复制';
+
+  @override
   String get oneDriveCacheNote => '播放时音频会缓存在应用数据目录。';
 
   @override
@@ -1175,27 +1196,22 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get welcomeEnterWait => '进入应用（需等待加载完成）';
 
   @override
-  String get welcomeHintWhenReady => '加载已完成，可立即进入，也可等待倒计时结束自动进入。';
+  String get welcomeHintWhenReady => '加载已完成，可随时进入主页。';
 
   @override
-  String get welcomeHintWhenNotReady => '倒计时结束且加载完成后，将自动进入应用。';
+  String get welcomeHintWhenNotReady => '启动完成后将自动进入主页。';
 
   @override
   String get welcomePreparing => '正在完成启动准备…';
 
   @override
-  String get welcomeCountdownLabel => '进入倒计时';
+  String get welcomeCountdownLabel => '启动时间';
 
   @override
-  String get welcomeCountdownSubDoneReady => '可以进入了';
+  String get welcomeCountdownSubDoneReady => '首页资源已就绪，可立即进入';
 
   @override
-  String get welcomeCountdownSubDoneWait => '请等待数据就绪';
-
-  @override
-  String welcomeCountdownSubNotDone(int n) {
-    return '默认 $n 秒，结束后自动进入';
-  }
+  String get welcomeStartupSubLoading => '正在加载首页所需数据…完成后自动进入';
 
   @override
   String get secondsUnit => '秒';
@@ -1957,6 +1973,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveNeedClientId => '請先填寫 Azure 應用程式的用戶端 ID。';
 
   @override
+  String get oneDriveSignInFailed => '登入失敗：請核對用戶端 ID、Azure 中的重新導向 URI，或稍後再試。';
+
+  @override
+  String get oneDriveAzureRedirectIntro =>
+      '若出現 redirect_uri 無效：請在 Azure「應用程式註冊」→「驗證」→「新增平台」選「行動應用程式及傳統型應用程式」（請勿選 Web 或單頁應用程式），在「自訂重新導向 URI」貼上下方位址，且須與入口網站的設定完全一致。';
+
+  @override
+  String get oneDriveRedirectCopyTooltip => '複製重新導向 URI';
+
+  @override
+  String get oneDriveRedirectCopied => '已複製重新導向 URI';
+
+  @override
   String get oneDriveCacheNote => '播放時音訊會快取在應用程式資料目錄。';
 
   @override
@@ -2105,27 +2134,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get welcomeEnterWait => '進入應用（需等待載入完成）';
 
   @override
-  String get welcomeHintWhenReady => '載入已完成，可立即進入，也可等待倒計時結束自動進入。';
+  String get welcomeHintWhenReady => '載入已完成，可隨時進入主頁。';
 
   @override
-  String get welcomeHintWhenNotReady => '倒計時結束且載入完成後，將自動進入應用。';
+  String get welcomeHintWhenNotReady => '啟動完成後將自動進入主頁。';
 
   @override
   String get welcomePreparing => '正在完成啟動準備…';
 
   @override
-  String get welcomeCountdownLabel => '進入倒計時';
+  String get welcomeCountdownLabel => '啟動時間';
 
   @override
-  String get welcomeCountdownSubDoneReady => '可以進入了';
+  String get welcomeCountdownSubDoneReady => '首頁資源已就緒，可立即進入';
 
   @override
-  String get welcomeCountdownSubDoneWait => '請等待數據就緒';
-
-  @override
-  String welcomeCountdownSubNotDone(int n) {
-    return '預設 $n 秒，結束後自動進入';
-  }
+  String get welcomeStartupSubLoading => '正在載入主頁資料…完成後自動進入';
 
   @override
   String get secondsUnit => '秒';

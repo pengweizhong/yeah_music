@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/logging/app_log.dart';
-import 'package:yeah_music/compments/folder_provider.dart';
-import 'package:yeah_music/compments/play_list_provider.dart';
+import 'package:yeah_music/welcome/app_startup_clock.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
@@ -17,13 +16,11 @@ import 'package:yeah_music/welcome/welcome_fake_status.dart';
 import 'package:yeah_music/welcome/welcome_l10n.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
-const _kDeferLoadMs = 80;
+/// 仅在首帧与计时器轮转之后拉起预载，避免与话术轮播抢时钟。
+const _kDeferLoadMs = 16;
 
 class WelcomeEntryPage extends StatefulWidget {
-  const WelcomeEntryPage({super.key, this.preHiveCountdownLeft});
-
-  /// 若经 [AppStartupGate] 已倒计过若干秒，在此接续剩余秒，避免重计为 [kWelcomeCountdownStart]。
-  final int? preHiveCountdownLeft;
+  const WelcomeEntryPage({super.key});
 
   @override
   State<WelcomeEntryPage> createState() => _WelcomeEntryPageState();
@@ -33,73 +30,52 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     with SingleTickerProviderStateMixin {
   Object? _error;
   int _pass = 0;
-  WelcomeFakeStatusRotator? _fake;
 
   bool _dataReady = false;
   bool _navigated = false;
   HomeInitialData? _initial;
 
-  int _secondsLeft = kWelcomeCountdownStart;
-  Timer? _countdownTimer;
-
   late final AnimationController _glow;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final l10n = AppLocalizations.of(context);
-    final hints = welcomeFakeLoadHintsList(l10n);
-    if (_fake == null) {
-      _fake = WelcomeFakeStatusRotator(hints)..start();
-    } else {
-      _fake!.setHintsIfChanged(hints);
-    }
-  }
+  late final WelcomeFakeStatusRotator _fake;
 
   @override
   void initState() {
     super.initState();
+    _fake = WelcomeFakeStatusRotator(
+      List<String>.from(kWelcomeFakeHintsPlaceholder),
+    )..start();
     _glow = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     )..repeat(reverse: true);
-    _startCountdown(from: widget.preHiveCountdownLeft);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleRun());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _kickBackgroundPreload());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fake.setHintsIfChanged(
+      welcomeFakeLoadHintsList(AppLocalizations.of(context)),
+    );
+  }
+
+  void _kickBackgroundPreload() {
+    Future<void>(() async {
+      await Future<void>.delayed(const Duration(milliseconds: _kDeferLoadMs));
+      if (!mounted) return;
+      // 多让出一帧调度，计时 Ticker 与光晕先于重 IO 多跑两轮
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      await _runLoad();
+    });
   }
 
   @override
   void dispose() {
     _glow.dispose();
-    _countdownTimer?.cancel();
-    _fake?.dispose();
+    _fake.dispose();
     super.dispose();
-  }
-
-  void _startCountdown({int? from}) {
-    _countdownTimer?.cancel();
-    final start = (from ?? kWelcomeCountdownStart).clamp(0, 99);
-    setState(() => _secondsLeft = start);
-    if (start <= 0) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _tryAutoEnter());
-      return;
-    }
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() {
-        if (_secondsLeft > 0) {
-          _secondsLeft -= 1;
-        }
-        if (_secondsLeft <= 0) {
-          t.cancel();
-        }
-      });
-      if (_secondsLeft <= 0) {
-        _tryAutoEnter();
-      }
-    });
   }
 
   void _tryAutoEnter() {
@@ -133,7 +109,6 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     final initial = _initial;
     if (initial == null) return;
     _navigated = true;
-    _countdownTimer?.cancel();
     final route = PageRouteBuilder<void>(
       pageBuilder: (context, a, s) => HomePage(initial: initial),
       transitionDuration: const Duration(milliseconds: 420),
@@ -148,19 +123,8 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     await Navigator.of(context).pushReplacement(route);
   }
 
-  Future<void> _scheduleRun() async {
-    await Future<void>.delayed(
-      const Duration(milliseconds: _kDeferLoadMs),
-    );
-    if (!mounted) return;
-    await _runLoad();
-  }
-
   Future<void> _runLoad() async {
-    if (_navigated) return;
-    setState(() {
-      _error = null;
-    });
+    if (_navigated || !mounted) return;
     try {
       _initial = await _load();
     } catch (e, st) {
@@ -171,33 +135,36 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     if (!mounted) return;
     setState(() {
       _dataReady = true;
+      _error = null;
     });
-    if (_secondsLeft <= 0) {
-      _tryAutoEnter();
-    }
+    _tryAutoEnter();
   }
 
   Future<HomeInitialData> _load() async {
     if (!mounted) {
       throw StateError('unmounted');
     }
-    final folder = context.read<FolderProvider>();
-    final play = context.read<PlayListProvider>();
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) throw StateError('unmounted');
+
     final user = context.read<UserPlaylistProvider>();
 
+    late final List<String> p;
+    late final List<({String path, int count})> top;
+    late final QuickEntryConfig? c;
+
+    final batch = <Future<void>>[
+      RecentPlayService.getPaths(limit: 50).then((v) => p = v),
+      RecentPlayService.getTopByPlayCount(limit: 40).then((v) => top = v),
+      SettingsService.loadQuickEntryConfig().then((v) => c = v),
+    ];
     if (!user.initialized) {
-      await user.init();
+      batch.add(user.init());
     }
+    await Future.wait<void>(batch);
     if (!mounted) throw StateError('unmounted');
     await Future<void>.delayed(Duration.zero);
-    if (!play.initialized) {
-      await play.init(folder);
-    }
-    if (!mounted) throw StateError('unmounted');
-    await Future<void>.delayed(Duration.zero);
-    final p = await RecentPlayService.getPaths(limit: 50);
-    final top = await RecentPlayService.getTopByPlayCount(limit: 40);
-    final c = await SettingsService.loadQuickEntryConfig();
+
     return HomeInitialData(
       recentPaths: p,
       mostPlayedRaw: top,
@@ -206,7 +173,8 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   }
 
   void _retry() {
-    _fake?.restart();
+    AppStartupClock.reset();
+    _fake.restart();
     _dataReady = false;
     _initial = null;
     _navigated = false;
@@ -214,13 +182,11 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
       _error = null;
       _pass++;
     });
-    _startCountdown();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleRun());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _kickBackgroundPreload());
   }
 
   @override
   Widget build(BuildContext context) {
-    final fake = _fake;
     if (_error != null) {
       final l10n = AppLocalizations.of(context);
       return Scaffold(
@@ -248,13 +214,9 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
         ),
       );
     }
-    if (fake == null) {
-      return const SizedBox.shrink();
-    }
     return WelcomeCountdownView(
       key: ValueKey(_pass),
-      statusListenable: fake.hint,
-      secondsLeft: _secondsLeft,
+      statusListenable: _fake.hint,
       dataReady: _dataReady,
       glow: _glow,
       onEnter: _onTapEnter,

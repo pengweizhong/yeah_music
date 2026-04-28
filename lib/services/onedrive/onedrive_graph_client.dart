@@ -45,20 +45,24 @@ class OneDriveGraphClient {
     required String accessToken,
     String? parentId,
   }) async {
-    final path = parentId == null
+    final out = <OneDriveGraphItem>[];
+    String? nextUrl = parentId == null
         ? '${OneDriveConfig.graphBase}/me/drive/root/children'
         : '${OneDriveConfig.graphBase}/me/drive/items/$parentId/children';
-    final res = await _getJson(path, accessToken);
-    final list = res['value'] as List<dynamic>?;
-    if (list == null) return const [];
-    final out = <OneDriveGraphItem>[];
-    for (final e in list) {
-      if (e is Map<String, dynamic>) {
-        final item = OneDriveGraphItem.fromJson(e);
-        if (item != null) {
-          out.add(item);
+    while (nextUrl != null) {
+      final res = await _getJson(nextUrl, accessToken);
+      final list = res['value'] as List<dynamic>?;
+      if (list != null) {
+        for (final e in list) {
+          if (e is Map<String, dynamic>) {
+            final item = OneDriveGraphItem.fromJson(e);
+            if (item != null) {
+              out.add(item);
+            }
+          }
         }
       }
+      nextUrl = res['@odata.nextLink'] as String?;
     }
     out.sort((a, b) {
       if (a.isFolder != b.isFolder) {

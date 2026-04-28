@@ -11,8 +11,8 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_material_themes.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
+import 'package:yeah_music/welcome/app_startup_clock.dart';
 import 'package:yeah_music/welcome/pre_hive_startup_view.dart';
-import 'package:yeah_music/welcome/welcome_countdown_view.dart';
 
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
@@ -26,6 +26,7 @@ void main() {
   appLog.i('应用正在启动');
 
   WidgetsFlutterBinding.ensureInitialized();
+  AppStartupClock.ensureStarted();
   VisibilityDetectorController.instance.updateInterval =
       const Duration(milliseconds: 80);
   PaintingBinding.instance.imageCache
@@ -62,11 +63,8 @@ class _AppStartupGateState extends State<AppStartupGate>
     with SingleTickerProviderStateMixin {
   Object? _error;
   bool _ready = false;
-  int? _preHiveCountdownToPass;
 
   AnimationController? _glow;
-  int _secondsLeft = kWelcomeCountdownStart;
-  Timer? _countdownTimer;
 
   void _initPreHiveVisuals() {
     _glow?.dispose();
@@ -80,50 +78,28 @@ class _AppStartupGateState extends State<AppStartupGate>
   void initState() {
     super.initState();
     _initPreHiveVisuals();
-    _startCountdown();
-    _bootstrap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_bootstrap());
+    });
   }
 
   @override
   void dispose() {
-    _countdownTimer?.cancel();
     _glow?.dispose();
     super.dispose();
   }
 
-  void _startCountdown() {
-    _countdownTimer?.cancel();
-    setState(() => _secondsLeft = kWelcomeCountdownStart);
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() {
-        if (_secondsLeft > 0) {
-          _secondsLeft -= 1;
-        }
-        if (_secondsLeft <= 0) {
-          t.cancel();
-        }
-      });
-    });
-  }
-
   void _teardownPreHiveOnly() {
-    _countdownTimer?.cancel();
-    _countdownTimer = null;
     _glow?.dispose();
     _glow = null;
   }
 
-  void _disposePreHiveResources(int captured) {
+  void _disposePreHiveResources() {
     _teardownPreHiveOnly();
     if (!mounted) return;
     setState(() {
       _ready = true;
       _error = null;
-      _preHiveCountdownToPass = captured;
     });
   }
 
@@ -143,22 +119,23 @@ class _AppStartupGateState extends State<AppStartupGate>
       return;
     }
     if (!mounted) return;
-    _disposePreHiveResources(_secondsLeft);
+    _disposePreHiveResources();
     appLog.i('应用启动成功');
   }
 
   void _retry() {
+    AppStartupClock.reset();
     _teardownPreHiveOnly();
     _initPreHiveVisuals();
-    _startCountdown();
     if (mounted) {
       setState(() {
         _error = null;
         _ready = false;
-        _preHiveCountdownToPass = null;
       });
     }
-    _bootstrap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_bootstrap());
+    });
   }
 
   @override
@@ -219,7 +196,6 @@ class _AppStartupGateState extends State<AppStartupGate>
             ),
             home: PreHiveStartupView(
               glow: _glow!,
-              secondsLeft: _secondsLeft,
             ),
           );
         },
@@ -245,18 +221,13 @@ class _AppStartupGateState extends State<AppStartupGate>
         ),
         ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),
       ],
-      child: YeahMusicApp(
-        preHiveCountdownLeft: _preHiveCountdownToPass,
-      ),
+      child: const YeahMusicApp(),
     );
   }
 }
 
 class YeahMusicApp extends StatelessWidget {
-  const YeahMusicApp({super.key, this.preHiveCountdownLeft});
-
-  /// Hive 与欢迎页门控前已跑的倒计时剩余秒数，避免进入欢迎页时从 5 重计。
-  final int? preHiveCountdownLeft;
+  const YeahMusicApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -269,9 +240,7 @@ class YeahMusicApp extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale.resolvedLocale,
-          home: WelcomeEntryPage(
-            preHiveCountdownLeft: preHiveCountdownLeft,
-          ),
+          home: const WelcomeEntryPage(),
           theme: AppMaterialThemes.light,
           darkTheme: AppMaterialThemes.dark,
           themeMode: appearance.themeMode,
