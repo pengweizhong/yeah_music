@@ -24,10 +24,12 @@ import 'compments/folder_provider.dart';
 import 'compments/onedrive_controller.dart';
 import 'navigation/app_route_observer.dart';
 import 'compments/play_list_provider.dart';
+import 'compments/playback_shortcut_controller.dart';
 import 'compments/theme_config_provider.dart';
 import 'compments/user_playlist_provider.dart';
 import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
+import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 
 Future<void> main(List<String> args) async {
@@ -250,6 +252,13 @@ class _AppStartupGateState extends State<AppStartupGate>
           },
         ),
         ChangeNotifierProvider(create: (_) => ThemeConfigProvider()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final c = PlaybackShortcutController();
+            unawaited(c.loadFromStorage());
+            return c;
+          },
+        ),
       ],
       child: const YeahMusicApp(),
     );
@@ -271,9 +280,12 @@ class YeahMusicApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale.resolvedLocale,
           builder: (context, child) {
-            return DesktopFloatingLyricsHost(
-              child: MacosMenuBarLyricsHost(
-                child: child ?? const SizedBox.shrink(),
+            return DesktopPlaybackShortcutsListener(
+              controller: context.read<PlaybackShortcutController>(),
+              child: DesktopFloatingLyricsHost(
+                child: MacosMenuBarLyricsHost(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             );
           },

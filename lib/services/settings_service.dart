@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/playback_mode.dart';
+import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
@@ -40,6 +43,9 @@ class SettingsService {
       'android_car_lyrics_show_cover';
   static const String _androidCarLyricsSyncLyricsKey =
       'android_car_lyrics_sync_lyrics';
+
+  /// 桌面端播放控制快捷键（JSON）。
+  static const String _playbackShortcutsKey = 'playback_shortcuts_v1';
 
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
@@ -546,6 +552,35 @@ class SettingsService {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_androidCarLyricsSyncLyricsKey, sync);
+      } catch (_) {}
+    }
+  }
+
+  static Future<PlaybackShortcutConfig> loadPlaybackShortcutConfig() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_playbackShortcutsKey);
+      if (raw is String && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          return PlaybackShortcutConfig.fromJson(decoded);
+        }
+      }
+    } catch (_) {}
+    return PlaybackShortcutConfig.defaults;
+  }
+
+  static Future<void> savePlaybackShortcutConfig(
+    PlaybackShortcutConfig config,
+  ) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_playbackShortcutsKey, jsonEncode(config.toJson()));
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_playbackShortcutsKey, jsonEncode(config.toJson()));
       } catch (_) {}
     }
   }

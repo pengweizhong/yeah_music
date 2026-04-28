@@ -12,6 +12,7 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
+import 'package:yeah_music/pages/setting/playback_shortcuts_section.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -346,6 +347,11 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    if (!kIsWeb &&
+                        (Platform.isMacOS ||
+                            Platform.isWindows ||
+                            Platform.isLinux))
+                      const PlaybackShortcutsSettingsSection(),
                     const _AndroidCarLyricsSettingsSection(),
                     if (_showDesktopLyricsSection)
                       const _DesktopLyricsSettingsSection(),

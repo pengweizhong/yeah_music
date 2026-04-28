@@ -81,6 +81,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in with Microsoft, choose your music root on OneDrive, and browse files. Audio is cached locally while playing so playback stays smooth offline after first load.';
 
   @override
+  String get settingsPlaybackShortcutsTitle => 'Keyboard shortcuts';
+
+  @override
+  String get settingsPlaybackShortcutsSubtitle =>
+      'Play, pause, previous, and next track';
+
+  @override
+  String get settingsPlaybackShortcutsPlayPause => 'Play / pause';
+
+  @override
+  String get settingsPlaybackShortcutsPrevious => 'Previous track';
+
+  @override
+  String get settingsPlaybackShortcutsNext => 'Next track';
+
+  @override
+  String get settingsPlaybackShortcutsChange => 'Change…';
+
+  @override
+  String get settingsPlaybackShortcutsDisable => 'Off';
+
+  @override
+  String get settingsPlaybackShortcutsEnable => 'On';
+
+  @override
+  String get settingsPlaybackShortcutsDisabledLabel => 'Off';
+
+  @override
+  String get settingsPlaybackShortcutsPressKey => 'New shortcut';
+
+  @override
+  String get settingsPlaybackShortcutsPressKeyHint =>
+      'Press the key combination to use. Esc cancels.';
+
+  @override
   String get settingsMacosMenuBarLyrics => 'Menu bar lyrics';
 
   @override

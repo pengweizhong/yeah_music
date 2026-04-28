@@ -78,6 +78,40 @@ class AppLocalizationsJa extends AppLocalizations {
       'Microsoft にサインインし、OneDrive 上の音楽ルートを選んで閲覧します。再生時にローカルへキャッシュするため、一度取得すればオフラインでもスムーズに再生できます。';
 
   @override
+  String get settingsPlaybackShortcutsTitle => 'キーボードショートカット';
+
+  @override
+  String get settingsPlaybackShortcutsSubtitle => '再生・一時停止・前の曲・次の曲';
+
+  @override
+  String get settingsPlaybackShortcutsPlayPause => '再生 / 一時停止';
+
+  @override
+  String get settingsPlaybackShortcutsPrevious => '前の曲';
+
+  @override
+  String get settingsPlaybackShortcutsNext => '次の曲';
+
+  @override
+  String get settingsPlaybackShortcutsChange => '変更…';
+
+  @override
+  String get settingsPlaybackShortcutsDisable => 'オフ';
+
+  @override
+  String get settingsPlaybackShortcutsEnable => 'オン';
+
+  @override
+  String get settingsPlaybackShortcutsDisabledLabel => 'オフ';
+
+  @override
+  String get settingsPlaybackShortcutsPressKey => '新しいショートカット';
+
+  @override
+  String get settingsPlaybackShortcutsPressKeyHint =>
+      '使うキーの組み合わせを押してください。Esc でキャンセル。';
+
+  @override
   String get settingsMacosMenuBarLyrics => 'メニューバーに歌詞';
 
   @override

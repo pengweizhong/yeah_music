@@ -234,6 +234,72 @@ abstract class AppLocalizations {
   /// **'Sign in with Microsoft, choose your music root on OneDrive, and browse files. Audio is cached locally while playing so playback stays smooth offline after first load.'**
   String get settingsOneDriveDesc;
 
+  /// No description provided for @settingsPlaybackShortcutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get settingsPlaybackShortcutsTitle;
+
+  /// No description provided for @settingsPlaybackShortcutsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play, pause, previous, and next track'**
+  String get settingsPlaybackShortcutsSubtitle;
+
+  /// No description provided for @settingsPlaybackShortcutsPlayPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Play / pause'**
+  String get settingsPlaybackShortcutsPlayPause;
+
+  /// No description provided for @settingsPlaybackShortcutsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous track'**
+  String get settingsPlaybackShortcutsPrevious;
+
+  /// No description provided for @settingsPlaybackShortcutsNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next track'**
+  String get settingsPlaybackShortcutsNext;
+
+  /// No description provided for @settingsPlaybackShortcutsChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change…'**
+  String get settingsPlaybackShortcutsChange;
+
+  /// No description provided for @settingsPlaybackShortcutsDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsPlaybackShortcutsDisable;
+
+  /// No description provided for @settingsPlaybackShortcutsEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get settingsPlaybackShortcutsEnable;
+
+  /// No description provided for @settingsPlaybackShortcutsDisabledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsPlaybackShortcutsDisabledLabel;
+
+  /// No description provided for @settingsPlaybackShortcutsPressKey.
+  ///
+  /// In en, this message translates to:
+  /// **'New shortcut'**
+  String get settingsPlaybackShortcutsPressKey;
+
+  /// No description provided for @settingsPlaybackShortcutsPressKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Press the key combination to use. Esc cancels.'**
+  String get settingsPlaybackShortcutsPressKeyHint;
+
   /// No description provided for @settingsMacosMenuBarLyrics.
   ///
   /// In en, this message translates to:

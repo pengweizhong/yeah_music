@@ -76,6 +76,39 @@ class AppLocalizationsZh extends AppLocalizations {
       '使用 Microsoft 登录，在 OneDrive 上选定音乐根目录并浏览文件；播放时会缓存到本地，首次加载后离线也可流畅播放。';
 
   @override
+  String get settingsPlaybackShortcutsTitle => '快捷键';
+
+  @override
+  String get settingsPlaybackShortcutsSubtitle => '播放、暂停、上一曲、下一曲';
+
+  @override
+  String get settingsPlaybackShortcutsPlayPause => '播放 / 暂停';
+
+  @override
+  String get settingsPlaybackShortcutsPrevious => '上一曲';
+
+  @override
+  String get settingsPlaybackShortcutsNext => '下一曲';
+
+  @override
+  String get settingsPlaybackShortcutsChange => '更改…';
+
+  @override
+  String get settingsPlaybackShortcutsDisable => '关闭';
+
+  @override
+  String get settingsPlaybackShortcutsEnable => '开启';
+
+  @override
+  String get settingsPlaybackShortcutsDisabledLabel => '已关闭';
+
+  @override
+  String get settingsPlaybackShortcutsPressKey => '录制快捷键';
+
+  @override
+  String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
+
+  @override
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
 
   @override
@@ -1222,6 +1255,39 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '使用 Microsoft 登录，在 OneDrive 上选定音乐根目录并浏览文件；播放时会缓存到本地，首次加载后离线也可流畅播放。';
 
   @override
+  String get settingsPlaybackShortcutsTitle => '快捷键';
+
+  @override
+  String get settingsPlaybackShortcutsSubtitle => '播放、暂停、上一曲、下一曲';
+
+  @override
+  String get settingsPlaybackShortcutsPlayPause => '播放 / 暂停';
+
+  @override
+  String get settingsPlaybackShortcutsPrevious => '上一曲';
+
+  @override
+  String get settingsPlaybackShortcutsNext => '下一曲';
+
+  @override
+  String get settingsPlaybackShortcutsChange => '更改…';
+
+  @override
+  String get settingsPlaybackShortcutsDisable => '关闭';
+
+  @override
+  String get settingsPlaybackShortcutsEnable => '开启';
+
+  @override
+  String get settingsPlaybackShortcutsDisabledLabel => '已关闭';
+
+  @override
+  String get settingsPlaybackShortcutsPressKey => '录制快捷键';
+
+  @override
+  String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
+
+  @override
   String get settingsMacosMenuBarLyrics => '菜单栏歌词';
 
   @override
@@ -2366,6 +2432,39 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsOneDriveDesc =>
       '使用 Microsoft 登入，在 OneDrive 上選定音樂根目錄並瀏覽檔案；播放時會快取到本機，首次載入後離線也可順暢播放。';
+
+  @override
+  String get settingsPlaybackShortcutsTitle => '快速鍵';
+
+  @override
+  String get settingsPlaybackShortcutsSubtitle => '播放、暫停、上一曲、下一曲';
+
+  @override
+  String get settingsPlaybackShortcutsPlayPause => '播放 / 暫停';
+
+  @override
+  String get settingsPlaybackShortcutsPrevious => '上一曲';
+
+  @override
+  String get settingsPlaybackShortcutsNext => '下一曲';
+
+  @override
+  String get settingsPlaybackShortcutsChange => '更改…';
+
+  @override
+  String get settingsPlaybackShortcutsDisable => '關閉';
+
+  @override
+  String get settingsPlaybackShortcutsEnable => '開啟';
+
+  @override
+  String get settingsPlaybackShortcutsDisabledLabel => '已關閉';
+
+  @override
+  String get settingsPlaybackShortcutsPressKey => '錄製快速鍵';
+
+  @override
+  String get settingsPlaybackShortcutsPressKeyHint => '請按下新的組合鍵。Esc 取消。';
 
   @override
   String get settingsMacosMenuBarLyrics => '選單列歌詞';
