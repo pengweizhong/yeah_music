@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
+import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/onedrive_download_task.dart';
 import 'package:yeah_music/models/song.dart';
@@ -12,9 +14,15 @@ import 'package:yeah_music/utils/file_utils.dart';
 
 /// OneDrive 下载队列：批量 / 单曲追加；暂停 / 继续 / 停止；持久化记录。
 class OneDriveDownloadQueueController extends ChangeNotifier {
-  OneDriveDownloadQueueController({required OneDriveController oneDrive}) : _od = oneDrive;
+  OneDriveDownloadQueueController({
+    required OneDriveController oneDrive,
+    PlayListProvider? playListRef,
+  })  : _od = oneDrive,
+        _playListRef = playListRef;
 
   final OneDriveController _od;
+
+  final PlayListProvider? _playListRef;
 
   List<OneDriveDownloadTask> _tasks = [];
 
@@ -457,6 +465,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       task.error = null;
       notifyListeners();
       _schedulePersist();
+      _maybeNotifyLibraryOdOverlay();
       return;
     }
 
@@ -490,6 +499,16 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     }
     notifyListeners();
     _schedulePersist();
+    if (task.status == OneDriveDownloadStatus.completed && task.song != null) {
+      _maybeNotifyLibraryOdOverlay();
+    }
+  }
+
+  void _maybeNotifyLibraryOdOverlay() {
+    final pl = _playListRef;
+    if (pl != null && pl.initialized) {
+      unawaited(pl.refreshOneDriveLibraryOverlay(_od));
+    }
   }
 
   void _markCancelledFrom(int from) {

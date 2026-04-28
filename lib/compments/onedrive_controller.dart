@@ -438,9 +438,12 @@ class OneDriveController extends ChangeNotifier {
   }
 
   /// 解析点播落地目录：有效自定义目录存在则用自定义；否则用 [_defaultPlaybackStorageDirectory]。
+  ///
+  /// 从 Hive 读取路径，与 [_onedriveLocalPlaybackRoots] 一致，避免 [_localDownloadDir] 尚未注入时使用默认目录。
   Future<Directory> _playbackStorageDirectory() async {
     final defaultRoot = await _defaultPlaybackStorageDirectory();
-    final configured = _localDownloadDir?.trim();
+    final configuredRaw = await SettingsService.loadOneDriveLocalDownloadDir();
+    final configured = configuredRaw?.trim();
     if (configured == null || configured.isEmpty) {
       return defaultRoot;
     }
@@ -498,11 +501,15 @@ class OneDriveController extends ChangeNotifier {
   }
 
   /// 默认缓存目录以及（若配置且存在）用户下载目录；路径相同时只保留一处。
+  ///
+  /// 使用 [SettingsService.loadOneDriveLocalDownloadDir] 而非内存字段 [_localDownloadDir]，
+  /// 避免启动阶段 [loadFromStorage] 尚未完成时打开「缓存歌单」只扫到默认目录、漏掉用户目录中的曲目。
   Future<List<Directory>> _onedriveLocalPlaybackRoots() async {
     final support = await getApplicationSupportDirectory();
     final def = Directory(p.join(support.path, 'onedrive_cache'));
     final roots = <Directory>[def];
-    final configured = _localDownloadDir?.trim();
+    final configuredRaw = await SettingsService.loadOneDriveLocalDownloadDir();
+    final configured = configuredRaw?.trim();
     if (configured != null && configured.isNotEmpty) {
       final user = Directory(p.normalize(configured));
       if (await user.exists()) {

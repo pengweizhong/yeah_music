@@ -6,12 +6,14 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
+import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
+import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 const _kSelectAccent = Color(0xFF8AB4F8);
 
@@ -25,6 +27,7 @@ class StoragePlayListPage extends StatefulWidget {
 
 class _StoragePlayListPageState extends State<StoragePlayListPage> {
   bool _selectMode = false;
+
   /// `true` 时每次点选仅保留一个歌单（单选）；`false` 为多选切换
   bool _singleSelectOnly = false;
   final Set<String> _selectedPlaylistIds = {};
@@ -42,12 +45,18 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       final folderProvider = context.read<FolderProvider>();
       final playListProvider = context.read<PlayListProvider>();
       if (!playListProvider.initialized) {
-        await playListProvider.init(folderProvider);
+        await playListProvider.init(
+          folderProvider,
+          oneDrive: context.read<OneDriveController>(),
+        );
       }
     });
   }
 
-  Future<void> _createPlaylist(BuildContext context, UserPlaylistProvider user) async {
+  Future<void> _createPlaylist(
+    BuildContext context,
+    UserPlaylistProvider user,
+  ) async {
     final controller = TextEditingController();
     final name = await showFrostedDialog<String>(
       context: context,
@@ -78,7 +87,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   cursorColor: Colors.white,
                   decoration: InputDecoration(
                     labelText: l10n.fieldName,
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(
@@ -101,7 +112,8 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                       child: Text(l10n.actionCancel),
                     ),
                     FilledButton(
-                      onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                      onPressed: () =>
+                          Navigator.pop(ctx, controller.text.trim()),
                       child: Text(l10n.actionCreate),
                     ),
                   ],
@@ -131,18 +143,18 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     } else {
       if (selectedIds.isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.exportSelectFirst)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.exportSelectFirst)));
         }
         return;
       }
       map = user.buildExportMapForPlaylists(selectedIds);
       if ((map['playlists'] as List<dynamic>).isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.exportNoneToExport)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.exportNoneToExport)));
         }
         return;
       }
@@ -160,16 +172,16 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         dialogTitle: selectedIds == null
             ? l10n.exportAllPlaylists
             : (selectedIds.length == 1
-                ? l10n.exportDialogTitle
-                : l10n.exportSelectedPlaylists),
+                  ? l10n.exportDialogTitle
+                  : l10n.exportSelectedPlaylists),
         fileName: suggestedName,
       );
 
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportSaved(path))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.exportSaved(path))));
         if (_selectMode) {
           setState(() {
             _selectMode = false;
@@ -178,15 +190,15 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
           });
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportCancelled)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.exportCancelled)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.exportFailed('$e'))));
       }
     }
   }
@@ -275,7 +287,10 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     );
   }
 
-  Future<void> _confirmDeleteSelected(BuildContext context, UserPlaylistProvider user) async {
+  Future<void> _confirmDeleteSelected(
+    BuildContext context,
+    UserPlaylistProvider user,
+  ) async {
     if (_selectedPlaylistIds.isEmpty) return;
     final n = _selectedPlaylistIds.length;
     final ok = await showFrostedDialog<bool>(
@@ -359,7 +374,10 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     });
   }
 
-  Future<void> _importPlaylists(BuildContext context, UserPlaylistProvider user) async {
+  Future<void> _importPlaylists(
+    BuildContext context,
+    UserPlaylistProvider user,
+  ) async {
     final l10n = AppLocalizations.of(context);
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -373,9 +391,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       final bytes = picked.bytes;
       if (bytes == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.importCannotRead)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.importCannotRead)));
         }
         return;
       }
@@ -455,9 +473,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         final m = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              replaceAll ? m.importReplaced : m.importMerged,
-            ),
+            content: Text(replaceAll ? m.importReplaced : m.importMerged),
           ),
         );
       }
@@ -487,7 +503,10 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
             appBar: _selectMode
                 ? AppBar(
                     leading: IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                      ),
                       tooltip: l10n.tooltipDone,
                       onPressed: _exitSelectMode,
                     ),
@@ -526,15 +545,22 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     actions: [
                       PopupMenuButton<String>(
                         tooltip: l10n.tooltipMoreActions,
-                        icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                        icon: const Icon(
+                          Icons.more_vert_rounded,
+                          color: Colors.white,
+                        ),
                         color: const Color(0xFF2D2D2D),
                         surfaceTintColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         offset: const Offset(0, kToolbarHeight),
                         onSelected: (v) => _handleSelectMenu(v, userPl),
                         itemBuilder: (context) {
                           final m = AppLocalizations.of(context);
-                          final allOn = _selectedPlaylistIds.length == userPl.playlists.length &&
+                          final allOn =
+                              _selectedPlaylistIds.length ==
+                                  userPl.playlists.length &&
                               userPl.playlists.isNotEmpty;
                           return [
                             if (!_singleSelectOnly)
@@ -552,7 +578,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               child: _playlistMenuItemRow(
                                 Icons.upload_file_outlined,
                                 m.exportSelected,
-                                iconColor: _selectedPlaylistIds.isNotEmpty ? Colors.white70 : Colors.white30,
+                                iconColor: _selectedPlaylistIds.isNotEmpty
+                                    ? Colors.white70
+                                    : Colors.white30,
                               ),
                             ),
                             PopupMenuItem(
@@ -585,10 +613,15 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     actions: [
                       PopupMenuButton<String>(
                         tooltip: l10n.tooltipMore,
-                        icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                        icon: const Icon(
+                          Icons.more_vert_rounded,
+                          color: Colors.white,
+                        ),
                         color: const Color(0xFF2D2D2D),
                         surfaceTintColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         offset: const Offset(0, kToolbarHeight),
                         onSelected: (v) => _handleMainMenu(v, userPl),
                         itemBuilder: (context) {
@@ -638,226 +671,268 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     icon: const Icon(Icons.playlist_add),
                     label: Text(l10n.fabNewPlaylist),
                   ),
-            body: Column(
-              children: [
-                SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
-                Expanded(
-                  child: userPl.playlists.isEmpty
-                      ? Center(
-                          child: Text(
-                            l10n.emptyPlaylistsHint,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.65)),
-                          ),
-                        )
-                      : _selectMode
-                          ? ListView.builder(
-                              padding: const EdgeInsets.only(bottom: 120),
-                              itemCount: userPl.playlists.length,
-                              itemBuilder: (context, index) {
-                                final pl = userPl.playlists[index];
-                                final selected = _selectedPlaylistIds.contains(pl.id);
-                                void toggleSelection() {
-                                  setState(() {
-                                    if (_singleSelectOnly) {
-                                      if (selected) {
-                                        _selectedPlaylistIds.clear();
-                                      } else {
-                                        _selectedPlaylistIds
-                                          ..clear()
-                                          ..add(pl.id);
-                                      }
-                                    } else if (selected) {
-                                      _selectedPlaylistIds.remove(pl.id);
-                                    } else {
-                                      _selectedPlaylistIds.add(pl.id);
-                                    }
-                                  });
-                                }
+            body: SongPlaylistBodyUnderlapColumn(
+              child: userPl.playlists.isEmpty
+                  ? Center(
+                      child: Text(
+                        l10n.emptyPlaylistsHint,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.65),
+                        ),
+                      ),
+                    )
+                  : _selectMode
+                  ? ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 120),
+                      itemCount: userPl.playlists.length,
+                      itemBuilder: (context, index) {
+                        final pl = userPl.playlists[index];
+                        final selected = _selectedPlaylistIds.contains(pl.id);
+                        void toggleSelection() {
+                          setState(() {
+                            if (_singleSelectOnly) {
+                              if (selected) {
+                                _selectedPlaylistIds.clear();
+                              } else {
+                                _selectedPlaylistIds
+                                  ..clear()
+                                  ..add(pl.id);
+                              }
+                            } else if (selected) {
+                              _selectedPlaylistIds.remove(pl.id);
+                            } else {
+                              _selectedPlaylistIds.add(pl.id);
+                            }
+                          });
+                        }
 
-                                return Padding(
-                                  key: ValueKey('sel_${pl.id}'),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: toggleSelection,
-                                      borderRadius: BorderRadius.circular(14),
-                                      child: Ink(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(
-                                            color: selected
-                                                ? _kSelectAccent.withValues(alpha: 0.6)
-                                                : Colors.white.withValues(alpha: 0.12),
-                                            width: 1.2,
-                                          ),
-                                          color: selected
-                                              ? _kSelectAccent.withValues(alpha: 0.12)
-                                              : Colors.white.withValues(alpha: 0.04),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              _selectLeadingIcon(selected),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      pl.name,
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 3),
-                                                    Text(
-                                                      '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(pl.createdAt.toString().split(' ').first)}',
-                                                      style: TextStyle(
-                                                        color: Colors.white.withValues(alpha: 0.52),
-                                                        fontSize: 13,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                        return Padding(
+                          key: ValueKey('sel_${pl.id}'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: toggleSelection,
+                              borderRadius: BorderRadius.circular(14),
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: selected
+                                        ? _kSelectAccent.withValues(alpha: 0.6)
+                                        : Colors.white.withValues(alpha: 0.12),
+                                    width: 1.2,
                                   ),
-                                );
-                              },
-                            )
-                          : ReorderableListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 6, 16, 120),
-                              buildDefaultDragHandles: false,
-                              itemCount: userPl.playlists.length,
-                              onReorder: userPl.reorderPlaylists,
-                              itemBuilder: (context, index) {
-                                final pl = userPl.playlists[index];
-                                final dateStr = pl.createdAt.toString().split(' ').first;
-                                return Material(
-                                  key: ValueKey<String>(pl.id),
-                                  color: Colors.transparent,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.1),
-                                        ),
-                                        color: Colors.white.withValues(alpha: 0.055),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                  color: selected
+                                      ? _kSelectAccent.withValues(alpha: 0.12)
+                                      : Colors.white.withValues(alpha: 0.04),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      _selectLeadingIcon(selected),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Expanded(
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            UserPlaylistDetailPage(playlistId: pl.id),
-                                                      ),
-                                                    );
-                                                  },
-                                                  onLongPress: () {
-                                                    setState(() {
-                                                      _selectMode = true;
-                                                      _singleSelectOnly = false;
-                                                      _selectedPlaylistIds
-                                                        ..clear()
-                                                        ..add(pl.id);
-                                                    });
-                                                  },
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-                                                    child: Row(
-                                                      children: [
-                                                        Container(
-                                                          width: 44,
-                                                          height: 44,
-                                                          decoration: BoxDecoration(
-                                                            borderRadius: BorderRadius.circular(12),
-                                                            color: Colors.white.withValues(alpha: 0.08),
-                                                          ),
-                                                          child: Icon(
-                                                            Icons.queue_music_rounded,
-                                                            color: Colors.white.withValues(alpha: 0.88),
-                                                            size: 22,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(width: 12),
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Text(
-                                                                pl.name,
-                                                                maxLines: 1,
-                                                                overflow: TextOverflow.ellipsis,
-                                                                style: const TextStyle(
-                                                                  color: Colors.white,
-                                                                  fontSize: 16,
-                                                                  fontWeight: FontWeight.w600,
-                                                                  height: 1.25,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(height: 4),
-                                                              Text(
-                                                                '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(dateStr)}',
-                                                                maxLines: 1,
-                                                                overflow: TextOverflow.ellipsis,
-                                                                style: TextStyle(
-                                                                  color: Colors.white.withValues(alpha: 0.5),
-                                                                  fontSize: 13,
-                                                                  height: 1.2,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
+                                            Text(
+                                              pl.name,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
                                               ),
                                             ),
-                                            ReorderableDragStartListener(
-                                              index: index,
-                                              child: Padding(
-                                                padding: const EdgeInsets.fromLTRB(4, 8, 10, 8),
-                                                child: Icon(
-                                                  Icons.drag_indicator_rounded,
-                                                  size: 22,
-                                                  color: Colors.white.withValues(alpha: 0.38),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(pl.createdAt.toString().split(' ').first)}',
+                                              style: TextStyle(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.52,
                                                 ),
+                                                fontSize: 13,
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                );
-                              },
+                                ),
+                              ),
                             ),
-                ),
-              ],
+                          ),
+                        );
+                      },
+                    )
+                  : ReorderableListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 120),
+                      buildDefaultDragHandles: false,
+                      itemCount: userPl.playlists.length,
+                      onReorder: userPl.reorderPlaylists,
+                      itemBuilder: (context, index) {
+                        final pl = userPl.playlists[index];
+                        final dateStr = pl.createdAt
+                            .toString()
+                            .split(' ')
+                            .first;
+                        return Material(
+                          key: ValueKey<String>(pl.id),
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                ),
+                                color: Colors.white.withValues(alpha: 0.055),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    UserPlaylistDetailPage(
+                                                      playlistId: pl.id,
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                          onLongPress: () {
+                                            setState(() {
+                                              _selectMode = true;
+                                              _singleSelectOnly = false;
+                                              _selectedPlaylistIds
+                                                ..clear()
+                                                ..add(pl.id);
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              12,
+                                              12,
+                                              8,
+                                              12,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  width: 44,
+                                                  height: 44,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                    color: Colors.white
+                                                        .withValues(
+                                                          alpha: 0.08,
+                                                        ),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.queue_music_rounded,
+                                                    color: Colors.white
+                                                        .withValues(
+                                                          alpha: 0.88,
+                                                        ),
+                                                    size: 22,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        pl.name,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          height: 1.25,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(dateStr)}',
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: TextStyle(
+                                                          color: Colors.white
+                                                              .withValues(
+                                                                alpha: 0.5,
+                                                              ),
+                                                          fontSize: 13,
+                                                          height: 1.2,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    ReorderableDragStartListener(
+                                      index: index,
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          4,
+                                          8,
+                                          10,
+                                          8,
+                                        ),
+                                        child: Icon(
+                                          Icons.drag_indicator_rounded,
+                                          size: 22,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.38,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
             bottomNavigationBar: const MiniPlayer(),
           ),

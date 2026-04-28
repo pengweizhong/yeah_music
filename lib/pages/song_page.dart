@@ -26,6 +26,7 @@ import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class SongPage extends StatefulWidget {
   int index;
@@ -79,6 +80,9 @@ class _SongPageState extends State<SongPage> {
   int _currentPage = 0; // 0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
   bool _pageStateLoaded = false; // 标记页面状态是否已加载
 
+  /// 播放页保持屏幕常亮（偏好持久化于 Hive）
+  bool _keepScreenAwake = false;
+
   // 手动滚动控制
   bool _isManualScrolling = false;
   Timer? _scrollTimer;
@@ -94,6 +98,7 @@ class _SongPageState extends State<SongPage> {
     _splitLyricScrollController = ScrollController();
     _loadSettings();
     _listenToPlayer();
+    unawaited(_loadKeepAwakePreference());
     _initPostFrame();
   }
 
@@ -236,6 +241,28 @@ class _SongPageState extends State<SongPage> {
     unawaited(DesktopFloatingLyricsGlue.reloadFromHive());
   }
 
+  Future<void> _loadKeepAwakePreference() async {
+    final v = await SettingsService.loadSongPageKeepScreenAwake();
+    if (!mounted) return;
+    setState(() => _keepScreenAwake = v);
+    if (v) await WakelockPlus.enable();
+  }
+
+  Future<void> _setKeepScreenAwake(
+    bool enabled, {
+    VoidCallback? alsoNotifySheet,
+  }) async {
+    await SettingsService.saveSongPageKeepScreenAwake(enabled);
+    if (!mounted) return;
+    setState(() => _keepScreenAwake = enabled);
+    alsoNotifySheet?.call();
+    if (enabled) {
+      await WakelockPlus.enable();
+    } else {
+      await WakelockPlus.disable();
+    }
+  }
+
   /// 加载播放模式
   Future<void> _loadPlaybackMode() async {
     final mode = await SettingsService.loadPlaybackMode();
@@ -248,6 +275,7 @@ class _SongPageState extends State<SongPage> {
 
   @override
   void dispose() {
+    unawaited(WakelockPlus.disable());
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
     _durationSubscription?.cancel();
@@ -683,6 +711,15 @@ class _SongPageState extends State<SongPage> {
                       return LyricStyleSettingsPanel(
                         settings: _settings,
                         pageContext: context,
+                        keepScreenAwake: _keepScreenAwake,
+                        onKeepScreenAwakeChanged: (v) {
+                          unawaited(
+                            _setKeepScreenAwake(
+                              v,
+                              alsoNotifySheet: () => setModalState(() {}),
+                            ),
+                          );
+                        },
                         onUpdate: () {
                           setModalState(() {});
                           setState(() {});

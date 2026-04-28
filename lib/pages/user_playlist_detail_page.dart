@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
-import 'package:yeah_music/compments/mini_player.dart';
+import 'package:yeah_music/widgets/compact_song_list_row.dart';
+import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
-import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
@@ -14,9 +14,6 @@ import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
-import 'package:yeah_music/widgets/compact_song_list_row.dart';
-import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
-import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
@@ -70,7 +67,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       context: context,
       controller: _listScrollController,
       songs: _lastOrderedSongs,
-      itemExtent: 80,
+      itemExtent: kSongPlaylistRowExtent,
       playList: p,
       onScrollApplied: (path) {
         if (!mounted) return;
@@ -365,7 +362,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
               context: context,
               controller: _listScrollController,
               songs: orderedSongs,
-              itemExtent: 80,
+              itemExtent: kSongPlaylistRowExtent,
               playList: playList,
               onScrollApplied: (path) {
                 if (!mounted) return;
@@ -382,171 +379,124 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
           }
         }
 
-        return Consumer<ThemeConfigProvider>(
-          builder: (context, themeConfig, _) {
-            return themeConfig.buildThemedBackground(
-              context: context,
-              child: Scaffold(
-                extendBodyBehindAppBar: true,
-                extendBody: true,
-                backgroundColor: Colors.transparent,
-                appBar: AppBar(
-                  title: Text(
-                    pl.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.search),
-                      tooltip: l10n.homeSearchTooltip,
-                      onPressed: orderedSongs.isEmpty
-                          ? null
-                          : () {
-                              showSearch(
-                                context: context,
-                                delegate: SongSearchDelegate(
-                                  orderedSongs,
-                                  playList,
-                                  playbackContextQueue: orderedSongs,
-                                  userPlaylistIdForContext: pl.id,
-                                  searchFieldLabelText: l10n.playlistSearchHint,
-                                ),
-                              );
-                            },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.sort),
-                      tooltip: l10n.tooltipSort,
-                      onPressed: _showSortOptions,
-                    ),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: Colors.white),
-                      onSelected: (value) async {
-                        if (value == 'rename') {
-                          await _renamePlaylist(context, pl, userPl);
-                        } else if (value == 'export') {
-                          await _exportThisPlaylist(context, pl, userPl);
-                        } else if (value == 'delete') {
-                          await _confirmDeletePlaylist(context, userPl);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'rename',
-                          child: Text(l10n.menuRename),
-                        ),
-                        PopupMenuItem(
-                          value: 'export',
-                          child: Text(l10n.menuExportThis),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Text(l10n.menuDeletePlaylist),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                body: Column(
-                  children: [
-                    SizedBox(
-                      height:
-                          MediaQuery.of(context).padding.top + kToolbarHeight,
-                    ),
-                    Expanded(
-                      child: orderedSongs.isEmpty
-                            ? Center(
-                              child: Text(
-                                l10n.playlistEmptyNoSongs,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                ),
-                              ),
-                            )
-                          : SongListScrollToCurrentLocate(
-                              controller: _listScrollController,
-                              songs: orderedSongs,
-                              itemExtent: 80,
-                              playList: playList,
-                              child: ScrollAwareListFrame(
-                                scrollController: _listScrollController,
-                                child: ListView.builder(
-                                  controller: _listScrollController,
-                                  itemExtent: 80,
-                                  cacheExtent: 280,
-                                  padding: const EdgeInsets.only(bottom: 100),
-                                  itemCount: orderedSongs.length,
-                                  itemBuilder: (context, index) {
-                                    final song = orderedSongs[index];
-                                    final cur = playList.currentSong;
-                                    final isRowCurrent = cur != null &&
-                                        songPathsEqual(song.path, cur.path);
-                                    return Dismissible(
-                                      key: ValueKey('${pl.id}_${song.path}'),
-                                      direction: DismissDirection.endToStart,
-                                      background: Container(
-                                        alignment: Alignment.centerRight,
-                                        padding: const EdgeInsets.only(
-                                          right: 20,
-                                        ),
-                                        color: Colors.red.shade800,
-                                        child: const Icon(
-                                          Icons.remove_circle_outline,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      onDismissed: (_) {
-                                        _memoOrderKey = null;
-                                        _memoOrderedSongs = null;
-                                        userPl.removeSongFromPlaylist(
-                                          pl.id,
-                                          song,
-                                        );
-                                      },
-                                      child: CompactSongListRow(
-                                        key: ValueKey(
-                                          'row_${pl.id}_${song.path}',
-                                        ),
-                                        song: song,
-                                        title: song.title ?? l10n.pageUnknownTitle,
-                                        subtitle:
-                                            songListSecondaryLine(song),
-                                        isCurrent: isRowCurrent,
-                                        onTap: () async {
-                                          final playListProv = context
-                                              .read<PlayListProvider>();
-                                          if (isRowCurrent) {
-                                            await toggleCurrentRowPlayback(
-                                              playListProv,
-                                            );
-                                            return;
-                                          }
-                                          await playListProv
-                                              .setPlaybackQueueAndPlay(
-                                                orderedSongs,
-                                                index,
-                                                session: PlaybackSessionSurface
-                                                    .userPlaylist,
-                                                userPlaylistId: pl.id,
-                                              );
-                                        },
-                                      ),
-                                    );
-                                  },
-                              ),
-                            ),
+        return SongPlaylistThemedScaffold(
+          appBar: AppBar(
+            title: Text(
+              pl.name,
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                tooltip: l10n.homeSearchTooltip,
+                onPressed: orderedSongs.isEmpty
+                    ? null
+                    : () {
+                        showSearch(
+                          context: context,
+                          delegate: SongSearchDelegate(
+                            orderedSongs,
+                            playList,
+                            playbackContextQueue: orderedSongs,
+                            userPlaylistIdForContext: pl.id,
+                            searchFieldLabelText: l10n.playlistSearchHint,
                           ),
-                    ),
-                  ],
-                ),
-                bottomNavigationBar: const MiniPlayer(),
+                        );
+                      },
               ),
-            );
-          },
+              IconButton(
+                icon: const Icon(Icons.sort),
+                tooltip: l10n.tooltipSort,
+                onPressed: _showSortOptions,
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) async {
+                  if (value == 'rename') {
+                    await _renamePlaylist(context, pl, userPl);
+                  } else if (value == 'export') {
+                    await _exportThisPlaylist(context, pl, userPl);
+                  } else if (value == 'delete') {
+                    await _confirmDeletePlaylist(context, userPl);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: Text(l10n.menuRename),
+                  ),
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Text(l10n.menuExportThis),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.menuDeletePlaylist),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          body: SongPlaylistBodyUnderlapColumn(
+            child: orderedSongs.isEmpty
+                ? Center(
+                    child: Text(
+                      l10n.playlistEmptyNoSongs,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  )
+                : SongPlaylistSongListView(
+                    scrollController: _listScrollController,
+                    songs: orderedSongs,
+                    itemBuilder: (context, song, index, isRowCurrent) {
+                      return Dismissible(
+                        key: ValueKey('${pl.id}_${song.path}'),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          color: Colors.red.shade800,
+                          child: const Icon(
+                            Icons.remove_circle_outline,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onDismissed: (_) {
+                          _memoOrderKey = null;
+                          _memoOrderedSongs = null;
+                          userPl.removeSongFromPlaylist(pl.id, song);
+                        },
+                        child: CompactSongListRow(
+                          key: ValueKey('row_${pl.id}_${song.path}'),
+                          song: song,
+                          title: song.title ?? l10n.pageUnknownTitle,
+                          subtitle: songListSecondaryLine(song),
+                          isCurrent: isRowCurrent,
+                          onTap: () async {
+                            final playListProv =
+                                context.read<PlayListProvider>();
+                            if (isRowCurrent) {
+                              await toggleCurrentRowPlayback(playListProv);
+                              return;
+                            }
+                            await playListProv.setPlaybackQueueAndPlay(
+                              orderedSongs,
+                              index,
+                              session: PlaybackSessionSurface.userPlaylist,
+                              userPlaylistId: pl.id,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+          ),
         );
       },
     );

@@ -8,6 +8,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 
+import '../../widgets/song_playlist_page_shell.dart';
 import '../../compments/bookmark_service.dart';
 import '../../compments/frosted_glass_panel.dart';
 import '../../compments/folder_provider.dart';
@@ -42,262 +43,308 @@ class FolderPageSettings extends StatelessWidget {
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
             ),
-            body: ListView.builder(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight),
-          itemCount: folderProvider.folders.length,
-          itemBuilder: (context, index) {
-            final folder = folderProvider.folders[index];
-            final n = folder.songList?.length ?? 0;
-            return ListTile(
-              title: Text(
-                folder.name ?? l10n.homeUnknownTitle,
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                l10n.homeTrackCount(n),
-                style: TextStyle(color: Colors.white.withOpacity(0.6)),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
-                    tooltip: l10n.tooltipFolderInfo,
-                    onPressed: () {
-                      showModalBottomSheet(
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        showDragHandle: false,
-                        context: context,
-                        builder: (sheetContext) {
-                          final sl = AppLocalizations.of(sheetContext);
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-                            ),
-                            child: FrostedGlassBottomSheet(
-                              child: Theme(
-                                data: frostedBottomSheetContentTheme(sheetContext),
-                                child: SafeArea(
-                                  top: false,
-                                  child: SizedBox(
-                                    height: 300,
-                                    width: double.infinity,
-                                    child: SingleChildScrollView(
-                                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                                      child: DefaultTextStyle(
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              sl.tooltipFolderInfo,
+            body: Builder(
+              builder: (ctx) => ListView.builder(
+                padding: EdgeInsets.only(
+                  top: songPlaylistUnderlapTopInset(ctx),
+                ),
+                itemCount: folderProvider.folders.length,
+                itemBuilder: (context, index) {
+                  final folder = folderProvider.folders[index];
+                  final n = folder.songList?.length ?? 0;
+                  return ListTile(
+                    title: Text(
+                      folder.name ?? l10n.homeUnknownTitle,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      l10n.homeTrackCount(n),
+                      style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.white,
+                          ),
+                          tooltip: l10n.tooltipFolderInfo,
+                          onPressed: () {
+                            showModalBottomSheet(
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              showDragHandle: false,
+                              context: context,
+                              builder: (sheetContext) {
+                                final sl = AppLocalizations.of(sheetContext);
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: MediaQuery.viewInsetsOf(
+                                      sheetContext,
+                                    ).bottom,
+                                  ),
+                                  child: FrostedGlassBottomSheet(
+                                    child: Theme(
+                                      data: frostedBottomSheetContentTheme(
+                                        sheetContext,
+                                      ),
+                                      child: SafeArea(
+                                        top: false,
+                                        child: SizedBox(
+                                          height: 300,
+                                          width: double.infinity,
+                                          child: SingleChildScrollView(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              16,
+                                              4,
+                                              16,
+                                              20,
+                                            ),
+                                            child: DefaultTextStyle(
                                               style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600,
                                                 color: Colors.white,
+                                                fontSize: 15,
                                               ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  sl.folderInfoAlias,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                                Expanded(child: Text('${folder.name}')),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  sl.folderInfoPath,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: SelectableText(
-                                                    folder.path,
-                                                    maxLines: null,
-                                                    showCursor: true,
-                                                    textAlign: TextAlign.start,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    sl.tooltipFolderInfo,
                                                     style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                       color: Colors.white,
                                                     ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  sl.folderInfoSongCount,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
+                                                  const SizedBox(height: 12),
+                                                  Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        sl.folderInfoAlias,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Text(
+                                                          '${folder.name}',
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ),
-                                                Text('${folder.songList?.length}'),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  sl.folderInfoAdded,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
+                                                  const SizedBox(height: 6),
+                                                  Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        sl.folderInfoPath,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: SelectableText(
+                                                          folder.path,
+                                                          maxLines: null,
+                                                          showCursor: true,
+                                                          textAlign:
+                                                              TextAlign.start,
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ),
-                                                Text(
-                                                  LocalDateUtils.formatDateTime(
-                                                    folder.createdAt,
-                                                    'yyyy-MM-dd HH:mm:ss',
+                                                  const SizedBox(height: 6),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        sl.folderInfoSongCount,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        '${folder.songList?.length}',
+                                                      ),
+                                                    ],
                                                   ),
-                                                ),
-                                              ],
+                                                  const SizedBox(height: 6),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        sl.folderInfoAdded,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        LocalDateUtils.formatDateTime(
+                                                          folder.createdAt,
+                                                          'yyyy-MM-dd HH:mm:ss',
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.refresh_outlined,
+                            color: Colors.white,
+                          ),
+                          tooltip: l10n.tooltipReloadSongs,
+                          onPressed: () async {
+                            showFrostedDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              child: PopScope(
+                                canPop: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    24,
+                                    20,
+                                    24,
+                                    20,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n.folderReloading,
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const CircularProgressIndicator(),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        l10n.folderScanningWait,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh_outlined, color: Colors.white),
-                    tooltip: l10n.tooltipReloadSongs,
-                    onPressed: () async {
-                      showFrostedDialog<void>(
-                        context: context,
-                        barrierDismissible: false,
-                        child: PopScope(
-                          canPop: false,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  l10n.folderReloading,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                            );
+
+                            try {
+                              await folderProvider.flushSongToFolder(
+                                folder,
+                                true,
+                              );
+                              context.read<PlayListProvider>().flushPlaylist(
+                                folder,
+                              );
+
+                              // 关闭进度对话框
+                              Navigator.of(context).pop();
+
+                              // 显示成功提示
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    l10n.folderLoadOk(
+                                      folder.songList?.length ?? 0,
+                                    ),
                                   ),
+                                  duration: const Duration(seconds: 2),
                                 ),
-                                const SizedBox(height: 16),
-                                const CircularProgressIndicator(),
-                                const SizedBox(height: 16),
+                              );
+                            } catch (e) {
+                              // 关闭进度对话框
+                              Navigator.of(context).pop();
+
+                              // 显示错误提示
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.folderLoadFailed('$e')),
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          tooltip: l10n.tooltipEdit,
+                          onPressed: () {
+                            _showRenameDialog(context, folder, folderProvider);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.white),
+                          tooltip: l10n.tooltipRemoveFolder,
+                          onPressed: () {
+                            ApplicationUtils.alertDialog(
+                              context,
+                              l10n.folderRemoveTitle,
+                              [
                                 Text(
-                                  l10n.folderScanningWait,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    height: 1.3,
-                                  ),
+                                  l10n.folderRemoveMessage(folder.name ?? ''),
                                 ),
                               ],
-                            ),
-                          ),
+                              [
+                                TextButton(
+                                  onPressed: () {
+                                    context
+                                        .read<PlayListProvider>()
+                                        .flushRemovePlaylist(folder);
+                                    folderProvider.deleteFolder(folder);
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(
+                                    l10n.actionConfirm,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(l10n.actionCancel),
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                      );
-
-                      try {
-                        await folderProvider.flushSongToFolder(folder, true);
-                        context.read<PlayListProvider>().flushPlaylist(folder);
-
-                        // 关闭进度对话框
-                        Navigator.of(context).pop();
-
-                        // 显示成功提示
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              l10n.folderLoadOk(
-                                folder.songList?.length ?? 0,
-                              ),
-                            ),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      } catch (e) {
-                        // 关闭进度对话框
-                        Navigator.of(context).pop();
-
-                        // 显示错误提示
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(
-                          SnackBar(
-                            content: Text(l10n.folderLoadFailed('$e')),
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.white),
-                    tooltip: l10n.tooltipEdit,
-                    onPressed: () {
-                      _showRenameDialog(context, folder, folderProvider);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.white),
-                    tooltip: l10n.tooltipRemoveFolder,
-                    onPressed: () {
-                      ApplicationUtils.alertDialog(
-                        context,
-                        l10n.folderRemoveTitle,
-                        [
-                          Text(
-                            l10n.folderRemoveMessage(folder.name ?? ''),
-                          ),
-                        ],
-                        [
-                          TextButton(
-                            onPressed: () {
-                              context
-                                  .read<PlayListProvider>()
-                                  .flushRemovePlaylist(folder);
-                              folderProvider.deleteFolder(folder);
-                              Navigator.pop(context);
-                            },
-                            child: Text(
-                              l10n.actionConfirm,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(l10n.actionCancel),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
             ),
             floatingActionButton: FloatingActionButton(
               child: const Icon(Icons.add),
@@ -329,9 +376,7 @@ class FolderPageSettings extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${l10n.folderAddErrorTitle}: ${e.message ?? e.code}',
-          ),
+          content: Text('${l10n.folderAddErrorTitle}: ${e.message ?? e.code}'),
           duration: const Duration(seconds: 4),
         ),
       );
@@ -409,9 +454,7 @@ class FolderPageSettings extends StatelessWidget {
         // 显示成功提示
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              l10n.folderAddOk(addFolder.songList?.length ?? 0),
-            ),
+            content: Text(l10n.folderAddOk(addFolder.songList?.length ?? 0)),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -435,7 +478,11 @@ class FolderPageSettings extends StatelessWidget {
     }
   }
 
-  void _showRenameDialog(BuildContext context, Folder folder, FolderProvider provider) {
+  void _showRenameDialog(
+    BuildContext context,
+    Folder folder,
+    FolderProvider provider,
+  ) {
     final controller = TextEditingController(text: folder.name);
     showFrostedDialog<void>(
       context: context,

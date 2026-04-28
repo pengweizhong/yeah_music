@@ -22,6 +22,7 @@ import 'package:yeah_music/models/constants.dart';
 
 import '../models/folder.dart';
 import 'folder_provider.dart';
+import 'onedrive_controller.dart';
 
 
 /// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
@@ -68,8 +69,11 @@ class PlayListProvider extends ChangeNotifier {
   /// 随机播放时的当前随机列表
   List<int>? _shuffledIndices;
 
-  /// 缓存的播放列表（仅曲库合并结果）
+  /// 缓存的播放列表（文件夹合并 + OneDrive 本地缓存叠加，不含临时队列）
   List<Song>? _cachedPlayList;
+
+  /// OneDrive 点播落地扫描结果（与文件夹曲目按路径去重后并入 [libraryMergedSongs] / [playList]）
+  List<Song>? _onedriveCachedSongs;
 
   /// 临时播放队列（例如用户歌单），非空时 [playList] 使用该列表而非曲库合并
   List<Song>? _playbackQueueOverride;
@@ -121,10 +125,27 @@ class PlayListProvider extends ChangeNotifier {
     _applyPlaybackSession(PlaybackSessionSurface.library);
   }
 
-  /// 本地已扫描目录的合并曲库（不受 [_playbackQueueOverride] 影响）
-  List<Song> get libraryMergedSongs {
-    return folderPlaylistMap.values.expand((l) => l).toList();
+  /// 媒体目录扫描结果与 OneDrive 本地缓存曲目合并（路径去重，文件夹条目优先）。
+  List<Song> _computeMergedLibrarySongs() {
+    final base = folderPlaylistMap.values.expand((l) => l).toList();
+    final extra = _onedriveCachedSongs;
+    if (extra == null || extra.isEmpty) return base;
+    final seen = <String>{
+      for (final s in base) _libraryPathKey(s.path),
+    };
+    final out = List<Song>.from(base);
+    for (final s in extra) {
+      final k = _libraryPathKey(s.path);
+      if (k.isEmpty) continue;
+      if (seen.contains(k)) continue;
+      seen.add(k);
+      out.add(s);
+    }
+    return out;
   }
+
+  /// 文件夹扫描合并后再并入 OneDrive 缓存目录中的曲目（不受 [_playbackQueueOverride] 影响）
+  List<Song> get libraryMergedSongs => _computeMergedLibrarySongs();
 
   /// 在合并曲库中按路径查 [Song]（与当前播放队列是否被歌单覆盖无关）
   Song? songInLibraryByPath(String path) {
@@ -190,7 +211,7 @@ class PlayListProvider extends ChangeNotifier {
   List<Song> get playList {
     if (_playbackQueueOverride != null) return _playbackQueueOverride!;
     if (_cachedPlayList == null) {
-      _cachedPlayList = folderPlaylistMap.values.expand((list) => list).toList();
+      _cachedPlayList = _computeMergedLibrarySongs();
     }
     return _cachedPlayList!;
   }
@@ -252,7 +273,7 @@ class PlayListProvider extends ChangeNotifier {
     _statsRecordRecent = true;
     _statsBumpPlayCount = true;
     _clearPlayListCache();
-    final lib = folderPlaylistMap.values.expand((l) => l).toList();
+    final lib = _computeMergedLibrarySongs();
     _cachedPlayList = lib;
     if (path != null) {
       final i = lib.indexWhere((s) => s.path == path);
@@ -280,8 +301,27 @@ class PlayListProvider extends ChangeNotifier {
     return list[idx];
   }
 
-  /// 从 FolderProvider 加载歌曲（优化版本，支持大量歌曲）
-  Future<void> init(FolderProvider folderProvider) async {
+  /// 从 [OneDriveController.loadLocallyCachedOneDriveSongs] 刷新叠加曲目并刷新合并缓存。
+  Future<void> refreshOneDriveLibraryOverlay(OneDriveController od) async {
+    await _loadOneDriveOverlayFrom(od);
+    _clearPlayListCache();
+    notifyListeners();
+  }
+
+  Future<void> _loadOneDriveOverlayFrom(OneDriveController od) async {
+    try {
+      _onedriveCachedSongs = await od.loadLocallyCachedOneDriveSongs();
+    } catch (_) {
+      _onedriveCachedSongs = null;
+    }
+  }
+
+  /// 从 FolderProvider 加载歌曲（优化版本，支持大量歌曲）。
+  /// [oneDrive] 非 null 时会并入 OneDrive 点播落地缓存路径中的音频。
+  Future<void> init(
+    FolderProvider folderProvider, {
+    OneDriveController? oneDrive,
+  }) async {
     //若本身已经被初始化
     if (_initialized) {
       return;
@@ -292,6 +332,9 @@ class PlayListProvider extends ChangeNotifier {
     }
     // 遍历所有文件夹（使用异步方式，避免阻塞UI）
     await _addPlayListAsync(folderProvider);
+    if (oneDrive != null) {
+      await _loadOneDriveOverlayFrom(oneDrive);
+    }
     _initialized = true;
     
     // 加载上次播放的歌曲索引
@@ -468,7 +511,7 @@ class PlayListProvider extends ChangeNotifier {
     putFolder(folder);
     _clearPlayListCache(); // 清除缓存
     if (_playbackQueueOverride == null) {
-      final list = folderPlaylistMap.values.expand((l) => l).toList();
+      final list = _computeMergedLibrarySongs();
       if (list.isEmpty) {
         _currentIndex = 0;
       } else if (_currentIndex >= list.length) {

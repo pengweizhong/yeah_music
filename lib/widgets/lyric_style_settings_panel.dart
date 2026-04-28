@@ -14,12 +14,17 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     super.key,
     required this.settings,
     required this.pageContext,
+    required this.keepScreenAwake,
+    required this.onKeepScreenAwakeChanged,
     required this.onUpdate,
     required this.onPersist,
   });
 
   final LyricSettings settings;
   final BuildContext pageContext;
+  /// 播放页屏幕常亮（与 Hive [SettingsService.loadSongPageKeepScreenAwake] 同步）
+  final bool keepScreenAwake;
+  final ValueChanged<bool> onKeepScreenAwakeChanged;
   final VoidCallback onUpdate;
   final Future<void> Function() onPersist;
 
@@ -92,6 +97,14 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     onChanged: (v) => _apply(() {
                       settings.showTranslations = v;
                     }),
+                  ),
+                  _softDivider(),
+                  _switchRow(
+                    icon: Icons.light_mode_rounded,
+                    label: l10n.songPageKeepScreenAwake,
+                    sub: l10n.lyricStyleKeepScreenAwakeSub,
+                    value: keepScreenAwake,
+                    onChanged: onKeepScreenAwakeChanged,
                   ),
                 ],
               ),

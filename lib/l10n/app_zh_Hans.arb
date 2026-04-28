@@ -454,6 +454,8 @@
   "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
   "sleepTimerPlayedMinutes": "定时关闭：已播放 {minutes} 分钟",
   "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "songPageKeepScreenAwake": "播放页屏幕常亮",
+  "lyricStyleKeepScreenAwakeSub": "在播放页查看歌词时不自动熄屏",
   "lyricModeEmptyHint": "切换显示模式",
   "lyricModeAllLines": "多行歌词：全部行（点击为单行）",
   "lyricModeSingleLineN": "多行歌词：仅第 {n} 行（继续点击切换）",

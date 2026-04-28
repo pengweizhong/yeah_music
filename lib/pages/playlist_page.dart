@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
-import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/folder_provider.dart';
+import '../compments/onedrive_controller.dart';
 import '../compments/play_list_provider.dart';
 import '../models/playback_session_surface.dart';
 import '../navigation/app_route_observer.dart';
@@ -17,7 +17,7 @@ import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
 import '../widgets/compact_song_list_row.dart';
 import '../widgets/scroll_aware_list_frame.dart';
-import '../widgets/scroll_to_current_locate_layer.dart';
+import '../widgets/song_playlist_page_shell.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
 
 @immutable
@@ -91,7 +91,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       context: context,
       controller: _listScrollController,
       songs: songs,
-      itemExtent: 80,
+      itemExtent: kSongPlaylistRowExtent,
       playList: pl,
       onScrollApplied: (p) {
         if (!mounted) return;
@@ -120,7 +120,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       final playListProvider = context.read<PlayListProvider>();
       if (!playListProvider.initialized) {
         appLog.d('曲库页: 正在初始化 PlayListProvider');
-        await playListProvider.init(folderProvider);
+        await playListProvider.init(
+          folderProvider,
+          oneDrive: context.read<OneDriveController>(),
+        );
       }
       if (!context.mounted) return;
       if (playListProvider.hasPlaybackQueueOverride) {
@@ -215,7 +218,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
               context: context,
               controller: _listScrollController,
               songs: _filteredSongs,
-              itemExtent: 80,
+              itemExtent: kSongPlaylistRowExtent,
               playList: playListProvider,
               onScrollApplied: (p) {
                 if (!mounted) return;
@@ -234,139 +237,92 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         final pathToIndex = <String, int>{
           for (var i = 0; i < playList.length; i++) playList[i].path: i,
         };
-        return Consumer<ThemeConfigProvider>(
-          builder: (context, themeConfig, child) {
-            final l10n = AppLocalizations.of(context);
-            return themeConfig.buildThemedBackground(
-              context: context,
-              child: Scaffold(
-                extendBodyBehindAppBar: true,
-                extendBody: true,
-                backgroundColor: Colors.transparent,
-                appBar: AppBar(
-                  title: Text(
-                    l10n.menuSongList,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
-                  actions: [
-                    // 搜索按钮
-                    IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () {
-                        showSearch(
-                          context: context,
-                          delegate: SongSearchDelegate(
-                            _filteredSongs,
-                            playListProvider,
-                            searchFieldLabelText: l10n.playlistSearchHint,
-                          ),
-                        );
-                      },
-                      tooltip: l10n.homeSearchTooltip,
+        final l10n = AppLocalizations.of(context);
+        return SongPlaylistThemedScaffold(
+          appBar: AppBar(
+            title: Text(
+              l10n.menuSongList,
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  showSearch(
+                    context: context,
+                    delegate: SongSearchDelegate(
+                      _filteredSongs,
+                      playListProvider,
+                      searchFieldLabelText: l10n.playlistSearchHint,
                     ),
-                    // 排序按钮
-                    IconButton(
-                      icon: const Icon(Icons.sort),
-                      onPressed: _showSortOptions,
-                      tooltip: l10n.tooltipSort,
-                    ),
-                  ],
-                ),
-                body: Column(
-                  children: [
-                    // 顶部间距
-                    SizedBox(
-                      height:
-                          MediaQuery.of(context).padding.top + kToolbarHeight,
-                    ),
-
-                    // 歌曲列表
-                    Expanded(
-                      child: _filteredSongs.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.music_note,
-                                    size: 64,
-                                    color: Colors.white.withOpacity(0.3),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    l10n.songsListEmpty,
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : SongListScrollToCurrentLocate(
-                              controller: _listScrollController,
-                              songs: _filteredSongs,
-                              itemExtent: 80,
-                              playList: playListProvider,
-                              child: ScrollAwareListFrame(
-                                scrollController: _listScrollController,
-                                child: ListView.builder(
-                                  controller: _listScrollController,
-                                  itemExtent: 80,
-                                  cacheExtent: 280,
-                                  padding: const EdgeInsets.only(bottom: 100),
-                                  itemCount: _filteredSongs.length,
-                                  itemBuilder: (context, index) {
-                                    final song = _filteredSongs[index];
-                                    final originalIndex =
-                                        pathToIndex[song.path] ?? 0;
-                                    final isRowCurrent = current != null &&
-                                        songPathsEqual(
-                                          song.path,
-                                          current.path,
-                                        );
-                                    return CompactSongListRow(
-                                      key: ValueKey<String>(song.path),
-                                      song: song,
-                                      title: song.title ?? l10n.pageUnknownTitle,
-                                      subtitle: songListSecondaryLine(song),
-                                      isCurrent: isRowCurrent,
-                                      onTap: () async {
-                                        if (isRowCurrent) {
-                                          await toggleCurrentRowPlayback(
-                                            playListProvider,
-                                          );
-                                          return;
-                                        }
-                                        playListProvider
-                                            .setPlaybackListSessionForLibrary();
-                                        if (playListProvider
-                                            .hasPlaybackQueueOverride) {
-                                          await playListProvider
-                                              .playAt(originalIndex);
-                                        } else {
-                                          await playListProvider.playAt(
-                                            originalIndex,
-                                            listSession: PlaybackSessionSurface
-                                                .library,
-                                          );
-                                        }
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-                bottomNavigationBar: const MiniPlayer(),
+                  );
+                },
+                tooltip: l10n.homeSearchTooltip,
               ),
-            );
-          },
+              IconButton(
+                icon: const Icon(Icons.sort),
+                onPressed: _showSortOptions,
+                tooltip: l10n.tooltipSort,
+              ),
+            ],
+          ),
+          body: SongPlaylistBodyUnderlapColumn(
+            child: _filteredSongs.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.music_note,
+                          size: 64,
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.songsListEmpty,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : SongPlaylistSongListView(
+                    scrollController: _listScrollController,
+                    songs: _filteredSongs,
+                    itemBuilder: (context, song, index, isRowCurrent) {
+                      final originalIndex = pathToIndex[song.path] ?? 0;
+                      return CompactSongListRow(
+                        key: ValueKey<String>(song.path),
+                        song: song,
+                        title: song.title ?? l10n.pageUnknownTitle,
+                        subtitle: songListSecondaryLine(song),
+                        isCurrent: isRowCurrent,
+                        onTap: () async {
+                          if (isRowCurrent) {
+                            await toggleCurrentRowPlayback(
+                              playListProvider,
+                            );
+                            return;
+                          }
+                          playListProvider.setPlaybackListSessionForLibrary();
+                          if (playListProvider.hasPlaybackQueueOverride) {
+                            await playListProvider.playAt(originalIndex);
+                          } else {
+                            await playListProvider.playAt(
+                              originalIndex,
+                              listSession: PlaybackSessionSurface.library,
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
+          ),
         );
       },
     );
@@ -523,7 +479,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         final l10n = AppLocalizations.of(context);
         return ScrollAwareListFrame(
           child: ListView.builder(
-            itemExtent: 80,
+            itemExtent: kSongPlaylistRowExtent,
             itemCount: results.length,
             itemBuilder: (context, index) {
               final song = results[index];

@@ -256,7 +256,11 @@ class _AppStartupGateState extends State<AppStartupGate>
         ChangeNotifierProvider(
           create: (context) {
             final od = context.read<OneDriveController>();
-            final q = OneDriveDownloadQueueController(oneDrive: od);
+            final pl = context.read<PlayListProvider>();
+            final q = OneDriveDownloadQueueController(
+              oneDrive: od,
+              playListRef: pl,
+            );
             unawaited(q.restorePersistedTasks());
             return q;
           },

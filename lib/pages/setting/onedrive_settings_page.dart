@@ -11,6 +11,7 @@ import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
+import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 class OneDriveSettingsPage extends StatefulWidget {
   const OneDriveSettingsPage({super.key});
@@ -46,7 +47,8 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                       Navigator.push<void>(
                         context,
                         MaterialPageRoute<void>(
-                          builder: (context) => const OneDriveCloudPlaylistPage(),
+                          builder: (context) =>
+                              const OneDriveCloudPlaylistPage(),
                         ),
                       );
                     },
@@ -57,63 +59,78 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                   ),
               ],
             ),
-            body: ListView(
-              padding: EdgeInsets.only(
-                top: MediaQuery.paddingOf(context).top + kToolbarHeight + 8,
-                left: 16,
-                right: 16,
-                bottom: 120,
-              ),
-              children: [
-                _SectionLabel(text: l10n.oneDriveSectionAccount),
-                const SizedBox(height: 8),
-                _AccountCard(
-                  l10n: l10n,
-                  od: od,
-                  onSignIn: () => _signIn(context, l10n, od),
-                  onSignOut: () => _signOut(context, l10n, od),
+            body: Builder(
+              builder: (ctx) => ListView(
+                padding: EdgeInsets.only(
+                  top: songPlaylistUnderlapTopInset(ctx) + 8,
+                  left: 16,
+                  right: 16,
+                  bottom: 120,
                 ),
-                if (od.signedIn) ...[
-                  ListTile(
-                    leading: const Icon(Icons.download_for_offline_rounded, color: Colors.white70),
-                    title: Text(l10n.oneDriveDownloadQueueTitle, style: const TextStyle(color: Colors.white)),
-                    subtitle: Text(
-                      l10n.oneDriveDownloadQueueSubtitle,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
-                    ),
-                    onTap: () {
-                      Navigator.push<void>(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (context) => const OneDriveDownloadQueuePage(),
-                        ),
-                      );
-                    },
-                  ),
+                children: [
+                  _SectionLabel(text: l10n.oneDriveSectionAccount),
                   const SizedBox(height: 8),
+                  _AccountCard(
+                    l10n: l10n,
+                    od: od,
+                    onSignIn: () => _signIn(context, l10n, od),
+                    onSignOut: () => _signOut(context, l10n, od),
+                  ),
+                  if (od.signedIn) ...[
+                    ListTile(
+                      leading: const Icon(
+                        Icons.download_for_offline_rounded,
+                        color: Colors.white70,
+                      ),
+                      title: Text(
+                        l10n.oneDriveDownloadQueueTitle,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        l10n.oneDriveDownloadQueueSubtitle,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 13,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                const OneDriveDownloadQueuePage(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  _TroubleshootExpansion(l10n: l10n),
+                  const SizedBox(height: 20),
+                  _SectionLabel(text: l10n.oneDriveSectionPaths),
+                  const SizedBox(height: 8),
+                  _PathsCard(
+                    l10n: l10n,
+                    od: od,
+                    onPickCloudAppFolder: () =>
+                        _pickCloudAppFolder(context, l10n, od),
+                    onEditMusicRoot: () => _editMusicRootId(context, l10n, od),
+                    onPickLocalDir: () =>
+                        _pickLocalDownloadDir(context, l10n, od),
+                    onClearCloudAppFolder: () =>
+                        od.setCloudAppDataFolder(null, label: ''),
+                    onClearLocalDir: () => od.setLocalDownloadDir(null),
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionLabel(text: l10n.oneDriveSectionSync),
+                  const SizedBox(height: 8),
+                  _SyncCard(
+                    l10n: l10n,
+                    od: od,
+                    onSyncNow: () => _handleSyncNow(context, l10n, od),
+                  ),
                 ],
-                _TroubleshootExpansion(l10n: l10n),
-                const SizedBox(height: 20),
-                _SectionLabel(text: l10n.oneDriveSectionPaths),
-                const SizedBox(height: 8),
-                _PathsCard(
-                  l10n: l10n,
-                  od: od,
-                  onPickCloudAppFolder: () => _pickCloudAppFolder(context, l10n, od),
-                  onEditMusicRoot: () => _editMusicRootId(context, l10n, od),
-                  onPickLocalDir: () => _pickLocalDownloadDir(context, l10n, od),
-                  onClearCloudAppFolder: () => od.setCloudAppDataFolder(null, label: ''),
-                  onClearLocalDir: () => od.setLocalDownloadDir(null),
-                ),
-                const SizedBox(height: 20),
-                _SectionLabel(text: l10n.oneDriveSectionSync),
-                const SizedBox(height: 8),
-                _SyncCard(
-                  l10n: l10n,
-                  od: od,
-                  onSyncNow: () => _handleSyncNow(context, l10n, od),
-                ),
-              ],
+              ),
             ),
             bottomNavigationBar: const MiniPlayer(),
           ),
@@ -137,14 +154,14 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     final ok = await od.signIn();
     if (!context.mounted) return;
     if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveSignInFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSignInFailed)));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.oneDriveSignedIn)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSignedIn)));
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => const OneDriveCloudPlaylistPage(),
@@ -159,9 +176,9 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
   ) async {
     await od.signOut();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.oneDriveSignOutDone)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSignOutDone)));
   }
 
   Future<void> _pickCloudAppFolder(
@@ -170,9 +187,9 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     OneDriveController od,
   ) async {
     if (!od.signedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveNeedSignInForPicker)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveNeedSignInForPicker)));
       return;
     }
     final res = await Navigator.of(context).push<OneDriveFolderPickResult>(
@@ -213,9 +230,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         title: Text(l10n.oneDriveMusicRootIdLabel),
         content: TextField(
           controller: ctrl,
-          decoration: InputDecoration(
-            hintText: l10n.oneDriveMusicRootHint,
-          ),
+          decoration: InputDecoration(hintText: l10n.oneDriveMusicRootHint),
           maxLines: 2,
         ),
         actions: [
@@ -245,9 +260,9 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     OneDriveController od,
   ) async {
     if (!od.signedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveSyncNowNeedLogin)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowNeedLogin)));
       return;
     }
     final folder = od.cloudAppDataFolderId;
@@ -259,9 +274,9 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     }
     await od.performSyncNow();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.oneDriveSyncNowFinished)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowFinished)));
   }
 }
 
@@ -329,11 +344,17 @@ class _SyncCard extends StatelessWidget {
             activeThumbColor: const Color(0xFF0078D4),
             title: Text(
               l10n.oneDriveSyncMasterTitle,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             subtitle: Text(
               l10n.oneDriveSyncMasterSubtitle,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 12),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 12,
+              ),
             ),
           ),
           Opacity(
@@ -342,7 +363,10 @@ class _SyncCard extends StatelessWidget {
               ignoring: !masterOn,
               child: Column(
                 children: [
-                  Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+                  Divider(
+                    height: 1,
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
                   SwitchListTile(
                     value: s.syncPlaylists,
                     onChanged: (v) {
@@ -355,7 +379,10 @@ class _SyncCard extends StatelessWidget {
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemPlaylistsSubtitle,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   SwitchListTile(
@@ -370,7 +397,10 @@ class _SyncCard extends StatelessWidget {
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemSettingsSubtitle,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   Padding(
@@ -400,7 +430,10 @@ class _SyncCard extends StatelessWidget {
                             value: s.frequency,
                             underline: const SizedBox.shrink(),
                             dropdownColor: const Color(0xFF2C2C2C),
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                             iconEnabledColor: Colors.white70,
                             items: OneDriveSyncFrequency.values
                                 .map(
@@ -481,7 +514,9 @@ class _AccountCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  od.signedIn ? Icons.check_circle_outline : Icons.person_outline,
+                  od.signedIn
+                      ? Icons.check_circle_outline
+                      : Icons.person_outline,
                   color: od.signedIn
                       ? const Color(0xFF81C784)
                       : Colors.white.withValues(alpha: 0.65),
@@ -491,7 +526,9 @@ class _AccountCard extends StatelessWidget {
                   child: Text(
                     od.isLinuxUnsupported
                         ? l10n.oneDriveLinuxUnsupported
-                        : (od.signedIn ? l10n.oneDriveSignedIn : l10n.oneDriveNotSignedIn),
+                        : (od.signedIn
+                              ? l10n.oneDriveSignedIn
+                              : l10n.oneDriveNotSignedIn),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -508,7 +545,9 @@ class _AccountCard extends StatelessWidget {
                   onPressed: onSignOut,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
                     minimumSize: const Size.fromHeight(46),
                   ),
                   child: Text(l10n.oneDriveSignOut),
@@ -588,7 +627,10 @@ class _TroubleshootExpansion extends StatelessWidget {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                       child: SelectableText(
                         OneDriveConfig.redirectUrl,
                         style: TextStyle(
@@ -723,7 +765,11 @@ class _PathsCard extends StatelessWidget {
                     ),
                   ),
                   if (onTapRow != null)
-                    Icon(Icons.edit_outlined, color: Colors.white.withValues(alpha: 0.4), size: 20),
+                    Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white.withValues(alpha: 0.4),
+                      size: 20,
+                    ),
                 ],
               ),
             ),
@@ -739,10 +785,7 @@ class _PathsCard extends StatelessWidget {
                   child: Text(primaryLabel),
                 ),
                 if (clearLabel != null && onClear != null)
-                  TextButton(
-                    onPressed: onClear,
-                    child: Text(clearLabel),
-                  ),
+                  TextButton(onPressed: onClear, child: Text(clearLabel)),
               ],
             ),
           ],
@@ -779,13 +822,15 @@ class _PathsCard extends StatelessWidget {
             primaryLabel: l10n.oneDriveChooseCloudFolder,
             onPrimary: od.signedIn ? onPickCloudAppFolder : null,
             clearLabel:
-                (od.cloudAppDataFolderId != null && od.cloudAppDataFolderId!.isNotEmpty)
-                    ? l10n.oneDriveClear
-                    : null,
+                (od.cloudAppDataFolderId != null &&
+                    od.cloudAppDataFolderId!.isNotEmpty)
+                ? l10n.oneDriveClear
+                : null,
             onClear:
-                (od.cloudAppDataFolderId != null && od.cloudAppDataFolderId!.isNotEmpty)
-                    ? onClearCloudAppFolder
-                    : null,
+                (od.cloudAppDataFolderId != null &&
+                    od.cloudAppDataFolderId!.isNotEmpty)
+                ? onClearCloudAppFolder
+                : null,
           ),
           Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           _pathBlock(
@@ -798,12 +843,12 @@ class _PathsCard extends StatelessWidget {
             onPrimary: onPickLocalDir,
             clearLabel:
                 (od.localDownloadDir != null && od.localDownloadDir!.isNotEmpty)
-                    ? l10n.oneDriveClear
-                    : null,
+                ? l10n.oneDriveClear
+                : null,
             onClear:
                 (od.localDownloadDir != null && od.localDownloadDir!.isNotEmpty)
-                    ? onClearLocalDir
-                    : null,
+                ? onClearLocalDir
+                : null,
           ),
         ],
       ),

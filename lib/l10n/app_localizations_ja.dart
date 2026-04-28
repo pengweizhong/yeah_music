@@ -1297,6 +1297,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get songPageKeepScreenAwake => '再生画面で画面オンのまま';
+
+  @override
+  String get lyricStyleKeepScreenAwakeSub => '再生画面で歌詞を読む間はスリープしません';
+
+  @override
   String get lyricModeEmptyHint => '表示モードを切り替え';
 
   @override

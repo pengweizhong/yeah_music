@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
-import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
-import 'package:yeah_music/compments/theme_config_provider.dart';
-import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/navigation/app_route_observer.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
-import 'package:yeah_music/widgets/recent_play_list_row.dart';
-import 'package:yeah_music/widgets/scroll_aware_list_frame.dart';
-import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
+import 'package:yeah_music/widgets/compact_song_list_row.dart';
+import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 /// 最近播放（按 [RecentPlayService] 记录的路径，在全库队列中解析并播放）
 class RecentPlaysPage extends StatefulWidget {
@@ -56,7 +54,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
       context: context,
       controller: _listScrollController,
       songs: items,
-      itemExtent: 86,
+      itemExtent: kSongPlaylistRowExtent,
       playList: playList,
       onScrollApplied: (_) {
         if (mounted) setState(() => _initialScrollInFlight = false);
@@ -92,167 +90,133 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
     }
   }
 
-  String _secondaryLine(Song s) {
-    if (s.artist == null || s.artist!.isEmpty) {
-      return s.album ?? '';
-    }
-    if (s.album == null || s.album!.isEmpty) {
-      return s.artist!;
-    }
-    return '${s.artist} · ${s.album}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Consumer<ThemeConfigProvider>(
-      builder: (context, themeConfig, child) {
-        return themeConfig.buildThemedBackground(
-          context: context,
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              title: Text(
-                l10n.homeSectionRecentPlays,
-                style: const TextStyle(color: Colors.white),
+    return SongPlaylistThemedScaffold(
+      appBar: AppBar(
+        title: Text(
+          l10n.homeSectionRecentPlays,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+      ),
+      body: _loading
+          ? SongPlaylistBodyUnderlapColumn(
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white54),
               ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-            ),
-            body: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white54),
-                  )
-                : Consumer<PlayListProvider>(
-                    builder: (context, playList, _) {
-                      if (!playList.initialized) {
-                        return Center(
-                          child: Text(
-                            l10n.homeLoadingLibrary,
-                            style: const TextStyle(color: Colors.white70),
+            )
+          : Consumer<PlayListProvider>(
+              builder: (context, playList, _) {
+                if (!playList.initialized) {
+                  return SongPlaylistBodyUnderlapColumn(
+                    child: Center(
+                      child: Text(
+                        l10n.homeLoadingLibrary,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                  );
+                }
+                final items = playList.resolveRecentSongsFromPaths(_paths);
+                final pathToIdx = <String, int>{
+                  for (var i = 0; i < playList.playList.length; i++)
+                    playList.playList[i].path: i,
+                };
+                if (items.isNotEmpty &&
+                    !_didInitialScrollToCurrent &&
+                    !_initialScrollInFlight &&
+                    playList.playbackSessionIsRecentList) {
+                  _initialScrollInFlight = true;
+                  scheduleScrollListToCurrentSong(
+                    context: context,
+                    controller: _listScrollController,
+                    songs: items,
+                    itemExtent: kSongPlaylistRowExtent,
+                    playList: playList,
+                    onScrollApplied: (_) {
+                      if (!mounted) return;
+                      setState(() {
+                        _didInitialScrollToCurrent = true;
+                        _initialScrollInFlight = false;
+                      });
+                    },
+                    onScrollFailed: () {
+                      if (mounted) {
+                        setState(() => _initialScrollInFlight = false);
+                      }
+                    },
+                  );
+                }
+                if (items.isEmpty) {
+                  return SongPlaylistBodyUnderlapColumn(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.history_rounded,
+                            size: 64,
+                            color: Colors.white.withValues(alpha: 0.3),
                           ),
-                        );
-                      }
-                      final items = playList.resolveRecentSongsFromPaths(
-                        _paths,
-                      );
-                      final pathToIdx = {
-                        for (var i = 0; i < playList.playList.length; i++)
-                          playList.playList[i].path: i,
-                      };
-                      if (items.isNotEmpty &&
-                          !_didInitialScrollToCurrent &&
-                          !_initialScrollInFlight &&
-                          playList.playbackSessionIsRecentList) {
-                        _initialScrollInFlight = true;
-                        scheduleScrollListToCurrentSong(
-                          context: context,
-                          controller: _listScrollController,
-                          songs: items,
-                          itemExtent: 86,
-                          playList: playList,
-                          onScrollApplied: (_) {
-                            if (!mounted) return;
-                            setState(() {
-                              _didInitialScrollToCurrent = true;
-                              _initialScrollInFlight = false;
-                            });
-                          },
-                          onScrollFailed: () {
-                            if (mounted) {
-                              setState(() => _initialScrollInFlight = false);
-                            }
-                          },
-                        );
-                      }
-                      if (items.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.history_rounded,
-                                size: 64,
-                                color: Colors.white.withValues(alpha: 0.3),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.recentPlaysEmptyTitle,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                l10n.homeRecentEmpty,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.45),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      return SongListScrollToCurrentLocate(
-                        controller: _listScrollController,
-                        songs: items,
-                        itemExtent: 86,
-                        playList: playList,
-                        child: ScrollAwareListFrame(
-                          scrollController: _listScrollController,
-                          child: ListView.builder(
-                            controller: _listScrollController,
-                            itemExtent: 86,
-                            cacheExtent: 280,
-                            padding: EdgeInsets.only(
-                              bottom: 100 + MediaQuery.paddingOf(context).bottom,
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.recentPlaysEmptyTitle,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 16,
                             ),
-                            itemCount: items.length,
-                            itemBuilder: (context, i) {
-                              final song = items[i];
-                              final idx = pathToIdx[song.path] ?? -1;
-                              final isCurrent =
-                                  playList.currentSong?.path == song.path;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                child: RecentPlayListRow(
-                                  song: song,
-                                  subtitle: _secondaryLine(song),
-                                  isCurrent: isCurrent,
-                                  onTap: () async {
-                                    if (idx < 0) return;
-                                    if (isCurrent) {
-                                      await toggleCurrentRowPlayback(
-                                        playList,
-                                      );
-                                      return;
-                                    }
-                                    playList.clearPlaybackQueueOverride();
-                                    if (!context.mounted) return;
-                                    await playList.playAt(
-                                      idx,
-                                      listSession:
-                                          PlaybackSessionSurface.recentList,
-                                    );
-                                  },
-                                ),
-                              );
-                            },
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.homeRecentEmpty,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.45),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return SongPlaylistBodyUnderlapColumn(
+                  child: SongPlaylistSongListView(
+                    scrollController: _listScrollController,
+                    songs: items,
+                    itemExtent: kSongPlaylistRowExtent,
+                    itemBuilder: (context, song, index, isCurrent) {
+                      final idx = pathToIdx[song.path] ?? -1;
+                      return CompactSongListRow(
+                        key: ValueKey<String>(song.path),
+                        song: song,
+                        title: song.title ?? l10n.pageUnknownTitle,
+                        subtitle: songListSecondaryLine(song),
+                        isCurrent: isCurrent,
+                        onTap: () async {
+                          if (idx < 0) return;
+                          if (isCurrent) {
+                            await toggleCurrentRowPlayback(playList);
+                            return;
+                          }
+                          playList.clearPlaybackQueueOverride();
+                          if (!context.mounted) return;
+                          await playList.playAt(
+                            idx,
+                            listSession: PlaybackSessionSurface.recentList,
+                          );
+                        },
                       );
                     },
                   ),
-            bottomNavigationBar: const MiniPlayer(),
-          ),
-        );
-      },
+                );
+              },
+            ),
     );
   }
 }

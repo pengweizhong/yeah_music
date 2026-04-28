@@ -2478,6 +2478,18 @@ abstract class AppLocalizations {
   /// **'Sleep timer: played for {minutes} min'**
   String sleepTimerPlayedMinutes(int minutes);
 
+  /// No description provided for @songPageKeepScreenAwake.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep screen on'**
+  String get songPageKeepScreenAwake;
+
+  /// No description provided for @lyricStyleKeepScreenAwakeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays awake while you read lyrics on this screen'**
+  String get lyricStyleKeepScreenAwakeSub;
+
   /// No description provided for @lyricModeEmptyHint.
   ///
   /// In en, this message translates to:

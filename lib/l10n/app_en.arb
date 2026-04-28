@@ -454,6 +454,8 @@
   "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
   "sleepTimerPlayedMinutes": "Sleep timer: played for {minutes} min",
   "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "songPageKeepScreenAwake": "Keep screen on",
+  "lyricStyleKeepScreenAwakeSub": "Stays awake while you read lyrics on this screen",
   "lyricModeEmptyHint": "Change display mode",
   "lyricModeAllLines": "Multi-line: all lines (tap for single line)",
   "lyricModeSingleLineN": "Multi-line: line {n} only (tap to cycle)",

@@ -19,6 +19,7 @@ class RecentPlayListRow extends StatefulWidget {
   });
 
   final Song song;
+
   /// 轻量占位；后台补全后以 [songListSecondaryLine] 为准。
   final String subtitle;
   final bool isCurrent;
@@ -41,8 +42,9 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
   void didUpdateWidget(RecentPlayListRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.song.path != widget.song.path) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _hydrateAfterLayout());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _hydrateAfterLayout(),
+      );
     }
   }
 
@@ -56,8 +58,8 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
     final song = widget.song;
     final fut = _ongoingHydrate ??=
         SongLibraryMetadataHydrator.hydrateIfNeeded(song).whenComplete(() {
-      _ongoingHydrate = null;
-    });
+          _ongoingHydrate = null;
+        });
     fut.then((_) {
       if (!mounted) return;
       setState(() {});
@@ -112,6 +114,7 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -186,10 +189,7 @@ class _RecentPlayTrailingIcon extends StatelessWidget {
 
 /// 正在播放时右侧动态均衡条（循环起伏）
 class _EqualizerPlayingBars extends StatefulWidget {
-  const _EqualizerPlayingBars({
-    required this.color,
-    required this.size,
-  });
+  const _EqualizerPlayingBars({required this.color, required this.size});
 
   final Color color;
   final double size;
@@ -243,23 +243,11 @@ class _EqualizerPlayingBarsState extends State<_EqualizerPlayingBars>
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _bar(
-                  h: _h(t, 0) * maxH,
-                  w: barW,
-                  c: widget.color,
-                ),
+                _bar(h: _h(t, 0) * maxH, w: barW, c: widget.color),
                 SizedBox(width: gap),
-                _bar(
-                  h: _h(t, 1.2) * maxH,
-                  w: barW,
-                  c: widget.color,
-                ),
+                _bar(h: _h(t, 1.2) * maxH, w: barW, c: widget.color),
                 SizedBox(width: gap),
-                _bar(
-                  h: _h(t, 2.4) * maxH,
-                  w: barW,
-                  c: widget.color,
-                ),
+                _bar(h: _h(t, 2.4) * maxH, w: barW, c: widget.color),
               ],
             );
           },

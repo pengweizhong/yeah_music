@@ -45,6 +45,7 @@ dependencies:
   visibility_detector: ^0.4.0+2
   desktop_multi_window: ^0.3.0
   window_manager: ^0.5.1
+  wakelock_plus: ^1.5.2
 
 dependency_overrides:
   flutter_appauth:

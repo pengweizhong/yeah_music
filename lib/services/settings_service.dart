@@ -57,6 +57,9 @@ class SettingsService {
   /// Android 有线耳机线控连击映射（JSON）。
   static const String _wireRemoteControlKey = 'wire_remote_control_v1';
 
+  /// 播放页是否保持屏幕常亮。
+  static const String _songPageKeepScreenAwakeKey = 'song_page_keep_screen_awake';
+
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
   static const int desktopFloatingLyricsLinesAfterDefault = 2;
@@ -768,6 +771,30 @@ class SettingsService {
         c.normalizeInPlace();
         await box.put(_quickEntryOrderKey, c.order);
         await box.put(_quickEntryHiddenKey, c.hidden.toList());
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadSongPageKeepScreenAwake() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_songPageKeepScreenAwakeKey, defaultValue: false);
+      if (v is bool) return v;
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> saveSongPageKeepScreenAwake(bool value) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_songPageKeepScreenAwakeKey, value);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_songPageKeepScreenAwakeKey, value);
       } catch (_) {}
     }
   }

@@ -1341,6 +1341,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get songPageKeepScreenAwake => 'Keep screen on';
+
+  @override
+  String get lyricStyleKeepScreenAwakeSub =>
+      'Stays awake while you read lyrics on this screen';
+
+  @override
   String get lyricModeEmptyHint => 'Change display mode';
 
   @override

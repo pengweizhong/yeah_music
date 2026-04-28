@@ -8,14 +8,14 @@ import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
 const double _kThumbMinLengthOneCmDp = 160.0 / 2.54;
 
 /// 静止时的条宽。须足够大以避免误点到列表：[RawScrollbar] 命中区宽度即此值量级。
-const double _kIdleThicknessDp = 18.0;
+const double _kIdleThicknessDp = 7.0;
 
 /// 用户滑动时加粗一档（离散切换，不使用逐帧数值动画）。
-const double _kActiveThicknessDp = 22.0;
+const double _kActiveThicknessDp = 13.0;
 
 /// 静止 / 滑动时滑块白度（alpha），静止宜更暗以免抢眼。
-const double _kIdleThumbAlpha = 0.34;
-const double _kActiveThumbAlpha = 0.92;
+const double _kIdleThumbAlpha = 0.05;
+const double _kActiveThumbAlpha = 0.45;
 
 /// 历史上曾用于在快速滚动时抑制列表封面解码；现已不再卸图，避免与 [ImageCache] 已缓存
 /// 的封面在「灰色占位 ↔ 真图」之间反复切换造成闪动。

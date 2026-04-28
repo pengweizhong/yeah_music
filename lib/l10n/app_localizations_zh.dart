@@ -1282,6 +1282,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get songPageKeepScreenAwake => '播放页屏幕常亮';
+
+  @override
+  String get lyricStyleKeepScreenAwakeSub => '在播放页查看歌词时不自动熄屏';
+
+  @override
   String get lyricModeEmptyHint => '切换显示模式';
 
   @override
@@ -2692,6 +2698,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get songPageKeepScreenAwake => '播放页屏幕常亮';
+
+  @override
+  String get lyricStyleKeepScreenAwakeSub => '在播放页查看歌词时不自动熄屏';
+
+  @override
   String get lyricModeEmptyHint => '切换显示模式';
 
   @override
@@ -4100,6 +4112,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String sleepTimerPlayedMinutes(int minutes) {
     return '定時關閉：已播放 $minutes 分鐘';
   }
+
+  @override
+  String get songPageKeepScreenAwake => '播放頁螢幕恆亮';
+
+  @override
+  String get lyricStyleKeepScreenAwakeSub => '在播放頁查看歌詞時不自動鎖屏';
 
   @override
   String get lyricModeEmptyHint => '切換顯示模式';

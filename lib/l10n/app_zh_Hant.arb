@@ -454,6 +454,8 @@
   "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
   "sleepTimerPlayedMinutes": "定時關閉：已播放 {minutes} 分鐘",
   "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "songPageKeepScreenAwake": "播放頁螢幕恆亮",
+  "lyricStyleKeepScreenAwakeSub": "在播放頁查看歌詞時不自動鎖屏",
   "lyricModeEmptyHint": "切換顯示模式",
   "lyricModeAllLines": "多行歌詞：全部行（點一下改單行）",
   "lyricModeSingleLineN": "多行歌詞：僅第 {n} 行（再點可切換）",

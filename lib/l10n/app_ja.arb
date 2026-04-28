@@ -454,6 +454,8 @@
   "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
   "sleepTimerPlayedMinutes": "スリープタイマー：{minutes} 分再生しました",
   "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "songPageKeepScreenAwake": "再生画面で画面オンのまま",
+  "lyricStyleKeepScreenAwakeSub": "再生画面で歌詞を読む間はスリープしません",
   "lyricModeEmptyHint": "表示モードを切り替え",
   "lyricModeAllLines": "複数行：全行表示（タップで1行）",
   "lyricModeSingleLineN": "複数行：{n} 行目のみ（タップで切替）",
