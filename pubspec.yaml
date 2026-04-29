@@ -50,6 +50,8 @@ dependencies:
 dependency_overrides:
   flutter_appauth:
     path: packages/flutter_appauth
+  just_audio_background:
+    path: packages/just_audio_background
 
 dev_dependencies:
   flutter_test:

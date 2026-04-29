@@ -32,6 +32,7 @@ import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
+import 'package:yeah_music/services/android_media_session_bridge.dart';
 import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 
 Future<void> main(List<String> args) async {
@@ -42,6 +43,12 @@ Future<void> main(List<String> args) async {
       androidNotificationChannelId: 'com.pengwz.yeah_music.channel.audio',
       androidNotificationChannelName: 'Yeah Music',
       androidNotificationOngoing: true,
+      preloadArtwork: true,
+      artDownscaleWidth: 512,
+      artDownscaleHeight: 512,
+      notificationColor: const Color(0xFF1E1E2E),
+      onAndroidLyricsSyncToggle:
+          AndroidMediaSessionBridge.toggleLyricsSyncFromNotification,
     );
   }
 

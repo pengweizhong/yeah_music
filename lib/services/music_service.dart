@@ -11,26 +11,77 @@ import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
+import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+
+int _coverContentFingerprint(List<int> bytes) {
+  final len = bytes.length;
+  if (len == 0) return 0;
+  var h = len;
+  final n = len < 4096 ? len : 4096;
+  for (var i = 0; i < n; i++) {
+    h = (h * 31 + bytes[i]) & 0x3fffffff;
+  }
+  h ^= bytes[len - 1];
+  return h;
+}
 
 class MusicService {
   static final _player = AudioPlayer();
   static bool isPlaying = false;
 
-  /// Android 且开启车载歌词时，使用与 [PlayListProvider.playList] 对齐的拼接队列。
+  /// [MediaMetadataCompat.METADATA_KEY_COMPOSER]，部分国产系统控制中心/流体云会读此字段作第三行或歌词。
+  static const String androidComposerMetadataKey =
+      'android.media.metadata.COMPOSER';
+
+  static Map<String, dynamic>? _androidLyricExtras(String? line) {
+    if (line == null || line.isEmpty) return null;
+    return {androidComposerMetadataKey: line};
+  }
+
+  /// 新一次播放开始时递增；后台补封面任务带旧代数则提前退出，避免切歌后错写会话。
+  static int _androidMediaSessionSyncGeneration = 0;
+
+  /// 仅在后台为「当前这条」补系统媒体会话（内部 hydrate + [pushAndroidNotificationForSong]）。
+  /// 不对整队列并行 hydrate、也不 O(n) [updateMediaItem]，避免播放页卡顿、闪退。
+  static Future<void> _androidRefreshCurrentSessionOnly(
+    List<Song> queue,
+    int currentIndex,
+    int syncGeneration,
+  ) async {
+    if (!Platform.isAndroid || queue.isEmpty) return;
+    final idx = currentIndex.clamp(0, queue.length - 1);
+    final s = queue[idx];
+    try {
+      await Future<void>.delayed(Duration.zero);
+      if (syncGeneration != _androidMediaSessionSyncGeneration) return;
+      await pushAndroidNotificationForSong(s);
+      await Future<void>.delayed(const Duration(milliseconds: 280));
+      if (syncGeneration != _androidMediaSessionSyncGeneration) return;
+      await pushAndroidNotificationForSong(s);
+    } catch (e) {
+      appLog.d('_androidRefreshCurrentSessionOnly: $e');
+    }
+  }
+
+  /// Android 多曲时 [playCurrentFromPlaylist] 会构建整段队列（与「车载歌词」开关无关）；单文件模式为 false。
   static bool androidCarQueueActive = false;
 
   static Future<void> _playChain = Future.value();
 
-  /// 按当前播放列表与索引开始播放（Android 车载开则用整队列；否则仅当前曲）。
+  /// 按当前播放列表与索引开始播放。
+  ///
+  /// Android 且列表多于一首时始终构建 [ConcatenatingAudioSource]，使通知/车机上的上一首、下一首与
+  /// 真实曲目对应（否则仅单文件会话，`hasPrevious` 在首曲为 false，紧凑通知易把停播当成「上一首」）。
+  /// 封面/内嵌图仍受「显示封面」开关影响，不依赖「启用车载歌词」。
   Future<void> playCurrentFromPlaylist({
     required List<Song> queue,
     required int currentIndex,
   }) async {
     if (queue.isEmpty) return;
     final i = currentIndex.clamp(0, queue.length - 1);
-    final useCarQueue =
-        Platform.isAndroid && await SettingsService.loadAndroidCarLyricsEnabled();
-    if (useCarQueue) {
+    final useFullPlayerQueue = Platform.isAndroid && queue.length > 1;
+    if (useFullPlayerQueue) {
       final f = _playChain
           .catchError((Object? e) {
             appLog.d('playQueue 前序(可忽略): $e');
@@ -76,6 +127,10 @@ class MusicService {
         await _player.setAudioSource(_buildAudioSource(song, tag: tag));
         await _player.seek(Duration.zero);
         play();
+        if (Platform.isAndroid) {
+          final g = ++_androidMediaSessionSyncGeneration;
+          unawaited(_androidRefreshCurrentSessionOnly([song], 0, g));
+        }
         return;
       } catch (e) {
         final msg = e.toString();
@@ -88,7 +143,7 @@ class MusicService {
             (msg.contains('257') ||
                 msg.contains('permission') ||
                 msg.contains('Permission'))) {
-          appLog.d('macOS: 尝试恢复安全作用域书签后重试播放');
+          appLog.d('macOS: 尝试恢复安全作用域书签后重试');
           try {
             await BookmarkService.restoreAllBookmarks();
           } catch (_) {}
@@ -116,10 +171,11 @@ class MusicService {
         }
         final children = <AudioSource>[];
         for (final s in queue) {
-          final tag = await _mediaItemForSong(
+          final tag = await buildMediaItemForSong(
             s,
             showCover: showCover,
             lyricStyle: lyricStyle,
+            subtitlePosition: Duration.zero,
           );
           children.add(_buildAudioSource(s, tag: tag));
         }
@@ -130,6 +186,10 @@ class MusicService {
         );
         androidCarQueueActive = true;
         play();
+        if (Platform.isAndroid) {
+          final g = ++_androidMediaSessionSyncGeneration;
+          unawaited(_androidRefreshCurrentSessionOnly(queue, idx, g));
+        }
         return;
       } catch (e) {
         final msg = e.toString();
@@ -147,19 +207,22 @@ class MusicService {
     if (Platform.isAndroid) {
       final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
       final lyricStyle = await SettingsService.loadLyricSettings();
-      return _mediaItemForSong(
+      return buildMediaItemForSong(
         song,
         showCover: showCover,
         lyricStyle: lyricStyle,
+        subtitlePosition: Duration.zero,
       );
     }
     return song;
   }
 
-  Future<MediaItem> _mediaItemForSong(
+  /// 构建 [MediaItem]（`just_audio_background` 的 AudioSource tag）。
+  static Future<MediaItem> buildMediaItemForSong(
     Song song, {
     required bool showCover,
     LyricSettings? lyricStyle,
+    Duration subtitlePosition = Duration.zero,
   }) async {
     final title = (song.title?.trim().isNotEmpty ?? false)
         ? song.title!.trim()
@@ -173,12 +236,14 @@ class MusicService {
       if (bytes != null && bytes.isNotEmpty) {
         try {
           final dir = await getTemporaryDirectory();
-          final f = File(
-            '${dir.path}/yeah_music_art_${song.path.hashCode}.jpg',
-          );
-          if (!await f.exists()) {
-            await f.writeAsBytes(bytes, flush: true);
-          }
+          final fp = _coverContentFingerprint(bytes);
+          final uniqueSuffix = Platform.isAndroid
+              ? '_${DateTime.now().microsecondsSinceEpoch}'
+              : '';
+          final name =
+              'yeah_nm_art_${song.path.hashCode}_${bytes.length}_$fp$uniqueSuffix.jpg';
+          final f = File(p.join(dir.path, name));
+          await f.writeAsBytes(bytes, flush: true);
           artUri = Uri.file(f.path);
         } catch (_) {}
       }
@@ -195,10 +260,14 @@ class MusicService {
           lyricStyle: style,
         ).formatLine(
           song: song,
-          position: Duration.zero,
+          position: subtitlePosition,
           l10n: null,
         );
       } catch (_) {}
+    }
+    String? displayDescription;
+    if (initialSubtitle != null && initialSubtitle.isNotEmpty) {
+      displayDescription = initialSubtitle;
     }
     return MediaItem(
       id: song.path,
@@ -208,7 +277,51 @@ class MusicService {
       duration: song.duration,
       artUri: artUri,
       displaySubtitle: initialSubtitle,
+      displayDescription: displayDescription,
+      extras: _androidLyricExtras(initialSubtitle),
     );
+  }
+
+  /// 在切歌或补载元数据后，把当前曲目的封面/标题/歌词行推送到系统媒体会话（更新通知）。
+  static Future<void> pushAndroidNotificationForSong(Song song) async {
+    if (!Platform.isAndroid) return;
+    try {
+      try {
+        await SongLibraryMetadataHydrator.hydrateIfNeeded(song);
+      } catch (e) {
+        appLog.d('通知用元数据补全失败(忽略): $e');
+      }
+      final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
+      final wantLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
+      if (showCover && (song.imageBytes == null || song.imageBytes!.isEmpty)) {
+        try {
+          await FileUtils.loadSongMeta(
+            song,
+            loadEmbeddedAlbumArt: true,
+            storeLyricsWithTrack: wantLyrics,
+          );
+        } catch (_) {}
+      } else if (wantLyrics &&
+          (song.lyrics == null || song.lyrics!.trim().isEmpty)) {
+        try {
+          await FileUtils.loadSongMeta(
+            song,
+            loadEmbeddedAlbumArt: false,
+            storeLyricsWithTrack: true,
+          );
+        } catch (_) {}
+      }
+      final lyricStyle = await SettingsService.loadLyricSettings();
+      final item = await buildMediaItemForSong(
+        song,
+        showCover: showCover,
+        lyricStyle: lyricStyle,
+        subtitlePosition: lastPosition,
+      );
+      await AudioService.updateMediaItem(item);
+    } catch (e) {
+      appLog.d('pushAndroidNotificationForSong: $e');
+    }
   }
 
   AudioSource _buildAudioSource(Song song, {required Object? tag}) {
@@ -267,13 +380,13 @@ class MusicService {
 
   static bool get canUseResumeToPlay {
     switch (_player.processingState) {
+      case ProcessingState.idle:
+      case ProcessingState.completed:
+        return false;
       case ProcessingState.ready:
       case ProcessingState.buffering:
       case ProcessingState.loading:
         return true;
-      case ProcessingState.idle:
-      case ProcessingState.completed:
-        return false;
     }
   }
 

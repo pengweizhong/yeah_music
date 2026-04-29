@@ -262,6 +262,7 @@ class PlayListProvider extends ChangeNotifier {
       updateRecentList: recordRecent,
       bumpPlayCount: bumpPlayCount,
     );
+    unawaited(_syncAndroidCarMediaSession());
     notifyListeners();
   }
 
@@ -355,14 +356,17 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 与 [just_audio_background] 内队列的 `hasPrevious` / `hasNext` 一致：列表循环时首曲仍有上一首，
+  /// 避免紧凑通知省略上一首键后停播被误当成「上一首/退出」。
   Future<void> _syncAndroidCarMediaSession() async {
     if (!Platform.isAndroid) return;
     try {
-      if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
       if (_playbackMode == PlaybackMode.singleLoop) {
         await AudioService.setRepeatMode(AudioServiceRepeatMode.one);
-      } else {
+      } else if (_playbackMode == PlaybackMode.playOnce) {
         await AudioService.setRepeatMode(AudioServiceRepeatMode.none);
+      } else {
+        await AudioService.setRepeatMode(AudioServiceRepeatMode.all);
       }
     } catch (_) {}
   }
@@ -567,6 +571,7 @@ class PlayListProvider extends ChangeNotifier {
     if (_playbackQueueOverride == null) {
       await _saveCurrentIndex();
     }
+    unawaited(_syncAndroidCarMediaSession());
     notifyListeners();
   }
 

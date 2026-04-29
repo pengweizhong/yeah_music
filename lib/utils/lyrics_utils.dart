@@ -87,6 +87,11 @@ class LyricsUtils {
   static int findCurrentLyricIndex(List<LyricEntry> lyrics, Duration currentPosition) {
     if (lyrics.isEmpty) return -1;
 
+    // 纯文本歌词：无时间戳，外部单行展示（系统通知等）固定用第一行
+    if (!lyrics.any((e) => e.timestamp != null)) {
+      return 0;
+    }
+
     // 初始阶段：当前时间还没到第一句，也把索引定位到 0（保证首次进入就能高亮/滚动到第一句）
     final firstTs = lyrics.first.timestamp;
     if (firstTs != null && currentPosition < firstTs) {
