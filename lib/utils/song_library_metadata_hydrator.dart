@@ -76,6 +76,15 @@ class SongLibraryMetadataHydrator {
     return true;
   }
 
+  /// 文件删除或重命名后丢弃该路径的内存缓存与封面 provider。
+  static void invalidatePath(String path) {
+    final p = path.trim();
+    if (p.isEmpty) return;
+    _cache.remove(p);
+    _pending.remove(p);
+    ApplicationUtils.evictSongCoverProvidersForPath(p);
+  }
+
   /// 库内已有完整展示所需元数据时写入 [_cache]，使后续 hydrate 走「已命中」分支、不重复 [readMetadata]。
   /// 要求非空歌词，以免阻断「仅从文件补歌词」的路径。
   static void _maybeSeedCacheFromLibrarySong(Song song) {

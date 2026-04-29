@@ -57,6 +57,80 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAboutDesc => '应用名称与版本、致谢与开源协议全文。';
 
   @override
+  String get settingsAboutDialogAuthor => '作者';
+
+  @override
+  String get settingsAboutDialogRepo => '仓库';
+
+  @override
+  String get settingsAboutDialogLicense => '许可证';
+
+  @override
+  String get settingsAboutDialogCopyright => '版权';
+
+  @override
+  String get settingsAboutDialogClose => '关闭';
+
+  @override
+  String settingsAboutDialogVersionLabel(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String get settingsSysinfoSectionDevice => '设备信息';
+
+  @override
+  String get settingsSysinfoSectionStorage => '存储空间';
+
+  @override
+  String get settingsSysinfoPlatformLabel => '运行平台';
+
+  @override
+  String get settingsSysinfoTotalSpace => '总空间';
+
+  @override
+  String get settingsSysinfoUsedSpace => '已使用';
+
+  @override
+  String get settingsSysinfoFreeSpace => '剩余空间';
+
+  @override
+  String get settingsSysinfoStorageUnavailable => '存储信息暂时无法获取';
+
+  @override
+  String get settingsSysinfoDeviceModel => '设备型号';
+
+  @override
+  String get settingsSysinfoManufacturer => '制造商';
+
+  @override
+  String get settingsSysinfoOsVersion => '系统版本';
+
+  @override
+  String get settingsSysinfoSdkVersion => 'SDK 版本';
+
+  @override
+  String get settingsSysinfoDeviceName => '设备名称';
+
+  @override
+  String get settingsSysinfoHostName => '主机名';
+
+  @override
+  String get settingsSysinfoKernelVersion => '内核版本';
+
+  @override
+  String get settingsSysinfoDistroLabel => '版本';
+
+  @override
+  String get settingsSysinfoBuildNumber => '构建号';
+
+  @override
+  String get settingsSysinfoError => '错误';
+
+  @override
+  String get settingsSysinfoFetchFailed => '无法获取设备信息';
+
+  @override
   String get settingsLanguage => '语言';
 
   @override
@@ -307,7 +381,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      '按计划在云端备份歌单与应用设置。需已登录并选择云端应用数据文件夹。自动同步能力将在后续版本接入。';
+      '按计划将歌单与应用设置备份到 OneDrive。每次上传为带时间戳的 JSON 文件，保存在云端应用数据文件夹。定时自动同步将在后续版本接入。';
 
   @override
   String get oneDriveSyncItemPlaylists => '歌单';
@@ -344,7 +418,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowDescription =>
-      '不等定时器，马上把歌单和设置推上去。（云端上传还在路上，功能就绪后会接上这次操作。）';
+      '立即上传最新歌单与设置。文件名含本地年月日时分秒（同一次快照的歌单与设置文件共用同一时间戳）。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '请先登录微软账号。';
@@ -353,7 +427,59 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveSyncNowNeedCloudFolder => '请先在上方选好「云端应用数据文件夹」，才知道备份往哪儿放。';
 
   @override
-  String get oneDriveSyncNowFinished => '好，已记下。云端备份就绪后会自动处理。';
+  String get oneDriveSyncNowFinished => '已上传至云端应用文件夹（时间戳 JSON）。';
+
+  @override
+  String oneDriveSyncNowFailed(String message) {
+    return '备份失败：$message';
+  }
+
+  @override
+  String get oneDriveRestoreFromCloud => '从云端恢复';
+
+  @override
+  String get oneDriveRestoreSubtitle => '从云端应用文件夹下载带时间戳的备份 JSON。';
+
+  @override
+  String get oneDriveRestoreSheetTitle => '选择备份时间点';
+
+  @override
+  String get oneDriveRestoreEmpty => '尚未发现备份文件。请先使用下方「立即同步」上传歌单或设置。';
+
+  @override
+  String get oneDriveRestorePlaylistCheckbox => '歌单';
+
+  @override
+  String get oneDriveRestoreSettingsCheckbox => '应用配置';
+
+  @override
+  String get oneDriveRestorePlaylistModeMerge => '合并到本地（同 id 歌单合并曲目）';
+
+  @override
+  String get oneDriveRestorePlaylistModeReplace => '覆盖本地歌单（先清空再导入）';
+
+  @override
+  String get oneDriveRestoreAction => '恢复';
+
+  @override
+  String get oneDriveRestoreNeedPickContent => '请至少勾选歌单或应用配置中的一项。';
+
+  @override
+  String get oneDriveRestoreMissingPlaylistsFile => '该备份中没有歌单文件。';
+
+  @override
+  String get oneDriveRestoreMissingSettingsFile => '该备份中没有设置文件。';
+
+  @override
+  String get oneDriveRestoreFinished => '恢复完成。';
+
+  @override
+  String oneDriveRestoreFailed(String message) {
+    return '恢复失败：$message';
+  }
+
+  @override
+  String get oneDriveRestoreLoadingList => '正在读取备份列表…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
@@ -399,6 +525,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDrivePickFolderForAppData => '选择用于应用数据与未来备份的文件夹。';
 
   @override
+  String get oneDrivePickFolderForMusicUpload => '选择本设备上传音乐时使用的目标文件夹。';
+
+  @override
+  String get oneDriveMusicUploadFolderTitle => '上传音乐目标文件夹';
+
+  @override
+  String get oneDriveMusicUploadFolderSubtitle =>
+      '从本机曲库上传到 OneDrive 时的默认父文件夹。未单独设置时，将使用上方的云端应用文件夹。';
+
+  @override
+  String get oneDriveMusicUploadFolderFallback => '与云端应用文件夹相同';
+
+  @override
   String get oneDriveTroubleshootTitle => '登录不顺利？';
 
   @override
@@ -431,6 +570,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveSignInFailed => '这次没登录成功，看看网络或稍后再试；也可以翻翻下面「登录不顺利」里的小提示。';
+
+  @override
+  String get oneDriveTroubleshootUpload403 =>
+      '若上传返回 403：在 Azure 门户 → 应用注册 → API 权限中，为 Microsoft Graph 添加委托权限 Files.ReadWrite.All（工作/学校账号可能需管理员同意），然后在应用内退出 OneDrive 并重新登录以使新权限生效。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
@@ -470,6 +613,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveDownloadQueueTitle => 'OneDrive 下载队列';
+
+  @override
+  String get oneDriveTransferQueueTitle => 'OneDrive 传输队列';
+
+  @override
+  String get oneDriveTransferTabDownload => '下载';
+
+  @override
+  String get oneDriveTransferTabUpload => '上传';
 
   @override
   String get oneDriveDownloadPause => '暂停';
@@ -512,10 +664,21 @@ class AppLocalizationsZh extends AppLocalizations {
       '暂无批量下载任务。\n在云端曲库或 OneDrive 浏览器中使用「播放全部」即可在此查看；关闭抽屉不会中断下载。';
 
   @override
+  String get oneDriveUploadQueueEmpty =>
+      '暂无上传任务。\n在本地曲库中通过多选栏的「上传到 OneDrive」添加；关闭界面不会中断后台传输。';
+
+  @override
+  String get oneDriveTransferQueueEmpty => '当前队列中还没有任务。';
+
+  @override
   String get oneDriveDownloadQueuePageHint => '在此暂停、继续或停止批量下载。关闭抽屉不会取消后台任务。';
 
   @override
-  String get oneDriveDownloadQueueSubtitle => '查看与控制批量下载与播放';
+  String get oneDriveUploadQueuePageHint =>
+      '本机发起的上传会显示在此，可用上方按钮暂停、继续或停止；清空记录会同时影响下载与上传历史。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '查看与控制上传、下载与播放';
 
   @override
   String get oneDriveDownloadQueueTooltip => '下载队列';
@@ -1462,6 +1625,76 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lyricLabelTranslation => '译文';
+
+  @override
+  String get libraryBatchSelect => '多选';
+
+  @override
+  String get libraryBatchDone => '完成';
+
+  @override
+  String get libraryBatchSelectAll => '全选';
+
+  @override
+  String get libraryBatchDelete => '删除';
+
+  @override
+  String get libraryBatchRename => '重命名';
+
+  @override
+  String get libraryBatchUploadOneDrive => '上传到 OneDrive';
+
+  @override
+  String get libraryBatchDeleteConfirmTitle => '删除所选歌曲？';
+
+  @override
+  String get libraryBatchDeleteConfirmMessage => '将从本机删除文件，并更新歌单与最近播放。此操作不可撤销。';
+
+  @override
+  String get libraryBatchNoneSelected => '请先选择歌曲';
+
+  @override
+  String get libraryBatchRenameTitle => '批量重命名';
+
+  @override
+  String get libraryBatchRenameHint => '名称模板，用 %n 表示递增序号（如 曲目 %n）';
+
+  @override
+  String get libraryBatchRenameStart => '起始编号';
+
+  @override
+  String get libraryRenameSingleTitle => '重命名单曲';
+
+  @override
+  String get libraryRenameSingleHint => '只填主文件名，扩展名保持不变。';
+
+  @override
+  String get libraryRenameSingleFieldLabel => '文件名';
+
+  @override
+  String get libraryRenameSingleDone => '已重命名';
+
+  @override
+  String get libraryBatchUploadNeedSignIn => '请先在设置中登录 OneDrive';
+
+  @override
+  String get libraryBatchUploadNeedCloudFolder => '请先在 OneDrive 设置中选择云端应用文件夹';
+
+  @override
+  String get libraryBatchUploadNeedParentFolder =>
+      '请先在 OneDrive 设置中选择「上传音乐」文件夹或云端应用文件夹。';
+
+  @override
+  String get libraryBatchUploadQueued => '已加入传输队列';
+
+  @override
+  String get libraryBatchOpenQueue => '查看队列';
+
+  @override
+  String get oneDriveUploadStatusUploading => '上传中';
+
+  @override
+  String get oneDriveTaskDirectionUpload => '上传';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -1517,6 +1750,80 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsAboutDesc => '应用名称与版本、致谢与开源协议全文。';
 
   @override
+  String get settingsAboutDialogAuthor => '作者';
+
+  @override
+  String get settingsAboutDialogRepo => '仓库';
+
+  @override
+  String get settingsAboutDialogLicense => '许可证';
+
+  @override
+  String get settingsAboutDialogCopyright => '版权';
+
+  @override
+  String get settingsAboutDialogClose => '关闭';
+
+  @override
+  String settingsAboutDialogVersionLabel(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String get settingsSysinfoSectionDevice => '设备信息';
+
+  @override
+  String get settingsSysinfoSectionStorage => '存储空间';
+
+  @override
+  String get settingsSysinfoPlatformLabel => '运行平台';
+
+  @override
+  String get settingsSysinfoTotalSpace => '总空间';
+
+  @override
+  String get settingsSysinfoUsedSpace => '已使用';
+
+  @override
+  String get settingsSysinfoFreeSpace => '剩余空间';
+
+  @override
+  String get settingsSysinfoStorageUnavailable => '存储信息暂时无法获取';
+
+  @override
+  String get settingsSysinfoDeviceModel => '设备型号';
+
+  @override
+  String get settingsSysinfoManufacturer => '制造商';
+
+  @override
+  String get settingsSysinfoOsVersion => '系统版本';
+
+  @override
+  String get settingsSysinfoSdkVersion => 'SDK 版本';
+
+  @override
+  String get settingsSysinfoDeviceName => '设备名称';
+
+  @override
+  String get settingsSysinfoHostName => '主机名';
+
+  @override
+  String get settingsSysinfoKernelVersion => '内核版本';
+
+  @override
+  String get settingsSysinfoDistroLabel => '版本';
+
+  @override
+  String get settingsSysinfoBuildNumber => '构建号';
+
+  @override
+  String get settingsSysinfoError => '错误';
+
+  @override
+  String get settingsSysinfoFetchFailed => '无法获取设备信息';
+
+  @override
   String get settingsLanguage => '语言';
 
   @override
@@ -1767,7 +2074,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      '按计划在云端备份歌单与应用设置。需已登录并选择云端应用数据文件夹。自动同步能力将在后续版本接入。';
+      '按计划将歌单与应用设置备份到 OneDrive。每次上传为带时间戳的 JSON 文件，保存在云端应用数据文件夹。定时自动同步将在后续版本接入。';
 
   @override
   String get oneDriveSyncItemPlaylists => '歌单';
@@ -1804,7 +2111,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncNowDescription =>
-      '不等定时器，马上把歌单和设置推上去。（云端上传还在路上，功能就绪后会接上这次操作。）';
+      '立即上传最新歌单与设置。文件名含本地年月日时分秒（同一次快照的歌单与设置文件共用同一时间戳）。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '请先登录微软账号。';
@@ -1813,7 +2120,59 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveSyncNowNeedCloudFolder => '请先在上方选好「云端应用数据文件夹」，才知道备份往哪儿放。';
 
   @override
-  String get oneDriveSyncNowFinished => '好，已记下。云端备份就绪后会自动处理。';
+  String get oneDriveSyncNowFinished => '已上传至云端应用文件夹（时间戳 JSON）。';
+
+  @override
+  String oneDriveSyncNowFailed(String message) {
+    return '备份失败：$message';
+  }
+
+  @override
+  String get oneDriveRestoreFromCloud => '从云端恢复';
+
+  @override
+  String get oneDriveRestoreSubtitle => '从云端应用文件夹下载带时间戳的备份 JSON。';
+
+  @override
+  String get oneDriveRestoreSheetTitle => '选择备份时间点';
+
+  @override
+  String get oneDriveRestoreEmpty => '尚未发现备份文件。请先使用下方「立即同步」上传歌单或设置。';
+
+  @override
+  String get oneDriveRestorePlaylistCheckbox => '歌单';
+
+  @override
+  String get oneDriveRestoreSettingsCheckbox => '应用配置';
+
+  @override
+  String get oneDriveRestorePlaylistModeMerge => '合并到本地（同 id 歌单合并曲目）';
+
+  @override
+  String get oneDriveRestorePlaylistModeReplace => '覆盖本地歌单（先清空再导入）';
+
+  @override
+  String get oneDriveRestoreAction => '恢复';
+
+  @override
+  String get oneDriveRestoreNeedPickContent => '请至少勾选歌单或应用配置中的一项。';
+
+  @override
+  String get oneDriveRestoreMissingPlaylistsFile => '该备份中没有歌单文件。';
+
+  @override
+  String get oneDriveRestoreMissingSettingsFile => '该备份中没有设置文件。';
+
+  @override
+  String get oneDriveRestoreFinished => '恢复完成。';
+
+  @override
+  String oneDriveRestoreFailed(String message) {
+    return '恢复失败：$message';
+  }
+
+  @override
+  String get oneDriveRestoreLoadingList => '正在读取备份列表…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
@@ -1859,6 +2218,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDrivePickFolderForAppData => '选择用于应用数据与未来备份的文件夹。';
 
   @override
+  String get oneDrivePickFolderForMusicUpload => '选择本设备上传音乐时使用的目标文件夹。';
+
+  @override
+  String get oneDriveMusicUploadFolderTitle => '上传音乐目标文件夹';
+
+  @override
+  String get oneDriveMusicUploadFolderSubtitle =>
+      '从本机曲库上传到 OneDrive 时的默认父文件夹。未单独设置时，将使用上方的云端应用文件夹。';
+
+  @override
+  String get oneDriveMusicUploadFolderFallback => '与云端应用文件夹相同';
+
+  @override
   String get oneDriveTroubleshootTitle => '登录不顺利？';
 
   @override
@@ -1891,6 +2263,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveSignInFailed => '这次没登录成功，看看网络或稍后再试；也可以翻翻下面「登录不顺利」里的小提示。';
+
+  @override
+  String get oneDriveTroubleshootUpload403 =>
+      '若上传返回 403：在 Azure 门户 → 应用注册 → API 权限中，为 Microsoft Graph 添加委托权限 Files.ReadWrite.All（工作/学校账号可能需管理员同意），然后在应用内退出 OneDrive 并重新登录以使新权限生效。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
@@ -1930,6 +2306,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveDownloadQueueTitle => 'OneDrive 下载队列';
+
+  @override
+  String get oneDriveTransferQueueTitle => 'OneDrive 传输队列';
+
+  @override
+  String get oneDriveTransferTabDownload => '下载';
+
+  @override
+  String get oneDriveTransferTabUpload => '上传';
 
   @override
   String get oneDriveDownloadPause => '暂停';
@@ -1972,10 +2357,21 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '暂无批量下载任务。\n在云端曲库或 OneDrive 浏览器中使用「播放全部」即可在此查看；关闭抽屉不会中断下载。';
 
   @override
+  String get oneDriveUploadQueueEmpty =>
+      '暂无上传任务。\n在本地曲库中通过多选栏的「上传到 OneDrive」添加；关闭界面不会中断后台传输。';
+
+  @override
+  String get oneDriveTransferQueueEmpty => '当前队列中还没有任务。';
+
+  @override
   String get oneDriveDownloadQueuePageHint => '在此暂停、继续或停止批量下载。关闭抽屉不会取消后台任务。';
 
   @override
-  String get oneDriveDownloadQueueSubtitle => '查看与控制批量下载与播放';
+  String get oneDriveUploadQueuePageHint =>
+      '本机发起的上传会显示在此，可用上方按钮暂停、继续或停止；清空记录会同时影响下载与上传历史。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '查看与控制上传、下载与播放';
 
   @override
   String get oneDriveDownloadQueueTooltip => '下载队列';
@@ -2922,6 +3318,76 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get lyricLabelTranslation => '译文';
+
+  @override
+  String get libraryBatchSelect => '多选';
+
+  @override
+  String get libraryBatchDone => '完成';
+
+  @override
+  String get libraryBatchSelectAll => '全选';
+
+  @override
+  String get libraryBatchDelete => '删除';
+
+  @override
+  String get libraryBatchRename => '重命名';
+
+  @override
+  String get libraryBatchUploadOneDrive => '上传到 OneDrive';
+
+  @override
+  String get libraryBatchDeleteConfirmTitle => '删除所选歌曲？';
+
+  @override
+  String get libraryBatchDeleteConfirmMessage => '将从本机删除文件，并更新歌单与最近播放。此操作不可撤销。';
+
+  @override
+  String get libraryBatchNoneSelected => '请先选择歌曲';
+
+  @override
+  String get libraryBatchRenameTitle => '批量重命名';
+
+  @override
+  String get libraryBatchRenameHint => '名称模板，用 %n 表示递增序号（如 曲目 %n）';
+
+  @override
+  String get libraryBatchRenameStart => '起始编号';
+
+  @override
+  String get libraryRenameSingleTitle => '重命名单曲';
+
+  @override
+  String get libraryRenameSingleHint => '只填主文件名，扩展名保持不变。';
+
+  @override
+  String get libraryRenameSingleFieldLabel => '文件名';
+
+  @override
+  String get libraryRenameSingleDone => '已重命名';
+
+  @override
+  String get libraryBatchUploadNeedSignIn => '请先在设置中登录 OneDrive';
+
+  @override
+  String get libraryBatchUploadNeedCloudFolder => '请先在 OneDrive 设置中选择云端应用文件夹';
+
+  @override
+  String get libraryBatchUploadNeedParentFolder =>
+      '请先在 OneDrive 设置中选择「上传音乐」文件夹或云端应用文件夹。';
+
+  @override
+  String get libraryBatchUploadQueued => '已加入传输队列';
+
+  @override
+  String get libraryBatchOpenQueue => '查看队列';
+
+  @override
+  String get oneDriveUploadStatusUploading => '上传中';
+
+  @override
+  String get oneDriveTaskDirectionUpload => '上传';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -2975,6 +3441,80 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsAboutDesc => '應用程式名稱與版本、致謝與開源授權全文。';
+
+  @override
+  String get settingsAboutDialogAuthor => '作者';
+
+  @override
+  String get settingsAboutDialogRepo => '存放庫';
+
+  @override
+  String get settingsAboutDialogLicense => '授權條款';
+
+  @override
+  String get settingsAboutDialogCopyright => '版權';
+
+  @override
+  String get settingsAboutDialogClose => '關閉';
+
+  @override
+  String settingsAboutDialogVersionLabel(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String get settingsSysinfoSectionDevice => '裝置資訊';
+
+  @override
+  String get settingsSysinfoSectionStorage => '儲存空間';
+
+  @override
+  String get settingsSysinfoPlatformLabel => '執行平台';
+
+  @override
+  String get settingsSysinfoTotalSpace => '總空間';
+
+  @override
+  String get settingsSysinfoUsedSpace => '已使用';
+
+  @override
+  String get settingsSysinfoFreeSpace => '剩餘空間';
+
+  @override
+  String get settingsSysinfoStorageUnavailable => '儲存資訊暫時無法取得';
+
+  @override
+  String get settingsSysinfoDeviceModel => '裝置型號';
+
+  @override
+  String get settingsSysinfoManufacturer => '製造商';
+
+  @override
+  String get settingsSysinfoOsVersion => '系統版本';
+
+  @override
+  String get settingsSysinfoSdkVersion => 'SDK 版本';
+
+  @override
+  String get settingsSysinfoDeviceName => '裝置名稱';
+
+  @override
+  String get settingsSysinfoHostName => '主機名稱';
+
+  @override
+  String get settingsSysinfoKernelVersion => '核心版本';
+
+  @override
+  String get settingsSysinfoDistroLabel => '版本';
+
+  @override
+  String get settingsSysinfoBuildNumber => '組建編號';
+
+  @override
+  String get settingsSysinfoError => '錯誤';
+
+  @override
+  String get settingsSysinfoFetchFailed => '無法取得裝置資訊';
 
   @override
   String get settingsLanguage => '語言';
@@ -3227,7 +3767,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      '依排程在雲端備份歌單與應用程式設定。需已登入並選擇雲端應用程式資料夾。自動同步將於後續版本提供。';
+      '依排程將歌單與應用程式設定備份到 OneDrive；每次上傳為附時間戳記的 JSON 檔案，並儲存於雲端應用程式資料夾。預約同步將於後續版本提供。';
 
   @override
   String get oneDriveSyncItemPlaylists => '歌單';
@@ -3264,7 +3804,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncNowDescription =>
-      '不必等排程，立刻上傳歌單與設定。（雲端上傳仍在準備中，上線後會接續這次操作。）';
+      '立即上傳最新歌單與設定。檔名含本機年月日時分秒（同一次快照的歌單與設定檔共用同一時間戳記）。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '請先登入 Microsoft 帳戶。';
@@ -3273,7 +3813,59 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveSyncNowNeedCloudFolder => '請先在上方選好「雲端應用程式資料夾」，我們才知道備份位置。';
 
   @override
-  String get oneDriveSyncNowFinished => '好的，已記下。雲端備份就緒後會自動處理。';
+  String get oneDriveSyncNowFinished => '已上傳至雲端應用程式資料夾（時間戳記 JSON）。';
+
+  @override
+  String oneDriveSyncNowFailed(String message) {
+    return '備份失敗：$message';
+  }
+
+  @override
+  String get oneDriveRestoreFromCloud => '從雲端還原';
+
+  @override
+  String get oneDriveRestoreSubtitle => '從雲端應用程式資料夾下載帶時間戳記的備份 JSON。';
+
+  @override
+  String get oneDriveRestoreSheetTitle => '選擇備份時間點';
+
+  @override
+  String get oneDriveRestoreEmpty => '尚未發現備份檔案。請先使用下方「立即同步」上傳歌單或設定。';
+
+  @override
+  String get oneDriveRestorePlaylistCheckbox => '歌單';
+
+  @override
+  String get oneDriveRestoreSettingsCheckbox => '應用程式設定';
+
+  @override
+  String get oneDriveRestorePlaylistModeMerge => '合併到本機（相同 id 歌單合併曲目）';
+
+  @override
+  String get oneDriveRestorePlaylistModeReplace => '覆寫本機歌單（先清空再匯入）';
+
+  @override
+  String get oneDriveRestoreAction => '還原';
+
+  @override
+  String get oneDriveRestoreNeedPickContent => '請至少勾選歌單或應用程式設定其中一項。';
+
+  @override
+  String get oneDriveRestoreMissingPlaylistsFile => '此備份中沒有歌單檔案。';
+
+  @override
+  String get oneDriveRestoreMissingSettingsFile => '此備份中沒有設定檔案。';
+
+  @override
+  String get oneDriveRestoreFinished => '還原完成。';
+
+  @override
+  String oneDriveRestoreFailed(String message) {
+    return '還原失敗：$message';
+  }
+
+  @override
+  String get oneDriveRestoreLoadingList => '正在讀取備份列表…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音樂瀏覽根目錄（選填）';
@@ -3319,6 +3911,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDrivePickFolderForAppData => '選擇應用程式資料與未來備份要用的資料夾。';
 
   @override
+  String get oneDrivePickFolderForMusicUpload => '選擇從本裝置上傳音樂時的目標資料夾。';
+
+  @override
+  String get oneDriveMusicUploadFolderTitle => '上傳音樂目標資料夾';
+
+  @override
+  String get oneDriveMusicUploadFolderSubtitle =>
+      '從本機曲庫上傳到 OneDrive 時的預設父資料夾。未另外設定時，會使用上方的雲端應用程式資料夾。';
+
+  @override
+  String get oneDriveMusicUploadFolderFallback => '與雲端應用程式資料夾相同';
+
+  @override
   String get oneDriveTroubleshootTitle => '登入不順利？';
 
   @override
@@ -3351,6 +3956,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveSignInFailed => '這次沒登入成功，檢查網路或稍後再試；也可看看下方「登入不順利」的提示。';
+
+  @override
+  String get oneDriveTroubleshootUpload403 =>
+      '若上傳出現 403：在 Azure 入口網站 → 應用程式註冊 → API 權限，為 Microsoft Graph 新增委派的 Files.ReadWrite.All（公司或學校帳戶可能需管理員同意），然後於應用程式內登出 OneDrive 並重新登入以套用新權限。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
@@ -3390,6 +3999,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveDownloadQueueTitle => 'OneDrive 下載佇列';
+
+  @override
+  String get oneDriveTransferQueueTitle => 'OneDrive 傳輸佇列';
+
+  @override
+  String get oneDriveTransferTabDownload => '下載';
+
+  @override
+  String get oneDriveTransferTabUpload => '上傳';
 
   @override
   String get oneDriveDownloadPause => '暫停';
@@ -3432,10 +4050,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '尚無批量下載。\n在雲端曲庫或 OneDrive 瀏覽器使用「播放全部」後會顯示於此；關閉抽屜不會中斷下載。';
 
   @override
+  String get oneDriveUploadQueueEmpty =>
+      '尚無上傳工作。\n在本機曲庫用多選列的「上傳到 OneDrive」加入；關閉畫面不會中斷背景傳輸。';
+
+  @override
+  String get oneDriveTransferQueueEmpty => '目前佇列中尚無工作。';
+
+  @override
   String get oneDriveDownloadQueuePageHint => '在此暫停、繼續或停止批量下載。關閉抽屜不會取消背景任務。';
 
   @override
-  String get oneDriveDownloadQueueSubtitle => '檢視與控制批量下載與播放';
+  String get oneDriveUploadQueuePageHint =>
+      '從本機發起的上傳會顯示於此，可用上方按鈕暫停、繼續或停止；清空紀錄會同時影響下載與上傳歷史。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => '檢視與控制上傳、下載與播放';
 
   @override
   String get oneDriveDownloadQueueTooltip => '下載佇列';
@@ -4382,4 +5011,74 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lyricLabelTranslation => '譯文';
+
+  @override
+  String get libraryBatchSelect => '多選';
+
+  @override
+  String get libraryBatchDone => '完成';
+
+  @override
+  String get libraryBatchSelectAll => '全選';
+
+  @override
+  String get libraryBatchDelete => '刪除';
+
+  @override
+  String get libraryBatchRename => '重新命名';
+
+  @override
+  String get libraryBatchUploadOneDrive => '上傳到 OneDrive';
+
+  @override
+  String get libraryBatchDeleteConfirmTitle => '刪除所選歌曲？';
+
+  @override
+  String get libraryBatchDeleteConfirmMessage => '將從本機刪除檔案，並更新歌單與最近播放。此操作無法復原。';
+
+  @override
+  String get libraryBatchNoneSelected => '請先選擇歌曲';
+
+  @override
+  String get libraryBatchRenameTitle => '批次重新命名';
+
+  @override
+  String get libraryBatchRenameHint => '名稱範本，用 %n 表示遞增序號（如 曲目 %n）';
+
+  @override
+  String get libraryBatchRenameStart => '起始編號';
+
+  @override
+  String get libraryRenameSingleTitle => '重新命名單曲';
+
+  @override
+  String get libraryRenameSingleHint => '只填主檔名，副檔名不變。';
+
+  @override
+  String get libraryRenameSingleFieldLabel => '檔名';
+
+  @override
+  String get libraryRenameSingleDone => '已重新命名';
+
+  @override
+  String get libraryBatchUploadNeedSignIn => '請先在設定中登入 OneDrive';
+
+  @override
+  String get libraryBatchUploadNeedCloudFolder => '請先在 OneDrive 設定中選擇雲端應用程式資料夾';
+
+  @override
+  String get libraryBatchUploadNeedParentFolder =>
+      '請先在 OneDrive 設定中選擇「上傳音樂」資料夾或雲端應用程式資料夾。';
+
+  @override
+  String get libraryBatchUploadQueued => '已加入傳輸佇列';
+
+  @override
+  String get libraryBatchOpenQueue => '查看佇列';
+
+  @override
+  String get oneDriveUploadStatusUploading => '上傳中';
+
+  @override
+  String get oneDriveTaskDirectionUpload => '上傳';
 }

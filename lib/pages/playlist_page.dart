@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/folder_provider.dart';
+import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
+import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
+import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
-import '../compments/folder_provider.dart';
 import '../compments/onedrive_controller.dart';
 import '../compments/play_list_provider.dart';
 import '../models/playback_session_surface.dart';
@@ -34,6 +39,8 @@ class PlayListPage extends StatefulWidget {
 class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   final ScrollController _listScrollController = ScrollController();
   bool _routeObserverSubscribed = false;
+  bool _batchSelect = false;
+  final Set<String> _selectedNormPaths = {};
   /// 已按该规范化路径自动滚过屏；仅在一次 [scheduleScrollListToCurrentSong] 的 [onScrollApplied] 中写入。
   String? _lastAutoScrollPathNorm;
   /// 防 build 在首次未挂接时重复排队；在 [onScrollApplied]/[onScrollFailed] 中清除
@@ -200,6 +207,312 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     );
   }
 
+  void _exitBatchSelect() {
+    setState(() {
+      _batchSelect = false;
+      _selectedNormPaths.clear();
+    });
+  }
+
+  void _toggleBatchPath(String path) {
+    final k = normSongPath(path);
+    setState(() {
+      if (_selectedNormPaths.contains(k)) {
+        _selectedNormPaths.remove(k);
+      } else {
+        _selectedNormPaths.add(k);
+      }
+    });
+  }
+
+  void _selectAllFiltered(List<Song> visible) {
+    setState(() {
+      for (final s in visible) {
+        _selectedNormPaths.add(normSongPath(s.path));
+      }
+    });
+  }
+
+  List<Song> _selectedSongsInListOrder(List<Song> visibleOrdered) {
+    final out = <Song>[];
+    for (final s in visibleOrdered) {
+      if (_selectedNormPaths.contains(normSongPath(s.path))) {
+        out.add(s);
+      }
+    }
+    return out;
+  }
+
+  Future<void> _confirmBatchDelete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final selected = _selectedSongsInListOrder(_filteredSongs);
+    if (selected.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.libraryBatchDeleteConfirmTitle),
+        content: Text(l10n.libraryBatchDeleteConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final folder = context.read<FolderProvider>();
+    final playList = context.read<PlayListProvider>();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) await userPl.init();
+    try {
+      await deleteLibrarySongsAndRefresh(
+        folderProvider: folder,
+        playListProvider: playList,
+        userPlaylistProvider: userPl,
+        songs: selected,
+      );
+      if (context.mounted) {
+        _exitBatchSelect();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.playlistDeletedOne)),
+        );
+      }
+    } catch (e) {
+      appLog.e('batch delete failed', error: e);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _batchRenameSheet(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final selected = _selectedSongsInListOrder(_filteredSongs);
+    if (selected.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      return;
+    }
+    final patternCtrl = TextEditingController(text: 'Track %n');
+    final startCtrl = TextEditingController(text: '1');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.libraryBatchRenameTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.libraryBatchRenameHint,
+              style: TextStyle(
+                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: patternCtrl,
+              decoration: InputDecoration(labelText: l10n.libraryBatchRenameTitle),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: startCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: l10n.libraryBatchRenameStart),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionOK),
+          ),
+        ],
+      ),
+    );
+    final pattern = patternCtrl.text.trim();
+    final startN = int.tryParse(startCtrl.text.trim()) ?? 1;
+    patternCtrl.dispose();
+    startCtrl.dispose();
+    if (ok != true || !context.mounted || pattern.isEmpty) return;
+    final folder = context.read<FolderProvider>();
+    final playList = context.read<PlayListProvider>();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) await userPl.init();
+    try {
+      await renameLibrarySongsWithPattern(
+        folderProvider: folder,
+        playListProvider: playList,
+        userPlaylistProvider: userPl,
+        songsInOrder: selected,
+        namePattern: pattern,
+        startNumber: startN,
+      );
+      if (context.mounted) {
+        _exitBatchSelect();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.playlistRenameTitle)),
+        );
+      }
+    } catch (e) {
+      appLog.e('batch rename failed', error: e);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _renameSingleSongSheet(BuildContext context, Song song) async {
+    if (_batchSelect) return;
+    final l10n = AppLocalizations.of(context);
+    final base = p.basenameWithoutExtension(song.path);
+    final newStem = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => _SingleSongRenameDialog(
+        l10n: l10n,
+        initialStem: base,
+      ),
+    );
+    if (newStem == null || !context.mounted) return;
+    final folder = context.read<FolderProvider>();
+    final playList = context.read<PlayListProvider>();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) await userPl.init();
+    try {
+      await renameLibrarySongToStem(
+        folderProvider: folder,
+        playListProvider: playList,
+        userPlaylistProvider: userPl,
+        song: song,
+        newStem: newStem,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.libraryRenameSingleDone)),
+        );
+      }
+    } catch (e) {
+      appLog.e('single rename failed', error: e);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _batchUploadOneDrive(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final od = context.read<OneDriveDownloadQueueController>();
+    final selected = _selectedSongsInListOrder(_filteredSongs);
+    if (selected.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      return;
+    }
+    try {
+      await od.enqueueLibraryUploads(selected);
+      if (!context.mounted) return;
+      _exitBatchSelect();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.libraryBatchUploadQueued),
+          action: SnackBarAction(
+            label: l10n.libraryBatchOpenQueue,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const OneDriveDownloadQueuePage(),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    } on StateError catch (e) {
+      final msg = '$e';
+      if (!context.mounted) return;
+      final text = msg.contains('not signed')
+          ? l10n.libraryBatchUploadNeedSignIn
+          : msg.contains('upload folder unset')
+              ? l10n.libraryBatchUploadNeedCloudFolder
+              : '$e';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
+  }
+
+  Widget _libraryBatchActionBar(BuildContext context, AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 8,
+      color: scheme.surface.withValues(alpha: 0.92),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: () => _selectAllFiltered(_filteredSongs),
+                child: Text(l10n.libraryBatchSelectAll),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${_selectedNormPaths.length}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600),
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.libraryBatchUploadOneDrive,
+                icon: const Icon(Icons.cloud_upload_outlined),
+                onPressed: () => _batchUploadOneDrive(context),
+              ),
+              IconButton(
+                tooltip: l10n.libraryBatchRename,
+                icon: const Icon(Icons.drive_file_rename_outline),
+                onPressed: () => _batchRenameSheet(context),
+              ),
+              IconButton(
+                tooltip: l10n.libraryBatchDelete,
+                icon: Icon(Icons.delete_outline, color: scheme.error),
+                onPressed: () => _confirmBatchDelete(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<PlayListProvider>(
@@ -238,93 +551,223 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           for (var i = 0; i < playList.length; i++) playList[i].path: i,
         };
         final l10n = AppLocalizations.of(context);
-        return SongPlaylistThemedScaffold(
+        return PopScope(
+          canPop: !_batchSelect,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && _batchSelect) {
+              _exitBatchSelect();
+            }
+          },
+          child: SongPlaylistThemedScaffold(
           appBar: AppBar(
+            leading: _batchSelect
+                ? IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _exitBatchSelect,
+                  )
+                : null,
             title: Text(
-              l10n.menuSongList,
+              _batchSelect
+                  ? '${_selectedNormPaths.length}'
+                  : l10n.menuSongList,
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  showSearch(
-                    context: context,
-                    delegate: SongSearchDelegate(
-                      _filteredSongs,
-                      playListProvider,
-                      searchFieldLabelText: l10n.playlistSearchHint,
-                    ),
-                  );
-                },
-                tooltip: l10n.homeSearchTooltip,
-              ),
-              IconButton(
-                icon: const Icon(Icons.sort),
-                onPressed: _showSortOptions,
-                tooltip: l10n.tooltipSort,
-              ),
+              if (_batchSelect)
+                TextButton(
+                  onPressed: _exitBatchSelect,
+                  child: Text(
+                    l10n.libraryBatchDone,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                )
+              else ...[
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    showSearch(
+                      context: context,
+                      delegate: SongSearchDelegate(
+                        _filteredSongs,
+                        playListProvider,
+                        searchFieldLabelText: l10n.playlistSearchHint,
+                      ),
+                    );
+                  },
+                  tooltip: l10n.homeSearchTooltip,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.sort),
+                  onPressed: _showSortOptions,
+                  tooltip: l10n.tooltipSort,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.checklist_rounded),
+                  onPressed: playList.isEmpty
+                      ? null
+                      : () => setState(() => _batchSelect = true),
+                  tooltip: l10n.libraryBatchSelect,
+                ),
+              ],
             ],
           ),
           body: SongPlaylistBodyUnderlapColumn(
-            child: _filteredSongs.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.music_note,
-                          size: 64,
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.songsListEmpty,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _filteredSongs.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.music_note,
+                                size: 64,
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.songsListEmpty,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
+                        )
+                      : SongPlaylistSongListView(
+                          scrollController: _listScrollController,
+                          songs: _filteredSongs,
+                          listBottomInsetExtra: _batchSelect ? 64 : 0,
+                          itemBuilder: (context, song, index, isRowCurrent) {
+                            final originalIndex =
+                                pathToIndex[song.path] ?? 0;
+                            return CompactSongListRow(
+                              key: ValueKey<String>(
+                                'lib_row_${index}_${normSongPath(song.path)}',
+                              ),
+                              song: song,
+                              title: song.title ?? l10n.pageUnknownTitle,
+                              subtitle: songListSecondaryLine(song),
+                              isCurrent: isRowCurrent,
+                              selectionMode: _batchSelect,
+                              isSelected: _selectedNormPaths
+                                  .contains(normSongPath(song.path)),
+                              onSelectionTap: () =>
+                                  _toggleBatchPath(song.path),
+                              onLongPress: () =>
+                                  _renameSingleSongSheet(context, song),
+                              onTap: () async {
+                                if (_batchSelect) {
+                                  _toggleBatchPath(song.path);
+                                  return;
+                                }
+                                if (isRowCurrent) {
+                                  await toggleCurrentRowPlayback(
+                                    playListProvider,
+                                  );
+                                  return;
+                                }
+                                playListProvider
+                                    .setPlaybackListSessionForLibrary();
+                                if (playListProvider
+                                    .hasPlaybackQueueOverride) {
+                                  await playListProvider
+                                      .playAt(originalIndex);
+                                } else {
+                                  await playListProvider.playAt(
+                                    originalIndex,
+                                    listSession:
+                                        PlaybackSessionSurface.library,
+                                  );
+                                }
+                              },
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                  )
-                : SongPlaylistSongListView(
-                    scrollController: _listScrollController,
-                    songs: _filteredSongs,
-                    itemBuilder: (context, song, index, isRowCurrent) {
-                      final originalIndex = pathToIndex[song.path] ?? 0;
-                      return CompactSongListRow(
-                        key: ValueKey<String>(song.path),
-                        song: song,
-                        title: song.title ?? l10n.pageUnknownTitle,
-                        subtitle: songListSecondaryLine(song),
-                        isCurrent: isRowCurrent,
-                        onTap: () async {
-                          if (isRowCurrent) {
-                            await toggleCurrentRowPlayback(
-                              playListProvider,
-                            );
-                            return;
-                          }
-                          playListProvider.setPlaybackListSessionForLibrary();
-                          if (playListProvider.hasPlaybackQueueOverride) {
-                            await playListProvider.playAt(originalIndex);
-                          } else {
-                            await playListProvider.playAt(
-                              originalIndex,
-                              listSession: PlaybackSessionSurface.library,
-                            );
-                          }
-                        },
-                      );
-                    },
-                  ),
+                ),
+                if (_batchSelect) _libraryBatchActionBar(context, l10n),
+              ],
+            ),
           ),
+        ),
         );
       },
+    );
+  }
+}
+
+/// 单首重命名对话框：在 [State] 内创建并 [dispose] [TextEditingController]，避免关闭动画期间误用已释放的 controller。
+class _SingleSongRenameDialog extends StatefulWidget {
+  const _SingleSongRenameDialog({
+    required this.l10n,
+    required this.initialStem,
+  });
+
+  final AppLocalizations l10n;
+  final String initialStem;
+
+  @override
+  State<_SingleSongRenameDialog> createState() => _SingleSongRenameDialogState();
+}
+
+class _SingleSongRenameDialogState extends State<_SingleSongRenameDialog> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initialStem);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.l10n.libraryRenameSingleTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              widget.l10n.libraryRenameSingleHint,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _ctrl,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: widget.l10n.libraryRenameSingleFieldLabel,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop<String?>(context, null),
+          child: Text(widget.l10n.actionCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop<String?>(context, _ctrl.text.trim()),
+          child: Text(widget.l10n.actionOK),
+        ),
+      ],
     );
   }
 }
@@ -486,7 +929,9 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
               final isRowCurrent = current != null &&
                   songPathsEqual(song.path, current.path);
               return CompactSongListRow(
-                key: ValueKey('search_${song.path}'),
+                key: ValueKey<String>(
+                  'search_${index}_${normSongPath(song.path)}',
+                ),
                 song: song,
                 title: song.title ?? l10n.pageUnknownTitle,
                 subtitle: songListSecondaryLine(song),

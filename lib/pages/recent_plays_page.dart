@@ -9,6 +9,7 @@ import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/navigation/app_route_observer.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
@@ -193,7 +194,9 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                     itemBuilder: (context, song, index, isCurrent) {
                       final idx = pathToIdx[song.path] ?? -1;
                       return CompactSongListRow(
-                        key: ValueKey<String>(song.path),
+                        key: ValueKey<String>(
+                          'recent_${index}_${normSongPath(song.path)}',
+                        ),
                         song: song,
                         title: song.title ?? l10n.pageUnknownTitle,
                         subtitle: songListSecondaryLine(song),

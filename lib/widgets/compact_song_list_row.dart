@@ -16,8 +16,12 @@ class CompactSongListRow extends StatefulWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.onLongPress,
     this.isCurrent = false,
     this.showAddToPlaylist = true,
+    this.selectionMode = false,
+    this.isSelected = false,
+    this.onSelectionTap,
   });
 
   final Song song;
@@ -26,9 +30,15 @@ class CompactSongListRow extends StatefulWidget {
   /// 副标题占位；补全后以 [songListSecondaryLine] 为准。
   final String subtitle;
   final VoidCallback onTap;
+  /// 非选择模式下长按（如曲库单首重命名）。
+  final VoidCallback? onLongPress;
   /// 是否为当前正在播放（与 [PlayListProvider.currentSong] 对应行）
   final bool isCurrent;
   final bool showAddToPlaylist;
+  /// 批量选曲：显示勾选并改 [onTap] 为勾选切换（通过 [onSelectionTap]）。
+  final bool selectionMode;
+  final bool isSelected;
+  final VoidCallback? onSelectionTap;
 
   @override
   State<CompactSongListRow> createState() => _CompactSongListRowState();
@@ -97,24 +107,47 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: widget.onTap,
+            onTap: widget.selectionMode
+                ? (widget.onSelectionTap ?? widget.onTap)
+                : widget.onTap,
+            onLongPress:
+                widget.selectionMode ? null : widget.onLongPress,
             child: Container(
               decoration: BoxDecoration(
                 color: widget.isCurrent
                     ? primary.withValues(alpha: 0.14)
-                    : null,
+                    : widget.selectionMode && widget.isSelected
+                        ? primary.withValues(alpha: 0.12)
+                        : null,
                 border: widget.isCurrent
                     ? Border.all(
                         color: primary.withValues(alpha: 0.35),
                         width: 1,
                       )
-                    : null,
+                    : widget.selectionMode && widget.isSelected
+                        ? Border.all(
+                            color: primary.withValues(alpha: 0.45),
+                            width: 1,
+                          )
+                        : null,
                 borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  if (widget.selectionMode) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Icon(
+                        widget.isSelected
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        color: widget.isSelected ? primary : Colors.white38,
+                        size: 26,
+                      ),
+                    ),
+                  ],
                   SongListCover(
                     song: widget.song,
                     size: 48,
@@ -154,9 +187,11 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                     ),
                   ),
                   if (widget.isCurrent) ListRowPlayingIndicator(color: primary),
-                  if (widget.isCurrent && widget.showAddToPlaylist)
+                  if (!widget.selectionMode &&
+                      widget.isCurrent &&
+                      widget.showAddToPlaylist)
                     const SizedBox(width: 2),
-                  if (widget.showAddToPlaylist)
+                  if (!widget.selectionMode && widget.showAddToPlaylist)
                     IconButton(
                       icon: const Icon(Icons.playlist_add, color: Colors.white70),
                       tooltip: l10n.tooltipAddToPlaylist,

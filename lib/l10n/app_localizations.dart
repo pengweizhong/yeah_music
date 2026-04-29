@@ -198,6 +198,150 @@ abstract class AppLocalizations {
   /// **'App name and version, acknowledgements, and open-source license texts.'**
   String get settingsAboutDesc;
 
+  /// No description provided for @settingsAboutDialogAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get settingsAboutDialogAuthor;
+
+  /// No description provided for @settingsAboutDialogRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository'**
+  String get settingsAboutDialogRepo;
+
+  /// No description provided for @settingsAboutDialogLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get settingsAboutDialogLicense;
+
+  /// No description provided for @settingsAboutDialogCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright'**
+  String get settingsAboutDialogCopyright;
+
+  /// No description provided for @settingsAboutDialogClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get settingsAboutDialogClose;
+
+  /// No description provided for @settingsAboutDialogVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'v{version}'**
+  String settingsAboutDialogVersionLabel(String version);
+
+  /// No description provided for @settingsSysinfoSectionDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Device'**
+  String get settingsSysinfoSectionDevice;
+
+  /// No description provided for @settingsSysinfoSectionStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get settingsSysinfoSectionStorage;
+
+  /// No description provided for @settingsSysinfoPlatformLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get settingsSysinfoPlatformLabel;
+
+  /// No description provided for @settingsSysinfoTotalSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Total space'**
+  String get settingsSysinfoTotalSpace;
+
+  /// No description provided for @settingsSysinfoUsedSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get settingsSysinfoUsedSpace;
+
+  /// No description provided for @settingsSysinfoFreeSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Free space'**
+  String get settingsSysinfoFreeSpace;
+
+  /// No description provided for @settingsSysinfoStorageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage details are unavailable.'**
+  String get settingsSysinfoStorageUnavailable;
+
+  /// No description provided for @settingsSysinfoDeviceModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get settingsSysinfoDeviceModel;
+
+  /// No description provided for @settingsSysinfoManufacturer.
+  ///
+  /// In en, this message translates to:
+  /// **'Manufacturer'**
+  String get settingsSysinfoManufacturer;
+
+  /// No description provided for @settingsSysinfoOsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'OS version'**
+  String get settingsSysinfoOsVersion;
+
+  /// No description provided for @settingsSysinfoSdkVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'SDK version'**
+  String get settingsSysinfoSdkVersion;
+
+  /// No description provided for @settingsSysinfoDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get settingsSysinfoDeviceName;
+
+  /// No description provided for @settingsSysinfoHostName.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer name'**
+  String get settingsSysinfoHostName;
+
+  /// No description provided for @settingsSysinfoKernelVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Kernel'**
+  String get settingsSysinfoKernelVersion;
+
+  /// No description provided for @settingsSysinfoDistroLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsSysinfoDistroLabel;
+
+  /// No description provided for @settingsSysinfoBuildNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get settingsSysinfoBuildNumber;
+
+  /// No description provided for @settingsSysinfoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get settingsSysinfoError;
+
+  /// No description provided for @settingsSysinfoFetchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load device information.'**
+  String get settingsSysinfoFetchFailed;
+
   /// No description provided for @settingsLanguage.
   ///
   /// In en, this message translates to:
@@ -675,7 +819,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncMasterSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Back up playlists and app settings on a schedule. Requires sign-in and a cloud app folder. Automatic sync will be enabled in a future update.'**
+  /// **'Back up playlists and app settings on a schedule. Each upload is saved as timestamped JSON files in your cloud app folder. Scheduled timers will run in a later update.'**
   String get oneDriveSyncMasterSubtitle;
 
   /// No description provided for @oneDriveSyncItemPlaylists.
@@ -747,7 +891,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncNowDescription.
   ///
   /// In en, this message translates to:
-  /// **'Push the latest playlists and settings without waiting for the timer. (Cloud upload is still on the way—this lets you trigger it early once it’s live.)'**
+  /// **'Upload playlists and settings now. Files are named with the local date and time, for example playlists and settings snapshots from the same moment share the same timestamp.'**
   String get oneDriveSyncNowDescription;
 
   /// No description provided for @oneDriveSyncNowNeedLogin.
@@ -765,8 +909,104 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncNowFinished.
   ///
   /// In en, this message translates to:
-  /// **'All set—we’ll use this the moment cloud backup is ready.'**
+  /// **'Backup uploaded as timestamped JSON in your cloud app folder.'**
   String get oneDriveSyncNowFinished;
+
+  /// No description provided for @oneDriveSyncNowFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed: {message}'**
+  String oneDriveSyncNowFailed(String message);
+
+  /// No description provided for @oneDriveRestoreFromCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from cloud'**
+  String get oneDriveRestoreFromCloud;
+
+  /// No description provided for @oneDriveRestoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download a timestamped backup from your cloud app folder.'**
+  String get oneDriveRestoreSubtitle;
+
+  /// No description provided for @oneDriveRestoreSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup'**
+  String get oneDriveRestoreSheetTitle;
+
+  /// No description provided for @oneDriveRestoreEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup files yet. Use “Sync now” to upload first.'**
+  String get oneDriveRestoreEmpty;
+
+  /// No description provided for @oneDriveRestorePlaylistCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get oneDriveRestorePlaylistCheckbox;
+
+  /// No description provided for @oneDriveRestoreSettingsCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings'**
+  String get oneDriveRestoreSettingsCheckbox;
+
+  /// No description provided for @oneDriveRestorePlaylistModeMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge with local playlists'**
+  String get oneDriveRestorePlaylistModeMerge;
+
+  /// No description provided for @oneDriveRestorePlaylistModeReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace playlists (clear local first)'**
+  String get oneDriveRestorePlaylistModeReplace;
+
+  /// No description provided for @oneDriveRestoreAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get oneDriveRestoreAction;
+
+  /// No description provided for @oneDriveRestoreNeedPickContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least playlists or settings.'**
+  String get oneDriveRestoreNeedPickContent;
+
+  /// No description provided for @oneDriveRestoreMissingPlaylistsFile.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists file in this backup.'**
+  String get oneDriveRestoreMissingPlaylistsFile;
+
+  /// No description provided for @oneDriveRestoreMissingSettingsFile.
+  ///
+  /// In en, this message translates to:
+  /// **'No settings file in this backup.'**
+  String get oneDriveRestoreMissingSettingsFile;
+
+  /// No description provided for @oneDriveRestoreFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore completed.'**
+  String get oneDriveRestoreFinished;
+
+  /// No description provided for @oneDriveRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed: {message}'**
+  String oneDriveRestoreFailed(String message);
+
+  /// No description provided for @oneDriveRestoreLoadingList.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading backups…'**
+  String get oneDriveRestoreLoadingList;
 
   /// No description provided for @oneDriveMusicRootIdLabel.
   ///
@@ -852,6 +1092,30 @@ abstract class AppLocalizations {
   /// **'Pick a folder for app data and future backups.'**
   String get oneDrivePickFolderForAppData;
 
+  /// No description provided for @oneDrivePickFolderForMusicUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the folder where uploads from this device should go.'**
+  String get oneDrivePickFolderForMusicUpload;
+
+  /// No description provided for @oneDriveMusicUploadFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music upload folder'**
+  String get oneDriveMusicUploadFolderTitle;
+
+  /// No description provided for @oneDriveMusicUploadFolderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default folder for uploads from this device. If unset, the cloud app folder is used.'**
+  String get oneDriveMusicUploadFolderSubtitle;
+
+  /// No description provided for @oneDriveMusicUploadFolderFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses cloud app folder'**
+  String get oneDriveMusicUploadFolderFallback;
+
   /// No description provided for @oneDriveTroubleshootTitle.
   ///
   /// In en, this message translates to:
@@ -917,6 +1181,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn’t finish signing in—check your connection and try again, or skim the tips under “Having trouble signing in?”'**
   String get oneDriveSignInFailed;
+
+  /// No description provided for @oneDriveTroubleshootUpload403.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload HTTP 403: In Azure → App registration → API permissions, add Microsoft Graph delegated Files.ReadWrite.All (and grant admin consent if required), then sign out and sign in again in this app.'**
+  String get oneDriveTroubleshootUpload403;
 
   /// No description provided for @oneDriveAzureRedirectIntro.
   ///
@@ -989,6 +1259,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OneDrive downloads'**
   String get oneDriveDownloadQueueTitle;
+
+  /// No description provided for @oneDriveTransferQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive transfers'**
+  String get oneDriveTransferQueueTitle;
+
+  /// No description provided for @oneDriveTransferTabDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get oneDriveTransferTabDownload;
+
+  /// No description provided for @oneDriveTransferTabUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads'**
+  String get oneDriveTransferTabUpload;
 
   /// No description provided for @oneDriveDownloadPause.
   ///
@@ -1068,16 +1356,34 @@ abstract class AppLocalizations {
   /// **'No batch download yet.\nUse “Play all” in the cloud library or OneDrive browser — you can close this panel and downloads keep running.'**
   String get oneDriveDownloadQueueEmpty;
 
+  /// No description provided for @oneDriveUploadQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No upload tasks yet.\nUse “Upload to OneDrive” from the local library.'**
+  String get oneDriveUploadQueueEmpty;
+
+  /// No description provided for @oneDriveTransferQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks in the queue yet.'**
+  String get oneDriveTransferQueueEmpty;
+
   /// No description provided for @oneDriveDownloadQueuePageHint.
   ///
   /// In en, this message translates to:
   /// **'Pause, resume, or stop downloads here. Closing the sheet does not cancel background downloads.'**
   String get oneDriveDownloadQueuePageHint;
 
+  /// No description provided for @oneDriveUploadQueuePageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Library uploads appear here. Use the same controls to pause, resume, or stop.'**
+  String get oneDriveUploadQueuePageHint;
+
   /// No description provided for @oneDriveDownloadQueueSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Batch downloads and playback controls'**
+  /// **'Upload & download queue and playback'**
   String get oneDriveDownloadQueueSubtitle;
 
   /// No description provided for @oneDriveDownloadQueueTooltip.
@@ -2819,6 +3125,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Translation'**
   String get lyricLabelTranslation;
+
+  /// No description provided for @libraryBatchSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get libraryBatchSelect;
+
+  /// No description provided for @libraryBatchDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get libraryBatchDone;
+
+  /// No description provided for @libraryBatchSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryBatchSelectAll;
+
+  /// No description provided for @libraryBatchDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get libraryBatchDelete;
+
+  /// No description provided for @libraryBatchRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get libraryBatchRename;
+
+  /// No description provided for @libraryBatchUploadOneDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload to OneDrive'**
+  String get libraryBatchUploadOneDrive;
+
+  /// No description provided for @libraryBatchDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected songs?'**
+  String get libraryBatchDeleteConfirmTitle;
+
+  /// No description provided for @libraryBatchDeleteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Files will be removed from this device and references cleaned up. This cannot be undone.'**
+  String get libraryBatchDeleteConfirmMessage;
+
+  /// No description provided for @libraryBatchNoneSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Select songs first'**
+  String get libraryBatchNoneSelected;
+
+  /// No description provided for @libraryBatchRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch rename'**
+  String get libraryBatchRenameTitle;
+
+  /// No description provided for @libraryBatchRenameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern; use %n for a number (e.g. Track %n)'**
+  String get libraryBatchRenameHint;
+
+  /// No description provided for @libraryBatchRenameStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start at'**
+  String get libraryBatchRenameStart;
+
+  /// No description provided for @libraryRenameSingleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename track'**
+  String get libraryRenameSingleTitle;
+
+  /// No description provided for @libraryRenameSingleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Main filename only; the extension is kept.'**
+  String get libraryRenameSingleHint;
+
+  /// No description provided for @libraryRenameSingleFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get libraryRenameSingleFieldLabel;
+
+  /// No description provided for @libraryRenameSingleDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed'**
+  String get libraryRenameSingleDone;
+
+  /// No description provided for @libraryBatchUploadNeedSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to OneDrive in Settings'**
+  String get libraryBatchUploadNeedSignIn;
+
+  /// No description provided for @libraryBatchUploadNeedCloudFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an OneDrive cloud app folder in Settings first'**
+  String get libraryBatchUploadNeedCloudFolder;
+
+  /// No description provided for @libraryBatchUploadNeedParentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a music upload folder or cloud app folder under OneDrive settings first.'**
+  String get libraryBatchUploadNeedParentFolder;
+
+  /// No description provided for @libraryBatchUploadQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to transfer queue'**
+  String get libraryBatchUploadQueued;
+
+  /// No description provided for @libraryBatchOpenQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Open queue'**
+  String get libraryBatchOpenQueue;
+
+  /// No description provided for @oneDriveUploadStatusUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get oneDriveUploadStatusUploading;
+
+  /// No description provided for @oneDriveTaskDirectionUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get oneDriveTaskDirectionUpload;
 }
 
 class _AppLocalizationsDelegate

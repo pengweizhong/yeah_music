@@ -275,6 +275,43 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 从所有用户歌单中移除路径（文件已删除等）。
+  Future<void> removePathsFromAllPlaylists(Iterable<String> rawPaths) async {
+    final norms = <String>{
+      for (final p in rawPaths)
+        if (p.trim().isNotEmpty) normSongPath(p),
+    };
+    if (norms.isEmpty) return;
+    var changed = false;
+    for (final playlist in _playlists) {
+      final before = playlist.songPaths.length;
+      playlist.songPaths.removeWhere((p) => norms.contains(normSongPath(p)));
+      if (playlist.songPaths.length != before) changed = true;
+    }
+    if (!changed) return;
+    await _save();
+    notifyListeners();
+  }
+
+  /// 所有歌单内将路径 [oldPath] 替换为 [newPath]（文件重命名后）。
+  Future<void> replaceSongPathInAllPlaylists(String oldPath, String newPath) async {
+    final o = normSongPath(oldPath);
+    final n = newPath.trim();
+    if (o.isEmpty || n.isEmpty) return;
+    var changed = false;
+    for (final playlist in _playlists) {
+      for (var i = 0; i < playlist.songPaths.length; i++) {
+        if (normSongPath(playlist.songPaths[i]) == o) {
+          playlist.songPaths[i] = n;
+          changed = true;
+        }
+      }
+    }
+    if (!changed) return;
+    await _save();
+    notifyListeners();
+  }
+
   Map<String, Song> _indexLibraryByNormPath(List<Song> allSongs) {
     final byNormPath = <String, Song>{};
     for (final song in allSongs) {

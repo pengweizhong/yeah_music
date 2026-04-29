@@ -59,6 +59,80 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAboutDesc => 'アプリ名とバージョン、クレジット、オープンソースライセンスの全文です。';
 
   @override
+  String get settingsAboutDialogAuthor => '作者';
+
+  @override
+  String get settingsAboutDialogRepo => 'リポジトリ';
+
+  @override
+  String get settingsAboutDialogLicense => 'ライセンス';
+
+  @override
+  String get settingsAboutDialogCopyright => '著作権';
+
+  @override
+  String get settingsAboutDialogClose => '閉じる';
+
+  @override
+  String settingsAboutDialogVersionLabel(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String get settingsSysinfoSectionDevice => '端末情報';
+
+  @override
+  String get settingsSysinfoSectionStorage => 'ストレージ';
+
+  @override
+  String get settingsSysinfoPlatformLabel => '実行プラットフォーム';
+
+  @override
+  String get settingsSysinfoTotalSpace => '合計容量';
+
+  @override
+  String get settingsSysinfoUsedSpace => '使用済み';
+
+  @override
+  String get settingsSysinfoFreeSpace => '空き容量';
+
+  @override
+  String get settingsSysinfoStorageUnavailable => 'ストレージ情報を取得できません。';
+
+  @override
+  String get settingsSysinfoDeviceModel => 'モデル';
+
+  @override
+  String get settingsSysinfoManufacturer => '製造元';
+
+  @override
+  String get settingsSysinfoOsVersion => 'OS バージョン';
+
+  @override
+  String get settingsSysinfoSdkVersion => 'SDK バージョン';
+
+  @override
+  String get settingsSysinfoDeviceName => '端末名';
+
+  @override
+  String get settingsSysinfoHostName => 'コンピューター名';
+
+  @override
+  String get settingsSysinfoKernelVersion => 'カーネル';
+
+  @override
+  String get settingsSysinfoDistroLabel => 'バージョン';
+
+  @override
+  String get settingsSysinfoBuildNumber => 'ビルド';
+
+  @override
+  String get settingsSysinfoError => 'エラー';
+
+  @override
+  String get settingsSysinfoFetchFailed => '端末情報を取得できませんでした。';
+
+  @override
   String get settingsLanguage => '言語';
 
   @override
@@ -312,7 +386,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      'プレイリストとアプリ設定をスケジュールに合わせてバックアップします。サインインとクラウドのアプリ用フォルダが必要です。自動同期は今後の更新で有効化予定です。';
+      'プレイリストとアプリ設定をスケジュールに合わせて OneDrive にバックアップします。各バックアップは日時が付いた JSON ファイルとしてクラウドのアプリ用フォルダに保存されます。定期自動同期は今後の更新で有効化予定です。';
 
   @override
   String get oneDriveSyncItemPlaylists => 'プレイリスト';
@@ -349,7 +423,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowDescription =>
-      'タイマーを待たず、プレイリストと設定をすぐ反映。（クラウド側の転送は準備中です。準備ができ次第、この操作に続けます。）';
+      'プレイリストと設定を今すぐアップロードします。ファイル名には端末の年月日時分秒が含まれ、同じ時刻のプレイリストと設定は同じタイムスタンプになります。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '先に Microsoft にサインインしてください。';
@@ -359,7 +433,62 @@ class AppLocalizationsJa extends AppLocalizations {
       '上の「クラウドのアプリ用フォルダ」を選ぶと、バックアップ先が分かります。';
 
   @override
-  String get oneDriveSyncNowFinished => '了解です。クラウドの準備が整い次第、処理します。';
+  String get oneDriveSyncNowFinished =>
+      'クラウドのアプリ用フォルダにタイムスタンプ付き JSON をアップロードしました。';
+
+  @override
+  String oneDriveSyncNowFailed(String message) {
+    return 'バックアップに失敗しました：$message';
+  }
+
+  @override
+  String get oneDriveRestoreFromCloud => 'クラウドから復元';
+
+  @override
+  String get oneDriveRestoreSubtitle =>
+      'クラウドのアプリ用フォルダからタイムスタンプ付きのバックアップ JSON を取得します。';
+
+  @override
+  String get oneDriveRestoreSheetTitle => 'バックアップを選ぶ';
+
+  @override
+  String get oneDriveRestoreEmpty => 'バックアップがまだありません。先に「今すぐ同期」でアップロードしてください。';
+
+  @override
+  String get oneDriveRestorePlaylistCheckbox => 'プレイリスト';
+
+  @override
+  String get oneDriveRestoreSettingsCheckbox => 'アプリ設定';
+
+  @override
+  String get oneDriveRestorePlaylistModeMerge => 'ローカルとマージ（同じ id は曲を結合）';
+
+  @override
+  String get oneDriveRestorePlaylistModeReplace => 'ローカルを置き換え（いったん消してから取り込み）';
+
+  @override
+  String get oneDriveRestoreAction => '復元';
+
+  @override
+  String get oneDriveRestoreNeedPickContent => 'プレイリストまたはアプリ設定のどちらかを選んでください。';
+
+  @override
+  String get oneDriveRestoreMissingPlaylistsFile =>
+      'このバックアップにプレイリストファイルがありません。';
+
+  @override
+  String get oneDriveRestoreMissingSettingsFile => 'このバックアップに設定ファイルがありません。';
+
+  @override
+  String get oneDriveRestoreFinished => '復元が完了しました。';
+
+  @override
+  String oneDriveRestoreFailed(String message) {
+    return '復元に失敗しました：$message';
+  }
+
+  @override
+  String get oneDriveRestoreLoadingList => 'バックアップ一覧を読み込み中…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音楽ブラウズのルート（任意）';
@@ -406,6 +535,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDrivePickFolderForAppData => 'アプリデータと今後のバックアップ用フォルダを選びます。';
 
   @override
+  String get oneDrivePickFolderForMusicUpload =>
+      'この端末からアップロードするときの保存先フォルダーを選びます。';
+
+  @override
+  String get oneDriveMusicUploadFolderTitle => '音楽アップロード先フォルダー';
+
+  @override
+  String get oneDriveMusicUploadFolderSubtitle =>
+      'ローカルライブラリから OneDrive へ上げるときの既定の親フォルダー。未設定のときは上のアプリ用フォルダーを使います。';
+
+  @override
+  String get oneDriveMusicUploadFolderFallback => 'アプリ用フォルダーと同じ';
+
+  @override
   String get oneDriveTroubleshootTitle => 'サインインがうまくいかないとき';
 
   @override
@@ -440,6 +583,10 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get oneDriveSignInFailed =>
       '今回はサインインできませんでした。通信を確認して再試行するか、下のヒントも見てみてください。';
+
+  @override
+  String get oneDriveTroubleshootUpload403 =>
+      'アップロードが 403 のとき: Azure Portal → アプリの登録 → API の権限で、Microsoft Graph の委任権限 Files.ReadWrite.All を追加し（職場・学校アカウントでは管理者の同意が必要な場合あり）、アプリ内で OneDrive から一度サインアウトして再サインインしてください。';
 
   @override
   String get oneDriveAzureRedirectIntro =>
@@ -479,6 +626,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveDownloadQueueTitle => 'OneDrive ダウンロード';
+
+  @override
+  String get oneDriveTransferQueueTitle => 'OneDrive 転送';
+
+  @override
+  String get oneDriveTransferTabDownload => 'ダウンロード';
+
+  @override
+  String get oneDriveTransferTabUpload => 'アップロード';
 
   @override
   String get oneDriveDownloadPause => '一時停止';
@@ -521,11 +677,22 @@ class AppLocalizationsJa extends AppLocalizations {
       'まだありません。\nクラウドライブラリまたはブラウザで「すべて再生」を使うとここに表示されます。パネルを閉じてもダウンロードは続きます。';
 
   @override
+  String get oneDriveUploadQueueEmpty =>
+      'アップロードはまだありません。\nローカルライブラリの一括バーから「OneDrive にアップロード」で追加できます。';
+
+  @override
+  String get oneDriveTransferQueueEmpty => 'キューに項目はありません。';
+
+  @override
   String get oneDriveDownloadQueuePageHint =>
       '一時停止・再開・停止はここで。パネルを閉じてもバックグラウンドのダウンロードは止まりません。';
 
   @override
-  String get oneDriveDownloadQueueSubtitle => '一括ダウンロードと再生';
+  String get oneDriveUploadQueuePageHint =>
+      '端末からのアップロードはここに表示されます。上のボタンで一時停止・再開・停止できます。履歴を消すとダウンロード履歴も消えます。';
+
+  @override
+  String get oneDriveDownloadQueueSubtitle => 'アップロード・ダウンロードと再生';
 
   @override
   String get oneDriveDownloadQueueTooltip => 'ダウンロードキュー';
@@ -1476,4 +1643,76 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lyricLabelTranslation => '訳文';
+
+  @override
+  String get libraryBatchSelect => '選択';
+
+  @override
+  String get libraryBatchDone => '完了';
+
+  @override
+  String get libraryBatchSelectAll => 'すべて';
+
+  @override
+  String get libraryBatchDelete => '削除';
+
+  @override
+  String get libraryBatchRename => '名前変更';
+
+  @override
+  String get libraryBatchUploadOneDrive => 'OneDrive にアップロード';
+
+  @override
+  String get libraryBatchDeleteConfirmTitle => '選択した曲を削除しますか？';
+
+  @override
+  String get libraryBatchDeleteConfirmMessage =>
+      '端末からファイルが削除され、プレイリストなどの参照が更新されます。取り消せません。';
+
+  @override
+  String get libraryBatchNoneSelected => '曲を選択してください';
+
+  @override
+  String get libraryBatchRenameTitle => '一括リネーム';
+
+  @override
+  String get libraryBatchRenameHint => 'パターン（%n は連番。例: Track %n）';
+
+  @override
+  String get libraryBatchRenameStart => '開始番号';
+
+  @override
+  String get libraryRenameSingleTitle => '1 曲だけ名前変更';
+
+  @override
+  String get libraryRenameSingleHint => '拡張子なしのファイル名だけを入力してください。';
+
+  @override
+  String get libraryRenameSingleFieldLabel => '名前';
+
+  @override
+  String get libraryRenameSingleDone => '名前を変更しました';
+
+  @override
+  String get libraryBatchUploadNeedSignIn => '設定から OneDrive にサインインしてください';
+
+  @override
+  String get libraryBatchUploadNeedCloudFolder =>
+      '設定で OneDrive のアプリ用フォルダーを選んでください';
+
+  @override
+  String get libraryBatchUploadNeedParentFolder =>
+      '設定で音楽アップロード用フォルダーまたはアプリ用フォルダーを選んでください。';
+
+  @override
+  String get libraryBatchUploadQueued => '転送キューに追加しました';
+
+  @override
+  String get libraryBatchOpenQueue => 'キューを開く';
+
+  @override
+  String get oneDriveUploadStatusUploading => 'アップロード中';
+
+  @override
+  String get oneDriveTaskDirectionUpload => 'アップロード';
 }

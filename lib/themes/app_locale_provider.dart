@@ -64,6 +64,11 @@ class AppLocaleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// SharedPreferences 被外部写入（如云端恢复界面语言）后刷新。
+  Future<void> reloadFromStorage() async {
+    await _load();
+  }
+
   Future<void> setOption(AppLanguageOption value) async {
     if (value == _option) {
       return;

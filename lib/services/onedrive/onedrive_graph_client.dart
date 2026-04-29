@@ -99,6 +99,33 @@ class OneDriveGraphClient {
     return OneDriveGraphItem.fromJson(res);
   }
 
+  /// 读取云盘文件内容为 UTF-8 文本（小到中等 JSON）；优先匿名 [downloadUrl]，否则 Bearer GET `/content`。
+  Future<String> downloadDriveItemUtf8({
+    required String accessToken,
+    required String itemId,
+  }) async {
+    final meta = await getItem(accessToken: accessToken, itemId: itemId);
+    if (meta == null || meta.id.trim().isEmpty) {
+      throw OneDriveApiException('item not found: $itemId');
+    }
+    final dl = meta.downloadUrl;
+    Uri uri;
+    Map<String, String> headers = const {};
+    if (dl != null && dl.isNotEmpty) {
+      uri = Uri.parse(dl);
+    } else {
+      uri = Uri.parse('${OneDriveConfig.graphBase}/me/drive/items/$itemId/content');
+      headers = {HttpHeaders.authorizationHeader: 'Bearer $accessToken'};
+    }
+    final r = await _client.get(uri, headers: headers);
+    if (r.statusCode < 200 || r.statusCode >= 300) {
+      throw OneDriveApiException(
+        'GET content → ${r.statusCode}: ${r.body.length > 200 ? '${r.body.substring(0, 200)}…' : r.body}',
+      );
+    }
+    return utf8.decode(r.bodyBytes);
+  }
+
   Future<Map<String, dynamic>> _getJson(String url, String accessToken) async {
     final u = Uri.parse(url);
     final r = await _client.get(
@@ -112,6 +139,182 @@ class OneDriveGraphClient {
       throw OneDriveApiException('GET $url → ${r.statusCode}: ${r.body}');
     }
     return json.decode(r.body) as Map<String, dynamic>;
+  }
+
+  static String _driveItemChildPathUrl(
+    String parentItemId,
+    String remoteFileName,
+    String suffix,
+  ) {
+    final normalized =
+        remoteFileName.replaceAll('\\', '/').split('/').where((e) => e.isNotEmpty).join('/');
+    final encoded = normalized
+        .split('/')
+        .map(Uri.encodeComponent)
+        .join('/');
+    return '${OneDriveConfig.graphBase}/me/drive/items/$parentItemId:/$encoded:/$suffix';
+  }
+
+  /// Graph 要求冲突策略作为查询参数；名称含 `@`，避免交给 [Uri] 编码导致 400/403。
+  static Uri _uploadUriWithConflictReplace(String pathWithoutQuery) {
+    final sep = pathWithoutQuery.contains('?') ? '&' : '?';
+    return Uri.parse(
+      '$pathWithoutQuery$sep@microsoft.graph.conflictBehavior=replace',
+    );
+  }
+
+  /// 单文件上传（小文件一次 PUT；大于 4MiB 自动走上传会话分块）。行为与下载对称，支持暂停/取消。
+  Future<void> uploadLocalFileWithProgress({
+    required String accessToken,
+    required String parentItemId,
+    required String remoteFileName,
+    required File file,
+    required void Function(int sent, int total) onProgress,
+    required Future<void> Function() waitWhilePaused,
+    required bool Function() isCancelled,
+  }) async {
+    const simpleMax = 4 * 1024 * 1024;
+    const chunkSize = 10 * 320 * 1024;
+
+    Future<void> pump() async {
+      await waitWhilePaused();
+      if (isCancelled()) {
+        throw OneDriveDownloadCancelledException();
+      }
+    }
+
+    final len = await file.length();
+    if (len <= 0) {
+      throw OneDriveApiException('empty file');
+    }
+
+    if (len <= simpleMax) {
+      await pump();
+      final bytes = await file.readAsBytes();
+      await pump();
+      final url = _uploadUriWithConflictReplace(
+        _driveItemChildPathUrl(parentItemId, remoteFileName, 'content'),
+      );
+      final put = await _client.put(
+        url,
+        headers: {
+          HttpHeaders.authorizationHeader: 'Bearer $accessToken',
+          HttpHeaders.contentTypeHeader: 'application/octet-stream',
+        },
+        body: bytes,
+      );
+      if (put.statusCode < 200 || put.statusCode >= 300) {
+        throw OneDriveApiException('PUT upload → ${put.statusCode}: ${put.body}');
+      }
+      onProgress(len, len);
+      return;
+    }
+
+    await pump();
+    final sessionUrl = _uploadUriWithConflictReplace(
+      _driveItemChildPathUrl(parentItemId, remoteFileName, 'createUploadSession'),
+    );
+    final create = await _client.post(
+      sessionUrl,
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $accessToken',
+        HttpHeaders.contentTypeHeader: 'application/json',
+      },
+      body: '{"item":{"@microsoft.graph.conflictBehavior":"replace"}}',
+    );
+    if (create.statusCode < 200 || create.statusCode >= 300) {
+      throw OneDriveApiException(
+        'createUploadSession → ${create.statusCode}: ${create.body}',
+      );
+    }
+    final sessionMap = json.decode(create.body) as Map<String, dynamic>;
+    final uploadUrl = sessionMap['uploadUrl'] as String?;
+    if (uploadUrl == null || uploadUrl.isEmpty) {
+      throw OneDriveApiException('missing uploadUrl');
+    }
+
+    var offset = 0;
+    final rs = await file.open();
+    try {
+      while (offset < len) {
+        await pump();
+        final end = (offset + chunkSize < len) ? offset + chunkSize : len;
+        final chunkLen = end - offset;
+        await rs.setPosition(offset);
+        final chunk = await rs.read(chunkLen);
+        if (chunk.length != chunkLen) {
+          throw OneDriveApiException('short read');
+        }
+        final cr = 'bytes $offset-${end - 1}/$len';
+        final putChunk = await _client.put(
+          Uri.parse(uploadUrl),
+          headers: {
+            HttpHeaders.contentLengthHeader: '$chunkLen',
+            'Content-Range': cr,
+          },
+          body: chunk,
+        );
+        if (putChunk.statusCode != 200 &&
+            putChunk.statusCode != 201 &&
+            putChunk.statusCode != 202) {
+          throw OneDriveApiException(
+            'chunk upload → ${putChunk.statusCode}: ${putChunk.body}',
+          );
+        }
+        offset = end;
+        onProgress(offset, len);
+      }
+    } finally {
+      await rs.close();
+    }
+  }
+
+  /// 在 [parentId] 为 `null` 时在「我的文件」根下查找同名文件夹（不含文件）。
+  Future<OneDriveGraphItem?> findChildFolderNamed({
+    required String accessToken,
+    String? parentId,
+    required String folderName,
+  }) async {
+    final want = folderName.trim().toLowerCase();
+    if (want.isEmpty) return null;
+    final kids = await listChildren(accessToken: accessToken, parentId: parentId);
+    for (final c in kids) {
+      if (c.isFolder && c.name.trim().toLowerCase() == want) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  /// 在指定父文件夹下新建子文件夹；[parentId] 为 `null` 时创建于云盘根「我的文件」。
+  Future<OneDriveGraphItem?> createFolderChild({
+    required String accessToken,
+    String? parentId,
+    required String folderName,
+  }) async {
+    final name = folderName.trim();
+    if (name.isEmpty) return null;
+    final url = parentId == null || parentId.trim().isEmpty
+        ? '${OneDriveConfig.graphBase}/me/drive/root/children'
+        : '${OneDriveConfig.graphBase}/me/drive/items/${parentId.trim()}/children';
+    final body = json.encode(<String, dynamic>{
+      'name': name,
+      'folder': <String, dynamic>{},
+      '@microsoft.graph.conflictBehavior': 'rename',
+    });
+    final r = await _client.post(
+      Uri.parse(url),
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $accessToken',
+        HttpHeaders.contentTypeHeader: 'application/json',
+      },
+      body: body,
+    );
+    if (r.statusCode < 200 || r.statusCode >= 300) {
+      throw OneDriveApiException('POST folder → ${r.statusCode}: ${r.body}');
+    }
+    final decoded = json.decode(r.body) as Map<String, dynamic>;
+    return OneDriveGraphItem.fromJson(decoded);
   }
 
   /// 将内容下载到 [file]；优先使用 [downloadUrl]（可匿名 GET），否则走 `/content`。

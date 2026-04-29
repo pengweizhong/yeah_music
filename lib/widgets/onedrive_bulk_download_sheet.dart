@@ -102,6 +102,7 @@ class _OneDriveBulkDownloadSheetState extends State<OneDriveBulkDownloadSheet> {
                 ),
                 OneDriveDownloadQueuePanel(
                   maxListHeight: h * 0.52,
+                  taskFilter: OneDriveQueuePanelTaskFilter.downloadsOnly,
                   showPlayDownloadedButton: _runEnded && ctrl.hasCompletedSongs,
                   onPlayDownloaded: () => _playDownloaded(context),
                   autoPlaySwitch: SwitchListTile.adaptive(

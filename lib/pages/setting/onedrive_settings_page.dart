@@ -4,7 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
+import 'package:yeah_music/compments/playback_shortcut_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/compments/user_playlist_provider.dart';
+import 'package:yeah_music/models/onedrive_cloud_backup_snapshot.dart';
+import 'package:yeah_music/themes/app_locale_provider.dart';
+import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
@@ -114,11 +119,15 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                     od: od,
                     onPickCloudAppFolder: () =>
                         _pickCloudAppFolder(context, l10n, od),
+                    onPickMusicUploadFolder: () =>
+                        _pickMusicUploadFolder(context, l10n, od),
                     onEditMusicRoot: () => _editMusicRootId(context, l10n, od),
                     onPickLocalDir: () =>
                         _pickLocalDownloadDir(context, l10n, od),
                     onClearCloudAppFolder: () =>
                         od.setCloudAppDataFolder(null, label: ''),
+                    onClearMusicUploadFolder: () =>
+                        od.setMusicUploadFolder(null, label: ''),
                     onClearLocalDir: () => od.setLocalDownloadDir(null),
                   ),
                   const SizedBox(height: 20),
@@ -128,6 +137,8 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                     l10n: l10n,
                     od: od,
                     onSyncNow: () => _handleSyncNow(context, l10n, od),
+                    onRestoreFromCloud: () =>
+                        _handleRestoreFromCloud(context, l10n, od),
                   ),
                 ],
               ),
@@ -204,6 +215,29 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     await od.setCloudAppDataFolder(res.itemId, label: res.name);
   }
 
+  Future<void> _pickMusicUploadFolder(
+    BuildContext context,
+    AppLocalizations l10n,
+    OneDriveController od,
+  ) async {
+    if (!od.signedIn) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveNeedSignInForPicker)));
+      return;
+    }
+    final res = await Navigator.of(context).push<OneDriveFolderPickResult>(
+      MaterialPageRoute(
+        builder: (_) => OneDriveBrowserPage(
+          pickFolderForIndex: true,
+          folderPickSubtitle: l10n.oneDrivePickFolderForMusicUpload,
+        ),
+      ),
+    );
+    if (!context.mounted || res == null) return;
+    await od.setMusicUploadFolder(res.itemId, label: res.name);
+  }
+
   Future<void> _pickLocalDownloadDir(
     BuildContext context,
     AppLocalizations l10n,
@@ -272,11 +306,433 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       );
       return;
     }
-    await od.performSyncNow();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) {
+      await userPl.init();
+    }
+    try {
+      await od.performSyncNow(userPlaylistProvider: userPl);
+    } on StateError catch (e) {
+      if (!context.mounted) return;
+      final msg = '$e';
+      final text = msg.contains('not signed')
+          ? l10n.oneDriveSyncNowNeedLogin
+          : msg.contains('cloud app folder')
+          ? l10n.oneDriveSyncNowNeedCloudFolder
+          : msg;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+      return;
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveSyncNowFailed('$e'))),
+      );
+      return;
+    }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowFinished)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.oneDriveSyncNowFinished)),
+    );
+  }
+
+  Future<void> _reloadAfterCloudRestore(BuildContext context) async {
+    await Future.wait<void>([
+      context.read<ThemeConfigProvider>().reloadFromStorage(),
+      context.read<AppLocaleProvider>().reloadFromStorage(),
+      context.read<AppThemeModeProvider>().reloadFromStorage(),
+      context.read<PlaybackShortcutController>().loadFromStorage(),
+      context.read<OneDriveController>().loadFromStorage(),
+    ]);
+  }
+
+  Future<void> _handleRestoreFromCloud(
+    BuildContext context,
+    AppLocalizations l10n,
+    OneDriveController od,
+  ) async {
+    if (!od.signedIn) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowNeedLogin)));
+      return;
+    }
+    final folder = od.cloudAppDataFolderId;
+    if (folder == null || folder.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveSyncNowNeedCloudFolder)),
+      );
+      return;
+    }
+    late final List<OneDriveCloudBackupSnapshot> snapshots;
+    try {
+      snapshots = await od.listCloudBackupSnapshots();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    final choice = await showModalBottomSheet<_OneDriveRestoreChoice>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1D22),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+            ),
+            child: _OneDriveRestoreSheet(
+              l10n: l10n,
+              snapshots: snapshots,
+            ),
+          ),
+        );
+      },
+    );
+    if (!context.mounted || choice == null) return;
+
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) {
+      await userPl.init();
+    }
+    if (!context.mounted) return;
+    try {
+      await od.restoreCloudBackup(
+        userPlaylistProvider: userPl,
+        snapshot: choice.snapshot,
+        restorePlaylists: choice.restorePlaylists,
+        restoreSettings: choice.restoreSettings,
+        replaceAllPlaylists: choice.replaceAllPlaylists,
+      );
+      if (!context.mounted) return;
+      await _reloadAfterCloudRestore(context);
+    } on StateError catch (e) {
+      if (!context.mounted) return;
+      final m = '$e';
+      final text = m.contains('playlist backup missing')
+          ? l10n.oneDriveRestoreMissingPlaylistsFile
+          : m.contains('settings backup missing')
+          ? l10n.oneDriveRestoreMissingSettingsFile
+          : m;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveRestoreFailed(text))),
+      );
+      return;
+    } on FormatException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+      );
+      return;
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.oneDriveRestoreFinished)),
+    );
+  }
+}
+
+class _OneDriveRestoreChoice {
+  _OneDriveRestoreChoice({
+    required this.snapshot,
+    required this.restorePlaylists,
+    required this.restoreSettings,
+    required this.replaceAllPlaylists,
+  });
+
+  final OneDriveCloudBackupSnapshot snapshot;
+  final bool restorePlaylists;
+  final bool restoreSettings;
+  final bool replaceAllPlaylists;
+}
+
+class _OneDriveRestoreSheet extends StatefulWidget {
+  const _OneDriveRestoreSheet({
+    required this.l10n,
+    required this.snapshots,
+  });
+
+  final AppLocalizations l10n;
+  final List<OneDriveCloudBackupSnapshot> snapshots;
+
+  @override
+  State<_OneDriveRestoreSheet> createState() => _OneDriveRestoreSheetState();
+}
+
+class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
+  late int _selectedIndex;
+  late bool _wantPlaylists;
+  late bool _wantSettings;
+  bool _replacePlaylists = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = 0;
+    if (widget.snapshots.isEmpty) return;
+    _syncTogglesForIndex(0);
+  }
+
+  void _syncTogglesForIndex(int i) {
+    final s = widget.snapshots[i];
+    _wantPlaylists = s.hasPlaylistsJson;
+    _wantSettings = s.hasSettingsJson;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    if (widget.snapshots.isEmpty) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.oneDriveRestoreSheetTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, color: Colors.white54),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.oneDriveRestoreEmpty,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final snap = widget.snapshots[_selectedIndex];
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.78,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.oneDriveRestoreSheetTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, color: Colors.white54),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                l10n.oneDriveRestoreSubtitle,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  fontSize: 12,
+                  height: 1.35,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: Material(
+                color: Colors.transparent,
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  children: [
+                    for (var i = 0; i < widget.snapshots.length; i++)
+                      RadioListTile<int>(
+                        value: i,
+                        groupValue: _selectedIndex,
+                        activeColor: const Color(0xFF0078D4),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() {
+                            _selectedIndex = v;
+                            _syncTogglesForIndex(v);
+                          });
+                        },
+                        title: Text(
+                          widget.snapshots[i].stamp,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Builder(
+                            builder: (_) {
+                            final p = widget.snapshots[i];
+                            final parts = <String>[
+                              if (p.hasPlaylistsJson)
+                                l10n.oneDriveRestorePlaylistCheckbox,
+                              if (p.hasSettingsJson)
+                                l10n.oneDriveRestoreSettingsCheckbox,
+                            ];
+                            return Text(
+                              parts.isEmpty ? '—' : parts.join(' · '),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.45),
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    const Divider(height: 1, color: Color(0x22FFFFFF)),
+                    CheckboxListTile(
+                      value: _wantPlaylists,
+                      onChanged: snap.hasPlaylistsJson
+                          ? (v) {
+                              setState(() {
+                                _wantPlaylists = v ?? false;
+                              });
+                            }
+                          : null,
+                      activeColor: const Color(0xFF0078D4),
+                      title: Text(
+                        l10n.oneDriveRestorePlaylistCheckbox,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    CheckboxListTile(
+                      value: _wantSettings,
+                      onChanged: snap.hasSettingsJson
+                          ? (v) {
+                              setState(() {
+                                _wantSettings = v ?? false;
+                              });
+                            }
+                          : null,
+                      activeColor: const Color(0xFF0078D4),
+                      title: Text(
+                        l10n.oneDriveRestoreSettingsCheckbox,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    if (_wantPlaylists && snap.hasPlaylistsJson) ...[
+                      RadioListTile<bool>(
+                        value: false,
+                        groupValue: _replacePlaylists,
+                        activeColor: const Color(0xFF0078D4),
+                        onChanged: (_) {
+                          setState(() => _replacePlaylists = false);
+                        },
+                        title: Text(
+                          l10n.oneDriveRestorePlaylistModeMerge,
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+                        ),
+                      ),
+                      RadioListTile<bool>(
+                        value: true,
+                        groupValue: _replacePlaylists,
+                        activeColor: const Color(0xFF0078D4),
+                        onChanged: (_) {
+                          setState(() => _replacePlaylists = true);
+                        },
+                        title: Text(
+                          l10n.oneDriveRestorePlaylistModeReplace,
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+              child: FilledButton(
+                onPressed: () {
+                  if (!_wantPlaylists && !_wantSettings) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.oneDriveRestoreNeedPickContent)),
+                    );
+                    return;
+                  }
+                  if (_wantPlaylists && !snap.hasPlaylistsJson) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.oneDriveRestoreMissingPlaylistsFile),
+                      ),
+                    );
+                    return;
+                  }
+                  if (_wantSettings && !snap.hasSettingsJson) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.oneDriveRestoreMissingSettingsFile),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).pop(
+                    _OneDriveRestoreChoice(
+                      snapshot: snap,
+                      restorePlaylists: _wantPlaylists,
+                      restoreSettings: _wantSettings,
+                      replaceAllPlaylists: _replacePlaylists,
+                    ),
+                  );
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0078D4),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: Text(l10n.oneDriveRestoreAction),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -317,11 +773,13 @@ class _SyncCard extends StatelessWidget {
     required this.l10n,
     required this.od,
     required this.onSyncNow,
+    required this.onRestoreFromCloud,
   });
 
   final AppLocalizations l10n;
   final OneDriveController od;
   final VoidCallback onSyncNow;
+  final VoidCallback onRestoreFromCloud;
 
   @override
   Widget build(BuildContext context) {
@@ -471,10 +929,29 @@ class _SyncCard extends StatelessWidget {
                     height: 1.35,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.oneDriveRestoreSubtitle,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 FilledButton.tonal(
                   onPressed: onSyncNow,
                   child: Text(l10n.oneDriveSyncNow),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  onPressed: onRestoreFromCloud,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+                    minimumSize: const Size.fromHeight(46),
+                  ),
+                  child: Text(l10n.oneDriveRestoreFromCloud),
                 ),
               ],
             ),
@@ -614,6 +1091,15 @@ class _TroubleshootExpansion extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
+            Text(
+              l10n.oneDriveTroubleshootUpload403,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -673,18 +1159,22 @@ class _PathsCard extends StatelessWidget {
     required this.l10n,
     required this.od,
     required this.onPickCloudAppFolder,
+    required this.onPickMusicUploadFolder,
     required this.onEditMusicRoot,
     required this.onPickLocalDir,
     required this.onClearCloudAppFolder,
+    required this.onClearMusicUploadFolder,
     required this.onClearLocalDir,
   });
 
   final AppLocalizations l10n;
   final OneDriveController od;
   final VoidCallback onPickCloudAppFolder;
+  final VoidCallback onPickMusicUploadFolder;
   final VoidCallback onEditMusicRoot;
   final VoidCallback onPickLocalDir;
   final VoidCallback onClearCloudAppFolder;
+  final VoidCallback onClearMusicUploadFolder;
   final VoidCallback onClearLocalDir;
 
   String _musicRootSummary() {
@@ -703,6 +1193,16 @@ class _PathsCard extends StatelessWidget {
       return od.cloudAppDataFolderLabel;
     }
     return od.cloudAppDataFolderId!;
+  }
+
+  String _musicUploadSummary() {
+    if (od.musicUploadFolderId == null || od.musicUploadFolderId!.isEmpty) {
+      return l10n.oneDriveMusicUploadFolderFallback;
+    }
+    if (od.musicUploadFolderLabel.isNotEmpty) {
+      return od.musicUploadFolderLabel;
+    }
+    return od.musicUploadFolderId!;
   }
 
   Widget _pathBlock({
@@ -830,6 +1330,26 @@ class _PathsCard extends StatelessWidget {
                 (od.cloudAppDataFolderId != null &&
                     od.cloudAppDataFolderId!.isNotEmpty)
                 ? onClearCloudAppFolder
+                : null,
+          ),
+          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+          _pathBlock(
+            icon: Icons.cloud_upload_outlined,
+            iconColor: Colors.cyan.shade200,
+            title: l10n.oneDriveMusicUploadFolderTitle,
+            subtitle: l10n.oneDriveMusicUploadFolderSubtitle,
+            valueLine: _musicUploadSummary(),
+            primaryLabel: l10n.oneDriveChooseCloudFolder,
+            onPrimary: od.signedIn ? onPickMusicUploadFolder : null,
+            clearLabel:
+                (od.musicUploadFolderId != null &&
+                    od.musicUploadFolderId!.isNotEmpty)
+                ? l10n.oneDriveClear
+                : null,
+            onClear:
+                (od.musicUploadFolderId != null &&
+                    od.musicUploadFolderId!.isNotEmpty)
+                ? onClearMusicUploadFolder
                 : null,
           ),
           Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),

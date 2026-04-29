@@ -11,6 +11,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
@@ -239,7 +240,9 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
         itemBuilder: (context, song, index, isRowCurrent) {
           final playList = context.read<PlayListProvider>();
           return CompactSongListRow(
-            key: ValueKey<String>('od_cached_${song.path}'),
+            key: ValueKey<String>(
+              'od_cached_${index}_${normSongPath(song.path)}',
+            ),
             song: song,
             title: song.title ?? l10n.pageUnknownTitle,
             subtitle: songListSecondaryLine(song),

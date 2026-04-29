@@ -2,9 +2,41 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/system_info.dart';
 import 'package:yeah_music/utils/system_utils.dart';
+
+class _DeviceLine {
+  const _DeviceLine(this.key, this.value);
+  final String key;
+  final String value;
+}
+
+String _deviceLabel(AppLocalizations l10n, String key) {
+  switch (key) {
+    case 'deviceModel':
+      return l10n.settingsSysinfoDeviceModel;
+    case 'manufacturer':
+      return l10n.settingsSysinfoManufacturer;
+    case 'systemVersion':
+      return l10n.settingsSysinfoOsVersion;
+    case 'sdkVersion':
+      return l10n.settingsSysinfoSdkVersion;
+    case 'deviceName':
+      return l10n.settingsSysinfoDeviceName;
+    case 'hostName':
+      return l10n.settingsSysinfoHostName;
+    case 'kernelVersion':
+      return l10n.settingsSysinfoKernelVersion;
+    case 'distroVersion':
+      return l10n.settingsSysinfoDistroLabel;
+    case 'buildNumber':
+      return l10n.settingsSysinfoBuildNumber;
+    default:
+      return key;
+  }
+}
 
 class DiskSpaceView extends StatefulWidget {
   const DiskSpaceView({super.key});
@@ -15,7 +47,8 @@ class DiskSpaceView extends StatefulWidget {
 
 class _DiskSpaceViewState extends State<DiskSpaceView> {
   SystemInfo? systemInfo;
-  Map<String, String> deviceInfo = {};
+  final List<_DeviceLine> _deviceLines = [];
+  bool _deviceFetchFailed = false;
   bool isLoading = true;
 
   @override
@@ -29,60 +62,70 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
       isLoading = true;
     });
 
-    // 加载磁盘信息
     try {
       systemInfo = await SystemUtils.getSystemInfo();
     } catch (e) {
       appLog.e('加载系统/磁盘信息失败', error: e);
     }
-    
-    // 加载设备信息
+
     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    
+    _deviceLines.clear();
+    _deviceFetchFailed = false;
+
     try {
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfoPlugin.androidInfo;
-        deviceInfo = {
-          '设备型号': androidInfo.model,
-          '制造商': androidInfo.manufacturer,
-          '系统版本': 'Android ${androidInfo.version.release}',
-          'SDK版本': androidInfo.version.sdkInt.toString(),
-        };
+        _deviceLines.addAll([
+          _DeviceLine('deviceModel', androidInfo.model),
+          _DeviceLine('manufacturer', androidInfo.manufacturer),
+          _DeviceLine(
+            'systemVersion',
+            'Android ${androidInfo.version.release}',
+          ),
+          _DeviceLine('sdkVersion', androidInfo.version.sdkInt.toString()),
+        ]);
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfoPlugin.iosInfo;
-        deviceInfo = {
-          '设备型号': iosInfo.model,
-          '设备名称': iosInfo.name,
-          '系统版本': '${iosInfo.systemName} ${iosInfo.systemVersion}',
-        };
+        _deviceLines.addAll([
+          _DeviceLine('deviceModel', iosInfo.model),
+          _DeviceLine('deviceName', iosInfo.name),
+          _DeviceLine(
+            'systemVersion',
+            '${iosInfo.systemName} ${iosInfo.systemVersion}',
+          ),
+        ]);
       } else if (Platform.isMacOS) {
         final macInfo = await deviceInfoPlugin.macOsInfo;
-        deviceInfo = {
-          '设备型号': macInfo.model,
-          '主机名': macInfo.computerName,
-          '系统版本': 'macOS ${macInfo.osRelease}',
-          '内核版本': macInfo.kernelVersion,
-        };
+        _deviceLines.addAll([
+          _DeviceLine('deviceModel', macInfo.model),
+          _DeviceLine('hostName', macInfo.computerName),
+          _DeviceLine('systemVersion', 'macOS ${macInfo.osRelease}'),
+          _DeviceLine('kernelVersion', macInfo.kernelVersion),
+        ]);
       } else if (Platform.isLinux) {
         final linuxInfo = await deviceInfoPlugin.linuxInfo;
-        deviceInfo = {
-          '设备名称': linuxInfo.name,
-          '版本': linuxInfo.version ?? 'Unknown',
-          '内核版本': linuxInfo.versionId ?? 'Unknown',
-        };
+        _deviceLines.addAll([
+          _DeviceLine('deviceName', linuxInfo.name),
+          _DeviceLine('distroVersion', linuxInfo.version ?? 'Unknown'),
+          _DeviceLine('kernelVersion', linuxInfo.versionId ?? 'Unknown'),
+        ]);
       } else if (Platform.isWindows) {
         final windowsInfo = await deviceInfoPlugin.windowsInfo;
-        deviceInfo = {
-          '设备名称': windowsInfo.computerName,
-          '系统版本': 'Windows ${windowsInfo.majorVersion}.${windowsInfo.minorVersion}',
-          '构建号': windowsInfo.buildNumber.toString(),
-        };
+        _deviceLines.addAll([
+          _DeviceLine('deviceName', windowsInfo.computerName),
+          _DeviceLine(
+            'systemVersion',
+            'Windows ${windowsInfo.majorVersion}.${windowsInfo.minorVersion}',
+          ),
+          _DeviceLine('buildNumber', windowsInfo.buildNumber.toString()),
+        ]);
       }
     } catch (e) {
       appLog.e('获取设备信息失败', error: e);
-      deviceInfo = {'错误': '无法获取设备信息'};
+      _deviceFetchFailed = true;
+      _deviceLines.clear();
     }
-    
+
     if (mounted) {
       setState(() {
         isLoading = false;
@@ -92,6 +135,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (isLoading) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -104,79 +148,70 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 设备信息标题
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              "设备信息",
+              l10n.settingsSysinfoSectionDevice,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          
-          // 平台信息
           _buildInfoTile(
             Icons.phone_android,
-            "运行平台",
+            l10n.settingsSysinfoPlatformLabel,
             systemInfo?.platformName ?? 'Unknown',
           ),
-          
-          // 设备详细信息
-          if (deviceInfo.isNotEmpty)
-            ...deviceInfo.entries.map((entry) => _buildInfoTile(
-              Icons.info_outline,
-              entry.key,
-              entry.value,
-            )),
-          
+          if (_deviceFetchFailed)
+            _buildInfoTile(
+              Icons.error_outline,
+              l10n.settingsSysinfoError,
+              l10n.settingsSysinfoFetchFailed,
+            )
+          else
+            ..._deviceLines.map(
+              (e) => _buildInfoTile(
+                Icons.info_outline,
+                _deviceLabel(l10n, e.key),
+                e.value,
+              ),
+            ),
           const SizedBox(height: 8),
-          
-          // 存储信息标题
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              "存储空间",
+              l10n.settingsSysinfoSectionStorage,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          
-          // 检查是否有存储信息
           if (systemInfo?.total != null && systemInfo!.total! > 0) ...[
-            // 总空间
             _buildInfoTile(
               Icons.sd_storage,
-              "总空间",
+              l10n.settingsSysinfoTotalSpace,
               SystemUtils.formatCapacityDescription(systemInfo?.total),
             ),
-            
-            // 已使用
             _buildInfoTile(
               Icons.storage,
-              "已使用",
+              l10n.settingsSysinfoUsedSpace,
               SystemUtils.formatCapacityDescription(systemInfo?.used),
               subtitle: systemInfo?.total != null && systemInfo?.used != null
-                  ? "${((systemInfo!.used! / systemInfo!.total!) * 100).toStringAsFixed(1)}%"
+                  ? '${((systemInfo!.used! / systemInfo!.total!) * 100).toStringAsFixed(1)}%'
                   : null,
             ),
-            
-            // 剩余空间
             _buildInfoTile(
               Icons.memory,
-              "剩余空间",
+              l10n.settingsSysinfoFreeSpace,
               SystemUtils.formatCapacityDescription(systemInfo?.free),
               subtitle: systemInfo?.total != null && systemInfo?.free != null
-                  ? "${((systemInfo!.free! / systemInfo!.total!) * 100).toStringAsFixed(1)}%"
+                  ? '${((systemInfo!.free! / systemInfo!.total!) * 100).toStringAsFixed(1)}%'
                   : null,
             ),
-            
-            // 存储使用进度条
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
@@ -187,7 +222,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
                     child: LinearProgressIndicator(
                       value: systemInfo!.used! / systemInfo!.total!,
                       minHeight: 8,
-                      backgroundColor: Colors.grey.withOpacity(0.3),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.3),
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getStorageColor(systemInfo!.used! / systemInfo!.total!),
                       ),
@@ -196,31 +231,34 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
                 ],
               ),
             ),
-          ] else ...[
-            // 没有存储信息时显示提示
+          ] else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
-                "存储信息暂时无法获取",
+                l10n.settingsSysinfoStorageUnavailable,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
               ),
             ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value, {String? subtitle}) {
+  Widget _buildInfoTile(
+    IconData icon,
+    String title,
+    String value, {
+    String? subtitle,
+  }) {
     return ListTile(
-      leading: Icon(icon, color: Colors.white.withOpacity(0.7), size: 20),
+      leading: Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 20),
       title: Text(
         title,
         style: TextStyle(
-          color: Colors.white.withOpacity(0.7),
+          color: Colors.white.withValues(alpha: 0.7),
           fontSize: 13,
         ),
       ),
@@ -239,7 +277,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
             Text(
               subtitle,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 12,
               ),
             ),

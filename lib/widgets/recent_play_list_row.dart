@@ -7,6 +7,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
+import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 
 /// 最近播放列表行（首页等）。顺序由调用方传入决定，不在此重排。
@@ -148,17 +149,28 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        subtitleStr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: widget.isCurrent
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : Colors.white.withValues(alpha: 0.5),
-                          fontSize: 13,
-                        ),
-                      ),
+                      widget.trailingPlayCount != null
+                          ? AutoMarqueeSingleLineText(
+                              text: subtitleStr,
+                              style: TextStyle(
+                                color: widget.isCurrent
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : Colors.white.withValues(alpha: 0.5),
+                                fontSize: 13,
+                              ),
+                              gapBetweenLoops: 40,
+                            )
+                          : Text(
+                              subtitleStr,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: widget.isCurrent
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : Colors.white.withValues(alpha: 0.5),
+                                fontSize: 13,
+                              ),
+                            ),
                     ],
                   ),
                 ),

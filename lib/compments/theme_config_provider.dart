@@ -108,6 +108,11 @@ class ThemeConfigProvider extends ChangeNotifier {
     }
   }
 
+  /// [applyCloudBackupMap] / 外链恢复 prefs 后与冷启动一致的再读盘。
+  Future<void> reloadFromStorage() async {
+    await _loadConfig();
+  }
+
   /// 加载配置
   Future<void> _loadConfig() async {
     final prefs = await SharedPreferences.getInstance();

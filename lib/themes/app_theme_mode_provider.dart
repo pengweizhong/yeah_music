@@ -46,6 +46,11 @@ class AppThemeModeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// SharedPreferences 被外部写入后刷新明暗模式。
+  Future<void> reloadFromStorage() async {
+    await _load();
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     if (mode == _themeMode) return;
     _themeMode = mode;

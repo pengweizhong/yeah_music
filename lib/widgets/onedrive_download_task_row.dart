@@ -18,7 +18,9 @@ class OneDriveDownloadTaskRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusLabel = switch (task.status) {
       OneDriveDownloadStatus.pending => l10n.oneDriveDownloadStatusPending,
-      OneDriveDownloadStatus.downloading => l10n.oneDriveDownloadStatusDownloading,
+      OneDriveDownloadStatus.downloading => task.isUpload
+          ? l10n.oneDriveUploadStatusUploading
+          : l10n.oneDriveDownloadStatusDownloading,
       OneDriveDownloadStatus.completed => l10n.oneDriveDownloadStatusDone,
       OneDriveDownloadStatus.failed => l10n.oneDriveDownloadStatusFailed,
       OneDriveDownloadStatus.cancelled => l10n.oneDriveDownloadStatusCancelled,

@@ -96,6 +96,7 @@ class SongPlaylistSongListView extends StatelessWidget {
     this.onRefresh,
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
+    this.listBottomInsetExtra = 0,
   });
 
   final ScrollController scrollController;
@@ -111,9 +112,13 @@ class SongPlaylistSongListView extends StatelessWidget {
   final Color? refreshIndicatorColor;
   final Color? refreshIndicatorBackgroundColor;
 
+  /// 附加列表底部留白（例如批量操作条盖住迷你播放器以上区域时上移列表）。
+  final double listBottomInsetExtra;
+
   @override
   Widget build(BuildContext context) {
-    final bottomPad = songPlaylistListBottomPadding(context);
+        final bottomPad =
+            songPlaylistListBottomPadding(context) + listBottomInsetExtra;
     return Consumer<PlayListProvider>(
       builder: (context, playList, _) {
         Widget listCore = ListView.builder(

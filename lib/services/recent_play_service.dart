@@ -1,5 +1,6 @@
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 
 /// 最近播放曲目（按文件路径去重，最新在前），以及各路径累计播放次数（与 [recordPath] 同步增加）。
 class RecentPlayService {
@@ -51,6 +52,111 @@ class RecentPlayService {
           }
         }
         countMap[t] = (countMap[t] ?? 0) + 1;
+        await box.put(_playCountKey, countMap);
+      }
+    } catch (_) {}
+  }
+
+  /// 从最近播放与播放次数中移除路径（曲目已从磁盘删除等）。
+  static Future<void> removePathsAndCounts(Iterable<String> paths) async {
+    final normSet = <String>{
+      for (final t in paths)
+        if (t.trim().isNotEmpty) normSongPath(t),
+    };
+    if (normSet.isEmpty) return;
+
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final rawRecent = box.get(_hiveKey);
+      if (rawRecent is List<dynamic>) {
+        final list = rawRecent
+            .whereType<String>()
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .where((e) => !normSet.contains(normSongPath(e)))
+            .toList();
+        await box.put(_hiveKey, list);
+      }
+      final rawCount = box.get(_playCountKey);
+      if (rawCount is Map) {
+        final countMap = <String, int>{};
+        for (final e in rawCount.entries) {
+          if (e.key is! String) continue;
+          final k = (e.key as String).trim();
+          if (k.isEmpty) continue;
+          if (normSet.contains(normSongPath(k))) continue;
+          countMap[k] = _asIntCount(e.value);
+        }
+        await box.put(_playCountKey, countMap);
+      }
+    } catch (_) {}
+  }
+
+  /// 最近列表与播放次数：将旧路径置换为新路径（文件重命名后）。
+  static Future<void> migratePaths(Map<String, String> oldToNew) async {
+    if (oldToNew.isEmpty) return;
+    bool normEq(String a, String b) {
+      final x = a.replaceAll(r'\', '/').toLowerCase();
+      final y = b.replaceAll(r'\', '/').toLowerCase();
+      return x == y;
+    }
+
+    String? findNewFor(String path) {
+      for (final e in oldToNew.entries) {
+        if (normEq(path, e.key)) return e.value;
+      }
+      return null;
+    }
+
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final rawRecent = box.get(_hiveKey);
+      if (rawRecent is List<dynamic>) {
+        final list = <String>[];
+        for (final e in rawRecent.whereType<String>()) {
+          final t = e.trim();
+          if (t.isEmpty) continue;
+          final n = findNewFor(t);
+          list.add(n ?? t);
+        }
+        await box.put(_hiveKey, list);
+      }
+      final rawCount = box.get(_playCountKey);
+      if (rawCount is Map) {
+        final countMap = <String, int>{};
+        for (final e in rawCount.entries) {
+          if (e.key is! String) continue;
+          final k = (e.key as String).trim();
+          if (k.isEmpty) continue;
+          countMap[k] = _asIntCount(e.value);
+        }
+        for (final e in oldToNew.entries) {
+          final oldRaw = e.key.trim();
+          final newRaw = e.value.trim();
+          if (oldRaw.isEmpty || newRaw.isEmpty) continue;
+          String? oldKey;
+          for (final k in countMap.keys) {
+            if (normEq(k, oldRaw)) {
+              oldKey = k;
+              break;
+            }
+          }
+          if (oldKey == null) continue;
+          final carry = countMap.remove(oldKey) ?? 0;
+          if (carry <= 0) continue;
+          String? mergeKey;
+          for (final k in countMap.keys) {
+            if (normEq(k, newRaw)) {
+              mergeKey = k;
+              break;
+            }
+          }
+          if (mergeKey != null) {
+            countMap[mergeKey] = (countMap[mergeKey] ?? 0) + carry;
+          } else {
+            countMap[newRaw] = (countMap[newRaw] ?? 0) + carry;
+          }
+        }
         await box.put(_playCountKey, countMap);
       }
     } catch (_) {}

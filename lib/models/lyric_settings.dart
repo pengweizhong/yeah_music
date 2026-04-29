@@ -101,4 +101,44 @@ class LyricSettings extends HiveObject {
 
   // Convert int to Color
   static int intToColor(int value) => value;
+
+  /// 歌词设置 JSON 快照（云端备份用；字段与 Hive 一致便于还原）。
+  Map<String, dynamic> toBackupMap() => {
+        'showOriginal': showOriginal,
+        'showTranslations': showTranslations,
+        'originalFontSize': originalFontSize,
+        'translationFontSize': translationFontSize,
+        'activeOriginalColor': activeOriginalColor,
+        'activeTranslationColor': activeTranslationColor,
+        'playedOriginalColor': playedOriginalColor,
+        'playedTranslationColor': playedTranslationColor,
+        'upcomingOriginalColor': upcomingOriginalColor,
+        'upcomingTranslationColor': upcomingTranslationColor,
+        'lyricDisplayModeList': List<String>.from(lyricDisplayModeList),
+        'lyricLineSpacing': lyricLineSpacing,
+        'lyricTextAlignIndex': lyricTextAlignIndex,
+      };
+
+  factory LyricSettings.fromBackupMap(Map<String, dynamic> m) {
+    final s = LyricSettings()
+      ..showOriginal = m['showOriginal'] as bool? ?? true
+      ..showTranslations = m['showTranslations'] as bool? ?? true
+      ..originalFontSize = (m['originalFontSize'] as num?)?.toDouble() ?? 20.0
+      ..translationFontSize = (m['translationFontSize'] as num?)?.toDouble() ?? 14.0
+      ..activeOriginalColor = (m['activeOriginalColor'] as num?)?.toInt() ?? 0xFFFFFFFF
+      ..activeTranslationColor = (m['activeTranslationColor'] as num?)?.toInt() ?? 0xFFD0D0D0
+      ..playedOriginalColor = (m['playedOriginalColor'] as num?)?.toInt() ?? 0xFFB0B0B0
+      ..playedTranslationColor = (m['playedTranslationColor'] as num?)?.toInt() ?? 0xFF909090
+      ..upcomingOriginalColor = (m['upcomingOriginalColor'] as num?)?.toInt() ?? 0xFF7A7A7A
+      ..upcomingTranslationColor = (m['upcomingTranslationColor'] as num?)?.toInt() ?? 0xFF6A6A6A
+      ..lyricLineSpacing = (m['lyricLineSpacing'] as num?)?.toDouble() ?? 12.0
+      ..lyricTextAlignIndex = (m['lyricTextAlignIndex'] as num?)?.toInt() ?? 1;
+    final modeListRaw = m['lyricDisplayModeList'];
+    if (modeListRaw is List) {
+      s.lyricDisplayModeList = modeListRaw.map((e) => '$e').toList();
+    }
+    s.normalizeLayoutFields();
+    return s;
+  }
 }
+

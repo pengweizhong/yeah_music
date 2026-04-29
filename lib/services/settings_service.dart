@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
@@ -20,6 +21,8 @@ class SettingsService {
   static const String _oneDriveMusicRootIdKey = 'onedrive_music_root_id';
   static const String _oneDriveCloudAppFolderIdKey = 'onedrive_cloud_app_folder_id';
   static const String _oneDriveCloudAppFolderLabelKey = 'onedrive_cloud_app_folder_label';
+  static const String _oneDriveMusicUploadFolderIdKey = 'onedrive_music_upload_folder_id';
+  static const String _oneDriveMusicUploadFolderLabelKey = 'onedrive_music_upload_folder_label';
   static const String _oneDriveLocalDownloadDirKey = 'onedrive_local_download_dir';
   static const String _oneDriveSyncSettingsKey = 'onedrive_sync_settings_v1';
   static const String _oneDriveIndexFoldersKey = 'onedrive_index_folders';
@@ -299,6 +302,48 @@ class SettingsService {
         } else {
           await box.put(_oneDriveCloudAppFolderIdKey, itemId.trim());
           await box.put(_oneDriveCloudAppFolderLabelKey, label.trim());
+        }
+      } catch (_) {}
+    }
+  }
+
+  /// 本地上传至 OneDrive 的默认目标文件夹（Graph driveItem id）；与应用数据目录可分开配置。
+  static Future<(String?, String)> loadOneDriveMusicUploadFolder() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final idRaw = box.get(_oneDriveMusicUploadFolderIdKey) as String?;
+      final labelRaw = box.get(_oneDriveMusicUploadFolderLabelKey) as String?;
+      final id = idRaw?.trim();
+      final label = labelRaw?.trim() ?? '';
+      if (id == null || id.isEmpty) {
+        return (null, '');
+      }
+      return (id, label);
+    } catch (_) {
+      return (null, '');
+    }
+  }
+
+  static Future<void> saveOneDriveMusicUploadFolder(String? itemId, String label) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (itemId == null || itemId.trim().isEmpty) {
+        await box.delete(_oneDriveMusicUploadFolderIdKey);
+        await box.delete(_oneDriveMusicUploadFolderLabelKey);
+      } else {
+        await box.put(_oneDriveMusicUploadFolderIdKey, itemId.trim());
+        await box.put(_oneDriveMusicUploadFolderLabelKey, label.trim());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (itemId == null || itemId.trim().isEmpty) {
+          await box.delete(_oneDriveMusicUploadFolderIdKey);
+          await box.delete(_oneDriveMusicUploadFolderLabelKey);
+        } else {
+          await box.put(_oneDriveMusicUploadFolderIdKey, itemId.trim());
+          await box.put(_oneDriveMusicUploadFolderLabelKey, label.trim());
         }
       } catch (_) {}
     }
@@ -796,6 +841,266 @@ class SettingsService {
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_songPageKeepScreenAwakeKey, value);
       } catch (_) {}
+    }
+  }
+
+  /// 参与云端「应用设置」备份的 Hive 键（排除体积巨大的索引曲目与普通下载队列历史）。
+  static const List<String> _hiveKeysForCloudBackup = <String>[
+    _lyricSettingsKey,
+    _playbackModeKey,
+    _timerDurationKey,
+    _quickEntryOrderKey,
+    _quickEntryHiddenKey,
+    _oneDriveClientIdKey,
+    _oneDriveMusicRootIdKey,
+    _oneDriveCloudAppFolderIdKey,
+    _oneDriveCloudAppFolderLabelKey,
+    _oneDriveMusicUploadFolderIdKey,
+    _oneDriveMusicUploadFolderLabelKey,
+    _oneDriveLocalDownloadDirKey,
+    _oneDriveSyncSettingsKey,
+    _oneDriveIndexFoldersKey,
+    _oneDriveIndexAtKey,
+    _oneDriveCloudSortTypeKey,
+    _oneDriveCloudSortAscKey,
+    _macosMenuBarLyricsKey,
+    _desktopFloatingLyricsKey,
+    _desktopFloatingLyricsBgOpacityKey,
+    _desktopFloatingLyricsLinesBeforeKey,
+    _desktopFloatingLyricsLinesAfterKey,
+    _desktopFloatingLyricsLockedKey,
+    _androidCarLyricsEnabledKey,
+    _androidCarLyricsShowCoverKey,
+    _androidCarLyricsSyncLyricsKey,
+    _playbackShortcutsKey,
+    _wireRemoteControlKey,
+    _songPageKeepScreenAwakeKey,
+  ];
+
+  static const String yeahMusicAppSettingsBackupFormatId = 'yeah_music_app_settings_v1';
+
+  static dynamic _hiveValueToJsonForCloudBackup(dynamic value) {
+    if (value == null || value is num || value is String || value is bool) {
+      return value;
+    }
+    if (value is LyricSettings) {
+      return value.toBackupMap();
+    }
+    if (value is List) {
+      return value.map<dynamic>(_hiveValueToJsonForCloudBackup).toList();
+    }
+    if (value is Map) {
+      final out = <String, dynamic>{};
+      for (final e in value.entries) {
+        out['${e.key}'] = _hiveValueToJsonForCloudBackup(e.value);
+      }
+      return out;
+    }
+    return value.toString();
+  }
+
+  /// 供 OneDrive 上传：应用偏好（Hive 白名单项与 SharedPreferences：主题、明暗、界面语言）。
+  static Future<Map<String, dynamic>> buildAppSettingsBackupMapForCloud() async {
+    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+    final hiveFlat = <String, dynamic>{};
+    for (final key in _hiveKeysForCloudBackup) {
+      if (!box.containsKey(key)) continue;
+      hiveFlat[key] = _hiveValueToJsonForCloudBackup(box.get(key));
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final appearance = <String, dynamic>{
+      if (prefs.containsKey('theme_type')) 'theme_type': prefs.getInt('theme_type'),
+      if (prefs.containsKey('primary_color')) 'primary_color': prefs.getInt('primary_color'),
+      if (prefs.containsKey('secondary_color')) 'secondary_color': prefs.getInt('secondary_color'),
+      if (prefs.containsKey('background_image_path'))
+        'background_image_path': prefs.getString('background_image_path'),
+      if (prefs.containsKey('background_image_effect'))
+        'background_image_effect': prefs.getDouble('background_image_effect'),
+      if (prefs.containsKey('global_theme_mode')) 'global_theme_mode': prefs.getInt('global_theme_mode'),
+      if (prefs.containsKey('app_language_option')) 'app_language_option': prefs.getString('app_language_option'),
+    };
+
+    return {
+      'format': yeahMusicAppSettingsBackupFormatId,
+      'version': 1,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'hive': hiveFlat,
+      'sharedPreferences': <String, dynamic>{'appearance': appearance},
+    };
+  }
+
+  static Future<String> buildAppSettingsBackupJsonStringForCloud() async {
+    final map = await buildAppSettingsBackupMapForCloud();
+    return const JsonEncoder.withIndent('  ').convert(map);
+  }
+
+  static int _asIntForCloudRestore(dynamic json, [int fallback = 0]) {
+    if (json is int) return json;
+    if (json is num) return json.round();
+    return fallback;
+  }
+
+  static double _asDoubleForCloudRestore(dynamic json, double fallback) {
+    if (json is double) return json;
+    if (json is num) return json.toDouble();
+    return fallback;
+  }
+
+  static bool _asBoolForCloudRestore(dynamic json, bool fallback) {
+    if (json is bool) return json;
+    return fallback;
+  }
+
+  /// 将 [buildAppSettingsBackupMapForCloud] 产出的快照写回 Hive 与 SharedPreferences（appearance）。
+  static Future<void> applyCloudBackupMap(Map<String, dynamic> root) async {
+    final fmt = root['format'] as String?;
+    if (fmt != yeahMusicAppSettingsBackupFormatId) {
+      throw FormatException('unsupported settings backup format: $fmt');
+    }
+    final hiveRaw = root['hive'];
+    if (hiveRaw is! Map) {
+      throw const FormatException('settings backup missing hive');
+    }
+    final hiveDecoded = Map<String, dynamic>.from(hiveRaw);
+    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+    for (final key in _hiveKeysForCloudBackup) {
+      if (!hiveDecoded.containsKey(key)) continue;
+      await box.put(
+        key,
+        _decodeHiveValueForCloudRestore(key, hiveDecoded[key]),
+      );
+    }
+
+    final spWrapper = root['sharedPreferences'];
+    if (spWrapper is! Map) return;
+    final appearance = spWrapper['appearance'];
+    if (appearance is! Map) return;
+    final app = Map<String, dynamic>.from(appearance);
+    final prefs = await SharedPreferences.getInstance();
+    Future<void> setIntPref(String prefsKey, Object? v) async {
+      if (v is int) {
+        await prefs.setInt(prefsKey, v);
+      } else if (v is num) {
+        await prefs.setInt(prefsKey, v.round());
+      }
+    }
+
+    if (app.containsKey('theme_type')) {
+      await setIntPref('theme_type', app['theme_type']);
+    }
+    if (app.containsKey('primary_color')) {
+      await setIntPref('primary_color', app['primary_color']);
+    }
+    if (app.containsKey('secondary_color')) {
+      await setIntPref('secondary_color', app['secondary_color']);
+    }
+    if (app.containsKey('background_image_path')) {
+      final v = app['background_image_path'];
+      if (v == null) {
+        await prefs.remove('background_image_path');
+      } else if (v is String) {
+        await prefs.setString('background_image_path', v);
+      }
+    }
+    if (app.containsKey('background_image_effect')) {
+      final v = app['background_image_effect'];
+      if (v is num) {
+        await prefs.setDouble('background_image_effect', v.toDouble());
+      }
+    }
+    if (app.containsKey('global_theme_mode')) {
+      await setIntPref('global_theme_mode', app['global_theme_mode']);
+    }
+    if (app.containsKey('app_language_option')) {
+      final v = app['app_language_option'];
+      if (v is String) {
+        await prefs.setString('app_language_option', v);
+      }
+    }
+  }
+
+  static dynamic _decodeHiveValueForCloudRestore(String key, dynamic json) {
+    switch (key) {
+      case _lyricSettingsKey:
+        if (json is! Map) {
+          throw const FormatException('backup hive lyric_settings invalid');
+        }
+        final ls = LyricSettings.fromBackupMap(Map<String,dynamic>.from(json));
+        return ls;
+      case _playbackModeKey:
+        return _asIntForCloudRestore(json, 0).clamp(0, 999);
+      case _timerDurationKey:
+        return _asIntForCloudRestore(json, 30);
+      case _quickEntryOrderKey:
+        if (json is! List) return <dynamic>[];
+        return json.map((e) => '$e').where((s) => s.isNotEmpty).toList();
+      case _quickEntryHiddenKey:
+        if (json is! List) return <dynamic>[];
+        return json.map((e) => '$e').where((s) => s.isNotEmpty).toList();
+      case _oneDriveClientIdKey:
+      case _oneDriveMusicRootIdKey:
+      case _oneDriveCloudAppFolderIdKey:
+      case _oneDriveCloudAppFolderLabelKey:
+      case _oneDriveMusicUploadFolderIdKey:
+      case _oneDriveMusicUploadFolderLabelKey:
+      case _oneDriveLocalDownloadDirKey:
+        return '$json';
+      case _oneDriveSyncSettingsKey:
+        if (json is String && json.trim().isNotEmpty) {
+          return json.trim();
+        }
+        if (json is Map) {
+          return jsonEncode(Map<String,dynamic>.from(json));
+        }
+        return jsonEncode(OneDriveSyncSettings.defaults.toJson());
+      case _oneDriveIndexFoldersKey:
+        if (json is! List) {
+          return <Map<dynamic,dynamic>>[];
+        }
+        return json
+            .whereType<Map>()
+            .map((e) => Map<dynamic,dynamic>.from(e))
+            .toList();
+      case _oneDriveIndexAtKey:
+        final s = json is String ? json : '$json';
+        return DateTime.tryParse(s)?.toIso8601String() ??
+            DateTime.now().toIso8601String();
+      case _oneDriveCloudSortTypeKey:
+        return '$json';
+      case _oneDriveCloudSortAscKey:
+        return _asBoolForCloudRestore(json, true);
+      case _macosMenuBarLyricsKey:
+      case _desktopFloatingLyricsKey:
+      case _desktopFloatingLyricsLockedKey:
+      case _androidCarLyricsEnabledKey:
+      case _androidCarLyricsShowCoverKey:
+      case _androidCarLyricsSyncLyricsKey:
+      case _songPageKeepScreenAwakeKey:
+        return _asBoolForCloudRestore(json, false);
+      case _desktopFloatingLyricsBgOpacityKey:
+        return _asDoubleForCloudRestore(
+          json,
+          desktopFloatingLyricsBgOpacityDefault,
+        ).clamp(_desktopBgOpacityMin, _desktopBgOpacityMax);
+      case _desktopFloatingLyricsLinesBeforeKey:
+        return _asIntForCloudRestore(
+          json,
+          desktopFloatingLyricsLinesBeforeDefault,
+        ).clamp(0, _desktopLinesRangeMax);
+      case _desktopFloatingLyricsLinesAfterKey:
+        return _asIntForCloudRestore(
+          json,
+          desktopFloatingLyricsLinesAfterDefault,
+        ).clamp(0, _desktopLinesRangeMax);
+      case _playbackShortcutsKey:
+      case _wireRemoteControlKey:
+        if (json is String) return json;
+        if (json is Map) {
+          return jsonEncode(Map<String,dynamic>.from(json));
+        }
+        return '{}';
+      default:
+        return json;
     }
   }
 }

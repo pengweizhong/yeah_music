@@ -10,6 +10,13 @@ String formatOneDriveDownloadBytes(int n) {
   return '${(n / (1024 * 1024)).toStringAsFixed(1)} MB';
 }
 
+/// 队列列表过滤：[downloadsOnly] 用于批量下载抽屉与「下载」Tab；[uploadsOnly] 用于「上传」Tab。
+enum OneDriveQueuePanelTaskFilter {
+  all,
+  downloadsOnly,
+  uploadsOnly,
+}
+
 /// 下载控制区 + 任务列表（抽屉与全屏页共用）。
 class OneDriveDownloadQueuePanel extends StatelessWidget {
   const OneDriveDownloadQueuePanel({
@@ -19,6 +26,7 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
     this.showPlayDownloadedButton = false,
     this.onPlayDownloaded,
     this.autoPlaySwitch,
+    this.taskFilter = OneDriveQueuePanelTaskFilter.all,
   });
 
   /// 底部抽屉内为列表设上限；全屏页传 `null`，由外层 [Expanded] 包住本组件以占满剩余高度。
@@ -33,20 +41,35 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
   /// 非 null 时插入「完成后自动播放」区域（仅首次批量抽屉使用）。
   final Widget? autoPlaySwitch;
 
+  final OneDriveQueuePanelTaskFilter taskFilter;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
     return Consumer<OneDriveDownloadQueueController>(
       builder: (context, ctrl, _) {
-        final tasks = ctrl.tasksSortedForDisplay;
+        final allSorted = ctrl.tasksSortedForDisplay;
+        final tasks = switch (taskFilter) {
+          OneDriveQueuePanelTaskFilter.all => allSorted,
+          OneDriveQueuePanelTaskFilter.downloadsOnly =>
+            allSorted.where((t) => !t.isUpload).toList(),
+          OneDriveQueuePanelTaskFilter.uploadsOnly =>
+            allSorted.where((t) => t.isUpload).toList(),
+        };
+        final emptyMessage = switch (taskFilter) {
+          OneDriveQueuePanelTaskFilter.downloadsOnly =>
+            l10n.oneDriveDownloadQueueEmpty,
+          OneDriveQueuePanelTaskFilter.uploadsOnly => l10n.oneDriveUploadQueueEmpty,
+          OneDriveQueuePanelTaskFilter.all => l10n.oneDriveTransferQueueEmpty,
+        };
 
         Widget buildList() {
           if (tasks.isEmpty) {
             return Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                l10n.oneDriveDownloadQueueEmpty,
+                emptyMessage,
                 style: const TextStyle(color: Colors.white54, height: 1.45),
                 textAlign: TextAlign.center,
               ),
@@ -101,17 +124,17 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: ctrl.canStopDownloads
                           ? ctrl.requestStop
-                          : ctrl.canContinueAfterStop
-                              ? ctrl.resumeStoppedBatch
+                          : ctrl.canResumeStaleTasks
+                              ? ctrl.resumeStaleTasks
                               : null,
                       icon: Icon(
-                        ctrl.canContinueAfterStop && !ctrl.canStopDownloads
+                        ctrl.canResumeStaleTasks && !ctrl.canStopDownloads
                             ? Icons.play_arrow_rounded
                             : Icons.stop_rounded,
                         size: 20,
                       ),
                       label: Text(
-                        ctrl.canContinueAfterStop && !ctrl.canStopDownloads
+                        ctrl.canResumeStaleTasks && !ctrl.canStopDownloads
                             ? l10n.oneDriveDownloadContinueAll
                             : l10n.oneDriveDownloadStopAll,
                       ),

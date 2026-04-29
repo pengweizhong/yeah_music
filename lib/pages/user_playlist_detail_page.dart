@@ -548,7 +548,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                         songs: orderedSongs,
                         itemBuilder: (context, song, index, isRowCurrent) {
                           return Dismissible(
-                            key: ValueKey('${pl.id}_${song.path}'),
+                            key: ValueKey<String>(
+                              '${pl.id}_${index}_${normSongPath(song.path)}',
+                            ),
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: Alignment.centerRight,
@@ -567,7 +569,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                               userPl.removeSongFromPlaylist(pl.id, song);
                             },
                             child: CompactSongListRow(
-                              key: ValueKey('row_${pl.id}_${song.path}'),
+                              key: ValueKey<String>(
+                                'row_${pl.id}_${index}_${normSongPath(song.path)}',
+                              ),
                               song: song,
                               title: song.title ?? l10n.pageUnknownTitle,
                               subtitle: songListSecondaryLine(song),

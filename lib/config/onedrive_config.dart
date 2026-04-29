@@ -3,10 +3,11 @@
 /// **正式发布**：在 Azure 注册「公共客户端 / 移动和桌面」应用，将应用程序（客户端）ID 填入
 /// [embeddedApplicationClientId]（可嵌入应用，与常见消费级 App 一致）；或通过 CI 传入
 /// `--dart-define=ONEDRIVE_CLIENT_ID=...` 覆盖。
-///
+/// **`Azure`**
 /// 1. 「身份验证」平台：**移动和桌面应用程序**，重定向 URI 与 [redirectUrl] **逐字一致**。
-/// 2. 「API 权限」Microsoft Graph 委托：`offline_access`、`User.Read`、`Files.Read.All`
-///    （后续若需云端备份写入再增加 `Files.ReadWrite` 等）。请求范围见 [scopes]。
+/// 2. 「API 权限」Microsoft Graph 委托：`offline_access`、`User.Read`、`Files.Read.All`、
+///    `Files.ReadWrite`、`Files.ReadWrite.All`（上传至任意所选文件夹时建议使用后者；变更权限后需重新登录）。
+///    请求范围见 [scopes]。
 abstract final class OneDriveConfig {
   /// 商店包内置的 Azure 应用程序（客户端）ID。开源仓库可留空，改用 dart-define。
   static const String embeddedApplicationClientId = '';
@@ -36,6 +37,8 @@ abstract final class OneDriveConfig {
   static const List<String> scopes = <String>[
     'offline_access',
     'Files.Read.All',
+    'Files.ReadWrite',
+    'Files.ReadWrite.All',
     'User.Read',
   ];
 

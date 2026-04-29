@@ -61,6 +61,81 @@ class AppLocalizationsEn extends AppLocalizations {
       'App name and version, acknowledgements, and open-source license texts.';
 
   @override
+  String get settingsAboutDialogAuthor => 'Author';
+
+  @override
+  String get settingsAboutDialogRepo => 'Repository';
+
+  @override
+  String get settingsAboutDialogLicense => 'License';
+
+  @override
+  String get settingsAboutDialogCopyright => 'Copyright';
+
+  @override
+  String get settingsAboutDialogClose => 'Close';
+
+  @override
+  String settingsAboutDialogVersionLabel(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String get settingsSysinfoSectionDevice => 'Device';
+
+  @override
+  String get settingsSysinfoSectionStorage => 'Storage';
+
+  @override
+  String get settingsSysinfoPlatformLabel => 'Platform';
+
+  @override
+  String get settingsSysinfoTotalSpace => 'Total space';
+
+  @override
+  String get settingsSysinfoUsedSpace => 'Used';
+
+  @override
+  String get settingsSysinfoFreeSpace => 'Free space';
+
+  @override
+  String get settingsSysinfoStorageUnavailable =>
+      'Storage details are unavailable.';
+
+  @override
+  String get settingsSysinfoDeviceModel => 'Model';
+
+  @override
+  String get settingsSysinfoManufacturer => 'Manufacturer';
+
+  @override
+  String get settingsSysinfoOsVersion => 'OS version';
+
+  @override
+  String get settingsSysinfoSdkVersion => 'SDK version';
+
+  @override
+  String get settingsSysinfoDeviceName => 'Device name';
+
+  @override
+  String get settingsSysinfoHostName => 'Computer name';
+
+  @override
+  String get settingsSysinfoKernelVersion => 'Kernel';
+
+  @override
+  String get settingsSysinfoDistroLabel => 'Version';
+
+  @override
+  String get settingsSysinfoBuildNumber => 'Build';
+
+  @override
+  String get settingsSysinfoError => 'Error';
+
+  @override
+  String get settingsSysinfoFetchFailed => 'Could not load device information.';
+
+  @override
   String get settingsLanguage => 'Language';
 
   @override
@@ -331,7 +406,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      'Back up playlists and app settings on a schedule. Requires sign-in and a cloud app folder. Automatic sync will be enabled in a future update.';
+      'Back up playlists and app settings on a schedule. Each upload is saved as timestamped JSON files in your cloud app folder. Scheduled timers will run in a later update.';
 
   @override
   String get oneDriveSyncItemPlaylists => 'Playlists';
@@ -370,7 +445,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowDescription =>
-      'Push the latest playlists and settings without waiting for the timer. (Cloud upload is still on the way—this lets you trigger it early once it’s live.)';
+      'Upload playlists and settings now. Files are named with the local date and time, for example playlists and settings snapshots from the same moment share the same timestamp.';
 
   @override
   String get oneDriveSyncNowNeedLogin => 'Sign in with Microsoft first.';
@@ -381,7 +456,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowFinished =>
-      'All set—we’ll use this the moment cloud backup is ready.';
+      'Backup uploaded as timestamped JSON in your cloud app folder.';
+
+  @override
+  String oneDriveSyncNowFailed(String message) {
+    return 'Backup failed: $message';
+  }
+
+  @override
+  String get oneDriveRestoreFromCloud => 'Restore from cloud';
+
+  @override
+  String get oneDriveRestoreSubtitle =>
+      'Download a timestamped backup from your cloud app folder.';
+
+  @override
+  String get oneDriveRestoreSheetTitle => 'Choose a backup';
+
+  @override
+  String get oneDriveRestoreEmpty =>
+      'No backup files yet. Use “Sync now” to upload first.';
+
+  @override
+  String get oneDriveRestorePlaylistCheckbox => 'Playlists';
+
+  @override
+  String get oneDriveRestoreSettingsCheckbox => 'App settings';
+
+  @override
+  String get oneDriveRestorePlaylistModeMerge => 'Merge with local playlists';
+
+  @override
+  String get oneDriveRestorePlaylistModeReplace =>
+      'Replace playlists (clear local first)';
+
+  @override
+  String get oneDriveRestoreAction => 'Restore';
+
+  @override
+  String get oneDriveRestoreNeedPickContent =>
+      'Select at least playlists or settings.';
+
+  @override
+  String get oneDriveRestoreMissingPlaylistsFile =>
+      'No playlists file in this backup.';
+
+  @override
+  String get oneDriveRestoreMissingSettingsFile =>
+      'No settings file in this backup.';
+
+  @override
+  String get oneDriveRestoreFinished => 'Restore completed.';
+
+  @override
+  String oneDriveRestoreFailed(String message) {
+    return 'Restore failed: $message';
+  }
+
+  @override
+  String get oneDriveRestoreLoadingList => 'Loading backups…';
 
   @override
   String get oneDriveMusicRootIdLabel => 'Music browse root (optional)';
@@ -432,6 +565,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick a folder for app data and future backups.';
 
   @override
+  String get oneDrivePickFolderForMusicUpload =>
+      'Pick the folder where uploads from this device should go.';
+
+  @override
+  String get oneDriveMusicUploadFolderTitle => 'Music upload folder';
+
+  @override
+  String get oneDriveMusicUploadFolderSubtitle =>
+      'Default folder for uploads from this device. If unset, the cloud app folder is used.';
+
+  @override
+  String get oneDriveMusicUploadFolderFallback => 'Uses cloud app folder';
+
+  @override
   String get oneDriveTroubleshootTitle => 'Having trouble signing in?';
 
   @override
@@ -467,6 +614,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get oneDriveSignInFailed =>
       'Couldn’t finish signing in—check your connection and try again, or skim the tips under “Having trouble signing in?”';
+
+  @override
+  String get oneDriveTroubleshootUpload403 =>
+      'Upload HTTP 403: In Azure → App registration → API permissions, add Microsoft Graph delegated Files.ReadWrite.All (and grant admin consent if required), then sign out and sign in again in this app.';
 
   @override
   String get oneDriveAzureRedirectIntro =>
@@ -506,6 +657,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveDownloadQueueTitle => 'OneDrive downloads';
+
+  @override
+  String get oneDriveTransferQueueTitle => 'OneDrive transfers';
+
+  @override
+  String get oneDriveTransferTabDownload => 'Downloads';
+
+  @override
+  String get oneDriveTransferTabUpload => 'Uploads';
 
   @override
   String get oneDriveDownloadPause => 'Pause';
@@ -550,12 +710,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'No batch download yet.\nUse “Play all” in the cloud library or OneDrive browser — you can close this panel and downloads keep running.';
 
   @override
+  String get oneDriveUploadQueueEmpty =>
+      'No upload tasks yet.\nUse “Upload to OneDrive” from the local library.';
+
+  @override
+  String get oneDriveTransferQueueEmpty => 'No tasks in the queue yet.';
+
+  @override
   String get oneDriveDownloadQueuePageHint =>
       'Pause, resume, or stop downloads here. Closing the sheet does not cancel background downloads.';
 
   @override
+  String get oneDriveUploadQueuePageHint =>
+      'Library uploads appear here. Use the same controls to pause, resume, or stop.';
+
+  @override
   String get oneDriveDownloadQueueSubtitle =>
-      'Batch downloads and playback controls';
+      'Upload & download queue and playback';
 
   @override
   String get oneDriveDownloadQueueTooltip => 'Download queue';
@@ -1527,4 +1698,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricLabelTranslation => 'Translation';
+
+  @override
+  String get libraryBatchSelect => 'Select';
+
+  @override
+  String get libraryBatchDone => 'Done';
+
+  @override
+  String get libraryBatchSelectAll => 'All';
+
+  @override
+  String get libraryBatchDelete => 'Delete';
+
+  @override
+  String get libraryBatchRename => 'Rename';
+
+  @override
+  String get libraryBatchUploadOneDrive => 'Upload to OneDrive';
+
+  @override
+  String get libraryBatchDeleteConfirmTitle => 'Delete selected songs?';
+
+  @override
+  String get libraryBatchDeleteConfirmMessage =>
+      'Files will be removed from this device and references cleaned up. This cannot be undone.';
+
+  @override
+  String get libraryBatchNoneSelected => 'Select songs first';
+
+  @override
+  String get libraryBatchRenameTitle => 'Batch rename';
+
+  @override
+  String get libraryBatchRenameHint =>
+      'Pattern; use %n for a number (e.g. Track %n)';
+
+  @override
+  String get libraryBatchRenameStart => 'Start at';
+
+  @override
+  String get libraryRenameSingleTitle => 'Rename track';
+
+  @override
+  String get libraryRenameSingleHint =>
+      'Main filename only; the extension is kept.';
+
+  @override
+  String get libraryRenameSingleFieldLabel => 'Name';
+
+  @override
+  String get libraryRenameSingleDone => 'Renamed';
+
+  @override
+  String get libraryBatchUploadNeedSignIn => 'Sign in to OneDrive in Settings';
+
+  @override
+  String get libraryBatchUploadNeedCloudFolder =>
+      'Choose an OneDrive cloud app folder in Settings first';
+
+  @override
+  String get libraryBatchUploadNeedParentFolder =>
+      'Choose a music upload folder or cloud app folder under OneDrive settings first.';
+
+  @override
+  String get libraryBatchUploadQueued => 'Added to transfer queue';
+
+  @override
+  String get libraryBatchOpenQueue => 'Open queue';
+
+  @override
+  String get oneDriveUploadStatusUploading => 'Uploading';
+
+  @override
+  String get oneDriveTaskDirectionUpload => 'Upload';
 }

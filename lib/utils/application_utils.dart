@@ -3,12 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_config.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 
 import '../models/song.dart';
 
 class ApplicationUtils {
-  ///弹出软件的"关于信息"
+  /// 弹出软件的「关于」对话框（文案随界面语言）。
   static void showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showFrostedDialog<void>(
       context: context,
       maxWidth: 400,
@@ -54,9 +56,9 @@ class ApplicationUtils {
                 color: const Color(0x332196F3),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
-                'v1.0.0',
-                style: TextStyle(
+              child: Text(
+                l10n.settingsAboutDialogVersionLabel('1.0.0'),
+                style: const TextStyle(
                   fontSize: 14,
                   color: Color(0xFF64B5F6),
                   fontWeight: FontWeight.w500,
@@ -66,23 +68,35 @@ class ApplicationUtils {
             const SizedBox(height: 20),
             Divider(color: Colors.white.withValues(alpha: 0.2)),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.person_outline, '作者', 'PengWeiZhong'),
+            _buildInfoRow(
+              Icons.person_outline,
+              l10n.settingsAboutDialogAuthor,
+              'PengWeiZhong',
+            ),
             const SizedBox(height: 12),
             _buildInfoRow(
               Icons.code,
-              '仓库',
+              l10n.settingsAboutDialogRepo,
               'https://github.com/pengweizhong/yeah_music',
             ),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.gavel, '许可证', 'GPL-3.0'),
+            _buildInfoRow(
+              Icons.gavel,
+              l10n.settingsAboutDialogLicense,
+              'GPL-3.0',
+            ),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.copyright, '版权', '©2026 PengWeiZhong'),
+            _buildInfoRow(
+              Icons.copyright,
+              l10n.settingsAboutDialogCopyright,
+              '©2026 PengWeiZhong',
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('关闭'),
+                child: Text(l10n.settingsAboutDialogClose),
               ),
             ),
           ],
