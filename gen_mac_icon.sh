@@ -1,7 +1,7 @@
 #!/bin/bash
 # 一键生成 macOS AppIcon，圆角 + 透明边距 + iconset + Contents.json + icns
 
-ICON_SRC="yeah_music.png"
+ICON_SRC="yeah_music_final.png"
 ICONSET_DIR="macos/Runner/Assets.xcassets/AppIcon.appiconset"
 TMP_DIR="./temp/icon"
 
@@ -11,9 +11,9 @@ mkdir -p $ICONSET_DIR $TMP_DIR
 
 
 echo "增加透明边距..."
-# extent 越大 → 图标内容越小 (1280-1024)/1280 ≈ 20% 这里设置的缩小5%
+# extent 越大 → 图标内容越小 (1280-1024)/1280 ≈ 20% 这里设置的缩小5% 1078
 magick $ICON_SRC -resize 1024x1024 \
-  -background none -gravity center -extent 1078x1078 \
+  -background none -gravity center -extent 1024x1024 \
   $TMP_DIR/year_music_padded.png
 
 echo "生成各尺寸图标..."
