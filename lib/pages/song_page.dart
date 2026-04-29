@@ -2103,45 +2103,64 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   SizedBox(
+                    key: ValueKey<String>('q_${index}_${s.path}'),
                     height: _kQueueRowH,
-                    child: ListTile(
-                      key: ValueKey<String>('q_${index}_${s.path}'),
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      minVerticalPadding: 0,
-                      selected: isCurrent,
-                      selectedColor: primary,
-                      selectedTileColor: primary.withValues(alpha: 0.16),
-                      leading: SongListCover(
-                        song: s,
-                        size: 48,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      title: Text(
-                        s.title ?? l10n.pageUnknownTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight:
-                              isCurrent ? FontWeight.w600 : FontWeight.w500,
-                          color: isCurrent ? primary : Colors.white,
+                    child: Material(
+                      color: isCurrent
+                          ? primary.withValues(alpha: 0.16)
+                          : Colors.transparent,
+                      child: InkWell(
+                        onTap: () => widget.onPick(index),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SongListCover(
+                                song: s,
+                                size: 48,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      s.title ?? l10n.pageUnknownTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: isCurrent
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        color: isCurrent
+                                            ? primary
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      s.artist ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: isCurrent
+                                            ? primary.withValues(alpha: 0.8)
+                                            : Colors.white
+                                                .withValues(alpha: 0.5),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isCurrent)
+                                PlayingBarsIndicator(color: primary),
+                            ],
+                          ),
                         ),
                       ),
-                      subtitle: Text(
-                        s.artist ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: isCurrent
-                              ? primary.withValues(alpha: 0.8)
-                              : Colors.white.withValues(alpha: 0.5),
-                          fontSize: 13,
-                        ),
-                      ),
-                    trailing: isCurrent
-                        ? PlayingBarsIndicator(color: primary)
-                        : null,
-                      onTap: () => widget.onPick(index),
                     ),
                   ),
                   Container(height: _kQueueSepH, color: divColor),
