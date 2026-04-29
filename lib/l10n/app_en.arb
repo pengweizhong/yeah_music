@@ -62,21 +62,6 @@
   "settingsPlaybackShortcutsDisabledLabel": "Off",
   "settingsPlaybackShortcutsPressKey": "New shortcut",
   "settingsPlaybackShortcutsPressKeyHint": "Press the key combination to use. Esc cancels.",
-  "settingsPlaybackFadeOutTitle": "Playback fade-out",
-  "settingsPlaybackFadeOutSubtitle": "Lower volume smoothly before pause, stop, or track changes",
-  "settingsPlaybackFadeOutHint": "0 disables fade-out (up to {maxMs} ms).",
-  "@settingsPlaybackFadeOutHint": {
-    "placeholders": {
-      "maxMs": { "type": "int" }
-    }
-  },
-  "settingsPlaybackFadeOutMsLabel": "{ms} ms",
-  "@settingsPlaybackFadeOutMsLabel": {
-    "placeholders": {
-      "ms": { "type": "int" }
-    }
-  },
-  "settingsPlaybackFadeOutDisable": "Off",
   "settingsWireRemoteTitle": "Headset controls",
   "settingsWireRemoteSubtitle": "Wired multi-press and Bluetooth next/prev keys while the app is open",
   "settingsWireRemoteSubtitleOtherPlatforms": "Customization works on the Android app in the foreground.",

@@ -192,26 +192,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Press the key combination to use. Esc cancels.';
 
   @override
-  String get settingsPlaybackFadeOutTitle => 'Playback fade-out';
-
-  @override
-  String get settingsPlaybackFadeOutSubtitle =>
-      'Lower volume smoothly before pause, stop, or track changes';
-
-  @override
-  String settingsPlaybackFadeOutHint(int maxMs) {
-    return '0 disables fade-out (up to $maxMs ms).';
-  }
-
-  @override
-  String settingsPlaybackFadeOutMsLabel(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get settingsPlaybackFadeOutDisable => 'Off';
-
-  @override
   String get settingsWireRemoteTitle => 'Headset controls';
 
   @override

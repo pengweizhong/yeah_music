@@ -183,25 +183,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
-  String get settingsPlaybackFadeOutTitle => '播放淡出';
-
-  @override
-  String get settingsPlaybackFadeOutSubtitle => '暂停、停止或切换曲目前先平滑降低音量';
-
-  @override
-  String settingsPlaybackFadeOutHint(int maxMs) {
-    return '0 表示关闭淡出（最长 $maxMs ms）。';
-  }
-
-  @override
-  String settingsPlaybackFadeOutMsLabel(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get settingsPlaybackFadeOutDisable => '关闭';
-
-  @override
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
@@ -1901,25 +1882,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
-  String get settingsPlaybackFadeOutTitle => '播放淡出';
-
-  @override
-  String get settingsPlaybackFadeOutSubtitle => '暂停、停止或切换曲目前先平滑降低音量';
-
-  @override
-  String settingsPlaybackFadeOutHint(int maxMs) {
-    return '0 表示关闭淡出（最长 $maxMs ms）。';
-  }
-
-  @override
-  String settingsPlaybackFadeOutMsLabel(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get settingsPlaybackFadeOutDisable => '关闭';
-
-  @override
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
@@ -3617,25 +3579,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsPlaybackShortcutsPressKeyHint => '請按下新的組合鍵。Esc 取消。';
-
-  @override
-  String get settingsPlaybackFadeOutTitle => '播放淡出';
-
-  @override
-  String get settingsPlaybackFadeOutSubtitle => '暫停、停止或切換曲目前先平滑降低音量';
-
-  @override
-  String settingsPlaybackFadeOutHint(int maxMs) {
-    return '0 表示關閉淡出（最長 $maxMs ms）。';
-  }
-
-  @override
-  String settingsPlaybackFadeOutMsLabel(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get settingsPlaybackFadeOutDisable => '關閉';
 
   @override
   String get settingsWireRemoteTitle => '耳機線控';
