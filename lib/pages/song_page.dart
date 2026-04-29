@@ -1129,7 +1129,7 @@ class _SongPageState extends State<SongPage> {
     if (mounted) setState(() {});
 
     try {
-      await MusicService().pause();
+      await MusicService().pause(fadeOut: false);
       await MusicService().seek(target);
       if (!mounted || requestId != _seekRequestId) return;
 

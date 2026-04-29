@@ -444,6 +444,36 @@ abstract class AppLocalizations {
   /// **'Press the key combination to use. Esc cancels.'**
   String get settingsPlaybackShortcutsPressKeyHint;
 
+  /// No description provided for @settingsPlaybackFadeOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback fade-out'**
+  String get settingsPlaybackFadeOutTitle;
+
+  /// No description provided for @settingsPlaybackFadeOutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower volume smoothly before pause, stop, or track changes'**
+  String get settingsPlaybackFadeOutSubtitle;
+
+  /// No description provided for @settingsPlaybackFadeOutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0 disables fade-out (up to {maxMs} ms).'**
+  String settingsPlaybackFadeOutHint(int maxMs);
+
+  /// No description provided for @settingsPlaybackFadeOutMsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{ms} ms'**
+  String settingsPlaybackFadeOutMsLabel(int ms);
+
+  /// No description provided for @settingsPlaybackFadeOutDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsPlaybackFadeOutDisable;
+
   /// No description provided for @settingsWireRemoteTitle.
   ///
   /// In en, this message translates to:
@@ -1007,6 +1037,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading backups…'**
   String get oneDriveRestoreLoadingList;
+
+  /// No description provided for @oneDriveSyncNowInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get oneDriveSyncNowInProgress;
+
+  /// No description provided for @oneDriveRestoreInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring…'**
+  String get oneDriveRestoreInProgress;
 
   /// No description provided for @oneDriveMusicRootIdLabel.
   ///

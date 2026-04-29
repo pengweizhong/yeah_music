@@ -183,6 +183,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '播放淡出';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '暂停、停止或切换曲目前先平滑降低音量';
+
+  @override
+  String settingsPlaybackFadeOutHint(int maxMs) {
+    return '0 表示关闭淡出（最长 $maxMs ms）。';
+  }
+
+  @override
+  String settingsPlaybackFadeOutMsLabel(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get settingsPlaybackFadeOutDisable => '关闭';
+
+  @override
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
@@ -480,6 +499,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveRestoreLoadingList => '正在读取备份列表…';
+
+  @override
+  String get oneDriveSyncNowInProgress => '同步中…';
+
+  @override
+  String get oneDriveRestoreInProgress => '恢复中…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
@@ -1876,6 +1901,25 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '播放淡出';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '暂停、停止或切换曲目前先平滑降低音量';
+
+  @override
+  String settingsPlaybackFadeOutHint(int maxMs) {
+    return '0 表示关闭淡出（最长 $maxMs ms）。';
+  }
+
+  @override
+  String settingsPlaybackFadeOutMsLabel(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get settingsPlaybackFadeOutDisable => '关闭';
+
+  @override
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
@@ -2173,6 +2217,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveRestoreLoadingList => '正在读取备份列表…';
+
+  @override
+  String get oneDriveSyncNowInProgress => '同步中…';
+
+  @override
+  String get oneDriveRestoreInProgress => '恢复中…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
@@ -3569,6 +3619,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsPlaybackShortcutsPressKeyHint => '請按下新的組合鍵。Esc 取消。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '播放淡出';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '暫停、停止或切換曲目前先平滑降低音量';
+
+  @override
+  String settingsPlaybackFadeOutHint(int maxMs) {
+    return '0 表示關閉淡出（最長 $maxMs ms）。';
+  }
+
+  @override
+  String settingsPlaybackFadeOutMsLabel(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get settingsPlaybackFadeOutDisable => '關閉';
+
+  @override
   String get settingsWireRemoteTitle => '耳機線控';
 
   @override
@@ -3866,6 +3935,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveRestoreLoadingList => '正在讀取備份列表…';
+
+  @override
+  String get oneDriveSyncNowInProgress => '同步中…';
+
+  @override
+  String get oneDriveRestoreInProgress => '還原中…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音樂瀏覽根目錄（選填）';

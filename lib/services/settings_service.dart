@@ -63,6 +63,11 @@ class SettingsService {
   /// 播放页是否保持屏幕常亮。
   static const String _songPageKeepScreenAwakeKey = 'song_page_keep_screen_awake';
 
+  /// 暂停 / 停止 / 切歌前淡出音量持续时间（毫秒），0 表示关闭。[playbackFadeOutMsMaxInclusive] 封顶。
+  static const String _playbackFadeOutMsKey = 'playback_fade_out_ms';
+
+  static const int playbackFadeOutMsMaxInclusive = 10000;
+
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
   static const int desktopFloatingLyricsLinesAfterDefault = 2;
@@ -844,6 +849,38 @@ class SettingsService {
     }
   }
 
+  /// 读出淡出时长毫秒数；未设置或损坏时为 0。[savePlaybackFadeOutMilliseconds]。
+  static Future<int> loadPlaybackFadeOutMilliseconds() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_playbackFadeOutMsKey);
+      if (v is int) {
+        return v.clamp(0, playbackFadeOutMsMaxInclusive);
+      }
+      if (v is num) {
+        return v.round().clamp(0, playbackFadeOutMsMaxInclusive);
+      }
+      return 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  static Future<void> savePlaybackFadeOutMilliseconds(int milliseconds) async {
+    final clamped =
+        milliseconds.clamp(0, playbackFadeOutMsMaxInclusive);
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_playbackFadeOutMsKey, clamped);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_playbackFadeOutMsKey, clamped);
+      } catch (_) {}
+    }
+  }
+
   /// 参与云端「应用设置」备份的 Hive 键（排除体积巨大的索引曲目与普通下载队列历史）。
   static const List<String> _hiveKeysForCloudBackup = <String>[
     _lyricSettingsKey,
@@ -875,6 +912,7 @@ class SettingsService {
     _playbackShortcutsKey,
     _wireRemoteControlKey,
     _songPageKeepScreenAwakeKey,
+    _playbackFadeOutMsKey,
   ];
 
   static const String yeahMusicAppSettingsBackupFormatId = 'yeah_music_app_settings_v1';
@@ -1099,6 +1137,9 @@ class SettingsService {
           return jsonEncode(Map<String,dynamic>.from(json));
         }
         return '{}';
+      case _playbackFadeOutMsKey:
+        return _asIntForCloudRestore(json, 0)
+            .clamp(0, playbackFadeOutMsMaxInclusive);
       default:
         return json;
     }

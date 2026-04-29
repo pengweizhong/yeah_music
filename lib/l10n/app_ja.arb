@@ -63,6 +63,21 @@
   "settingsPlaybackShortcutsDisabledLabel": "オフ",
   "settingsPlaybackShortcutsPressKey": "新しいショートカット",
   "settingsPlaybackShortcutsPressKeyHint": "使うキーの組み合わせを押してください。Esc でキャンセル。",
+  "settingsPlaybackFadeOutTitle": "再生のフェードアウト",
+  "settingsPlaybackFadeOutSubtitle": "一時停止・停止・曲送りの前に音量を滑らかに下げます",
+  "settingsPlaybackFadeOutHint": "0 で無効（最大 {maxMs} ms）。",
+  "@settingsPlaybackFadeOutHint": {
+    "placeholders": {
+      "maxMs": { "type": "int" }
+    }
+  },
+  "settingsPlaybackFadeOutMsLabel": "{ms} ms",
+  "@settingsPlaybackFadeOutMsLabel": {
+    "placeholders": {
+      "ms": { "type": "int" }
+    }
+  },
+  "settingsPlaybackFadeOutDisable": "オフ",
   "settingsWireRemoteTitle": "ヘッドセット操作",
   "settingsWireRemoteSubtitle": "有線の連打と Bluetooth の次へ／戻るキー（アプリが手前のとき）",
   "settingsWireRemoteSubtitleOtherPlatforms": "カスタム割り当ては Android アプリが手前のときのみ有効です。",
@@ -171,6 +186,8 @@
     }
   },
   "oneDriveRestoreLoadingList": "バックアップ一覧を読み込み中…",
+  "oneDriveSyncNowInProgress": "同期中…",
+  "oneDriveRestoreInProgress": "復元中…",
   "oneDriveMusicRootIdLabel": "音楽ブラウズのルート（任意）",
   "oneDriveMusicRootHint": "OneDrive のアイテム ID。空欄の場合はドライブのルートから。",
   "oneDriveMusicRootTileTitle": "音楽ブラウズのルート",

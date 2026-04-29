@@ -30,6 +30,24 @@ class MusicService {
   static final _player = AudioPlayer();
   static bool isPlaying = false;
 
+  /// 暂停 / 停止 / 切歌前将输出音量线性渐弱（受设置中的毫秒数；0 则跳过）。
+  static Future<void> _fadeOutPlaybackVolumeIfConfigured() async {
+    final fadeMs = await SettingsService.loadPlaybackFadeOutMilliseconds();
+    if (fadeMs <= 0) return;
+    if (!_player.playing) return;
+    final initial = _player.volume.clamp(0.0, 1.0);
+    if (initial <= 0.001) return;
+    const stepMs = 25;
+    final steps = (fadeMs / stepMs).ceil().clamp(1, 480);
+    for (var s = 1; s <= steps; s++) {
+      if (!_player.playing) break;
+      final t = s / steps;
+      await _player.setVolume(initial * (1.0 - t));
+      await Future<void>.delayed(const Duration(milliseconds: stepMs));
+    }
+    await _player.setVolume(0);
+  }
+
   /// [MediaMetadataCompat.METADATA_KEY_COMPOSER]，部分国产系统控制中心/流体云会读此字段作第三行或歌词。
   static const String androidComposerMetadataKey =
       'android.media.metadata.COMPOSER';
@@ -96,7 +114,9 @@ class MusicService {
     androidCarQueueActive = false;
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
+        await _fadeOutPlaybackVolumeIfConfigured();
         await _player.stop();
+        await _player.setVolume(1.0);
         if (attempt == 0) {
           await Future<void>.delayed(const Duration(milliseconds: 32));
         } else {
@@ -142,7 +162,9 @@ class MusicService {
     final lyricStyle = await SettingsService.loadLyricSettings();
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
+        await _fadeOutPlaybackVolumeIfConfigured();
         await _player.stop();
+        await _player.setVolume(1.0);
         if (attempt == 0) {
           await Future<void>.delayed(const Duration(milliseconds: 32));
         } else {
@@ -362,9 +384,18 @@ class MusicService {
     isPlaying = _player.playing;
   }
 
-  Future<void> pause() async {
-    await _player.pause();
-    isPlaying = false;
+  Future<void> pause({bool fadeOut = true}) async {
+    try {
+      if (fadeOut) {
+        await _fadeOutPlaybackVolumeIfConfigured();
+      }
+      await _player.pause();
+    } finally {
+      isPlaying = false;
+      try {
+        await _player.setVolume(1.0);
+      } catch (_) {}
+    }
   }
 
   void resume() {
@@ -394,10 +425,19 @@ class MusicService {
     return _player.seek(duration, index: index);
   }
 
-  Future<void> stop() async {
-    isPlaying = false;
-    androidCarQueueActive = false;
-    return _player.stop();
+  Future<void> stop({bool fadeOut = true}) async {
+    try {
+      if (fadeOut) {
+        await _fadeOutPlaybackVolumeIfConfigured();
+      }
+      isPlaying = false;
+      androidCarQueueActive = false;
+      await _player.stop();
+    } finally {
+      try {
+        await _player.setVolume(1.0);
+      } catch (_) {}
+    }
   }
 
   static Stream<bool> get playingStream {

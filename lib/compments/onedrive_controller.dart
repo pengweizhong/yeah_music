@@ -23,11 +23,9 @@ import 'package:yeah_music/utils/onedrive_backup_stamp.dart';
 /// 点播时落地路径：若设置里指定了「本地下载目录」且该路径存在且为文件夹，则下载到该目录；
 /// 否则（未指定、路径不存在或为文件）使用应用支持目录下的 `onedrive_cache`。
 class OneDriveController extends ChangeNotifier {
-  OneDriveController({
-    OneDriveAuth? auth,
-    OneDriveGraphClient? graph,
-  })  : _auth = auth ?? OneDriveAuth(),
-        _graph = graph ?? OneDriveGraphClient();
+  OneDriveController({OneDriveAuth? auth, OneDriveGraphClient? graph})
+    : _auth = auth ?? OneDriveAuth(),
+      _graph = graph ?? OneDriveGraphClient();
 
   final OneDriveAuth _auth;
   final OneDriveGraphClient _graph;
@@ -51,6 +49,16 @@ class OneDriveController extends ChangeNotifier {
 
   OneDriveSyncSettings _syncSettings = OneDriveSyncSettings.defaults;
 
+  /// 「立即同步」上传进行中；与 [restoreCloudBackup] 互斥，避免并行写云端/本地 Hive。
+  bool _immediateSyncBusy = false;
+
+  /// 云端恢复（下载并应用）进行中。
+  bool _immediateRestoreBusy = false;
+
+  bool get isImmediateSyncBusy => _immediateSyncBusy;
+
+  bool get isImmediateRestoreBusy => _immediateRestoreBusy;
+
   String? get musicRootItemId => _musicRootItemId;
 
   /// 云端「应用数据」目录（设置/歌单备份等预留），Graph driveItem id。
@@ -69,7 +77,8 @@ class OneDriveController extends ChangeNotifier {
   String? get accountHint => _accountHint;
   bool get isLinuxUnsupported => Platform.isLinux;
 
-  List<OneDriveIndexFolder> get indexFolders => List.unmodifiable(_indexFolders);
+  List<OneDriveIndexFolder> get indexFolders =>
+      List.unmodifiable(_indexFolders);
 
   List<OneDriveCloudTrack> get cloudTracks => List.unmodifiable(_cloudTracks);
 
@@ -115,11 +124,15 @@ class OneDriveController extends ChangeNotifier {
 
   Future<void> _loadCloudIndexFromDisk() async {
     final foldersRaw = await SettingsService.loadOneDriveIndexFolders();
-    _indexFolders =
-        foldersRaw.map(OneDriveIndexFolder.fromMap).where((e) => e.itemId.isNotEmpty).toList();
+    _indexFolders = foldersRaw
+        .map(OneDriveIndexFolder.fromMap)
+        .where((e) => e.itemId.isNotEmpty)
+        .toList();
     final tracksRaw = await SettingsService.loadOneDriveIndexTracks();
-    _cloudTracks =
-        tracksRaw.map(OneDriveCloudTrack.fromMap).where((e) => e.itemId.isNotEmpty).toList();
+    _cloudTracks = tracksRaw
+        .map(OneDriveCloudTrack.fromMap)
+        .where((e) => e.itemId.isNotEmpty)
+        .toList();
     _cloudTracks.sort((a, b) => a.sortKey.compareTo(b.sortKey));
     _cloudIndexAt = await SettingsService.loadOneDriveIndexCompletedAt();
   }
@@ -140,7 +153,9 @@ class OneDriveController extends ChangeNotifier {
     if (id.isEmpty) return;
     if (_indexFolders.any((e) => e.itemId == id)) return;
     final raw = label.trim();
-    _indexFolders.add(OneDriveIndexFolder(itemId: id, label: raw.isEmpty ? 'Folder' : raw));
+    _indexFolders.add(
+      OneDriveIndexFolder(itemId: id, label: raw.isEmpty ? 'Folder' : raw),
+    );
     await SettingsService.saveOneDriveIndexFolders(
       _indexFolders.map((e) => e.toMap()).toList(),
     );
@@ -329,7 +344,9 @@ class OneDriveController extends ChangeNotifier {
     );
   }
 
-  Future<List<Song>> buildQueueForCloudTracks(List<OneDriveCloudTrack> slice) async {
+  Future<List<Song>> buildQueueForCloudTracks(
+    List<OneDriveCloudTrack> slice,
+  ) async {
     final out = <Song>[];
     for (final t in slice) {
       out.add(await songForCloudTrack(t));
@@ -381,7 +398,10 @@ class OneDriveController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setCloudAppDataFolder(String? itemId, {String label = ''}) async {
+  Future<void> setCloudAppDataFolder(
+    String? itemId, {
+    String label = '',
+  }) async {
     _cloudAppDataFolderId = itemId;
     _cloudAppDataFolderLabel = label;
     await SettingsService.saveOneDriveCloudAppFolder(itemId, label);
@@ -418,6 +438,9 @@ class OneDriveController extends ChangeNotifier {
     if (!sync.syncPlaylists && !sync.syncAppSettings) {
       return;
     }
+    if (_immediateSyncBusy || _immediateRestoreBusy) {
+      throw StateError('immediate cloud op busy');
+    }
     if (effectiveClientId.isEmpty || !_signedIn) {
       throw StateError('not signed in');
     }
@@ -429,62 +452,72 @@ class OneDriveController extends ChangeNotifier {
     if (parent == null || parent.isEmpty) {
       throw StateError('cloud app folder unset');
     }
-    await userPlaylistProvider.init();
-
-    final stamp = formatOneDriveBackupFileStamp(DateTime.now());
-    final tmpRoot = await getTemporaryDirectory();
-    const encoder = JsonEncoder.withIndent('  ');
-    Future<void> uploadBackupFile({
-      required String remoteBaseName,
-      required String utf8Payload,
-    }) async {
-      final remoteName = '${remoteBaseName}_$stamp.json';
-      final safeScratch = File(
-        p.join(
-          tmpRoot.path,
-          'yeah_sync_${DateTime.now().microsecondsSinceEpoch}.json',
-        ),
-      );
-      await safeScratch.writeAsString(utf8Payload, flush: true);
-      try {
-        await uploadLocalFileWithProgress(
-          parentFolderItemId: parent,
-          remoteFileName: remoteName,
-          file: safeScratch,
-          onProgress: (int sent, int? total) {},
-          waitWhilePaused: () async {},
-          isCancelled: () => false,
-        );
-      } finally {
-        try {
-          if (await safeScratch.exists()) {
-            await safeScratch.delete();
-          }
-        } catch (_) {}
-      }
-    }
-
-    if (sync.syncPlaylists) {
-      final map = userPlaylistProvider.buildExportMap();
-      await uploadBackupFile(
-        remoteBaseName: 'yeah_music_playlists',
-        utf8Payload: encoder.convert(map),
-      );
-    }
-    if (sync.syncAppSettings) {
-      final payload = await SettingsService.buildAppSettingsBackupJsonStringForCloud();
-      await uploadBackupFile(
-        remoteBaseName: 'yeah_music_settings',
-        utf8Payload: payload,
-      );
-    }
+    _immediateSyncBusy = true;
     notifyListeners();
+    try {
+      await userPlaylistProvider.init();
+
+      final stamp = formatOneDriveBackupFileStamp(DateTime.now());
+      final tmpRoot = await getTemporaryDirectory();
+      const encoder = JsonEncoder.withIndent('  ');
+      Future<void> uploadBackupFile({
+        required String remoteBaseName,
+        required String utf8Payload,
+      }) async {
+        final remoteName = '${remoteBaseName}_$stamp.json';
+        final safeScratch = File(
+          p.join(
+            tmpRoot.path,
+            'yeah_sync_${DateTime.now().microsecondsSinceEpoch}.json',
+          ),
+        );
+        await safeScratch.writeAsString(utf8Payload, flush: true);
+        try {
+          await uploadLocalFileWithProgress(
+            parentFolderItemId: parent,
+            remoteFileName: remoteName,
+            file: safeScratch,
+            onProgress: (int sent, int? total) {},
+            waitWhilePaused: () async {},
+            isCancelled: () => false,
+          );
+        } finally {
+          try {
+            if (await safeScratch.exists()) {
+              await safeScratch.delete();
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (sync.syncPlaylists) {
+        final map = userPlaylistProvider.buildExportMap();
+        await uploadBackupFile(
+          remoteBaseName: 'yeah_music_playlists',
+          utf8Payload: encoder.convert(map),
+        );
+      }
+      if (sync.syncAppSettings) {
+        final payload =
+            await SettingsService.buildAppSettingsBackupJsonStringForCloud();
+        await uploadBackupFile(
+          remoteBaseName: 'yeah_music_settings',
+          utf8Payload: payload,
+        );
+      }
+      notifyListeners();
+    } finally {
+      _immediateSyncBusy = false;
+      notifyListeners();
+    }
   }
 
-  static final RegExp _cloudBackupPlaylistFileName =
-      RegExp(r'^yeah_music_playlists_(.+)\.json$');
-  static final RegExp _cloudBackupSettingsFileName =
-      RegExp(r'^yeah_music_settings_(.+)\.json$');
+  static final RegExp _cloudBackupPlaylistFileName = RegExp(
+    r'^yeah_music_playlists_(.+)\.json$',
+  );
+  static final RegExp _cloudBackupSettingsFileName = RegExp(
+    r'^yeah_music_settings_(.+)\.json$',
+  );
 
   /// 列举云端应用文件夹中带时间戳后缀的备份文件，并按时间戳降序（新一在前）。
   Future<List<OneDriveCloudBackupSnapshot>> listCloudBackupSnapshots() async {
@@ -496,8 +529,10 @@ class OneDriveController extends ChangeNotifier {
     if (token == null) {
       throw StateError('not signed in');
     }
-    final children =
-        await _graph.listChildren(accessToken: token, parentId: folder);
+    final children = await _graph.listChildren(
+      accessToken: token,
+      parentId: folder,
+    );
     final playlistIdsByStamp = <String, String>{};
     final settingsIdsByStamp = <String, String>{};
     for (final it in children) {
@@ -539,46 +574,56 @@ class OneDriveController extends ChangeNotifier {
     if (!restorePlaylists && !restoreSettings) {
       return;
     }
+    if (_immediateSyncBusy || _immediateRestoreBusy) {
+      throw StateError('immediate cloud op busy');
+    }
     final token = await getAccessToken();
     if (token == null) {
       throw StateError('not signed in');
     }
 
-    await userPlaylistProvider.init();
-
-    if (restorePlaylists) {
-      final id = snapshot.playlistsItemId?.trim();
-      if (id == null || id.isEmpty) {
-        throw StateError('playlist backup missing');
-      }
-      final raw = await _graph.downloadDriveItemUtf8(
-        accessToken: token,
-        itemId: id,
-      );
-      final doc = parseUserPlaylistExportJson(raw);
-      await userPlaylistProvider.applyImportedDocument(
-        doc,
-        replaceAll: replaceAllPlaylists,
-      );
-    }
-
-    if (restoreSettings) {
-      final id = snapshot.settingsItemId?.trim();
-      if (id == null || id.isEmpty) {
-        throw StateError('settings backup missing');
-      }
-      final raw = await _graph.downloadDriveItemUtf8(
-        accessToken: token,
-        itemId: id,
-      );
-      final decoded = jsonDecode(raw);
-      if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('settings backup root must be object');
-      }
-      await SettingsService.applyCloudBackupMap(decoded);
-    }
-
+    _immediateRestoreBusy = true;
     notifyListeners();
+    try {
+      await userPlaylistProvider.init();
+
+      if (restorePlaylists) {
+        final id = snapshot.playlistsItemId?.trim();
+        if (id == null || id.isEmpty) {
+          throw StateError('playlist backup missing');
+        }
+        final raw = await _graph.downloadDriveItemUtf8(
+          accessToken: token,
+          itemId: id,
+        );
+        final doc = parseUserPlaylistExportJson(raw);
+        await userPlaylistProvider.applyImportedDocument(
+          doc,
+          replaceAll: replaceAllPlaylists,
+        );
+      }
+
+      if (restoreSettings) {
+        final id = snapshot.settingsItemId?.trim();
+        if (id == null || id.isEmpty) {
+          throw StateError('settings backup missing');
+        }
+        final raw = await _graph.downloadDriveItemUtf8(
+          accessToken: token,
+          itemId: id,
+        );
+        final decoded = jsonDecode(raw);
+        if (decoded is! Map<String, dynamic>) {
+          throw const FormatException('settings backup root must be object');
+        }
+        await SettingsService.applyCloudBackupMap(decoded);
+      }
+
+      notifyListeners();
+    } finally {
+      _immediateRestoreBusy = false;
+      notifyListeners();
+    }
   }
 
   Future<String?> getAccessToken() {
@@ -620,10 +665,7 @@ class OneDriveController extends ChangeNotifier {
       throw StateError('not signed in');
     }
     if (parentItemId == null && _musicRootItemId != null) {
-      return _graph.listChildren(
-        accessToken: t,
-        parentId: _musicRootItemId,
-      );
+      return _graph.listChildren(accessToken: t, parentId: _musicRootItemId);
     }
     return _graph.listChildren(accessToken: t, parentId: parentItemId);
   }
@@ -707,7 +749,10 @@ class OneDriveController extends ChangeNotifier {
     for (final root in roots) {
       await root.create(recursive: true);
       if (!await root.exists()) continue;
-      await for (final entity in root.list(recursive: false, followLinks: false)) {
+      await for (final entity in root.list(
+        recursive: false,
+        followLinks: false,
+      )) {
         if (entity is! File) continue;
         if (!OneDriveConfig.isAudioFileName(entity.path)) continue;
         final norm = p.normalize(entity.path);
@@ -717,7 +762,10 @@ class OneDriveController extends ChangeNotifier {
       }
     }
     files.sort(
-      (a, b) => p.basename(a.path).toLowerCase().compareTo(p.basename(b.path).toLowerCase()),
+      (a, b) => p
+          .basename(a.path)
+          .toLowerCase()
+          .compareTo(p.basename(b.path).toLowerCase()),
     );
     final songs = <Song>[];
     for (final f in files) {
@@ -769,7 +817,10 @@ class OneDriveController extends ChangeNotifier {
     if (t == null) {
       throw StateError('not signed in');
     }
-    final parentMeta = await _graph.getItem(accessToken: t, itemId: parentFolderItemId);
+    final parentMeta = await _graph.getItem(
+      accessToken: t,
+      itemId: parentFolderItemId,
+    );
     if (parentMeta == null || !parentMeta.isFolder) {
       throw StateError('upload parent is not a folder');
     }
@@ -785,11 +836,11 @@ class OneDriveController extends ChangeNotifier {
   }
 
   /// 为当前目录中所有音频建播放队列；已缓存的跳过网络，其余串行下载。
-  Future<List<Song>> buildQueueForAudioItems(List<OneDriveGraphItem> items) async {
+  Future<List<Song>> buildQueueForAudioItems(
+    List<OneDriveGraphItem> items,
+  ) async {
     final files = items
-        .where(
-          (e) => !e.isFolder && OneDriveConfig.isAudioFileName(e.name),
-        )
+        .where((e) => !e.isFolder && OneDriveConfig.isAudioFileName(e.name))
         .toList();
     final out = <Song>[];
     for (final f in files) {

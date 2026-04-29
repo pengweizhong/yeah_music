@@ -186,6 +186,25 @@ class AppLocalizationsJa extends AppLocalizations {
       '使うキーの組み合わせを押してください。Esc でキャンセル。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '再生のフェードアウト';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '一時停止・停止・曲送りの前に音量を滑らかに下げます';
+
+  @override
+  String settingsPlaybackFadeOutHint(int maxMs) {
+    return '0 で無効（最大 $maxMs ms）。';
+  }
+
+  @override
+  String settingsPlaybackFadeOutMsLabel(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get settingsPlaybackFadeOutDisable => 'オフ';
+
+  @override
   String get settingsWireRemoteTitle => 'ヘッドセット操作';
 
   @override
@@ -489,6 +508,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveRestoreLoadingList => 'バックアップ一覧を読み込み中…';
+
+  @override
+  String get oneDriveSyncNowInProgress => '同期中…';
+
+  @override
+  String get oneDriveRestoreInProgress => '復元中…';
 
   @override
   String get oneDriveMusicRootIdLabel => '音楽ブラウズのルート（任意）';

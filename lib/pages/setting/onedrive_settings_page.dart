@@ -16,7 +16,6 @@ import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
-import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 class OneDriveSettingsPage extends StatefulWidget {
   const OneDriveSettingsPage({super.key});
@@ -26,6 +25,9 @@ class OneDriveSettingsPage extends StatefulWidget {
 }
 
 class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
+  /// 列出备份、弹窗选择、到应用完成前的整段恢复流程（与应用内 [isImmediateRestoreBusy] 叠加）。
+  bool _restoreFlowBusy = false;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -34,7 +36,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         return theme.buildThemedBackground(
           context: context,
           child: Scaffold(
-            extendBodyBehindAppBar: true,
+            extendBodyBehindAppBar: false,
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
@@ -64,14 +66,8 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                   ),
               ],
             ),
-            body: Builder(
-              builder: (ctx) => ListView(
-                padding: EdgeInsets.only(
-                  top: songPlaylistUnderlapTopInset(ctx) + 8,
-                  left: 16,
-                  right: 16,
-                  bottom: 120,
-                ),
+            body: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 children: [
                   _SectionLabel(text: l10n.oneDriveSectionAccount),
                   const SizedBox(height: 8),
@@ -139,9 +135,15 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                     onSyncNow: () => _handleSyncNow(context, l10n, od),
                     onRestoreFromCloud: () =>
                         _handleRestoreFromCloud(context, l10n, od),
+                    operationsLocked:
+                        od.isImmediateSyncBusy ||
+                        od.isImmediateRestoreBusy ||
+                        _restoreFlowBusy,
+                    syncShowsProgress: od.isImmediateSyncBusy,
+                    restoreShowsProgress:
+                        od.isImmediateRestoreBusy || _restoreFlowBusy,
                   ),
                 ],
-              ),
             ),
             bottomNavigationBar: const MiniPlayer(),
           ),
@@ -306,6 +308,11 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       );
       return;
     }
+    if (od.isImmediateSyncBusy ||
+        od.isImmediateRestoreBusy ||
+        _restoreFlowBusy) {
+      return;
+    }
     final userPl = context.read<UserPlaylistProvider>();
     if (!userPl.initialized) {
       await userPl.init();
@@ -315,6 +322,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     } on StateError catch (e) {
       if (!context.mounted) return;
       final msg = '$e';
+      if (msg.contains('immediate cloud op busy')) return;
       final text = msg.contains('not signed')
           ? l10n.oneDriveSyncNowNeedLogin
           : msg.contains('cloud app folder')
@@ -324,15 +332,15 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       return;
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveSyncNowFailed('$e'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowFailed('$e'))));
       return;
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.oneDriveSyncNowFinished)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowFinished)));
   }
 
   Future<void> _reloadAfterCloudRestore(BuildContext context) async {
@@ -363,86 +371,97 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       );
       return;
     }
-    late final List<OneDriveCloudBackupSnapshot> snapshots;
-    try {
-      snapshots = await od.listCloudBackupSnapshots();
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
-      );
+    if (od.isImmediateSyncBusy ||
+        od.isImmediateRestoreBusy ||
+        _restoreFlowBusy) {
       return;
     }
-    if (!context.mounted) return;
-    final choice = await showModalBottomSheet<_OneDriveRestoreChoice>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A1D22),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-            ),
-            child: _OneDriveRestoreSheet(
-              l10n: l10n,
-              snapshots: snapshots,
-            ),
-          ),
+
+    setState(() => _restoreFlowBusy = true);
+    try {
+      late final List<OneDriveCloudBackupSnapshot> snapshots;
+      try {
+        snapshots = await od.listCloudBackupSnapshots();
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
         );
-      },
-    );
-    if (!context.mounted || choice == null) return;
+        return;
+      }
+      if (!context.mounted) return;
+      final choice = await showModalBottomSheet<_OneDriveRestoreChoice>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          return DecoratedBox(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A1D22),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+              ),
+              child: _OneDriveRestoreSheet(l10n: l10n, snapshots: snapshots),
+            ),
+          );
+        },
+      );
+      if (!context.mounted || choice == null) return;
 
-    final userPl = context.read<UserPlaylistProvider>();
-    if (!userPl.initialized) {
-      await userPl.init();
-    }
-    if (!context.mounted) return;
-    try {
-      await od.restoreCloudBackup(
-        userPlaylistProvider: userPl,
-        snapshot: choice.snapshot,
-        restorePlaylists: choice.restorePlaylists,
-        restoreSettings: choice.restoreSettings,
-        replaceAllPlaylists: choice.replaceAllPlaylists,
-      );
+      final userPl = context.read<UserPlaylistProvider>();
+      if (!userPl.initialized) {
+        await userPl.init();
+      }
       if (!context.mounted) return;
-      await _reloadAfterCloudRestore(context);
-    } on StateError catch (e) {
-      if (!context.mounted) return;
-      final m = '$e';
-      final text = m.contains('playlist backup missing')
-          ? l10n.oneDriveRestoreMissingPlaylistsFile
-          : m.contains('settings backup missing')
-          ? l10n.oneDriveRestoreMissingSettingsFile
-          : m;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveRestoreFailed(text))),
-      );
-      return;
-    } on FormatException catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
-      );
-      return;
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
-      );
-      return;
-    }
+      try {
+        await od.restoreCloudBackup(
+          userPlaylistProvider: userPl,
+          snapshot: choice.snapshot,
+          restorePlaylists: choice.restorePlaylists,
+          restoreSettings: choice.restoreSettings,
+          replaceAllPlaylists: choice.replaceAllPlaylists,
+        );
+        if (!context.mounted) return;
+        await _reloadAfterCloudRestore(context);
+      } on StateError catch (e) {
+        if (!context.mounted) return;
+        final m = '$e';
+        if (m.contains('immediate cloud op busy')) return;
+        final text = m.contains('playlist backup missing')
+            ? l10n.oneDriveRestoreMissingPlaylistsFile
+            : m.contains('settings backup missing')
+            ? l10n.oneDriveRestoreMissingSettingsFile
+            : m;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.oneDriveRestoreFailed(text))),
+        );
+        return;
+      } on FormatException catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+        );
+        return;
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+        );
+        return;
+      }
 
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.oneDriveRestoreFinished)),
-    );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveRestoreFinished)));
+    } finally {
+      if (mounted) {
+        setState(() => _restoreFlowBusy = false);
+      }
+    }
   }
 }
 
@@ -461,10 +480,7 @@ class _OneDriveRestoreChoice {
 }
 
 class _OneDriveRestoreSheet extends StatefulWidget {
-  const _OneDriveRestoreSheet({
-    required this.l10n,
-    required this.snapshots,
-  });
+  const _OneDriveRestoreSheet({required this.l10n, required this.snapshots});
 
   final AppLocalizations l10n;
   final List<OneDriveCloudBackupSnapshot> snapshots;
@@ -607,7 +623,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
                           ),
                         ),
                         subtitle: Builder(
-                            builder: (_) {
+                          builder: (_) {
                             final p = widget.snapshots[i];
                             final parts = <String>[
                               if (p.hasPlaylistsJson)
@@ -666,7 +682,9 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
                         },
                         title: Text(
                           l10n.oneDriveRestorePlaylistModeMerge,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                       ),
                       RadioListTile<bool>(
@@ -678,7 +696,9 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
                         },
                         title: Text(
                           l10n.oneDriveRestorePlaylistModeReplace,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                       ),
                     ],
@@ -692,7 +712,9 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
                 onPressed: () {
                   if (!_wantPlaylists && !_wantSettings) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.oneDriveRestoreNeedPickContent)),
+                      SnackBar(
+                        content: Text(l10n.oneDriveRestoreNeedPickContent),
+                      ),
                     );
                     return;
                   }
@@ -774,12 +796,37 @@ class _SyncCard extends StatelessWidget {
     required this.od,
     required this.onSyncNow,
     required this.onRestoreFromCloud,
+    required this.operationsLocked,
+    required this.syncShowsProgress,
+    required this.restoreShowsProgress,
   });
 
   final AppLocalizations l10n;
   final OneDriveController od;
   final VoidCallback onSyncNow;
   final VoidCallback onRestoreFromCloud;
+
+  /// 任一同步 / 恢复 / 列出备份流程进行中时为 true。
+  final bool operationsLocked;
+  final bool syncShowsProgress;
+  final bool restoreShowsProgress;
+
+  static Widget _busyLabelRow({
+    required Widget indicator,
+    required String label,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(height: 20, width: 20, child: indicator),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(label, overflow: TextOverflow.ellipsis, maxLines: 1),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -940,18 +987,36 @@ class _SyncCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 FilledButton.tonal(
-                  onPressed: onSyncNow,
-                  child: Text(l10n.oneDriveSyncNow),
+                  onPressed: operationsLocked ? null : onSyncNow,
+                  child: syncShowsProgress
+                      ? _busyLabelRow(
+                          indicator: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white70,
+                          ),
+                          label: l10n.oneDriveSyncNowInProgress,
+                        )
+                      : Text(l10n.oneDriveSyncNow),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton(
-                  onPressed: onRestoreFromCloud,
+                  onPressed: operationsLocked ? null : onRestoreFromCloud,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
                     minimumSize: const Size.fromHeight(46),
                   ),
-                  child: Text(l10n.oneDriveRestoreFromCloud),
+                  child: restoreShowsProgress
+                      ? _busyLabelRow(
+                          indicator: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white70,
+                          ),
+                          label: l10n.oneDriveRestoreInProgress,
+                        )
+                      : Text(l10n.oneDriveRestoreFromCloud),
                 ),
               ],
             ),

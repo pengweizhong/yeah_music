@@ -12,6 +12,7 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
+import 'package:yeah_music/pages/setting/playback_fade_section.dart';
 import 'package:yeah_music/pages/setting/playback_shortcuts_section.dart';
 import 'package:yeah_music/pages/setting/wire_remote_control_section.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
@@ -353,6 +354,7 @@ class SettingPage extends StatelessWidget {
                             Platform.isWindows ||
                             Platform.isLinux))
                       const PlaybackShortcutsSettingsSection(),
+                    const PlaybackFadeSettingsSection(),
                     const _AndroidCarLyricsSettingsSection(),
                     if (!kIsWeb) const WireRemoteControlSection(),
                     if (_showDesktopLyricsSection)

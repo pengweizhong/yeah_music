@@ -63,6 +63,21 @@
   "settingsPlaybackShortcutsDisabledLabel": "已關閉",
   "settingsPlaybackShortcutsPressKey": "錄製快速鍵",
   "settingsPlaybackShortcutsPressKeyHint": "請按下新的組合鍵。Esc 取消。",
+  "settingsPlaybackFadeOutTitle": "播放淡出",
+  "settingsPlaybackFadeOutSubtitle": "暫停、停止或切換曲目前先平滑降低音量",
+  "settingsPlaybackFadeOutHint": "0 表示關閉淡出（最長 {maxMs} ms）。",
+  "@settingsPlaybackFadeOutHint": {
+    "placeholders": {
+      "maxMs": { "type": "int" }
+    }
+  },
+  "settingsPlaybackFadeOutMsLabel": "{ms} ms",
+  "@settingsPlaybackFadeOutMsLabel": {
+    "placeholders": {
+      "ms": { "type": "int" }
+    }
+  },
+  "settingsPlaybackFadeOutDisable": "關閉",
   "settingsWireRemoteTitle": "耳機線控",
   "settingsWireRemoteSubtitle": "有線連擊與藍牙獨立下一曲／上一曲鍵（應用程式在前景時生效）",
   "settingsWireRemoteSubtitleOtherPlatforms": "自訂線控僅在 Android 版、應用程式在前景時生效。",
@@ -171,6 +186,8 @@
     }
   },
   "oneDriveRestoreLoadingList": "正在讀取備份列表…",
+  "oneDriveSyncNowInProgress": "同步中…",
+  "oneDriveRestoreInProgress": "還原中…",
   "oneDriveMusicRootIdLabel": "音樂瀏覽根目錄（選填）",
   "oneDriveMusicRootHint": "OneDrive 項目 id，留空則從雲端根目錄進入。",
   "oneDriveMusicRootTileTitle": "音樂瀏覽根目錄",
