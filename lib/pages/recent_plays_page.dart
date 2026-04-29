@@ -43,6 +43,11 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
   }
 
   @override
+  void didPush() {
+    _didInitialScrollToCurrent = false;
+  }
+
+  @override
   void didPopNext() {
     if (!mounted) return;
     final playList = context.read<PlayListProvider>();
@@ -57,6 +62,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
       songs: items,
       itemExtent: kSongPlaylistRowExtent,
       playList: playList,
+      scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (_) {
         if (mounted) setState(() => _initialScrollInFlight = false);
       },
@@ -139,6 +145,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                     songs: items,
                     itemExtent: kSongPlaylistRowExtent,
                     playList: playList,
+                    scrollToTopWhenCurrentMissingFromList: true,
                     onScrollApplied: (_) {
                       if (!mounted) return;
                       setState(() {

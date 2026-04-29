@@ -97,6 +97,11 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   }
 
   @override
+  void didPush() {
+    _lastAutoScrollPathNorm = null;
+  }
+
+  @override
   void didPopNext() {
     if (!mounted) return;
     final p = context.read<PlayListProvider>();
@@ -109,6 +114,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       songs: _lastOrderedSongs,
       itemExtent: kSongPlaylistRowExtent,
       playList: p,
+      scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (path) {
         if (!mounted) return;
         setState(() {
@@ -450,6 +456,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   songs: orderedSongs,
                   itemExtent: kSongPlaylistRowExtent,
                   playList: playList,
+                  scrollToTopWhenCurrentMissingFromList: true,
                   onScrollApplied: (path) {
                     if (!mounted) return;
                     setState(() {

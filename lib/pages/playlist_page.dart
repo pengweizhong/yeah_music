@@ -94,6 +94,12 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   }
 
   @override
+  void didPush() {
+    // 每次进入本页清空对齐记忆，确保滚到当前播放（或不在曲库列表时按策略滚顶）
+    _lastAutoScrollPathNorm = null;
+  }
+
+  @override
   void didPopNext() {
     if (!mounted) return;
     final pl = context.read<PlayListProvider>();
@@ -110,6 +116,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       songs: songs,
       itemExtent: kSongPlaylistRowExtent,
       playList: pl,
+      scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (p) {
         if (!mounted) return;
         setState(() {
@@ -438,6 +445,24 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                         await _reloadSongMetadataFromDisk(context, song);
                       },
                     ),
+                    const Divider(height: 1, color: Color(0x33FFFFFF)),
+                    ListTile(
+                      leading: Icon(
+                        Icons.delete_outline_rounded,
+                        color: Theme.of(sheetContext).colorScheme.error,
+                      ),
+                      title: Text(
+                        l10n.actionDelete,
+                        style: TextStyle(color: Theme.of(sheetContext).colorScheme.error),
+                      ),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          _confirmDeleteLibrarySong(context, song);
+                        });
+                      },
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -447,6 +472,75 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         );
       },
     );
+  }
+
+  Future<void> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
+    final l10n = AppLocalizations.of(context);
+    final displayName =
+        (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
+
+    final step1 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.songPageDeleteDiskWarningTitle),
+        content: Text(l10n.songPageDeleteDiskWarningBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.songPageDeleteContinue),
+          ),
+        ],
+      ),
+    );
+    if (step1 != true || !context.mounted) return;
+
+    final step2 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.songPageDeleteFinalConfirmTitle),
+        content: Text(l10n.songPageDeleteFinalConfirmBody(displayName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionDelete),
+          ),
+        ],
+      ),
+    );
+    if (step2 != true || !context.mounted) return;
+
+    final folder = context.read<FolderProvider>();
+    final playList = context.read<PlayListProvider>();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) await userPl.init();
+    try {
+      await deleteLibrarySongsAndRefresh(
+        folderProvider: folder,
+        playListProvider: playList,
+        userPlaylistProvider: userPl,
+        songs: [song],
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.playlistDeletedOne)),
+        );
+      }
+    } catch (e) {
+      appLog.e('library song delete failed', error: e);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
   }
 
   Future<void> _renameSingleSongSheet(BuildContext context, Song song) async {
@@ -602,6 +696,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
               songs: _filteredSongs,
               itemExtent: kSongPlaylistRowExtent,
               playList: playListProvider,
+              scrollToTopWhenCurrentMissingFromList: true,
               onScrollApplied: (p) {
                 if (!mounted) return;
                 setState(() {
