@@ -2190,6 +2190,210 @@ abstract class AppLocalizations {
   /// **'Lyric style'**
   String get tooltipLyricStyle;
 
+  /// No description provided for @songPageMoreSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get songPageMoreSheetTitle;
+
+  /// No description provided for @songPageMoreQueryMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'View audio metadata'**
+  String get songPageMoreQueryMetadata;
+
+  /// No description provided for @songPageMoreUploadOneDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload to OneDrive'**
+  String get songPageMoreUploadOneDrive;
+
+  /// No description provided for @songPageMoreShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get songPageMoreShare;
+
+  /// No description provided for @songPageMoreEditMusicTagsExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit tags in external app…'**
+  String get songPageMoreEditMusicTagsExternal;
+
+  /// No description provided for @songPageMoreEditLyricsExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit lyrics in external app…'**
+  String get songPageMoreEditLyricsExternal;
+
+  /// No description provided for @songPageMoreExternalEditorComing.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening external editors will be supported in a future update.'**
+  String get songPageMoreExternalEditorComing;
+
+  /// No description provided for @songPageMetadataDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio metadata'**
+  String get songPageMetadataDialogTitle;
+
+  /// No description provided for @songPageMetadataReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read metadata for this file.'**
+  String get songPageMetadataReadFailed;
+
+  /// No description provided for @songPageShareFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This file was not found on disk.'**
+  String get songPageShareFileNotFound;
+
+  /// No description provided for @songPageDeleteDiskWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete from disk?'**
+  String get songPageDeleteDiskWarningTitle;
+
+  /// No description provided for @songPageDeleteDiskWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently removes the audio file from device storage. This cannot be undone. The song will also be removed from playlists and history.'**
+  String get songPageDeleteDiskWarningBody;
+
+  /// No description provided for @songPageDeleteContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get songPageDeleteContinue;
+
+  /// No description provided for @songPageDeleteFinalConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm deletion'**
+  String get songPageDeleteFinalConfirmTitle;
+
+  /// No description provided for @songPageDeleteFinalConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{fileName}\"?'**
+  String songPageDeleteFinalConfirmBody(Object fileName);
+
+  /// No description provided for @songPageMetaFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get songPageMetaFieldTitle;
+
+  /// No description provided for @songPageMetaFieldArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get songPageMetaFieldArtist;
+
+  /// No description provided for @songPageMetaFieldAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get songPageMetaFieldAlbum;
+
+  /// No description provided for @songPageMetaFieldDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get songPageMetaFieldDuration;
+
+  /// No description provided for @songPageMetaFieldBitrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Bitrate'**
+  String get songPageMetaFieldBitrate;
+
+  /// No description provided for @songPageMetaFieldSampleRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample rate'**
+  String get songPageMetaFieldSampleRate;
+
+  /// No description provided for @songPageMetaFieldYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get songPageMetaFieldYear;
+
+  /// No description provided for @songPageMetaFieldTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get songPageMetaFieldTrack;
+
+  /// No description provided for @songPageMetaFieldDisc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disc'**
+  String get songPageMetaFieldDisc;
+
+  /// No description provided for @songPageMetaFieldPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get songPageMetaFieldPath;
+
+  /// No description provided for @songPageMetaFieldSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get songPageMetaFieldSize;
+
+  /// No description provided for @songPageMetaFieldGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get songPageMetaFieldGenre;
+
+  /// No description provided for @songPageMetaFieldPerformers.
+  ///
+  /// In en, this message translates to:
+  /// **'Performers'**
+  String get songPageMetaFieldPerformers;
+
+  /// No description provided for @songPageMetaFieldLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get songPageMetaFieldLanguage;
+
+  /// No description provided for @songPageMetaFieldEmbeddedLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded lyrics'**
+  String get songPageMetaFieldEmbeddedLyrics;
+
+  /// No description provided for @songPageMetaFieldFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get songPageMetaFieldFormat;
+
+  /// No description provided for @songPageMetaSectionTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get songPageMetaSectionTags;
+
+  /// No description provided for @songPageMetaSectionAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get songPageMetaSectionAudio;
+
+  /// No description provided for @songPageMetaSectionFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get songPageMetaSectionFile;
+
   /// No description provided for @tooltipFolderInfo.
   ///
   /// In en, this message translates to:

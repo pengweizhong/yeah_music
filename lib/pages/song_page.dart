@@ -1,11 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
@@ -16,17 +22,22 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
+import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
+import 'package:yeah_music/widgets/song_metadata_dialog.dart' show showAudioMetadataDialog;
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:audio_metadata_reader/audio_metadata_reader.dart'
+    show AudioMetadata, readMetadata;
 
 class SongPage extends StatefulWidget {
   int index;
@@ -1006,6 +1017,317 @@ class _SongPageState extends State<SongPage> {
     Navigator.pop(ctx, v);
   }
 
+  Future<void> _showSongMetadataDialog(BuildContext context, Song song) async {
+    final l10n = AppLocalizations.of(context);
+    final path = song.path.trim();
+    if (path.isEmpty) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+      );
+      return;
+    }
+    late final AudioMetadata meta;
+    try {
+      meta = readMetadata(file, getImage: true);
+    } catch (e, st) {
+      appLog.e('read song metadata failed', error: e, stackTrace: st);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+      );
+      return;
+    }
+    late final int sizeBytes;
+    try {
+      sizeBytes = (await file.stat()).size;
+    } catch (_) {
+      sizeBytes = 0;
+    }
+
+    if (!context.mounted) return;
+    await showAudioMetadataDialog(
+      context: context,
+      song: song,
+      meta: meta,
+      sizeBytes: sizeBytes,
+    );
+  }
+
+  Future<void> _shareSongFile(BuildContext context, Song song) async {
+    final path = song.path.trim();
+    if (path.isEmpty) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).songPageShareFileNotFound)),
+      );
+      return;
+    }
+    try {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(path)]),
+      );
+    } catch (e, st) {
+      appLog.e('share audio file failed', error: e, stackTrace: st);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _uploadCurrentToOneDrive(BuildContext context, Song song) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await context.read<OneDriveDownloadQueueController>().enqueueLibraryUploads([song]);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.libraryBatchUploadQueued),
+          action: SnackBarAction(
+            label: l10n.libraryBatchOpenQueue,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const OneDriveDownloadQueuePage(
+                    initialTab: OneDriveTransferQueueTab.upload,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    } on StateError catch (e) {
+      final msg = '$e';
+      if (!context.mounted) return;
+      final text = msg.contains('not signed')
+          ? l10n.libraryBatchUploadNeedSignIn
+          : msg.contains('upload folder unset')
+              ? l10n.libraryBatchUploadNeedCloudFolder
+              : '$e';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  void _showExternalEditorComingSnack(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.songPageMoreExternalEditorComing)),
+    );
+  }
+
+  Future<void> _confirmDeleteCurrentSong(BuildContext context, Song song) async {
+    final l10n = AppLocalizations.of(context);
+    final displayName =
+        (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
+
+    final step1 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.songPageDeleteDiskWarningTitle),
+        content: Text(l10n.songPageDeleteDiskWarningBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.songPageDeleteContinue),
+          ),
+        ],
+      ),
+    );
+    if (step1 != true || !context.mounted) return;
+
+    final step2 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.songPageDeleteFinalConfirmTitle),
+        content: Text(l10n.songPageDeleteFinalConfirmBody(displayName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.actionDelete),
+          ),
+        ],
+      ),
+    );
+    if (step2 != true || !context.mounted) return;
+    final navigator = Navigator.of(context);
+    final folder = context.read<FolderProvider>();
+    final play = context.read<PlayListProvider>();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) await userPl.init();
+    await deleteLibrarySongsAndRefresh(
+      folderProvider: folder,
+      playListProvider: play,
+      userPlaylistProvider: userPl,
+      songs: [song],
+    );
+    if (!mounted) return;
+    navigator.maybePop();
+  }
+
+  void _showSongMoreSheet(BuildContext context, PlayListProvider playListProvider) {
+    final song = playListProvider.currentSong;
+    if (song == null) return;
+    final navigatorContext = context;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext);
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: FrostedGlassBottomSheet(
+            child: Theme(
+              data: frostedBottomSheetContentTheme(sheetContext),
+              child: SafeArea(
+                top: false,
+                child: Consumer<PlayListProvider>(
+                  builder: (ctx, provider, _) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                            child: Text(
+                              l10n.songPageMoreSheetTitle,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          ListTile(
+                            leading: Icon(
+                              provider.isSleepTimerActive
+                                  ? Icons.timer_off_rounded
+                                  : Icons.timer_rounded,
+                              color: Colors.white,
+                            ),
+                            title: Text(l10n.sleepTimerSheetTitle),
+                            subtitle: provider.isSleepTimerActive
+                                ? Text(l10n.sleepTimerCurrentN(provider.timerDuration))
+                                : null,
+                            trailing: provider.isSleepTimerActive
+                                ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
+                                : null,
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _showTimerSheet(navigatorContext, provider);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.info_outline_rounded, color: Colors.white),
+                            title: Text(l10n.songPageMoreQueryMetadata),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _showSongMetadataDialog(navigatorContext, song);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.cloud_upload_outlined, color: Colors.white),
+                            title: Text(l10n.songPageMoreUploadOneDrive),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _uploadCurrentToOneDrive(navigatorContext, song);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.share_outlined, color: Colors.white),
+                            title: Text(l10n.songPageMoreShare),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _shareSongFile(navigatorContext, song);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.edit_note_outlined, color: Colors.white),
+                            title: Text(l10n.songPageMoreEditMusicTagsExternal),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _showExternalEditorComingSnack(navigatorContext);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.subtitles_outlined, color: Colors.white),
+                            title: Text(l10n.songPageMoreEditLyricsExternal),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _showExternalEditorComingSnack(navigatorContext);
+                              });
+                            },
+                          ),
+                          const Divider(height: 1, color: Color(0x33FFFFFF)),
+                          ListTile(
+                            leading: Icon(
+                              Icons.delete_outline_rounded,
+                              color: Theme.of(ctx).colorScheme.error,
+                            ),
+                            title: Text(
+                              l10n.actionDelete,
+                              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                            ),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _confirmDeleteCurrentSong(navigatorContext, song);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // 显示定时关闭弹窗
   void _showTimerSheet(BuildContext context, PlayListProvider provider) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -1851,20 +2173,6 @@ class _SongPageState extends State<SongPage> {
                         },
                       ),
                       _SongToolIcon(
-                        icon: playListProvider.isSleepTimerActive
-                            ? Icons.timer_off_rounded
-                            : Icons.timer_rounded,
-                        iconColor: playListProvider.isSleepTimerActive
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
-                        onPressed: () {
-                          _showTimerSheet(context, playListProvider);
-                        },
-                        tooltip: playListProvider.isSleepTimerActive
-                            ? l10n.sleepTimerCancel
-                            : l10n.sleepTimerSheetTitle,
-                      ),
-                      _SongToolIcon(
                         icon: Icons.library_add_rounded,
                         onPressed: () {
                           final song = playListProvider.currentSong;
@@ -1872,6 +2180,13 @@ class _SongPageState extends State<SongPage> {
                           showAddToUserPlaylistsSheet(context, song);
                         },
                         tooltip: l10n.tooltipAddToPlaylist,
+                      ),
+                      _SongToolIcon(
+                        icon: Icons.more_horiz_rounded,
+                        onPressed: () {
+                          _showSongMoreSheet(context, playListProvider);
+                        },
+                        tooltip: l10n.tooltipMore,
                       ),
                     ],
                   ),

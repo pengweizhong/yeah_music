@@ -46,6 +46,7 @@ dependencies:
   desktop_multi_window: ^0.3.0
   window_manager: ^0.5.1
   wakelock_plus: ^1.5.2
+  share_plus: ^12.0.2
 
 dependency_overrides:
   flutter_appauth:

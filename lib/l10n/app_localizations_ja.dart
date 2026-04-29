@@ -1128,6 +1128,111 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tooltipLyricStyle => '歌詞の見た目';
 
   @override
+  String get songPageMoreSheetTitle => 'その他の操作';
+
+  @override
+  String get songPageMoreQueryMetadata => 'メタデータを表示';
+
+  @override
+  String get songPageMoreUploadOneDrive => 'OneDrive にアップロード';
+
+  @override
+  String get songPageMoreShare => '共有';
+
+  @override
+  String get songPageMoreEditMusicTagsExternal => '外部アプリでタグを編集…';
+
+  @override
+  String get songPageMoreEditLyricsExternal => '外部アプリで歌詞を編集…';
+
+  @override
+  String get songPageMoreExternalEditorComing => '外部エディタ連携は今後のバージョンで対応予定です。';
+
+  @override
+  String get songPageMetadataDialogTitle => 'オーディオのメタデータ';
+
+  @override
+  String get songPageMetadataReadFailed => 'メタデータを読み取れませんでした。';
+
+  @override
+  String get songPageShareFileNotFound => 'ディスク上にファイルが見つかりません。';
+
+  @override
+  String get songPageDeleteDiskWarningTitle => 'ディスクから削除しますか？';
+
+  @override
+  String get songPageDeleteDiskWarningBody =>
+      '端末ストレージから音声ファイルを完全に削除します。取り消せません。プレイリストと再生履歴からも削除されます。';
+
+  @override
+  String get songPageDeleteContinue => '削除へ進む';
+
+  @override
+  String get songPageDeleteFinalConfirmTitle => '削除の確認';
+
+  @override
+  String songPageDeleteFinalConfirmBody(Object fileName) {
+    return '「$fileName」を削除しますか？';
+  }
+
+  @override
+  String get songPageMetaFieldTitle => 'タイトル';
+
+  @override
+  String get songPageMetaFieldArtist => 'アーティスト';
+
+  @override
+  String get songPageMetaFieldAlbum => 'アルバム';
+
+  @override
+  String get songPageMetaFieldDuration => '長さ';
+
+  @override
+  String get songPageMetaFieldBitrate => 'ビットレート';
+
+  @override
+  String get songPageMetaFieldSampleRate => 'サンプルレート';
+
+  @override
+  String get songPageMetaFieldYear => '年';
+
+  @override
+  String get songPageMetaFieldTrack => 'トラック';
+
+  @override
+  String get songPageMetaFieldDisc => 'ディスク';
+
+  @override
+  String get songPageMetaFieldPath => 'パス';
+
+  @override
+  String get songPageMetaFieldSize => 'ファイルサイズ';
+
+  @override
+  String get songPageMetaFieldGenre => 'ジャンル';
+
+  @override
+  String get songPageMetaFieldPerformers => '参加アーティスト';
+
+  @override
+  String get songPageMetaFieldLanguage => '言語';
+
+  @override
+  String get songPageMetaFieldEmbeddedLyrics => '埋め込み歌詞';
+
+  @override
+  String get songPageMetaFieldFormat => '形式';
+
+  @override
+  String get songPageMetaSectionTags => 'タグ';
+
+  @override
+  String get songPageMetaSectionAudio => '音声';
+
+  @override
+  String get songPageMetaSectionFile => 'ファイル';
+
+  @override
   String get tooltipFolderInfo => 'フォルダ情報';
 
   @override

@@ -1173,6 +1173,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipLyricStyle => 'Lyric style';
 
   @override
+  String get songPageMoreSheetTitle => 'More actions';
+
+  @override
+  String get songPageMoreQueryMetadata => 'View audio metadata';
+
+  @override
+  String get songPageMoreUploadOneDrive => 'Upload to OneDrive';
+
+  @override
+  String get songPageMoreShare => 'Share';
+
+  @override
+  String get songPageMoreEditMusicTagsExternal => 'Edit tags in external app…';
+
+  @override
+  String get songPageMoreEditLyricsExternal => 'Edit lyrics in external app…';
+
+  @override
+  String get songPageMoreExternalEditorComing =>
+      'Opening external editors will be supported in a future update.';
+
+  @override
+  String get songPageMetadataDialogTitle => 'Audio metadata';
+
+  @override
+  String get songPageMetadataReadFailed =>
+      'Could not read metadata for this file.';
+
+  @override
+  String get songPageShareFileNotFound => 'This file was not found on disk.';
+
+  @override
+  String get songPageDeleteDiskWarningTitle => 'Delete from disk?';
+
+  @override
+  String get songPageDeleteDiskWarningBody =>
+      'This permanently removes the audio file from device storage. This cannot be undone. The song will also be removed from playlists and history.';
+
+  @override
+  String get songPageDeleteContinue => 'Continue';
+
+  @override
+  String get songPageDeleteFinalConfirmTitle => 'Confirm deletion';
+
+  @override
+  String songPageDeleteFinalConfirmBody(Object fileName) {
+    return 'Delete \"$fileName\"?';
+  }
+
+  @override
+  String get songPageMetaFieldTitle => 'Title';
+
+  @override
+  String get songPageMetaFieldArtist => 'Artist';
+
+  @override
+  String get songPageMetaFieldAlbum => 'Album';
+
+  @override
+  String get songPageMetaFieldDuration => 'Duration';
+
+  @override
+  String get songPageMetaFieldBitrate => 'Bitrate';
+
+  @override
+  String get songPageMetaFieldSampleRate => 'Sample rate';
+
+  @override
+  String get songPageMetaFieldYear => 'Year';
+
+  @override
+  String get songPageMetaFieldTrack => 'Track';
+
+  @override
+  String get songPageMetaFieldDisc => 'Disc';
+
+  @override
+  String get songPageMetaFieldPath => 'Path';
+
+  @override
+  String get songPageMetaFieldSize => 'File size';
+
+  @override
+  String get songPageMetaFieldGenre => 'Genre';
+
+  @override
+  String get songPageMetaFieldPerformers => 'Performers';
+
+  @override
+  String get songPageMetaFieldLanguage => 'Language';
+
+  @override
+  String get songPageMetaFieldEmbeddedLyrics => 'Embedded lyrics';
+
+  @override
+  String get songPageMetaFieldFormat => 'Format';
+
+  @override
+  String get songPageMetaSectionTags => 'Tags';
+
+  @override
+  String get songPageMetaSectionAudio => 'Audio';
+
+  @override
+  String get songPageMetaSectionFile => 'File';
+
+  @override
   String get tooltipFolderInfo => 'Folder details';
 
   @override

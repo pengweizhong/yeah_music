@@ -1112,6 +1112,111 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tooltipLyricStyle => '歌词样式';
 
   @override
+  String get songPageMoreSheetTitle => '更多操作';
+
+  @override
+  String get songPageMoreQueryMetadata => '查询歌曲元信息';
+
+  @override
+  String get songPageMoreUploadOneDrive => '上传至 OneDrive';
+
+  @override
+  String get songPageMoreShare => '分享';
+
+  @override
+  String get songPageMoreEditMusicTagsExternal => '使用音乐标签编辑…';
+
+  @override
+  String get songPageMoreEditLyricsExternal => '使用 Lyrics 编辑…';
+
+  @override
+  String get songPageMoreExternalEditorComing => '打开第三方编辑器将在后续版本支持。';
+
+  @override
+  String get songPageMetadataDialogTitle => '音频元信息';
+
+  @override
+  String get songPageMetadataReadFailed => '无法读取该文件的元信息。';
+
+  @override
+  String get songPageShareFileNotFound => '磁盘上找不到该文件。';
+
+  @override
+  String get songPageDeleteDiskWarningTitle => '从磁盘删除？';
+
+  @override
+  String get songPageDeleteDiskWarningBody =>
+      '将从设备存储中永久删除该音频文件，且不可恢复；并从歌单与播放历史中移除。';
+
+  @override
+  String get songPageDeleteContinue => '继续删除';
+
+  @override
+  String get songPageDeleteFinalConfirmTitle => '确认删除';
+
+  @override
+  String songPageDeleteFinalConfirmBody(Object fileName) {
+    return '确定删除「$fileName」吗？';
+  }
+
+  @override
+  String get songPageMetaFieldTitle => '标题';
+
+  @override
+  String get songPageMetaFieldArtist => '艺术家';
+
+  @override
+  String get songPageMetaFieldAlbum => '专辑';
+
+  @override
+  String get songPageMetaFieldDuration => '时长';
+
+  @override
+  String get songPageMetaFieldBitrate => '比特率';
+
+  @override
+  String get songPageMetaFieldSampleRate => '采样率';
+
+  @override
+  String get songPageMetaFieldYear => '年份';
+
+  @override
+  String get songPageMetaFieldTrack => '音轨';
+
+  @override
+  String get songPageMetaFieldDisc => '碟片';
+
+  @override
+  String get songPageMetaFieldPath => '路径';
+
+  @override
+  String get songPageMetaFieldSize => '文件大小';
+
+  @override
+  String get songPageMetaFieldGenre => '流派';
+
+  @override
+  String get songPageMetaFieldPerformers => '其它艺人';
+
+  @override
+  String get songPageMetaFieldLanguage => '语言';
+
+  @override
+  String get songPageMetaFieldEmbeddedLyrics => '嵌入式歌词';
+
+  @override
+  String get songPageMetaFieldFormat => '格式';
+
+  @override
+  String get songPageMetaSectionTags => '标签信息';
+
+  @override
+  String get songPageMetaSectionAudio => '音频参数';
+
+  @override
+  String get songPageMetaSectionFile => '文件';
+
+  @override
   String get tooltipFolderInfo => '目录信息';
 
   @override
@@ -2817,6 +2922,111 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get tooltipLyricStyle => '歌词样式';
 
   @override
+  String get songPageMoreSheetTitle => '更多操作';
+
+  @override
+  String get songPageMoreQueryMetadata => '查询歌曲元信息';
+
+  @override
+  String get songPageMoreUploadOneDrive => '上传至 OneDrive';
+
+  @override
+  String get songPageMoreShare => '分享';
+
+  @override
+  String get songPageMoreEditMusicTagsExternal => '使用音乐标签编辑…';
+
+  @override
+  String get songPageMoreEditLyricsExternal => '使用 Lyrics 编辑…';
+
+  @override
+  String get songPageMoreExternalEditorComing => '打开第三方编辑器将在后续版本支持。';
+
+  @override
+  String get songPageMetadataDialogTitle => '音频元信息';
+
+  @override
+  String get songPageMetadataReadFailed => '无法读取该文件的元信息。';
+
+  @override
+  String get songPageShareFileNotFound => '磁盘上找不到该文件。';
+
+  @override
+  String get songPageDeleteDiskWarningTitle => '从磁盘删除？';
+
+  @override
+  String get songPageDeleteDiskWarningBody =>
+      '将从设备存储中永久删除该音频文件，且不可恢复；并从歌单与播放历史中移除。';
+
+  @override
+  String get songPageDeleteContinue => '继续删除';
+
+  @override
+  String get songPageDeleteFinalConfirmTitle => '确认删除';
+
+  @override
+  String songPageDeleteFinalConfirmBody(Object fileName) {
+    return '确定删除「$fileName」吗？';
+  }
+
+  @override
+  String get songPageMetaFieldTitle => '标题';
+
+  @override
+  String get songPageMetaFieldArtist => '艺术家';
+
+  @override
+  String get songPageMetaFieldAlbum => '专辑';
+
+  @override
+  String get songPageMetaFieldDuration => '时长';
+
+  @override
+  String get songPageMetaFieldBitrate => '比特率';
+
+  @override
+  String get songPageMetaFieldSampleRate => '采样率';
+
+  @override
+  String get songPageMetaFieldYear => '年份';
+
+  @override
+  String get songPageMetaFieldTrack => '音轨';
+
+  @override
+  String get songPageMetaFieldDisc => '碟片';
+
+  @override
+  String get songPageMetaFieldPath => '路径';
+
+  @override
+  String get songPageMetaFieldSize => '文件大小';
+
+  @override
+  String get songPageMetaFieldGenre => '流派';
+
+  @override
+  String get songPageMetaFieldPerformers => '其它艺人';
+
+  @override
+  String get songPageMetaFieldLanguage => '语言';
+
+  @override
+  String get songPageMetaFieldEmbeddedLyrics => '嵌入式歌词';
+
+  @override
+  String get songPageMetaFieldFormat => '格式';
+
+  @override
+  String get songPageMetaSectionTags => '标签信息';
+
+  @override
+  String get songPageMetaSectionAudio => '音频参数';
+
+  @override
+  String get songPageMetaSectionFile => '文件';
+
+  @override
   String get tooltipFolderInfo => '目录信息';
 
   @override
@@ -4520,6 +4730,111 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tooltipLyricStyle => '歌詞樣式';
+
+  @override
+  String get songPageMoreSheetTitle => '更多操作';
+
+  @override
+  String get songPageMoreQueryMetadata => '查詢歌曲元資訊';
+
+  @override
+  String get songPageMoreUploadOneDrive => '上傳至 OneDrive';
+
+  @override
+  String get songPageMoreShare => '分享';
+
+  @override
+  String get songPageMoreEditMusicTagsExternal => '使用音樂標籤編輯…';
+
+  @override
+  String get songPageMoreEditLyricsExternal => '使用 Lyrics 編輯…';
+
+  @override
+  String get songPageMoreExternalEditorComing => '開啟第三方編輯器將在後續版本支援。';
+
+  @override
+  String get songPageMetadataDialogTitle => '音訊元資訊';
+
+  @override
+  String get songPageMetadataReadFailed => '無法讀取該檔案的元資訊。';
+
+  @override
+  String get songPageShareFileNotFound => '磁碟上找不到該檔案。';
+
+  @override
+  String get songPageDeleteDiskWarningTitle => '從磁碟刪除？';
+
+  @override
+  String get songPageDeleteDiskWarningBody =>
+      '將從裝置儲存空間永久刪除此音訊檔案，且無法復原；並從歌單與播放紀錄中移除。';
+
+  @override
+  String get songPageDeleteContinue => '繼續刪除';
+
+  @override
+  String get songPageDeleteFinalConfirmTitle => '確認刪除';
+
+  @override
+  String songPageDeleteFinalConfirmBody(Object fileName) {
+    return '確定刪除「$fileName」嗎？';
+  }
+
+  @override
+  String get songPageMetaFieldTitle => '標題';
+
+  @override
+  String get songPageMetaFieldArtist => '演出者';
+
+  @override
+  String get songPageMetaFieldAlbum => '專輯';
+
+  @override
+  String get songPageMetaFieldDuration => '時長';
+
+  @override
+  String get songPageMetaFieldBitrate => '位元率';
+
+  @override
+  String get songPageMetaFieldSampleRate => '取樣率';
+
+  @override
+  String get songPageMetaFieldYear => '年份';
+
+  @override
+  String get songPageMetaFieldTrack => '曲目';
+
+  @override
+  String get songPageMetaFieldDisc => '片號';
+
+  @override
+  String get songPageMetaFieldPath => '路徑';
+
+  @override
+  String get songPageMetaFieldSize => '檔案大小';
+
+  @override
+  String get songPageMetaFieldGenre => '流派';
+
+  @override
+  String get songPageMetaFieldPerformers => '其它藝人';
+
+  @override
+  String get songPageMetaFieldLanguage => '語言';
+
+  @override
+  String get songPageMetaFieldEmbeddedLyrics => '嵌入式歌詞';
+
+  @override
+  String get songPageMetaFieldFormat => '格式';
+
+  @override
+  String get songPageMetaSectionTags => '標籤資訊';
+
+  @override
+  String get songPageMetaSectionAudio => '音訊參數';
+
+  @override
+  String get songPageMetaSectionFile => '檔案';
 
   @override
   String get tooltipFolderInfo => '目錄資訊';
