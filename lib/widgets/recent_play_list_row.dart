@@ -6,8 +6,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
-import 'package:yeah_music/utils/song_display_lines.dart';
-import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
+import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 
 /// 最近播放列表行（首页等）。顺序由调用方传入决定，不在此重排。
@@ -80,25 +79,10 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
     return '未知';
   }
 
-  String _displaySubtitle(AppLocalizations l10n) {
-    final pc = widget.trailingPlayCount;
-    if (pc != null) {
-      final line = songListSecondaryLine(widget.song).trim();
-      if (line.isEmpty) {
-        return l10n.homePlayCount(pc);
-      }
-      return l10n.homePlayCountWithBase(line, pc);
-    }
-    final line = songListSecondaryLine(widget.song);
-    if (line.trim().isNotEmpty) return line;
-    return widget.subtitle;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final titleStr = _displayTitle();
-    final subtitleStr = _displaySubtitle(l10n);
     return VisibilityDetector(
       key: ValueKey<String>('recent_row_vis_${widget.song.path}'),
       onVisibilityChanged: _onRowVisibilityChanged,
@@ -150,21 +134,22 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                       ),
                       const SizedBox(height: 2),
                       widget.trailingPlayCount != null
-                          ? AutoMarqueeSingleLineText(
-                              text: subtitleStr,
-                              style: TextStyle(
+                          ? SongListSubtitleWithQualityMarqueePlayCount(
+                              song: widget.song,
+                              textStyle: TextStyle(
                                 color: widget.isCurrent
                                     ? Colors.white.withValues(alpha: 0.7)
                                     : Colors.white.withValues(alpha: 0.5),
                                 fontSize: 13,
                               ),
-                              gapBetweenLoops: 40,
+                              playCount: widget.trailingPlayCount!,
+                              l10n: l10n,
                             )
-                          : Text(
-                              subtitleStr,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
+                          : SongListSubtitleWithQualityRow(
+                              song: widget.song,
+                              fallbackSubtitle: widget.subtitle,
+                              compactBadge: true,
+                              textStyle: TextStyle(
                                 color: widget.isCurrent
                                     ? Colors.white.withValues(alpha: 0.7)
                                     : Colors.white.withValues(alpha: 0.5),

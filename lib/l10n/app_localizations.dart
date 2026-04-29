@@ -2220,6 +2220,132 @@ abstract class AppLocalizations {
   /// **'Edit tags in external app…'**
   String get songPageMoreEditMusicTagsExternal;
 
+  /// No description provided for @songPageMoreEditMusicTagsInline.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit embedded tags…'**
+  String get songPageMoreEditMusicTagsInline;
+
+  /// No description provided for @songPageInlineTagsEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit embedded tags'**
+  String get songPageInlineTagsEditorTitle;
+
+  /// No description provided for @songPageInlineTagsFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get songPageInlineTagsFieldTitle;
+
+  /// No description provided for @songPageInlineTagsFieldArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get songPageInlineTagsFieldArtist;
+
+  /// No description provided for @songPageInlineTagsFieldAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get songPageInlineTagsFieldAlbum;
+
+  /// No description provided for @songPageInlineTagsFieldYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get songPageInlineTagsFieldYear;
+
+  /// No description provided for @songPageInlineTagsFieldTrackNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Track #'**
+  String get songPageInlineTagsFieldTrackNumber;
+
+  /// No description provided for @songPageInlineTagsFieldTrackTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total tracks'**
+  String get songPageInlineTagsFieldTrackTotal;
+
+  /// No description provided for @songPageInlineTagsFieldDiscNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Disc #'**
+  String get songPageInlineTagsFieldDiscNumber;
+
+  /// No description provided for @songPageInlineTagsFieldDiscTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total discs'**
+  String get songPageInlineTagsFieldDiscTotal;
+
+  /// No description provided for @songPageInlineTagsFieldLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get songPageInlineTagsFieldLyrics;
+
+  /// No description provided for @songPageInlineTagsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get songPageInlineTagsSave;
+
+  /// No description provided for @songPageInlineTagsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags saved to file'**
+  String get songPageInlineTagsSaved;
+
+  /// No description provided for @songPageInlineTagsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save tags: {error}'**
+  String songPageInlineTagsSaveFailed(Object error);
+
+  /// No description provided for @songPageStorageManageAllFilesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing or deleting audio under shared storage needs “All files access”. Grant it for this app in system settings, then try again.'**
+  String get songPageStorageManageAllFilesHint;
+
+  /// No description provided for @audioQualityTierLq.
+  ///
+  /// In en, this message translates to:
+  /// **'Economy'**
+  String get audioQualityTierLq;
+
+  /// No description provided for @audioQualityTierStd.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get audioQualityTierStd;
+
+  /// No description provided for @audioQualityTierHq.
+  ///
+  /// In en, this message translates to:
+  /// **'High quality'**
+  String get audioQualityTierHq;
+
+  /// No description provided for @audioQualityTierSq.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless (CD equivalent)'**
+  String get audioQualityTierSq;
+
+  /// No description provided for @audioQualityTierHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi-Res'**
+  String get audioQualityTierHr;
+
+  /// No description provided for @audioQualityTierDsd.
+  ///
+  /// In en, this message translates to:
+  /// **'DSD · audiophile'**
+  String get audioQualityTierDsd;
+
   /// No description provided for @songPageMoreEditLyricsExternal.
   ///
   /// In en, this message translates to:

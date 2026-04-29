@@ -12,8 +12,11 @@
     <!-- Android 13 及以上使用 -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-
+    <!-- Android 11+：对外部共享目录内音频文件直接读写（内嵌标签改写 / 删除曲目文件）可能需「所有文件访问」；
+         需在运行时通过 permission_handler 请求，Play 上架需如实填写使用说明。 -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
 
     <application
         android:label="Yeah Music"

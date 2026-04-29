@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- FileProvider：供外部应用（如 Music Tag Editor）通过 content:// 读取当前曲目文件 -->
+<!-- FileProvider：供外部应用（如 Music Tag Editor）通过 content:// 读写本地曲目。
+     external-path：共享存储根；external-files-*：应用外置目录；root-path/storage：部分机型二级存储卷。 -->
 <paths>
     <external-path name="external_storage" path="." />
+    <external-files-path name="app_external_files" path="." />
+    <external-cache-path name="app_external_cache" path="." />
     <files-path name="internal_files" path="." />
     <cache-path name="cache" path="." />
+    <!-- 覆盖 /storage 下各卷（含 SD 卡挂载点），避免退回缓存副本导致第三方保存不到曲库真实路径 -->
+    <root-path name="storage_volumes" path="storage" />
 </paths>

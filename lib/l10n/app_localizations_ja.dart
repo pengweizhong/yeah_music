@@ -1143,6 +1143,72 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songPageMoreEditMusicTagsExternal => '外部アプリでタグを編集…';
 
   @override
+  String get songPageMoreEditMusicTagsInline => '埋め込みタグを編集…';
+
+  @override
+  String get songPageInlineTagsEditorTitle => '埋め込みタグを編集';
+
+  @override
+  String get songPageInlineTagsFieldTitle => 'タイトル';
+
+  @override
+  String get songPageInlineTagsFieldArtist => 'アーティスト';
+
+  @override
+  String get songPageInlineTagsFieldAlbum => 'アルバム';
+
+  @override
+  String get songPageInlineTagsFieldYear => '年';
+
+  @override
+  String get songPageInlineTagsFieldTrackNumber => 'トラック番号';
+
+  @override
+  String get songPageInlineTagsFieldTrackTotal => '総トラック数';
+
+  @override
+  String get songPageInlineTagsFieldDiscNumber => 'ディスク番号';
+
+  @override
+  String get songPageInlineTagsFieldDiscTotal => '総ディスク数';
+
+  @override
+  String get songPageInlineTagsFieldLyrics => '歌詞';
+
+  @override
+  String get songPageInlineTagsSave => '保存';
+
+  @override
+  String get songPageInlineTagsSaved => 'ファイルに保存しました';
+
+  @override
+  String songPageInlineTagsSaveFailed(Object error) {
+    return 'タグを保存できませんでした：$error';
+  }
+
+  @override
+  String get songPageStorageManageAllFilesHint =>
+      '共有ストレージ内の音声を編集・削除するには「すべてのファイルへのアクセス」が必要です。設定で許可してから再度お試しください。';
+
+  @override
+  String get audioQualityTierLq => 'エコノミー';
+
+  @override
+  String get audioQualityTierStd => '標準';
+
+  @override
+  String get audioQualityTierHq => '高音質';
+
+  @override
+  String get audioQualityTierSq => 'ロスレス（CD相当）';
+
+  @override
+  String get audioQualityTierHr => 'ハイレゾ';
+
+  @override
+  String get audioQualityTierDsd => 'DSD・最上位';
+
+  @override
   String get songPageMoreEditLyricsExternal => 'SyncedLyricEditor で編集…';
 
   @override

@@ -1127,6 +1127,72 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songPageMoreEditMusicTagsExternal => '使用音乐标签编辑…';
 
   @override
+  String get songPageMoreEditMusicTagsInline => '编辑内嵌标签…';
+
+  @override
+  String get songPageInlineTagsEditorTitle => '编辑内嵌标签';
+
+  @override
+  String get songPageInlineTagsFieldTitle => '标题';
+
+  @override
+  String get songPageInlineTagsFieldArtist => '艺术家';
+
+  @override
+  String get songPageInlineTagsFieldAlbum => '专辑';
+
+  @override
+  String get songPageInlineTagsFieldYear => '年份';
+
+  @override
+  String get songPageInlineTagsFieldTrackNumber => '曲目编号';
+
+  @override
+  String get songPageInlineTagsFieldTrackTotal => '曲目总数';
+
+  @override
+  String get songPageInlineTagsFieldDiscNumber => '碟片编号';
+
+  @override
+  String get songPageInlineTagsFieldDiscTotal => '碟片总数';
+
+  @override
+  String get songPageInlineTagsFieldLyrics => '歌词';
+
+  @override
+  String get songPageInlineTagsSave => '保存';
+
+  @override
+  String get songPageInlineTagsSaved => '已写入文件';
+
+  @override
+  String songPageInlineTagsSaveFailed(Object error) {
+    return '无法保存标签：$error';
+  }
+
+  @override
+  String get songPageStorageManageAllFilesHint =>
+      '修改或删除外部存储中的音频需要「所有文件访问」权限，请在系统设置中为本应用开启后重试。';
+
+  @override
+  String get audioQualityTierLq => '流畅';
+
+  @override
+  String get audioQualityTierStd => '标准';
+
+  @override
+  String get audioQualityTierHq => '高品质';
+
+  @override
+  String get audioQualityTierSq => '无损（CD 级）';
+
+  @override
+  String get audioQualityTierHr => '高解析';
+
+  @override
+  String get audioQualityTierDsd => '顶级发烧';
+
+  @override
   String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 编辑…';
 
   @override
@@ -2980,6 +3046,72 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get songPageMoreEditMusicTagsExternal => '使用音乐标签编辑…';
 
   @override
+  String get songPageMoreEditMusicTagsInline => '编辑内嵌标签…';
+
+  @override
+  String get songPageInlineTagsEditorTitle => '编辑内嵌标签';
+
+  @override
+  String get songPageInlineTagsFieldTitle => '标题';
+
+  @override
+  String get songPageInlineTagsFieldArtist => '艺术家';
+
+  @override
+  String get songPageInlineTagsFieldAlbum => '专辑';
+
+  @override
+  String get songPageInlineTagsFieldYear => '年份';
+
+  @override
+  String get songPageInlineTagsFieldTrackNumber => '曲目编号';
+
+  @override
+  String get songPageInlineTagsFieldTrackTotal => '曲目总数';
+
+  @override
+  String get songPageInlineTagsFieldDiscNumber => '碟片编号';
+
+  @override
+  String get songPageInlineTagsFieldDiscTotal => '碟片总数';
+
+  @override
+  String get songPageInlineTagsFieldLyrics => '歌词';
+
+  @override
+  String get songPageInlineTagsSave => '保存';
+
+  @override
+  String get songPageInlineTagsSaved => '已写入文件';
+
+  @override
+  String songPageInlineTagsSaveFailed(Object error) {
+    return '无法保存标签：$error';
+  }
+
+  @override
+  String get songPageStorageManageAllFilesHint =>
+      '修改或删除外部存储中的音频需要「所有文件访问」权限，请在系统设置中为本应用开启后重试。';
+
+  @override
+  String get audioQualityTierLq => '流畅';
+
+  @override
+  String get audioQualityTierStd => '标准';
+
+  @override
+  String get audioQualityTierHq => '高品质';
+
+  @override
+  String get audioQualityTierSq => '无损（CD 级）';
+
+  @override
+  String get audioQualityTierHr => '高解析';
+
+  @override
+  String get audioQualityTierDsd => '顶级发烧';
+
+  @override
   String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 编辑…';
 
   @override
@@ -4831,6 +4963,72 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get songPageMoreEditMusicTagsExternal => '使用音樂標籤編輯…';
+
+  @override
+  String get songPageMoreEditMusicTagsInline => '編輯內嵌標籤…';
+
+  @override
+  String get songPageInlineTagsEditorTitle => '編輯內嵌標籤';
+
+  @override
+  String get songPageInlineTagsFieldTitle => '標題';
+
+  @override
+  String get songPageInlineTagsFieldArtist => '演出者';
+
+  @override
+  String get songPageInlineTagsFieldAlbum => '專輯';
+
+  @override
+  String get songPageInlineTagsFieldYear => '年份';
+
+  @override
+  String get songPageInlineTagsFieldTrackNumber => '曲目編號';
+
+  @override
+  String get songPageInlineTagsFieldTrackTotal => '曲目總數';
+
+  @override
+  String get songPageInlineTagsFieldDiscNumber => '碟片編號';
+
+  @override
+  String get songPageInlineTagsFieldDiscTotal => '碟片總數';
+
+  @override
+  String get songPageInlineTagsFieldLyrics => '歌詞';
+
+  @override
+  String get songPageInlineTagsSave => '儲存';
+
+  @override
+  String get songPageInlineTagsSaved => '已寫入檔案';
+
+  @override
+  String songPageInlineTagsSaveFailed(Object error) {
+    return '無法儲存標籤：$error';
+  }
+
+  @override
+  String get songPageStorageManageAllFilesHint =>
+      '修改或刪除外部儲存中的音訊需要「所有檔案存取」權限，請在系統設定中為本應用程式開啟後重試。';
+
+  @override
+  String get audioQualityTierLq => '流暢';
+
+  @override
+  String get audioQualityTierStd => '標準';
+
+  @override
+  String get audioQualityTierHq => '高品質';
+
+  @override
+  String get audioQualityTierSq => '無損（CD 級）';
+
+  @override
+  String get audioQualityTierHr => '高解析';
+
+  @override
+  String get audioQualityTierDsd => '頂級發燒';
 
   @override
   String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 編輯…';

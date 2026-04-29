@@ -5,6 +5,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/song_audio_quality.dart';
 
 bool _sameImageBytes(Uint8List? a, Uint8List? b) {
   if (identical(a, b)) return true;
@@ -82,6 +83,7 @@ class SongLibraryMetadataHydrator {
     if (p.isEmpty) return;
     _cache.remove(p);
     _pending.remove(p);
+    invalidateSongAudioQualityCacheForPath(p);
     ApplicationUtils.evictSongCoverProvidersForPath(p);
   }
 

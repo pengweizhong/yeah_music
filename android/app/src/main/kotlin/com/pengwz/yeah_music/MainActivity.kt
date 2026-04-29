@@ -16,6 +16,13 @@ class MainActivity : AudioServiceFragmentActivity() {
         MusicTagEditorBridge.register(this, flutterEngine)
     }
 
+    override fun onResume() {
+        // 先于 Flutter 生命周期回调：把第三方写在缓存副本里的结果合并回原音频路径，
+        // 以便 Dart 侧 onResume 重新加载元数据时读到最新文件。
+        MusicTagEditorBridge.onHostResume(this)
+        super.onResume()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {

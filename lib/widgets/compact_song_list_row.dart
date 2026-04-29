@@ -3,7 +3,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
-import 'package:yeah_music/utils/song_display_lines.dart';
+import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
@@ -91,18 +91,11 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
     return widget.title;
   }
 
-  String _effectiveSubtitle() {
-    final line = songListSecondaryLine(widget.song);
-    if (line.trim().isNotEmpty) return line;
-    return widget.subtitle;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final titleStr = _effectiveTitle();
-    final subtitleStr = _effectiveSubtitle();
     return VisibilityDetector(
       key: ValueKey<String>('list_row_vis_${widget.song.path}'),
       onVisibilityChanged: _onListRowVisibilityChanged,
@@ -175,11 +168,11 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          subtitleStr,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                        SongListSubtitleWithQualityRow(
+                          song: widget.song,
+                          fallbackSubtitle: widget.subtitle,
+                          compactBadge: false,
+                          textStyle: TextStyle(
                             color: widget.isCurrent
                                 ? primary.withValues(alpha: 0.82)
                                 : Colors.white.withValues(alpha: 0.6),

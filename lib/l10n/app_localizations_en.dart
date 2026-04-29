@@ -1188,6 +1188,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPageMoreEditMusicTagsExternal => 'Edit tags in external app…';
 
   @override
+  String get songPageMoreEditMusicTagsInline => 'Edit embedded tags…';
+
+  @override
+  String get songPageInlineTagsEditorTitle => 'Edit embedded tags';
+
+  @override
+  String get songPageInlineTagsFieldTitle => 'Title';
+
+  @override
+  String get songPageInlineTagsFieldArtist => 'Artist';
+
+  @override
+  String get songPageInlineTagsFieldAlbum => 'Album';
+
+  @override
+  String get songPageInlineTagsFieldYear => 'Year';
+
+  @override
+  String get songPageInlineTagsFieldTrackNumber => 'Track #';
+
+  @override
+  String get songPageInlineTagsFieldTrackTotal => 'Total tracks';
+
+  @override
+  String get songPageInlineTagsFieldDiscNumber => 'Disc #';
+
+  @override
+  String get songPageInlineTagsFieldDiscTotal => 'Total discs';
+
+  @override
+  String get songPageInlineTagsFieldLyrics => 'Lyrics';
+
+  @override
+  String get songPageInlineTagsSave => 'Save';
+
+  @override
+  String get songPageInlineTagsSaved => 'Tags saved to file';
+
+  @override
+  String songPageInlineTagsSaveFailed(Object error) {
+    return 'Could not save tags: $error';
+  }
+
+  @override
+  String get songPageStorageManageAllFilesHint =>
+      'Editing or deleting audio under shared storage needs “All files access”. Grant it for this app in system settings, then try again.';
+
+  @override
+  String get audioQualityTierLq => 'Economy';
+
+  @override
+  String get audioQualityTierStd => 'Standard';
+
+  @override
+  String get audioQualityTierHq => 'High quality';
+
+  @override
+  String get audioQualityTierSq => 'Lossless (CD equivalent)';
+
+  @override
+  String get audioQualityTierHr => 'Hi-Res';
+
+  @override
+  String get audioQualityTierDsd => 'DSD · audiophile';
+
+  @override
   String get songPageMoreEditLyricsExternal => 'Edit with SyncedLyricEditor…';
 
   @override

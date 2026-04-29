@@ -7,6 +7,7 @@ import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/folder.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
+import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 
@@ -18,6 +19,9 @@ Future<void> deleteLibrarySongsAndRefresh({
   required List<Song> songs,
 }) async {
   if (songs.isEmpty) return;
+  if (Platform.isAndroid) {
+    await ensureAndroidManageExternalStorageAccess();
+  }
   final paths = songs.map((s) => s.path).toList();
   final normSet = {for (final s in songs) normSongPath(s.path)};
 
@@ -61,6 +65,9 @@ Future<void> renameLibrarySongToStem({
 }) async {
   final oldPath = song.path.trim();
   if (oldPath.isEmpty) return;
+  if (Platform.isAndroid) {
+    await ensureAndroidManageExternalStorageAccess();
+  }
   final f = File(oldPath);
   if (!await f.exists()) return;
   final ext = p.extension(oldPath);

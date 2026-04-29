@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -11,11 +13,9 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
-import 'package:yeah_music/services/music_service.dart';
-import 'package:yeah_music/utils/application_utils.dart';
-import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
-import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/utils/song_metadata_reload_utils.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/onedrive_controller.dart';
 import '../compments/play_list_provider.dart';
@@ -27,6 +27,7 @@ import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
 import '../widgets/compact_song_list_row.dart';
+import '../widgets/song_inline_tags_editor_sheet.dart';
 import '../widgets/song_metadata_dialog.dart';
 import '../widgets/scroll_aware_list_frame.dart';
 import '../widgets/song_playlist_page_shell.dart';
@@ -326,46 +327,11 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     final l10n = AppLocalizations.of(context);
     final path = song.path.trim();
     if (path.isEmpty) return;
-    SongLibraryMetadataHydrator.invalidatePath(path);
-
-    Future<void> loadInto(Song s) async {
-      await FileUtils.loadSongMeta(
-        s,
-        loadEmbeddedAlbumArt: true,
-        storeLyricsWithTrack: true,
-        maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
-      );
-      try {
-        await s.save();
-      } catch (_) {}
-      ApplicationUtils.evictSongCoverProvidersForPath(s.path);
-    }
-
-    final touched = <Song>{};
-    final folder = context.read<FolderProvider>();
-    final play = context.read<PlayListProvider>();
-    for (final f in folder.folders) {
-      final list = f.songList;
-      if (list == null) continue;
-      for (final s in list) {
-        if (!songPathsEqual(s.path, path)) continue;
-        if (!touched.add(s)) continue;
-        await loadInto(s);
-      }
-    }
-    for (final s in play.playList) {
-      if (!songPathsEqual(s.path, path)) continue;
-      if (!touched.add(s)) continue;
-      await loadInto(s);
-    }
-
-    if (!context.mounted) return;
-    folder.notifySongMetadataChangedRemote();
-    play.notifySongMetadataChangedRemote();
-    final cur = play.currentSong;
-    if (cur != null && songPathsEqual(cur.path, path)) {
-      await MusicService.pushAndroidNotificationForSong(cur);
-    }
+    await reloadAllSongInstancesAfterFileMetadataChanged(
+      context,
+      path,
+      maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
+    );
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.libraryReloadMetadataDone)),
@@ -420,6 +386,42 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                         await showAddToUserPlaylistsSheet(context, song);
                       },
                     ),
+                    ListTile(
+                      leading: const Icon(Icons.edit_attributes_outlined, color: Colors.white),
+                      title: Text(
+                        l10n.songPageMoreEditMusicTagsInline,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await showSongInlineTagsEditorSheet(
+                          navigatorContext: context,
+                          song: song,
+                          onSavedReload: (path) async {
+                            await reloadAllSongInstancesAfterFileMetadataChanged(
+                              context,
+                              path,
+                              maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    if (Platform.isAndroid)
+                      ListTile(
+                        leading: const Icon(Icons.edit_note_outlined, color: Colors.white),
+                        title: Text(
+                          l10n.songPageMoreEditMusicTagsExternal,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        onTap: () async {
+                          Navigator.pop(sheetContext);
+                          await MusicTagEditorLauncher.openMusicTagEditorWithFeedback(
+                            context,
+                            song,
+                          );
+                        },
+                      ),
                     ListTile(
                       leading: const Icon(Icons.info_outline_rounded, color: Colors.white),
                       title: Text(l10n.songPageMoreQueryMetadata, style: const TextStyle(color: Colors.white)),
