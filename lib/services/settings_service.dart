@@ -9,6 +9,7 @@ import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/models/wire_remote_control_config.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
+import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class SettingsService {
@@ -923,6 +924,7 @@ class SettingsService {
     return {
       'format': yeahMusicAppSettingsBackupFormatId,
       'version': 1,
+      'app': AppProductInfo.exportMetadataBlock,
       'exportedAt': DateTime.now().toIso8601String(),
       'hive': hiveFlat,
       'sharedPreferences': <String, dynamic>{'appearance': appearance},

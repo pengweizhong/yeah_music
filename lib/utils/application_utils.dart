@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
-import 'package:yeah_music/config/app_config.dart';
+import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 
 import '../models/song.dart';
@@ -41,9 +41,9 @@ class ApplicationUtils {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              AppConfig.appTitle,
-              style: TextStyle(
+            Text(
+              AppProductInfo.displayName,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -57,12 +57,20 @@ class ApplicationUtils {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                l10n.settingsAboutDialogVersionLabel('1.0.0'),
+                l10n.settingsAboutDialogVersionLabel(AppProductInfo.version),
                 style: const TextStyle(
                   fontSize: 14,
                   color: Color(0xFF64B5F6),
                   fontWeight: FontWeight.w500,
                 ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Build ${AppProductInfo.buildNumber}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.55),
               ),
             ),
             const SizedBox(height: 20),

@@ -7,6 +7,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class UserPlaylist {
@@ -411,6 +412,7 @@ class UserPlaylistProvider extends ChangeNotifier {
     return {
       'format': userPlaylistExportFormatId,
       'version': userPlaylistExportVersion,
+      'app': AppProductInfo.exportMetadataBlock,
       'exportedAt': DateTime.now().toIso8601String(),
       'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': _playlists.map((e) => e.toMap()).toList(),
@@ -429,6 +431,7 @@ class UserPlaylistProvider extends ChangeNotifier {
     return {
       'format': userPlaylistExportFormatId,
       'version': userPlaylistExportVersion,
+      'app': AppProductInfo.exportMetadataBlock,
       'exportedAt': DateTime.now().toIso8601String(),
       'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': out,

@@ -18,6 +18,7 @@ import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 
@@ -363,12 +364,12 @@ class SettingPage extends StatelessWidget {
                         style: TextStyle(color: context.gradFg()),
                       ),
                       subtitle: Text(
-                        l10n.settingsAboutSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
-                      ),
+                            l10n.settingsAboutSubtitle,
+                            style: TextStyle(
+                              color: context.gradFg(0.6),
+                              fontSize: 13,
+                            ),
+                          ),
                       leading: Icon(Icons.favorite, color: context.gradFg()),
                       onTap: () {
                         ApplicationUtils.showAboutDialog(context);

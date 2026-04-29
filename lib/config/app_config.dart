@@ -1,6 +1,5 @@
-/// 全局应用配置
+/// 全局应用配置（展示名称与版本见 [AppProductInfo]）。
 class AppConfig {
-  static const appTitle = "Yeah Music Player";
   static const copyright = "©2025 pengweizhong. GPL-3.0 license";
   static const supportedFormats = [".mp3", ".flac", ".m4a", ".wav"];
   ///播放页底部高度 用来控制整体封面、播放按钮、进度条的高度

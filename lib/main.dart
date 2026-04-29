@@ -9,6 +9,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter/services.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/pages/welcome_entry_page.dart';
@@ -37,11 +38,12 @@ import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppProductInfo.load();
 
   if (!kIsWeb && Platform.isAndroid) {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.pengwz.yeah_music.channel.audio',
-      androidNotificationChannelName: 'Yeah Music',
+      androidNotificationChannelName: AppProductInfo.displayName,
       androidNotificationOngoing: true,
       preloadArtwork: true,
       artDownscaleWidth: 512,

@@ -47,6 +47,7 @@ dependencies:
   window_manager: ^0.5.1
   wakelock_plus: ^1.5.2
   share_plus: ^12.0.2
+  package_info_plus: ^9.0.1
 
 dependency_overrides:
   flutter_appauth:
