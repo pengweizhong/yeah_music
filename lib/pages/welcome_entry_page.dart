@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/logging/app_log.dart';
-import 'package:yeah_music/welcome/app_startup_clock.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/home_initial_data.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
@@ -11,7 +10,6 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
-import 'package:yeah_music/welcome/welcome_countdown_view.dart';
 import 'package:yeah_music/welcome/welcome_fake_status.dart';
 import 'package:yeah_music/welcome/welcome_l10n.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
@@ -26,8 +24,7 @@ class WelcomeEntryPage extends StatefulWidget {
   State<WelcomeEntryPage> createState() => _WelcomeEntryPageState();
 }
 
-class _WelcomeEntryPageState extends State<WelcomeEntryPage>
-    with SingleTickerProviderStateMixin {
+class _WelcomeEntryPageState extends State<WelcomeEntryPage> {
   Object? _error;
   int _pass = 0;
 
@@ -35,7 +32,6 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   bool _navigated = false;
   HomeInitialData? _initial;
 
-  late final AnimationController _glow;
   late final WelcomeFakeStatusRotator _fake;
 
   @override
@@ -44,10 +40,6 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     _fake = WelcomeFakeStatusRotator(
       List<String>.from(kWelcomeFakeHintsPlaceholder),
     )..start();
-    _glow = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    )..repeat(reverse: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _kickBackgroundPreload());
   }
 
@@ -73,7 +65,6 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
 
   @override
   void dispose() {
-    _glow.dispose();
     _fake.dispose();
     super.dispose();
   }
@@ -83,25 +74,6 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
     if (_dataReady && _initial != null) {
       _enterHome();
     }
-  }
-
-  void _onTapEnter() {
-    if (!mounted) return;
-    if (!_dataReady || _initial == null) {
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.welcomeNotReadyMessage),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-      return;
-    }
-    _enterHome();
   }
 
   Future<void> _enterHome() async {
@@ -173,7 +145,6 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
   }
 
   void _retry() {
-    AppStartupClock.reset();
     _fake.restart();
     _dataReady = false;
     _initial = null;
@@ -214,12 +185,11 @@ class _WelcomeEntryPageState extends State<WelcomeEntryPage>
         ),
       );
     }
-    return WelcomeCountdownView(
+    return AppSplashChrome(
       key: ValueKey(_pass),
+      title: AppLocalizations.of(context).appTitle,
       statusListenable: _fake.hint,
-      dataReady: _dataReady,
-      glow: _glow,
-      onEnter: _onTapEnter,
+      showProgress: true,
     );
   }
 }
