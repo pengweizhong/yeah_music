@@ -1830,6 +1830,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get libraryBatchOpenQueue => '查看队列';
 
   @override
+  String get libraryBatchAddToPlaylist => '添加到歌单';
+
+  @override
+  String libraryBatchAddToPlaylistSheetTitle(int count) {
+    return '将 $count 首歌添加到用户歌单';
+  }
+
+  @override
+  String get libraryBatchAddToPlaylistSheetHelp =>
+      '已勾选的歌单是「当前所选曲目均已在其中」的歌单；确定后为所选每一首歌同步勾选状态。';
+
+  @override
+  String get libraryBatchAddToPlaylistDone => '歌单归属已更新';
+
+  @override
+  String get libraryReloadMetadata => '重新加载元信息';
+
+  @override
+  String get libraryReloadMetadataDone => '已从文件重新加载元信息';
+
+  @override
   String get oneDriveUploadStatusUploading => '上传中';
 
   @override
@@ -3662,6 +3683,27 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get libraryBatchOpenQueue => '查看队列';
 
   @override
+  String get libraryBatchAddToPlaylist => '添加到歌单';
+
+  @override
+  String libraryBatchAddToPlaylistSheetTitle(int count) {
+    return '将 $count 首歌添加到用户歌单';
+  }
+
+  @override
+  String get libraryBatchAddToPlaylistSheetHelp =>
+      '已勾选的歌单是「当前所选曲目均已在其中」的歌单；确定后为所选每一首歌同步勾选状态。';
+
+  @override
+  String get libraryBatchAddToPlaylistDone => '歌单归属已更新';
+
+  @override
+  String get libraryReloadMetadata => '重新加载元信息';
+
+  @override
+  String get libraryReloadMetadataDone => '已从文件重新加载元信息';
+
+  @override
   String get oneDriveUploadStatusUploading => '上传中';
 
   @override
@@ -5492,6 +5534,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get libraryBatchOpenQueue => '查看佇列';
+
+  @override
+  String get libraryBatchAddToPlaylist => '新增至播放清單';
+
+  @override
+  String libraryBatchAddToPlaylistSheetTitle(int count) {
+    return '將 $count 首歌新增至使用者播放清單';
+  }
+
+  @override
+  String get libraryBatchAddToPlaylistSheetHelp =>
+      '已勾選的播放清單為「目前所選曲目均已於其中」的清單；確定後為所選每一首歌同步勾選狀態。';
+
+  @override
+  String get libraryBatchAddToPlaylistDone => '播放清單歸屬已更新';
+
+  @override
+  String get libraryReloadMetadata => '重新載入中繼資料';
+
+  @override
+  String get libraryReloadMetadataDone => '已從檔案重新載入中繼資料';
 
   @override
   String get oneDriveUploadStatusUploading => '上傳中';

@@ -266,6 +266,39 @@ class UserPlaylistProvider extends ChangeNotifier {
     };
   }
 
+  /// 同时包含 [songs] 中每一首的用户歌单 id 交集（批量「添加到歌单」初始勾选）。
+  Set<String> playlistIdsContainingAllSongs(List<Song> songs) {
+    if (songs.isEmpty) return {};
+    var intersection = playlistIdsContainingSong(songs.first);
+    for (var i = 1; i < songs.length; i++) {
+      intersection =
+          intersection.intersection(playlistIdsContainingSong(songs[i]));
+    }
+    return intersection;
+  }
+
+  /// 与 [setSongInPlaylists] 语义一致，但对多首曲目批量生效。
+  Future<void> setSongsMembershipInPlaylists(
+    List<Song> songs,
+    Set<String> selectedPlaylistIds,
+  ) async {
+    if (songs.isEmpty) return;
+    final norms = {for (final s in songs) normSongPath(s.path)};
+    for (final playlist in _playlists) {
+      if (selectedPlaylistIds.contains(playlist.id)) {
+        for (final song in songs) {
+          final sn = normSongPath(song.path);
+          final has = playlist.songPaths.any((sp) => normSongPath(sp) == sn);
+          if (!has) playlist.songPaths.add(song.path);
+        }
+      } else {
+        playlist.songPaths.removeWhere((p) => norms.contains(normSongPath(p)));
+      }
+    }
+    await _save();
+    notifyListeners();
+  }
+
   Future<void> removeSongFromPlaylist(String playlistId, Song song) async {
     final playlist = _playlistById(playlistId);
     if (playlist == null) return;

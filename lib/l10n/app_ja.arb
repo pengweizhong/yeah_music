@@ -669,6 +669,19 @@
   "libraryBatchUploadNeedParentFolder": "設定で音楽アップロード用フォルダーまたはアプリ用フォルダーを選んでください。",
   "libraryBatchUploadQueued": "転送キューに追加しました",
   "libraryBatchOpenQueue": "キューを開く",
+  "libraryBatchAddToPlaylist": "プレイリストに追加",
+  "@libraryBatchAddToPlaylistSheetTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryBatchAddToPlaylistSheetTitle": "{count} 曲をユーザープレイリストに追加",
+  "libraryBatchAddToPlaylistSheetHelp": "チェック済みは、選択したすべての曲がすでに含まれているプレイリストです。確定すると選択した各曲に対して反映されます。",
+  "libraryBatchAddToPlaylistDone": "プレイリストを更新しました",
+  "libraryReloadMetadata": "埋め込みメタデータを再読み込み",
+  "libraryReloadMetadataDone": "ファイルからメタデータを再読み込みしました",
   "oneDriveUploadStatusUploading": "アップロード中",
   "oneDriveTaskDirectionUpload": "アップロード"
 }

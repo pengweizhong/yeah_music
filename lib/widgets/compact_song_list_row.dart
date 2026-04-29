@@ -19,6 +19,7 @@ class CompactSongListRow extends StatefulWidget {
     this.onLongPress,
     this.isCurrent = false,
     this.showAddToPlaylist = true,
+    this.onMoreMenuTap,
     this.selectionMode = false,
     this.isSelected = false,
     this.onSelectionTap,
@@ -30,11 +31,13 @@ class CompactSongListRow extends StatefulWidget {
   /// 副标题占位；补全后以 [songListSecondaryLine] 为准。
   final String subtitle;
   final VoidCallback onTap;
-  /// 非选择模式下长按（如曲库单首重命名）。
+  /// 非选择模式下长按（如曲库多选）。
   final VoidCallback? onLongPress;
   /// 是否为当前正在播放（与 [PlayListProvider.currentSong] 对应行）
   final bool isCurrent;
   final bool showAddToPlaylist;
+  /// 若提供则在尾部显示「更多」菜单，且**不再**显示加入歌单按钮（与 [showAddToPlaylist] 二选一优先）。
+  final VoidCallback? onMoreMenuTap;
   /// 批量选曲：显示勾选并改 [onTap] 为勾选切换（通过 [onSelectionTap]）。
   final bool selectionMode;
   final bool isSelected;
@@ -189,9 +192,22 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                   if (widget.isCurrent) ListRowPlayingIndicator(color: primary),
                   if (!widget.selectionMode &&
                       widget.isCurrent &&
-                      widget.showAddToPlaylist)
+                      (widget.onMoreMenuTap != null || widget.showAddToPlaylist))
                     const SizedBox(width: 2),
-                  if (!widget.selectionMode && widget.showAddToPlaylist)
+                  if (!widget.selectionMode &&
+                      widget.onMoreMenuTap != null)
+                    IconButton(
+                      icon: const Icon(Icons.more_horiz, color: Colors.white70),
+                      tooltip: l10n.tooltipMoreActions,
+                      onPressed: widget.onMoreMenuTap,
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
+                    )
+                  else if (!widget.selectionMode && widget.showAddToPlaylist)
                     IconButton(
                       icon: const Icon(Icons.playlist_add, color: Colors.white70),
                       tooltip: l10n.tooltipAddToPlaylist,

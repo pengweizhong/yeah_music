@@ -1910,6 +1910,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryBatchOpenQueue => 'Open queue';
 
   @override
+  String get libraryBatchAddToPlaylist => 'Add to playlists';
+
+  @override
+  String libraryBatchAddToPlaylistSheetTitle(int count) {
+    return 'Add $count tracks to playlists';
+  }
+
+  @override
+  String get libraryBatchAddToPlaylistSheetHelp =>
+      'Checked playlists already contain every selected track. Confirm applies these memberships to all selected tracks.';
+
+  @override
+  String get libraryBatchAddToPlaylistDone => 'Playlists updated';
+
+  @override
+  String get libraryReloadMetadata => 'Reload embedded metadata';
+
+  @override
+  String get libraryReloadMetadataDone => 'Metadata reloaded from file';
+
+  @override
   String get oneDriveUploadStatusUploading => 'Uploading';
 
   @override

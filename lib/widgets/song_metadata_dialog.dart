@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -5,6 +6,7 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
@@ -371,4 +373,46 @@ class _CoverPlaceholder extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 读取磁盘最新嵌套标签后弹出元数据对话框（与播放页一致）。
+Future<void> tryShowAudioMetadataDialogForSong(
+  BuildContext context,
+  Song song,
+) async {
+  final l10n = AppLocalizations.of(context);
+  final path = song.path.trim();
+  if (path.isEmpty) return;
+  final file = File(path);
+  if (!await file.exists()) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+    );
+    return;
+  }
+  late final AudioMetadata meta;
+  try {
+    meta = readMetadata(file, getImage: true);
+  } catch (e, st) {
+    appLog.e('read metadata for sheet failed', error: e, stackTrace: st);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+    );
+    return;
+  }
+  late final int sizeBytes;
+  try {
+    sizeBytes = (await file.stat()).size;
+  } catch (_) {
+    sizeBytes = 0;
+  }
+  if (!context.mounted) return;
+  await showAudioMetadataDialog(
+    context: context,
+    song: song,
+    meta: meta,
+    sizeBytes: sizeBytes,
+  );
 }

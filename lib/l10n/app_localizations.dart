@@ -3516,6 +3516,42 @@ abstract class AppLocalizations {
   /// **'Open queue'**
   String get libraryBatchOpenQueue;
 
+  /// No description provided for @libraryBatchAddToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlists'**
+  String get libraryBatchAddToPlaylist;
+
+  /// No description provided for @libraryBatchAddToPlaylistSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count} tracks to playlists'**
+  String libraryBatchAddToPlaylistSheetTitle(int count);
+
+  /// No description provided for @libraryBatchAddToPlaylistSheetHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked playlists already contain every selected track. Confirm applies these memberships to all selected tracks.'**
+  String get libraryBatchAddToPlaylistSheetHelp;
+
+  /// No description provided for @libraryBatchAddToPlaylistDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists updated'**
+  String get libraryBatchAddToPlaylistDone;
+
+  /// No description provided for @libraryReloadMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload embedded metadata'**
+  String get libraryReloadMetadata;
+
+  /// No description provided for @libraryReloadMetadataDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata reloaded from file'**
+  String get libraryReloadMetadataDone;
+
   /// No description provided for @oneDriveUploadStatusUploading.
   ///
   /// In en, this message translates to:

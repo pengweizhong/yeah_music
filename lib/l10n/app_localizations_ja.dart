@@ -1851,6 +1851,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryBatchOpenQueue => 'キューを開く';
 
   @override
+  String get libraryBatchAddToPlaylist => 'プレイリストに追加';
+
+  @override
+  String libraryBatchAddToPlaylistSheetTitle(int count) {
+    return '$count 曲をユーザープレイリストに追加';
+  }
+
+  @override
+  String get libraryBatchAddToPlaylistSheetHelp =>
+      'チェック済みは、選択したすべての曲がすでに含まれているプレイリストです。確定すると選択した各曲に対して反映されます。';
+
+  @override
+  String get libraryBatchAddToPlaylistDone => 'プレイリストを更新しました';
+
+  @override
+  String get libraryReloadMetadata => '埋め込みメタデータを再読み込み';
+
+  @override
+  String get libraryReloadMetadataDone => 'ファイルからメタデータを再読み込みしました';
+
+  @override
   String get oneDriveUploadStatusUploading => 'アップロード中';
 
   @override

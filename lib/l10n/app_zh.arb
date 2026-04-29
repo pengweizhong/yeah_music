@@ -669,6 +669,19 @@
   "libraryBatchUploadNeedParentFolder": "请先在 OneDrive 设置中选择「上传音乐」文件夹或云端应用文件夹。",
   "libraryBatchUploadQueued": "已加入传输队列",
   "libraryBatchOpenQueue": "查看队列",
+  "libraryBatchAddToPlaylist": "添加到歌单",
+  "@libraryBatchAddToPlaylistSheetTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryBatchAddToPlaylistSheetTitle": "将 {count} 首歌添加到用户歌单",
+  "libraryBatchAddToPlaylistSheetHelp": "已勾选的歌单是「当前所选曲目均已在其中」的歌单；确定后为所选每一首歌同步勾选状态。",
+  "libraryBatchAddToPlaylistDone": "歌单归属已更新",
+  "libraryReloadMetadata": "重新加载元信息",
+  "libraryReloadMetadataDone": "已从文件重新加载元信息",
   "oneDriveUploadStatusUploading": "上传中",
   "oneDriveTaskDirectionUpload": "上传"
 }

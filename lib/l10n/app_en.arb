@@ -669,6 +669,19 @@
   "libraryBatchUploadNeedParentFolder": "Choose a music upload folder or cloud app folder under OneDrive settings first.",
   "libraryBatchUploadQueued": "Added to transfer queue",
   "libraryBatchOpenQueue": "Open queue",
+  "libraryBatchAddToPlaylist": "Add to playlists",
+  "@libraryBatchAddToPlaylistSheetTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryBatchAddToPlaylistSheetTitle": "Add {count} tracks to playlists",
+  "libraryBatchAddToPlaylistSheetHelp": "Checked playlists already contain every selected track. Confirm applies these memberships to all selected tracks.",
+  "libraryBatchAddToPlaylistDone": "Playlists updated",
+  "libraryReloadMetadata": "Reload embedded metadata",
+  "libraryReloadMetadataDone": "Metadata reloaded from file",
   "oneDriveUploadStatusUploading": "Uploading",
   "oneDriveTaskDirectionUpload": "Upload"
 }

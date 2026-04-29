@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:hive/hive.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
@@ -20,6 +24,42 @@ class SongSortPreferences {
   final bool ascending;
 }
 
+/// 单次排序前从磁盘读取的时间（与 Finder / 资源管理器「修改日期」一致）
+class _DiskTimes {
+  const _DiskTimes({this.modified, this.changed});
+
+  final DateTime? modified;
+  final DateTime? changed;
+}
+
+/// 按路径读真实文件时间，避免 Hive / 后台 hydrate 与磁盘不一致导致排序乱跳。
+Map<String, _DiskTimes> _prefetchDiskTimes(List<Song> songs) {
+  if (kIsWeb) return {};
+  final m = <String, _DiskTimes>{};
+  for (final s in songs) {
+    final p = s.path.trim();
+    if (p.isEmpty) continue;
+    try {
+      final st = File(p).statSync();
+      m[p] = _DiskTimes(modified: st.modified, changed: st.changed);
+    } catch (_) {}
+  }
+  return m;
+}
+
+SongSortPreferences songSortPreferencesReadFromBox(Box<dynamic> box) {
+  final raw = box.get('sort_type', defaultValue: 0) as int?;
+  final asc = box.get('sort_ascending', defaultValue: true) as bool?;
+  var idx = raw ?? 0;
+  if (idx < 0) idx = 0;
+  final max = SongListSortType.modifyTime.index;
+  if (idx > max) idx = max;
+  return SongSortPreferences(
+    type: SongListSortType.values[idx],
+    ascending: asc ?? true,
+  );
+}
+
 List<Song> sortSongsCopy(
   List<Song> songs,
   SongListSortType type,
@@ -29,6 +69,11 @@ List<Song> sortSongsCopy(
   final out = List<Song>.from(songs);
   int rankAdded(String path) => pathAddIndex?[path] ?? 1 << 30;
 
+  final disk =
+      (type == SongListSortType.modifyTime || type == SongListSortType.createTime)
+      ? _prefetchDiskTimes(out)
+      : null;
+
   out.sort((a, b) {
     int result = 0;
     switch (type) {
@@ -36,13 +81,27 @@ List<Song> sortSongsCopy(
         result = (a.title ?? '').compareTo(b.title ?? '');
         break;
       case SongListSortType.createTime:
-        final aTime = a.createDateTime ?? a.updateDateTime ?? DateTime(1970);
-        final bTime = b.createDateTime ?? b.updateDateTime ?? DateTime(1970);
+        final da = disk?[a.path];
+        final db = disk?[b.path];
+        final aTime =
+            da?.changed ??
+            a.createDateTime ??
+            da?.modified ??
+            a.updateDateTime ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+        final bTime =
+            db?.changed ??
+            b.createDateTime ??
+            db?.modified ??
+            b.updateDateTime ??
+            DateTime.fromMillisecondsSinceEpoch(0);
         result = aTime.compareTo(bTime);
         break;
       case SongListSortType.modifyTime:
-        final aTime = a.updateDateTime ?? DateTime(1970);
-        final bTime = b.updateDateTime ?? DateTime(1970);
+        final da = disk?[a.path];
+        final db = disk?[b.path];
+        final aTime = da?.modified ?? a.updateDateTime ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bTime = db?.modified ?? b.updateDateTime ?? DateTime.fromMillisecondsSinceEpoch(0);
         result = aTime.compareTo(bTime);
         break;
       case SongListSortType.addedToPlaylist:
@@ -64,16 +123,20 @@ List<Song> sortSongsCopy(
 
 Future<SongSortPreferences> loadSongSortPreferences() async {
   final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-  final raw = box.get('sort_type', defaultValue: 0) as int?;
-  final asc = box.get('sort_ascending', defaultValue: true) as bool?;
-  var idx = raw ?? 0;
-  if (idx < 0) idx = 0;
-  final max = SongListSortType.modifyTime.index;
-  if (idx > max) idx = max;
-  return SongSortPreferences(
-    type: SongListSortType.values[idx],
-    ascending: asc ?? true,
-  );
+  return songSortPreferencesReadFromBox(box);
+}
+
+/// 同步读取（Hive 已初始化后）；失败则默认按曲名升序。
+SongSortPreferences loadSongSortPreferencesSync() {
+  try {
+    final box = HiveUtils.getBox<dynamic>(Constant.hiveRootPath);
+    return songSortPreferencesReadFromBox(box);
+  } catch (_) {
+    return const SongSortPreferences(
+      type: SongListSortType.name,
+      ascending: true,
+    );
+  }
 }
 
 /// 用户歌单页排序偏好（含「加入歌单时间」）

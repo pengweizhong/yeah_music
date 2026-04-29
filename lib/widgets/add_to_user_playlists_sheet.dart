@@ -5,13 +5,23 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
 
-Future<void> showAddToUserPlaylistsSheet(BuildContext context, Song song) async {
+/// 将单首曲目加入用户歌单（底部表单）。
+Future<bool> showAddToUserPlaylistsSheet(BuildContext context, Song song) {
+  return showAddManyToUserPlaylistsSheet(context, [song]);
+}
+
+/// 将多首曲目批量加入用户歌单；返回是否在对话框内点了「确定」并成功保存。
+Future<bool> showAddManyToUserPlaylistsSheet(
+  BuildContext context,
+  List<Song> songs,
+) async {
+  if (songs.isEmpty) return false;
   final provider = context.read<UserPlaylistProvider>();
   if (!provider.initialized) {
     await provider.init();
   }
-  if (!context.mounted) return;
-  await showModalBottomSheet<void>(
+  if (!context.mounted) return false;
+  final result = await showModalBottomSheet<bool>(
     context: context,
     showDragHandle: false,
     isScrollControlled: true,
@@ -19,16 +29,17 @@ Future<void> showAddToUserPlaylistsSheet(BuildContext context, Song song) async 
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: FrostedGlassBottomSheet(
-        child: _AddToUserPlaylistsBody(song: song),
+        child: _AddToUserPlaylistsBody(songs: songs),
       ),
     ),
   );
+  return result ?? false;
 }
 
 class _AddToUserPlaylistsBody extends StatefulWidget {
-  const _AddToUserPlaylistsBody({required this.song});
+  const _AddToUserPlaylistsBody({required this.songs});
 
-  final Song song;
+  final List<Song> songs;
 
   @override
   State<_AddToUserPlaylistsBody> createState() => _AddToUserPlaylistsBodyState();
@@ -42,7 +53,11 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
   void initState() {
     super.initState();
     final user = context.read<UserPlaylistProvider>();
-    _selected = {...user.playlistIdsContainingSong(widget.song)};
+    if (widget.songs.length == 1) {
+      _selected = {...user.playlistIdsContainingSong(widget.songs.first)};
+    } else {
+      _selected = {...user.playlistIdsContainingAllSongs(widget.songs)};
+    }
   }
 
   @override
@@ -67,11 +82,19 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
     final l10n = AppLocalizations.of(context);
     final user = context.watch<UserPlaylistProvider>();
     final playlists = user.playlists;
-    final titleName =
-        widget.song.title ?? widget.song.path.split('/').last;
+    final first = widget.songs.first;
+    final titleName = first.title ?? first.path.split('/').last;
 
     final scheme = Theme.of(context).colorScheme;
     final maxListHeight = MediaQuery.sizeOf(context).height * 0.52;
+
+    final sheetTitle = widget.songs.length == 1
+        ? l10n.addToPlaylistTitle(titleName)
+        : l10n.libraryBatchAddToPlaylistSheetTitle(widget.songs.length);
+
+    final helpText = widget.songs.length == 1
+        ? l10n.addToPlaylistMultiHelp
+        : l10n.libraryBatchAddToPlaylistSheetHelp;
 
     return SafeArea(
       child: Column(
@@ -81,21 +104,21 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
             child: Text(
-              l10n.addToPlaylistTitle(titleName),
+              sheetTitle,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
                 height: 1.3,
               ),
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              l10n.addToPlaylistMultiHelp,
+              helpText,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withValues(alpha: 0.55),
@@ -212,23 +235,40 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
             child: Row(
               children: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(context, false),
                   style: TextButton.styleFrom(foregroundColor: Colors.white70),
                   child: Text(l10n.actionCancel),
                 ),
                 const Spacer(),
                 FilledButton(
                   onPressed: () async {
-                    await user.setSongInPlaylists(widget.song, Set<String>.from(_selected));
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.addToPlaylistUpdatedN(_selected.length),
+                    if (widget.songs.length == 1) {
+                      await user.setSongInPlaylists(
+                        widget.songs.first,
+                        Set<String>.from(_selected),
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            l10n.addToPlaylistUpdatedN(_selected.length),
+                          ),
                         ),
-                      ),
-                    );
-                    Navigator.pop(context);
+                      );
+                    } else {
+                      await user.setSongsMembershipInPlaylists(
+                        widget.songs,
+                        Set<String>.from(_selected),
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.libraryBatchAddToPlaylistDone),
+                        ),
+                      );
+                    }
+                    if (!context.mounted) return;
+                    Navigator.pop(context, true);
                   },
                   child: Text(l10n.actionOK),
                 ),

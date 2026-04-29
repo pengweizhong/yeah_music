@@ -132,8 +132,6 @@ class _MetaSnapshot {
     required this.lyrics,
     required this.pictures,
     required this.imageBytes,
-    required this.createDateTime,
-    required this.updateDateTime,
   });
 
   final String? title;
@@ -148,8 +146,6 @@ class _MetaSnapshot {
   final String? lyrics;
   final List<Picture>? pictures;
   final Uint8List? imageBytes;
-  final DateTime? createDateTime;
-  final DateTime? updateDateTime;
 
   factory _MetaSnapshot.fromSong(Song s) {
     return _MetaSnapshot(
@@ -165,8 +161,6 @@ class _MetaSnapshot {
       lyrics: s.lyrics,
       pictures: s.pictures,
       imageBytes: s.imageBytes,
-      createDateTime: s.createDateTime,
-      updateDateTime: s.updateDateTime,
     );
   }
 
@@ -181,8 +175,6 @@ class _MetaSnapshot {
         s.sampleRate == sampleRate &&
         s.bitrate == bitrate &&
         s.lyrics == lyrics &&
-        s.createDateTime == createDateTime &&
-        s.updateDateTime == updateDateTime &&
         _sameImageBytes(s.imageBytes, imageBytes) &&
         _picturesRoughEqual(s.pictures, pictures);
   }
@@ -202,7 +194,5 @@ class _MetaSnapshot {
     if (!_sameImageBytes(s.imageBytes, imageBytes)) {
       s.imageBytes = imageBytes;
     }
-    s.createDateTime = createDateTime;
-    s.updateDateTime = updateDateTime;
   }
 }

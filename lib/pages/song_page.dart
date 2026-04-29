@@ -23,6 +23,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
@@ -324,11 +325,15 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   static const int _songMetaReloadMaxEmbeddedArtBytes = 512 * 1024;
 
   /// 外部编辑器改写磁盘文件后，刷新 Hive / UI / 媒体通知。
+  /// 亦用于「更多 → 重新加载元信息」：凡引用该路径的 [Song] 实例（目录列表、合并曲库、当前队列）均 [FileUtils.loadSongMeta] 并 [Song.save]。
   Future<void> _reloadSongMetaAfterExternalMusicTagEdit(String path) async {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return;
+
     final folder = Provider.of<FolderProvider>(context, listen: false);
     final play = Provider.of<PlayListProvider>(context, listen: false);
 
-    SongLibraryMetadataHydrator.invalidatePath(path);
+    SongLibraryMetadataHydrator.invalidatePath(trimmed);
 
     Future<void> loadInto(Song s) async {
       await FileUtils.loadSongMeta(
@@ -343,30 +348,42 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       ApplicationUtils.evictSongCoverProvidersForPath(s.path);
     }
 
-    final touched = <Song>{};
+    final pending = <Song>[];
+    void collect(Song? s) {
+      if (s == null) return;
+      if (!songPathsEqual(s.path, trimmed)) return;
+      if (pending.any((x) => identical(x, s))) return;
+      pending.add(s);
+    }
+
     for (final f in folder.folders) {
       final list = f.songList;
       if (list == null) continue;
       for (final s in list) {
-        if (!songPathsEqual(s.path, path)) continue;
-        if (!touched.add(s)) continue;
-        await loadInto(s);
+        collect(s);
       }
     }
+    for (final s in play.libraryMergedSongs) {
+      collect(s);
+    }
     for (final s in play.playList) {
-      if (!songPathsEqual(s.path, path)) continue;
-      if (!touched.add(s)) continue;
+      collect(s);
+    }
+    collect(play.currentSong);
+
+    for (final s in pending) {
       await loadInto(s);
     }
 
     if (!mounted) return;
     folder.notifySongMetadataChangedRemote();
     play.notifySongMetadataChangedRemote();
+
+    setState(() {
+      _lyricsHydratedForPath = null;
+    });
     final cur = play.currentSong;
-    if (cur != null && songPathsEqual(cur.path, path)) {
-      setState(() {
-        _lyricsHydratedForPath = null;
-      });
+    if (cur != null && songPathsEqual(cur.path, trimmed)) {
       _applySongLyrics(cur);
       _updateDuration();
       unawaited(MusicService.pushAndroidNotificationForSong(cur));
@@ -1404,6 +1421,25 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 if (!mounted) return;
                                 _showSongMetadataDialog(navigatorContext, song);
+                              });
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.refresh_rounded, color: Colors.white),
+                            title: Text(l10n.libraryReloadMetadata),
+                            onTap: () {
+                              final path = song.path;
+                              Navigator.pop(sheetContext);
+                              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                                if (!mounted) return;
+                                final messenger = ScaffoldMessenger.of(context);
+                                final doneText =
+                                    AppLocalizations.of(context).libraryReloadMetadataDone;
+                                await _reloadSongMetaAfterExternalMusicTagEdit(path);
+                                if (!mounted) return;
+                                messenger.showSnackBar(
+                                  SnackBar(content: Text(doneText)),
+                                );
                               });
                             },
                           ),
@@ -2463,20 +2499,57 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   static const double _kQueueItemExtent = _kQueueRowH + _kQueueSepH;
 
   late final ScrollController _queueScroll;
-  late int _lastHeardIndex;
+  late int _lastHeardDisplayIndex;
   int? _playerMediaIndex;
   StreamSubscription<int?>? _playerQueueIndexSub;
+
+  /// 与 [PlayListPage] 一致：全库顺序播放时队列 UI 按排序偏好展示；随机模式下仍为底层合并顺序以免误导。
+  ({List<Song> display, bool sortAlignedUi}) _queueRowsModel(PlayListProvider provider) {
+    final raw = provider.playList;
+    final prefs = loadSongSortPreferencesSync();
+    final align = provider.playbackSessionIsLibrary &&
+        !provider.hasPlaybackQueueOverride &&
+        provider.playbackMode != PlaybackMode.shuffle;
+    if (!align || raw.isEmpty) {
+      return (display: raw, sortAlignedUi: false);
+    }
+    return (
+      display: sortSongsCopy(raw, prefs.type, prefs.ascending),
+      sortAlignedUi: true,
+    );
+  }
+
+  int _displayIdxForPlaybackIdx(
+    int playbackIdx,
+    List<Song> raw,
+    List<Song> display,
+    bool aligned,
+  ) {
+    if (!aligned) {
+      return playbackIdx.clamp(0, raw.isEmpty ? 0 : raw.length - 1);
+    }
+    if (playbackIdx < 0 || playbackIdx >= raw.length) return 0;
+    final song = raw[playbackIdx];
+    final d = display.indexWhere((s) => s.path == song.path);
+    return d >= 0 ? d : playbackIdx.clamp(0, display.length - 1);
+  }
 
   @override
   void initState() {
     super.initState();
     _playerMediaIndex = MusicService.currentIndex;
-    _lastHeardIndex = _displayCurrentIndex(widget.provider);
-    final list = widget.provider.playList;
-    final n = list.length;
+    final provider = widget.provider;
+    final rows = _queueRowsModel(provider);
+    final raw = provider.playList;
+    final display = rows.display;
+    final aligned = rows.sortAlignedUi;
+    final pb = _displayCurrentIndex(provider);
+    _lastHeardDisplayIndex =
+        _displayIdxForPlaybackIdx(pb, raw, display, aligned);
+    final n = display.length;
     final i = n == 0
         ? 0
-        : _displayCurrentIndex(widget.provider).clamp(0, n - 1);
+        : _displayIdxForPlaybackIdx(pb, raw, display, aligned).clamp(0, n - 1);
     // 首帧即接近目标行，避免从 0 全量再 jump 造成一帧大布局与多帧重排
     _queueScroll = ScrollController(
       initialScrollOffset: i * _kQueueItemExtent,
@@ -2512,9 +2585,18 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   void _onProviderChanged() {
     if (!mounted) return;
     final p = widget.provider;
-    final idx = _displayCurrentIndex(p);
-    final indexMoved = idx != _lastHeardIndex;
-    _lastHeardIndex = idx;
+    final rows = _queueRowsModel(p);
+    final raw = p.playList;
+    final display = rows.display;
+    final aligned = rows.sortAlignedUi;
+    final idx = _displayIdxForPlaybackIdx(
+      _displayCurrentIndex(p),
+      raw,
+      display,
+      aligned,
+    );
+    final indexMoved = idx != _lastHeardDisplayIndex;
+    _lastHeardDisplayIndex = idx;
     setState(() {});
     if (indexMoved) {
       WidgetsBinding.instance
@@ -2541,10 +2623,19 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   void _refineQueueScroll({required bool animated}) {
     if (!mounted) return;
     if (!_queueScroll.hasClients) return;
-    final list = widget.provider.playList;
-    if (list.isEmpty) return;
-    final i = _displayCurrentIndex(widget.provider)
-        .clamp(0, list.length - 1);
+    final provider = widget.provider;
+    final rows = _queueRowsModel(provider);
+    final display = rows.display;
+    if (display.isEmpty) return;
+    final raw = provider.playList;
+    final aligned = rows.sortAlignedUi;
+    final i = _displayIdxForPlaybackIdx(
+          _displayCurrentIndex(provider),
+          raw,
+          display,
+          aligned,
+        )
+        .clamp(0, display.length - 1);
     final pos = _queueScroll.position;
     final rowTop = _rowTopForIndex(i);
     final viewH = pos.viewportDimension;
@@ -2565,11 +2656,14 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final provider = widget.provider;
-    final list = provider.playList;
+    final rawList = provider.playList;
+    final rows = _queueRowsModel(provider);
+    final displayList = rows.display;
+    final sortAlignedUi = rows.sortAlignedUi;
     final primary = Theme.of(context).colorScheme.primary;
     final divColor = Colors.white.withValues(alpha: 0.12);
 
-    if (list.isEmpty) {
+    if (displayList.isEmpty) {
       return Center(
         child: Text(
           l10n.queueNoTracks,
@@ -2577,6 +2671,10 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
         ),
       );
     }
+
+    final curPlayback = _displayCurrentIndex(provider);
+    final curDisplay =
+        _displayIdxForPlaybackIdx(curPlayback, rawList, displayList, sortAlignedUi);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2598,11 +2696,10 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
             itemExtent: _kQueueItemExtent,
             cacheExtent: 180,
             padding: const EdgeInsets.only(bottom: 12),
-            itemCount: list.length,
+            itemCount: displayList.length,
             itemBuilder: (context, index) {
-              final s = list[index];
-              final cur = _displayCurrentIndex(provider);
-              final isCurrent = index == cur;
+              final s = displayList[index];
+              final isCurrent = index == curDisplay;
               return Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
@@ -2614,7 +2711,12 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                           ? primary.withValues(alpha: 0.16)
                           : Colors.transparent,
                       child: InkWell(
-                        onTap: () => widget.onPick(index),
+                        onTap: () {
+                          final pb = sortAlignedUi
+                              ? rawList.indexWhere((x) => x.path == s.path)
+                              : index;
+                          if (pb >= 0) widget.onPick(pb);
+                        },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Row(
