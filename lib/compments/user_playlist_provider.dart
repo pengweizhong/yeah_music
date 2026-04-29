@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io' show File;
 
 import 'package:flutter/foundation.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
@@ -45,7 +48,8 @@ class UserPlaylist {
     };
   }
 
-  bool containsSong(Song song) => songPaths.contains(song.path);
+  bool containsSong(Song song) =>
+      songPaths.any((p) => normSongPath(p) == normSongPath(song.path));
 }
 
 /// 同一歌单内路径去重且保持顺序（加载旧数据时兜底）
@@ -226,13 +230,15 @@ class UserPlaylistProvider extends ChangeNotifier {
   }
 
   Future<void> setSongInPlaylists(Song song, Set<String> selectedPlaylistIds) async {
+    final sn = normSongPath(song.path);
     for (final playlist in _playlists) {
       if (selectedPlaylistIds.contains(playlist.id)) {
-        if (!playlist.songPaths.contains(song.path)) {
+        final has = playlist.songPaths.any((sp) => normSongPath(sp) == sn);
+        if (!has) {
           playlist.songPaths.add(song.path);
         }
       } else {
-        playlist.songPaths.remove(song.path);
+        playlist.songPaths.removeWhere((p) => normSongPath(p) == sn);
       }
     }
     await _save();
@@ -240,8 +246,10 @@ class UserPlaylistProvider extends ChangeNotifier {
   }
 
   Future<void> addSongToPlaylists(Song song, Set<String> playlistIds) async {
+    final sn = normSongPath(song.path);
     for (final playlist in _playlists.where((playlist) => playlistIds.contains(playlist.id))) {
-      if (!playlist.songPaths.contains(song.path)) {
+      final has = playlist.songPaths.any((sp) => normSongPath(sp) == sn);
+      if (!has) {
         playlist.songPaths.add(song.path);
       }
     }
@@ -251,24 +259,69 @@ class UserPlaylistProvider extends ChangeNotifier {
 
   /// 包含该歌曲（按文件路径）的歌单 id 集合
   Set<String> playlistIdsContainingSong(Song song) {
-    final path = song.path;
+    final n = normSongPath(song.path);
     return {
       for (final p in _playlists)
-        if (p.songPaths.contains(path)) p.id,
+        if (p.songPaths.any((sp) => normSongPath(sp) == n)) p.id,
     };
   }
 
   Future<void> removeSongFromPlaylist(String playlistId, Song song) async {
     final playlist = _playlistById(playlistId);
     if (playlist == null) return;
-    playlist.songPaths.remove(song.path);
+    final n = normSongPath(song.path);
+    playlist.songPaths.removeWhere((p) => normSongPath(p) == n);
     await _save();
     notifyListeners();
   }
 
+  Map<String, Song> _indexLibraryByNormPath(List<Song> allSongs) {
+    final byNormPath = <String, Song>{};
+    for (final song in allSongs) {
+      final k = normSongPath(song.path);
+      if (k.isEmpty) continue;
+      byNormPath.putIfAbsent(k, () => song);
+    }
+    return byNormPath;
+  }
+
+  /// 仅从已加载曲库解析（同步）。未命中路径将被忽略。
   List<Song> songsForPlaylist(UserPlaylist playlist, List<Song> allSongs) {
-    final byPath = {for (final song in allSongs) song.path: song};
-    return playlist.songPaths.map((path) => byPath[path]).whereType<Song>().toList();
+    final byNormPath = _indexLibraryByNormPath(allSongs);
+    return playlist.songPaths
+        .map((path) => byNormPath[normSongPath(path)])
+        .whereType<Song>()
+        .toList();
+  }
+
+  /// 与 [songsForPlaylist] 相同顺序；先匹配 [librarySongs]，未命中且路径在本机仍存在时读盘加载（覆盖 OneDrive
+  /// 缓存未及时并入 [PlayListProvider]、仅首页等处以 [UserPlaylist.songPaths] 计数等情形）。
+  Future<List<Song>> songsForPlaylistWithDiskFallback(
+    UserPlaylist playlist,
+    List<Song> librarySongs,
+  ) async {
+    final byNormPath = _indexLibraryByNormPath(librarySongs);
+    final out = <Song>[];
+    for (final path in playlist.songPaths) {
+      final trimmed = path.trim();
+      if (trimmed.isEmpty) continue;
+      final k = normSongPath(trimmed);
+      final fromLib = byNormPath[k];
+      if (fromLib != null) {
+        out.add(fromLib);
+        continue;
+      }
+      if (kIsWeb) continue;
+      try {
+        final f = File(trimmed);
+        if (await f.exists()) {
+          final s = Song(trimmed);
+          await FileUtils.loadSongMeta(s, loadEmbeddedAlbumArt: false);
+          out.add(s);
+        }
+      } catch (_) {}
+    }
+    return out;
   }
 
   UserPlaylist? _playlistById(String playlistId) {
