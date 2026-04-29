@@ -37,7 +37,7 @@ class RecentPlayListRow extends StatefulWidget {
 }
 
 class _RecentPlayListRowState extends State<RecentPlayListRow> {
-  Future<void>? _ongoingHydrate;
+  Future<bool>? _ongoingHydrate;
 
   @override
   void initState() {
@@ -67,8 +67,8 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
         SongLibraryMetadataHydrator.hydrateIfNeeded(song).whenComplete(() {
           _ongoingHydrate = null;
         });
-    fut.then((_) {
-      if (!mounted) return;
+    fut.then((changed) {
+      if (!mounted || !changed) return;
       setState(() {});
     });
   }

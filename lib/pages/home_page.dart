@@ -1384,9 +1384,10 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
     if (_coverBytes != null && _coverBytes!.isNotEmpty) return;
     await SongLibraryMetadataHydrator.hydrateIfNeeded(widget.song);
     if (!mounted) return;
-    final b = widget.song.imageBytes;
-    if (b != null && b.isNotEmpty) {
-      setState(() => _coverBytes = b);
+    final prev = _coverBytes;
+    _syncBytesFromSong();
+    if (_coverBytes != prev) {
+      setState(() {});
     }
   }
 

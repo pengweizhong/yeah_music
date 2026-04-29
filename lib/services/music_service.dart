@@ -39,30 +39,9 @@ class MusicService {
     return {androidComposerMetadataKey: line};
   }
 
-  /// 新一次播放开始时递增；后台补封面任务带旧代数则提前退出，避免切歌后错写会话。
+  /// 新一次 [setAudioSource]/队列换源成功并 [play] 时递增；仅带「本次播放代数」的
+  /// [pushAndroidNotificationForSong] 在结束时若已过期则丢弃，避免切歌后旧 hydrate 覆盖新会话。
   static int _androidMediaSessionSyncGeneration = 0;
-
-  /// 仅在后台为「当前这条」补系统媒体会话（内部 hydrate + [pushAndroidNotificationForSong]）。
-  /// 不对整队列并行 hydrate、也不 O(n) [updateMediaItem]，避免播放页卡顿、闪退。
-  static Future<void> _androidRefreshCurrentSessionOnly(
-    List<Song> queue,
-    int currentIndex,
-    int syncGeneration,
-  ) async {
-    if (!Platform.isAndroid || queue.isEmpty) return;
-    final idx = currentIndex.clamp(0, queue.length - 1);
-    final s = queue[idx];
-    try {
-      await Future<void>.delayed(Duration.zero);
-      if (syncGeneration != _androidMediaSessionSyncGeneration) return;
-      await pushAndroidNotificationForSong(s);
-      await Future<void>.delayed(const Duration(milliseconds: 280));
-      if (syncGeneration != _androidMediaSessionSyncGeneration) return;
-      await pushAndroidNotificationForSong(s);
-    } catch (e) {
-      appLog.d('_androidRefreshCurrentSessionOnly: $e');
-    }
-  }
 
   /// Android 多曲时 [playCurrentFromPlaylist] 会构建整段队列（与「车载歌词」开关无关）；单文件模式为 false。
   static bool androidCarQueueActive = false;
@@ -129,7 +108,7 @@ class MusicService {
         play();
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
-          unawaited(_androidRefreshCurrentSessionOnly([song], 0, g));
+          unawaited(pushAndroidNotificationForSong(song, abortIfStaleGeneration: g));
         }
         return;
       } catch (e) {
@@ -188,7 +167,8 @@ class MusicService {
         play();
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
-          unawaited(_androidRefreshCurrentSessionOnly(queue, idx, g));
+          final s = queue[idx];
+          unawaited(pushAndroidNotificationForSong(s, abortIfStaleGeneration: g));
         }
         return;
       } catch (e) {
@@ -283,7 +263,13 @@ class MusicService {
   }
 
   /// 在切歌或补载元数据后，把当前曲目的封面/标题/歌词行推送到系统媒体会话（更新通知）。
-  static Future<void> pushAndroidNotificationForSong(Song song) async {
+  ///
+  /// [abortIfStaleGeneration]：与 [_androidMediaSessionSyncGeneration] 配套，仅在「随本次换源发起的
+  /// 单次补推」上使用；歌词 tick、[AndroidCarLyricsSync] 等不传，始终落库。
+  static Future<void> pushAndroidNotificationForSong(
+    Song song, {
+    int? abortIfStaleGeneration,
+  }) async {
     if (!Platform.isAndroid) return;
     try {
       try {
@@ -311,6 +297,10 @@ class MusicService {
           );
         } catch (_) {}
       }
+      if (abortIfStaleGeneration != null &&
+          abortIfStaleGeneration != _androidMediaSessionSyncGeneration) {
+        return;
+      }
       final lyricStyle = await SettingsService.loadLyricSettings();
       final item = await buildMediaItemForSong(
         song,
@@ -318,6 +308,10 @@ class MusicService {
         lyricStyle: lyricStyle,
         subtitlePosition: lastPosition,
       );
+      if (abortIfStaleGeneration != null &&
+          abortIfStaleGeneration != _androidMediaSessionSyncGeneration) {
+        return;
+      }
       await AudioService.updateMediaItem(item);
     } catch (e) {
       appLog.d('pushAndroidNotificationForSong: $e');

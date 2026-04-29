@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_config.dart';
@@ -195,6 +197,20 @@ class ApplicationUtils {
     _coverProviderCache.removeWhere((k, _) => k.startsWith(prefix));
   }
 
+  /// [Uint8List.hashCode] 按对象身份变化，不能用于区分「内容相同的新缓冲区」。
+  /// 与 [path]、边长一起组成 [getImageCoverProvider] 的缓存键，并在列表 [Image] 上作稳定 [ValueKey]。
+  static int coverBytesFingerprint(Uint8List? bytes) {
+    if (bytes == null || bytes.isEmpty) return 0;
+    final len = bytes.length;
+    var h = len;
+    final n = len < 4096 ? len : 4096;
+    for (var i = 0; i < n; i++) {
+      h = (h * 31 + bytes[i]) & 0x3fffffff;
+    }
+    h ^= bytes[len - 1];
+    return h;
+  }
+
   /// 获取歌曲封面 [ImageProvider]。
   /// 内嵌封面使用 [ResizeImage] 按 [size]×[devicePixelRatio] 降采样解码，避免列表滚动时全尺寸解码进显存。
   static ImageProvider getImageCoverProvider(
@@ -212,7 +228,8 @@ class ApplicationUtils {
       return AssetImage("assets/icons/icon_512x512@2x.png");
     }
     final dim = (size * devicePixelRatio).round().clamp(32, 2048);
-    final key = '${song.path}#$dim';
+    final fp = coverBytesFingerprint(song.imageBytes);
+    final key = '${song.path}#$dim#$fp';
     final existing = _coverProviderCache[key];
     if (existing != null) {
       return existing;

@@ -80,8 +80,8 @@ class SongListCover extends StatelessWidget {
     );
 
     final img = Image(
-      key: ValueKey<Object>(
-        Object.hash(song.path, song.imageBytes?.length, song.imageBytes),
+      key: ValueKey<String>(
+        '${song.path}#${ApplicationUtils.coverBytesFingerprint(song.imageBytes)}',
       ),
       image: image,
       width: size,
