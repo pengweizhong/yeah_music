@@ -6,6 +6,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 
@@ -31,9 +32,6 @@ Future<void> reloadAllSongInstancesAfterFileMetadataChanged(
       storeLyricsWithTrack: true,
       maxEmbeddedArtBytes: maxEmbeddedArtBytes,
     );
-    try {
-      await s.save();
-    } catch (_) {}
     ApplicationUtils.evictSongCoverProvidersForPath(s.path);
   }
 
@@ -62,6 +60,10 @@ Future<void> reloadAllSongInstancesAfterFileMetadataChanged(
 
   for (final s in pending) {
     await loadInto(s);
+  }
+
+  if (pending.isNotEmpty) {
+    await persistEmbeddedSongPaths({for (final s in pending) s.path});
   }
 
   if (!context.mounted) return;

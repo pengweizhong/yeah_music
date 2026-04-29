@@ -66,7 +66,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
 
   /// 滑动进入可视区域时再拉元数据：避免离屏条目抢 IO，离开后再次划入可重试失败的解析。
   void _onListRowVisibilityChanged(VisibilityInfo info) {
-    if (!mounted || info.visibleFraction < 0.06) return;
+    if (!mounted || info.visibleFraction < 0.12) return;
     _hydrateAfterLayout();
   }
 

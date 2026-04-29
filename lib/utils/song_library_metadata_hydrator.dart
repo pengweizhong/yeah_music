@@ -4,7 +4,9 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/concurrent_limiter.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_audio_quality.dart';
 
 bool _sameImageBytes(Uint8List? a, Uint8List? b) {
@@ -29,14 +31,17 @@ bool _picturesRoughEqual(List<Picture>? a, List<Picture>? b) {
 
 /// 入库为轻量元数据时可调用本类，在列表等处后台补全：**封面、歌词与其它标签**，同一路径只读文件一次，
 /// [applyTo] 到各 [Song] 实例（不因去重跳过其它引用）。
+/// 与并行上限配合，避免滑动长列表时数十路同时 readMetadata。
 class SongLibraryMetadataHydrator {
   SongLibraryMetadataHydrator._();
 
   static final Map<String, Future<void>> _pending = {};
   static final Map<String, _MetaSnapshot> _cache = {};
+  static final ConcurrentLimiter _ioLimiter = ConcurrentLimiter(2);
 
   /// 列表展示经 [ResizeImage] 已降采样；过小会丢弃内嵌图导致大量「无封面」。
-  static const int _maxArtBytes = 512 * 1024;
+  /// 与 [FileUtils.loadSongMeta]、`music_service` 通知补图等处对齐同一上限。
+  static const int maxEmbeddedArtBytes = 512 * 1024;
 
   /// 若 [Song] 已与缓存一致则返回 false；否则写入并返回 true（便于列表仅在真有变更时 [setState]）。
   ///
@@ -58,6 +63,7 @@ class SongLibraryMetadataHydrator {
       if (beforeFp != afterFp) {
         ApplicationUtils.evictSongCoverProvidersForPath(p);
       }
+      scheduleEmbeddedSongMetadataPersist(song);
       return true;
     }
 
@@ -74,6 +80,7 @@ class SongLibraryMetadataHydrator {
     if (beforeFp != afterFp) {
       ApplicationUtils.evictSongCoverProvidersForPath(p);
     }
+    scheduleEmbeddedSongMetadataPersist(song);
     return true;
   }
 
@@ -102,19 +109,23 @@ class SongLibraryMetadataHydrator {
   }
 
   static Future<void> _loadPath(String path) async {
+    await _ioLimiter.acquire();
     try {
       await Future<void>.delayed(Duration.zero);
-      final tmp = Song(path);
-      await FileUtils.loadSongMeta(
-        tmp,
-        loadEmbeddedAlbumArt: true,
-        storeLyricsWithTrack: true,
-        maxEmbeddedArtBytes: _maxArtBytes,
-      );
-      _cache[path] = _MetaSnapshot.fromSong(tmp);
-    } catch (e, st) {
-      appLog.w('后台补全曲目元数据失败: $path', error: e, stackTrace: st);
+      try {
+        final tmp = Song(path);
+        await FileUtils.loadSongMeta(
+          tmp,
+          loadEmbeddedAlbumArt: true,
+          storeLyricsWithTrack: true,
+          maxEmbeddedArtBytes: maxEmbeddedArtBytes,
+        );
+        _cache[path] = _MetaSnapshot.fromSong(tmp);
+      } catch (e, st) {
+        appLog.w('后台补全曲目元数据失败: $path', error: e, stackTrace: st);
+      }
     } finally {
+      _ioLimiter.release();
       _pending.remove(path);
     }
   }

@@ -14,6 +14,32 @@ import 'package:yeah_music/utils/hive_utils.dart';
 import '../config/app_config.dart';
 import '../models/folder.dart';
 
+/// 目录重扫生成的新 [Song] 不含内嵌封面/歌词（见 [_loadSongBatch]）；合并旧列表中已持久化的
+/// [Song.imageBytes]、[Song.lyrics]，避免刷新目录把后台补全结果写没。
+void mergeEmbeddedFieldsFromPreviousSongList({
+  required List<Song> freshList,
+  required List<Song>? previousList,
+}) {
+  if (previousList == null || previousList.isEmpty) return;
+  final prevByPath = <String, Song>{
+    for (final s in previousList) s.path: s,
+  };
+  for (final fresh in freshList) {
+    final prev = prevByPath[fresh.path];
+    if (prev == null) continue;
+    if ((fresh.imageBytes == null || fresh.imageBytes!.isEmpty) &&
+        prev.imageBytes != null &&
+        prev.imageBytes!.isNotEmpty) {
+      fresh.imageBytes = prev.imageBytes;
+    }
+    final freshLy = fresh.lyrics?.trim() ?? '';
+    final prevLy = prev.lyrics?.trim() ?? '';
+    if (freshLy.isEmpty && prevLy.isNotEmpty) {
+      fresh.lyrics = prev.lyrics;
+    }
+  }
+}
+
 class FolderProvider extends ChangeNotifier {
   //main 里调用了 ..init()，也不能保证 UI 构建时 _box 已经就绪。
   late Box<Folder>? _box;
@@ -143,7 +169,12 @@ class FolderProvider extends ChangeNotifier {
       if (songFiles.isNotEmpty) {
         appLog.d('目录已扫描: ${dir.path} → ${songlist.length} 首');
       }
-      
+
+      mergeEmbeddedFieldsFromPreviousSongList(
+        freshList: songlist,
+        previousList: folder.songList,
+      );
+
       folder.songList = songlist;
       if (save) {
         await folder.save();

@@ -88,7 +88,7 @@ class SongListCover extends StatelessWidget {
       height: size,
       fit: BoxFit.cover,
       filterQuality: FilterQuality.low,
-      gaplessPlayback: false,
+      gaplessPlayback: true,
       errorBuilder: (context, error, stackTrace) {
         return ColoredBox(
           color: songListCoverPlaceholderColor(),

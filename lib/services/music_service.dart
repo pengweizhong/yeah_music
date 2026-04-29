@@ -11,7 +11,9 @@ import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
+import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 
 int _coverContentFingerprint(List<int> bytes) {
@@ -287,7 +289,10 @@ class MusicService {
             song,
             loadEmbeddedAlbumArt: true,
             storeLyricsWithTrack: wantLyrics,
+            maxEmbeddedArtBytes: SongLibraryMetadataHydrator.maxEmbeddedArtBytes,
           );
+          ApplicationUtils.evictSongCoverProvidersForPath(song.path);
+          scheduleEmbeddedSongMetadataPersist(song);
         } catch (_) {}
       } else if (wantLyrics &&
           (song.lyrics == null || song.lyrics!.trim().isEmpty)) {
@@ -297,6 +302,7 @@ class MusicService {
             loadEmbeddedAlbumArt: false,
             storeLyricsWithTrack: true,
           );
+          scheduleEmbeddedSongMetadataPersist(song);
         } catch (_) {}
       }
       if (abortIfStaleGeneration != null &&

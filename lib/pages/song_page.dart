@@ -1646,6 +1646,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         devicePixelRatio: dpr,
       ),
       fit: BoxFit.cover,
+      gaplessPlayback: true,
     );
     if (side != null) {
       return SizedBox(

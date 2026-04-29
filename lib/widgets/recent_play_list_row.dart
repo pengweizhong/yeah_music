@@ -56,7 +56,7 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
   }
 
   void _onRowVisibilityChanged(VisibilityInfo info) {
-    if (!mounted || info.visibleFraction < 0.06) return;
+    if (!mounted || info.visibleFraction < 0.12) return;
     _hydrateAfterLayout();
   }
 
