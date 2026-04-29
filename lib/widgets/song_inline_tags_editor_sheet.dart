@@ -22,9 +22,13 @@ Future<void> showSongInlineTagsEditorSheet({
     backgroundColor: Colors.transparent,
     builder: (sheetContext) {
       final mq = MediaQuery.of(sheetContext);
-      final maxSheetHeight = mq.size.height * 0.92;
-      return Padding(
-        padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
+      final bottomInset = mq.viewInsets.bottom;
+      final visibleHeight = mq.size.height - bottomInset;
+      final maxSheetHeight = visibleHeight * 0.92;
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(bottom: bottomInset),
         child: FrostedGlassBottomSheet(
           child: Theme(
             data: frostedBottomSheetContentTheme(sheetContext),
@@ -223,11 +227,15 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final scrollBottomPad = 16.0 + (bottomInset > 0 ? 8.0 : 0.0);
     return SafeArea(
       top: false,
+      bottom: false,
+      maintainBottomViewPadding: false,
       child: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: EdgeInsets.fromLTRB(16, 8, 16, scrollBottomPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -337,6 +345,7 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
               maxLines: 6,
               minLines: 3,
               enabled: !_saving,
+              scrollPadding: EdgeInsets.only(bottom: bottomInset + 96),
             ),
             const SizedBox(height: 16),
             FilledButton(

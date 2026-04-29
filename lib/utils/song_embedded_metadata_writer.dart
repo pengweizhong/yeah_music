@@ -1,8 +1,11 @@
 import 'dart:io';
 
-import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:audio_metadata_reader/audio_metadata_reader.dart'
+    show CommonMetadataSetters, MetadataParserException, readAllMetadata;
+import 'package:yeah_music/third_party/audio_metadata_reader/write_metadata_with_lyrics.dart';
 
 /// 使用 [audio_metadata_reader] 将常见字段写回音频文件内嵌标签。
+/// MP3 / FLAC 会通过补丁写入 USLT / Vorbis LYRICS，便于再次读取歌词。
 /// 支持格式以库为准（通常为 MP3 / FLAC / M4A 等）；不支持时会抛出 [MetadataParserException]。
 Future<void> writeEmbeddedTagsForPath({
   required String path,
@@ -21,17 +24,17 @@ Future<void> writeEmbeddedTagsForPath({
     throw FileSystemException('file not found', path);
   }
 
-  updateMetadata(file, (meta) {
-    final nt = title.trim();
-    meta.setTitle(nt.isEmpty ? null : nt);
-    meta.setArtist(_trimOrNull(artist));
-    meta.setAlbum(_trimOrNull(album));
-    meta.setYear(year);
-    meta.setTrackNumber(trackNumber);
-    meta.setTrackTotal(trackTotal);
-    meta.setCD(discNumber, totalDisc);
-    meta.setLyrics(_trimOrNull(lyrics));
-  });
+  final meta = readAllMetadata(file);
+  final nt = title.trim();
+  meta.setTitle(nt.isEmpty ? null : nt);
+  meta.setArtist(_trimOrNull(artist));
+  meta.setAlbum(_trimOrNull(album));
+  meta.setYear(year);
+  meta.setTrackNumber(trackNumber);
+  meta.setTrackTotal(trackTotal);
+  meta.setCD(discNumber, totalDisc);
+  meta.setLyrics(_trimOrNull(lyrics));
+  writeMetadataWithLyricsFix(file, meta);
 }
 
 String? _trimOrNull(String? s) {
