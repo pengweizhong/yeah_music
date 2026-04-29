@@ -71,6 +71,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
         widget.song.title ?? widget.song.path.split('/').last;
 
     final scheme = Theme.of(context).colorScheme;
+    final maxListHeight = MediaQuery.sizeOf(context).height * 0.52;
 
     return SafeArea(
       child: Column(
@@ -143,22 +144,25 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
               ],
             ),
           ),
-          Flexible(
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxListHeight),
             child: playlists.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        l10n.addToPlaylistNoPlaylistsYet,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
+                ? SizedBox(
+                    height: 120,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          l10n.addToPlaylistNoPlaylistsYet,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   )
                 : ListView.builder(
-                    shrinkWrap: true,
                     itemCount: playlists.length,
                     itemBuilder: (context, index) {
                       final pl = playlists[index];
