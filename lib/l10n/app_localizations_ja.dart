@@ -1143,10 +1143,33 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songPageMoreEditMusicTagsExternal => '外部アプリでタグを編集…';
 
   @override
-  String get songPageMoreEditLyricsExternal => '外部アプリで歌詞を編集…';
+  String get songPageMoreEditLyricsExternal => 'SyncedLyricEditor で編集…';
 
   @override
-  String get songPageMoreExternalEditorComing => '外部エディタ連携は今後のバージョンで対応予定です。';
+  String get songPageSyncedLyricEditorNotInstalled =>
+      'SyncedLyric Editor が未インストールのため開けません。';
+
+  @override
+  String get songPageSyncedLyricEditorLaunchFailed =>
+      'SyncedLyric Editor を開けませんでした。';
+
+  @override
+  String get songPageMusicTagEditorUnsupportedPlatform =>
+      '外部でのタグ編集は Android のみ対応です。';
+
+  @override
+  String get songPageMusicTagEditorFileNotFound => '音声ファイルが見つかりません。';
+
+  @override
+  String get songPageMusicTagEditorNotInstalled =>
+      'Music Tag Editor が未インストールのため開けません。';
+
+  @override
+  String get songPageMusicTagEditorCannotSharePath => 'この場所から他アプリで開けません。';
+
+  @override
+  String get songPageMusicTagEditorLaunchFailed =>
+      'Music Tag Editor を開けませんでした。';
 
   @override
   String get songPageMetadataDialogTitle => 'オーディオのメタデータ';

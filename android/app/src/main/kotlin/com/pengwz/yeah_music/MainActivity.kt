@@ -5,11 +5,17 @@ import android.os.Bundle
 import android.view.KeyEvent
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
 import com.ryanheise.audioservice.AudioServicePlugin
+import io.flutter.embedding.engine.FlutterEngine
 
 /// 供 OAuth 自定义 scheme（如 OneDrive）从浏览器返回时把 Intent 交给 AppAuth，
 /// 避免因 [singleTop] 未更新 Activity intent 而无法完成令牌交换。
 /// 继承 [AudioServiceFragmentActivity] 以支持 just_audio_background / 车载与锁屏媒体控制。
 class MainActivity : AudioServiceFragmentActivity() {
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        MusicTagEditorBridge.register(this, flutterEngine)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {

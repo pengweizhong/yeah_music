@@ -1127,10 +1127,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songPageMoreEditMusicTagsExternal => '使用音乐标签编辑…';
 
   @override
-  String get songPageMoreEditLyricsExternal => '使用 Lyrics 编辑…';
+  String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 编辑…';
 
   @override
-  String get songPageMoreExternalEditorComing => '打开第三方编辑器将在后续版本支持。';
+  String get songPageSyncedLyricEditorNotInstalled =>
+      '未安装 SyncedLyric Editor，无法跳转编辑。';
+
+  @override
+  String get songPageSyncedLyricEditorLaunchFailed =>
+      '无法打开 SyncedLyric Editor。';
+
+  @override
+  String get songPageMusicTagEditorUnsupportedPlatform =>
+      '外部标签编辑仅在 Android 上可用。';
+
+  @override
+  String get songPageMusicTagEditorFileNotFound => '未找到音频文件。';
+
+  @override
+  String get songPageMusicTagEditorNotInstalled =>
+      '未安装 Music Tag Editor，无法跳转编辑。';
+
+  @override
+  String get songPageMusicTagEditorCannotSharePath => '无法从当前路径向其它应用打开该文件。';
+
+  @override
+  String get songPageMusicTagEditorLaunchFailed => '无法打开 Music Tag Editor。';
 
   @override
   String get songPageMetadataDialogTitle => '音频元信息';
@@ -2937,10 +2959,32 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get songPageMoreEditMusicTagsExternal => '使用音乐标签编辑…';
 
   @override
-  String get songPageMoreEditLyricsExternal => '使用 Lyrics 编辑…';
+  String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 编辑…';
 
   @override
-  String get songPageMoreExternalEditorComing => '打开第三方编辑器将在后续版本支持。';
+  String get songPageSyncedLyricEditorNotInstalled =>
+      '未安装 SyncedLyric Editor，无法跳转编辑。';
+
+  @override
+  String get songPageSyncedLyricEditorLaunchFailed =>
+      '无法打开 SyncedLyric Editor。';
+
+  @override
+  String get songPageMusicTagEditorUnsupportedPlatform =>
+      '外部标签编辑仅在 Android 上可用。';
+
+  @override
+  String get songPageMusicTagEditorFileNotFound => '未找到音频文件。';
+
+  @override
+  String get songPageMusicTagEditorNotInstalled =>
+      '未安装 Music Tag Editor，无法跳转编辑。';
+
+  @override
+  String get songPageMusicTagEditorCannotSharePath => '无法从当前路径向其它应用打开该文件。';
+
+  @override
+  String get songPageMusicTagEditorLaunchFailed => '无法打开 Music Tag Editor。';
 
   @override
   String get songPageMetadataDialogTitle => '音频元信息';
@@ -4747,10 +4791,32 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get songPageMoreEditMusicTagsExternal => '使用音樂標籤編輯…';
 
   @override
-  String get songPageMoreEditLyricsExternal => '使用 Lyrics 編輯…';
+  String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 編輯…';
 
   @override
-  String get songPageMoreExternalEditorComing => '開啟第三方編輯器將在後續版本支援。';
+  String get songPageSyncedLyricEditorNotInstalled =>
+      '未安裝 SyncedLyric Editor，無法跳轉編輯。';
+
+  @override
+  String get songPageSyncedLyricEditorLaunchFailed =>
+      '無法開啟 SyncedLyric Editor。';
+
+  @override
+  String get songPageMusicTagEditorUnsupportedPlatform =>
+      '外部標籤編輯僅在 Android 上可用。';
+
+  @override
+  String get songPageMusicTagEditorFileNotFound => '找不到音訊檔案。';
+
+  @override
+  String get songPageMusicTagEditorNotInstalled =>
+      '未安裝 Music Tag Editor，無法跳轉編輯。';
+
+  @override
+  String get songPageMusicTagEditorCannotSharePath => '無法從目前路徑向其它應用程式開啟該檔案。';
+
+  @override
+  String get songPageMusicTagEditorLaunchFailed => '無法開啟 Music Tag Editor。';
 
   @override
   String get songPageMetadataDialogTitle => '音訊元資訊';

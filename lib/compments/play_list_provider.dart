@@ -718,4 +718,9 @@ class PlayListProvider extends ChangeNotifier {
     }
     return 0;
   }
+
+  /// 外部编辑器等改写磁盘文件后 [Song] 内存字段已在别处刷新，通知迷你条/列表等刷新。
+  void notifySongMetadataChangedRemote() {
+    notifyListeners();
+  }
 }

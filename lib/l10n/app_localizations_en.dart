@@ -1188,11 +1188,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPageMoreEditMusicTagsExternal => 'Edit tags in external app…';
 
   @override
-  String get songPageMoreEditLyricsExternal => 'Edit lyrics in external app…';
+  String get songPageMoreEditLyricsExternal => 'Edit with SyncedLyricEditor…';
 
   @override
-  String get songPageMoreExternalEditorComing =>
-      'Opening external editors will be supported in a future update.';
+  String get songPageSyncedLyricEditorNotInstalled =>
+      'SyncedLyric Editor is not installed.';
+
+  @override
+  String get songPageSyncedLyricEditorLaunchFailed =>
+      'Could not open SyncedLyric Editor.';
+
+  @override
+  String get songPageMusicTagEditorUnsupportedPlatform =>
+      'External tag editing is only available on Android.';
+
+  @override
+  String get songPageMusicTagEditorFileNotFound => 'Audio file not found.';
+
+  @override
+  String get songPageMusicTagEditorNotInstalled =>
+      'Music Tag Editor is not installed.';
+
+  @override
+  String get songPageMusicTagEditorCannotSharePath =>
+      'This file cannot be opened from its current location.';
+
+  @override
+  String get songPageMusicTagEditorLaunchFailed =>
+      'Could not open Music Tag Editor.';
 
   @override
   String get songPageMetadataDialogTitle => 'Audio metadata';

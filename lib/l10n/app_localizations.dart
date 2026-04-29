@@ -2223,14 +2223,50 @@ abstract class AppLocalizations {
   /// No description provided for @songPageMoreEditLyricsExternal.
   ///
   /// In en, this message translates to:
-  /// **'Edit lyrics in external app…'**
+  /// **'Edit with SyncedLyricEditor…'**
   String get songPageMoreEditLyricsExternal;
 
-  /// No description provided for @songPageMoreExternalEditorComing.
+  /// No description provided for @songPageSyncedLyricEditorNotInstalled.
   ///
   /// In en, this message translates to:
-  /// **'Opening external editors will be supported in a future update.'**
-  String get songPageMoreExternalEditorComing;
+  /// **'SyncedLyric Editor is not installed.'**
+  String get songPageSyncedLyricEditorNotInstalled;
+
+  /// No description provided for @songPageSyncedLyricEditorLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open SyncedLyric Editor.'**
+  String get songPageSyncedLyricEditorLaunchFailed;
+
+  /// No description provided for @songPageMusicTagEditorUnsupportedPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'External tag editing is only available on Android.'**
+  String get songPageMusicTagEditorUnsupportedPlatform;
+
+  /// No description provided for @songPageMusicTagEditorFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file not found.'**
+  String get songPageMusicTagEditorFileNotFound;
+
+  /// No description provided for @songPageMusicTagEditorNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Tag Editor is not installed.'**
+  String get songPageMusicTagEditorNotInstalled;
+
+  /// No description provided for @songPageMusicTagEditorCannotSharePath.
+  ///
+  /// In en, this message translates to:
+  /// **'This file cannot be opened from its current location.'**
+  String get songPageMusicTagEditorCannotSharePath;
+
+  /// No description provided for @songPageMusicTagEditorLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Music Tag Editor.'**
+  String get songPageMusicTagEditorLaunchFailed;
 
   /// No description provided for @songPageMetadataDialogTitle.
   ///

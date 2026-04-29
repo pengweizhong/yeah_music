@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider：供外部应用（如 Music Tag Editor）通过 content:// 读取当前曲目文件 -->
+<paths>
+    <external-path name="external_storage" path="." />
+    <files-path name="internal_files" path="." />
+    <cache-path name="cache" path="." />
+</paths>

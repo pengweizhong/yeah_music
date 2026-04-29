@@ -67,6 +67,17 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- 将音频文件以 content:// 分享给外部标签编辑器 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -84,5 +95,8 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="https" />
         </intent>
+        <!-- Android 11+ 包可见性：显式启动外部音频 / 歌词编辑器 -->
+        <package android:name="com.xjcheng.musictageditor" />
+        <package android:name="lyriceditor.lyricsearch.embedlyrictomp3.syncedlyriceditor" />
     </queries>
 </manifest>

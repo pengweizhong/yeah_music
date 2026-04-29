@@ -228,4 +228,9 @@ class FolderProvider extends ChangeNotifier {
   Future<bool> existFolder(Box box, String folder) async {
     return box.values.any((f) => f.path == folder);
   }
+
+  /// 外部工具改写曲目文件后 [Song] 已更新（Hive），通知目录列表等 UI。
+  void notifySongMetadataChangedRemote() {
+    notifyListeners();
+  }
 }

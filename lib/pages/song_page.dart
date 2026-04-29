@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +20,10 @@ import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/services/music_tag_editor_launcher.dart';
+import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
@@ -51,7 +56,7 @@ class SongPage extends StatefulWidget {
   }
 }
 
-class _SongPageState extends State<SongPage> {
+class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   List<LyricEntry> _lyrics = [];
   List<GlobalKey> _lyricKeys = [];
   int _currentLyricIndex = -1;
@@ -94,6 +99,9 @@ class _SongPageState extends State<SongPage> {
   /// 播放页保持屏幕常亮（偏好持久化于 Hive）
   bool _keepScreenAwake = false;
 
+  /// 已成功跳转外部音频编辑器（标签 / 歌词）；回到前台后对该路径重新 [FileUtils.loadSongMeta]。
+  String? _pendingExternalAudioReloadPath;
+
   // 手动滚动控制
   bool _isManualScrolling = false;
   Timer? _scrollTimer;
@@ -111,6 +119,17 @@ class _SongPageState extends State<SongPage> {
     _listenToPlayer();
     unawaited(_loadKeepAwakePreference());
     _initPostFrame();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state != AppLifecycleState.resumed) return;
+    final pending = _pendingExternalAudioReloadPath;
+    if (pending == null || pending.isEmpty) return;
+    _pendingExternalAudioReloadPath = null;
+    unawaited(_reloadSongMetaAfterExternalMusicTagEdit(pending));
   }
 
   @override
@@ -286,6 +305,7 @@ class _SongPageState extends State<SongPage> {
 
   @override
   void dispose() {
+    _pendingExternalAudioReloadPath = null;
     unawaited(WakelockPlus.disable());
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
@@ -296,7 +316,61 @@ class _SongPageState extends State<SongPage> {
     _scrollTimer?.cancel();
     // 延迟保存设置，避免在dispose时访问已关闭的box
     Future.microtask(() => _saveSettings());
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// 与 [SongLibraryMetadataHydrator] 内嵌封面大小上限一致。
+  static const int _songMetaReloadMaxEmbeddedArtBytes = 512 * 1024;
+
+  /// 外部编辑器改写磁盘文件后，刷新 Hive / UI / 媒体通知。
+  Future<void> _reloadSongMetaAfterExternalMusicTagEdit(String path) async {
+    final folder = Provider.of<FolderProvider>(context, listen: false);
+    final play = Provider.of<PlayListProvider>(context, listen: false);
+
+    SongLibraryMetadataHydrator.invalidatePath(path);
+
+    Future<void> loadInto(Song s) async {
+      await FileUtils.loadSongMeta(
+        s,
+        loadEmbeddedAlbumArt: true,
+        storeLyricsWithTrack: true,
+        maxEmbeddedArtBytes: _songMetaReloadMaxEmbeddedArtBytes,
+      );
+      try {
+        await s.save();
+      } catch (_) {}
+      ApplicationUtils.evictSongCoverProvidersForPath(s.path);
+    }
+
+    final touched = <Song>{};
+    for (final f in folder.folders) {
+      final list = f.songList;
+      if (list == null) continue;
+      for (final s in list) {
+        if (!songPathsEqual(s.path, path)) continue;
+        if (!touched.add(s)) continue;
+        await loadInto(s);
+      }
+    }
+    for (final s in play.playList) {
+      if (!songPathsEqual(s.path, path)) continue;
+      if (!touched.add(s)) continue;
+      await loadInto(s);
+    }
+
+    if (!mounted) return;
+    folder.notifySongMetadataChangedRemote();
+    play.notifySongMetadataChangedRemote();
+    final cur = play.currentSong;
+    if (cur != null && songPathsEqual(cur.path, path)) {
+      setState(() {
+        _lyricsHydratedForPath = null;
+      });
+      _applySongLyrics(cur);
+      _updateDuration();
+      unawaited(MusicService.pushAndroidNotificationForSong(cur));
+    }
   }
 
   /// 用于 [ScrollController.initialScrollOffset]，使首帧即接近当前行，避免先整屏从顶再跳
@@ -1117,11 +1191,92 @@ class _SongPageState extends State<SongPage> {
     }
   }
 
-  void _showExternalEditorComingSnack(BuildContext context) {
+  Future<void> _openMusicTagEditorExternal(BuildContext context, Song song) async {
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.songPageMoreExternalEditorComing)),
-    );
+    final path = song.path.trim();
+    if (path.isEmpty) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMusicTagEditorFileNotFound)),
+      );
+      return;
+    }
+    if (!Platform.isAndroid) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMusicTagEditorUnsupportedPlatform)),
+      );
+      return;
+    }
+    try {
+      final status = await MusicTagEditorLauncher.openMusicTagEditor(path);
+      if (!context.mounted) return;
+      final String? msg = switch (status) {
+        'ok' => null,
+        'activity_not_found' => l10n.songPageMusicTagEditorNotInstalled,
+        'file_not_found' => l10n.songPageMusicTagEditorFileNotFound,
+        'cannot_share_path' => l10n.songPageMusicTagEditorCannotSharePath,
+        'invalid_args' => l10n.songPageMusicTagEditorLaunchFailed,
+        null => l10n.songPageMusicTagEditorLaunchFailed,
+        _ => l10n.songPageMusicTagEditorLaunchFailed,
+      };
+      if (msg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        _pendingExternalAudioReloadPath = path;
+      }
+    } on MissingPluginException {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMusicTagEditorLaunchFailed)),
+      );
+    }
+  }
+
+  Future<void> _openSyncedLyricEditorExternal(BuildContext context, Song song) async {
+    final l10n = AppLocalizations.of(context);
+    final path = song.path.trim();
+    if (path.isEmpty) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMusicTagEditorFileNotFound)),
+      );
+      return;
+    }
+    if (!Platform.isAndroid) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageMusicTagEditorUnsupportedPlatform)),
+      );
+      return;
+    }
+    try {
+      final status = await MusicTagEditorLauncher.openSyncedLyricEditor(path);
+      if (!context.mounted) return;
+      final String? msg = switch (status) {
+        'ok' => null,
+        'activity_not_found' => l10n.songPageSyncedLyricEditorNotInstalled,
+        'file_not_found' => l10n.songPageMusicTagEditorFileNotFound,
+        'cannot_share_path' => l10n.songPageMusicTagEditorCannotSharePath,
+        'invalid_args' => l10n.songPageSyncedLyricEditorLaunchFailed,
+        null => l10n.songPageSyncedLyricEditorLaunchFailed,
+        _ => l10n.songPageSyncedLyricEditorLaunchFailed,
+      };
+      if (msg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        _pendingExternalAudioReloadPath = path;
+      }
+    } on MissingPluginException {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.songPageSyncedLyricEditorLaunchFailed)),
+      );
+    }
   }
 
   Future<void> _confirmDeleteCurrentSong(BuildContext context, Song song) async {
@@ -1281,7 +1436,7 @@ class _SongPageState extends State<SongPage> {
                               Navigator.pop(sheetContext);
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 if (!mounted) return;
-                                _showExternalEditorComingSnack(navigatorContext);
+                                _openMusicTagEditorExternal(navigatorContext, song);
                               });
                             },
                           ),
@@ -1292,7 +1447,7 @@ class _SongPageState extends State<SongPage> {
                               Navigator.pop(sheetContext);
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 if (!mounted) return;
-                                _showExternalEditorComingSnack(navigatorContext);
+                                _openSyncedLyricEditorExternal(navigatorContext, song);
                               });
                             },
                           ),
