@@ -1994,21 +1994,38 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
 
   late final ScrollController _queueScroll;
   late int _lastHeardIndex;
+  int? _playerMediaIndex;
+  StreamSubscription<int?>? _playerQueueIndexSub;
 
   @override
   void initState() {
     super.initState();
-    _lastHeardIndex = widget.provider.currentIndex;
+    _playerMediaIndex = MusicService.currentIndex;
+    _lastHeardIndex = _displayCurrentIndex(widget.provider);
     final list = widget.provider.playList;
     final n = list.length;
     final i = n == 0
         ? 0
-        : widget.provider.currentIndex.clamp(0, n - 1);
+        : _displayCurrentIndex(widget.provider).clamp(0, n - 1);
     // 首帧即接近目标行，避免从 0 全量再 jump 造成一帧大布局与多帧重排
     _queueScroll = ScrollController(
       initialScrollOffset: i * _kQueueItemExtent,
     );
     widget.provider.addListener(_onProviderChanged);
+    _playerQueueIndexSub =
+        MusicService.currentMediaIndexStream.listen((int? i) {
+      if (!mounted) return;
+      final before = _displayCurrentIndex(widget.provider,
+          playerIdxOverride: _playerMediaIndex);
+      setState(() => _playerMediaIndex = i);
+      if (!MusicService.androidCarQueueActive) return;
+      final after =
+          _displayCurrentIndex(widget.provider, playerIdxOverride: i);
+      if (after != before) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _refineQueueScroll(animated: true));
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refineQueueScroll(animated: false);
     });
@@ -2016,6 +2033,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
 
   @override
   void dispose() {
+    _playerQueueIndexSub?.cancel();
     widget.provider.removeListener(_onProviderChanged);
     _queueScroll.dispose();
     super.dispose();
@@ -2023,7 +2041,8 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
 
   void _onProviderChanged() {
     if (!mounted) return;
-    final idx = widget.provider.currentIndex;
+    final p = widget.provider;
+    final idx = _displayCurrentIndex(p);
     final indexMoved = idx != _lastHeardIndex;
     _lastHeardIndex = idx;
     setState(() {});
@@ -2031,6 +2050,19 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
       WidgetsBinding.instance
           .addPostFrameCallback((_) => _refineQueueScroll(animated: true));
     }
+  }
+
+  /// Android 车载整队列时以播放器当前段索引为准，否则以 [PlayListProvider.currentIndex] 为准。
+  int _displayCurrentIndex(PlayListProvider p, {int? playerIdxOverride}) {
+    final listLen = p.playList.length;
+    if (listLen <= 0) return 0;
+    final playerIdx = playerIdxOverride ?? _playerMediaIndex;
+    if (MusicService.androidCarQueueActive) {
+      if (playerIdx != null && playerIdx >= 0 && playerIdx < listLen) {
+        return playerIdx;
+      }
+    }
+    return p.currentIndex.clamp(0, listLen - 1);
   }
 
   /// 定高行 + [itemExtent]，与 [_kQueueItemExtent] 一致
@@ -2041,7 +2073,8 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     if (!_queueScroll.hasClients) return;
     final list = widget.provider.playList;
     if (list.isEmpty) return;
-    final i = widget.provider.currentIndex.clamp(0, list.length - 1);
+    final i = _displayCurrentIndex(widget.provider)
+        .clamp(0, list.length - 1);
     final pos = _queueScroll.position;
     final rowTop = _rowTopForIndex(i);
     final viewH = pos.viewportDimension;
@@ -2098,7 +2131,8 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
             itemCount: list.length,
             itemBuilder: (context, index) {
               final s = list[index];
-              final isCurrent = index == provider.currentIndex;
+              final cur = _displayCurrentIndex(provider);
+              final isCurrent = index == cur;
               return Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
@@ -2156,7 +2190,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                 ),
                               ),
                               if (isCurrent)
-                                PlayingBarsIndicator(color: primary),
+                                ListRowPlayingIndicator(color: primary),
                             ],
                           ),
                         ),
