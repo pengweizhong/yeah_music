@@ -118,6 +118,21 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
 
   bool get hasRecordedTasks => _tasks.isNotEmpty;
 
+  bool get hasDownloadTasks => _tasks.any((t) => !t.isUpload);
+
+  bool get hasUploadTasks => _tasks.any((t) => t.isUpload);
+
+  static void _taskBackToPending(OneDriveDownloadTask t) {
+    t.status = OneDriveDownloadStatus.pending;
+    t.error = null;
+    t.receivedBytes = 0;
+    t.totalBytes = null;
+    t.startedDownloadingAt = null;
+    if (t.isUpload) {
+      t.song = null;
+    }
+  }
+
   void pause() {
     _sessionPaused = true;
     notifyListeners();
@@ -348,6 +363,38 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     _tasks.clear();
     notifyListeners();
     await SettingsService.saveOneDriveDownloadQueueHistory([]);
+  }
+
+  /// 仅移除下载类任务；中止时会顺带取消队列尾部，故将仍保留的上传中「已取消」复位为待处理。
+  Future<void> clearDownloadTasksOnly() async {
+    if (!hasDownloadTasks) return;
+    await _abortRunningWorkerIfNeeded();
+    resetStopFlags();
+    _tasks.removeWhere((t) => !t.isUpload);
+    for (final t in _tasks) {
+      if (t.isUpload && t.status == OneDriveDownloadStatus.cancelled) {
+        _taskBackToPending(t);
+      }
+    }
+    notifyListeners();
+    await SettingsService.saveOneDriveDownloadQueueHistory(_tasksToPersistMaps());
+    _ensureWorkerRunning();
+  }
+
+  /// 仅移除上传类任务；中止后将仍保留的下载中「已取消」复位为待处理。
+  Future<void> clearUploadTasksOnly() async {
+    if (!hasUploadTasks) return;
+    await _abortRunningWorkerIfNeeded();
+    resetStopFlags();
+    _tasks.removeWhere((t) => t.isUpload);
+    for (final t in _tasks) {
+      if (!t.isUpload && t.status == OneDriveDownloadStatus.cancelled) {
+        _taskBackToPending(t);
+      }
+    }
+    notifyListeners();
+    await SettingsService.saveOneDriveDownloadQueueHistory(_tasksToPersistMaps());
+    _ensureWorkerRunning();
   }
 
   /// 后台追加云端曲目。

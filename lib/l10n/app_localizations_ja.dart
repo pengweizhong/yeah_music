@@ -720,6 +720,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveDownloadClearHistory => '履歴を消去';
 
   @override
+  String get oneDriveTransferClearDownloadsList => 'ダウンロード一覧をクリア';
+
+  @override
+  String get oneDriveTransferClearUploadsList => 'アップロード一覧をクリア';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive エラー：$message';
   }

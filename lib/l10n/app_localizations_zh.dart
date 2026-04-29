@@ -706,6 +706,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveDownloadClearHistory => '清空记录';
 
   @override
+  String get oneDriveTransferClearDownloadsList => '清空下载列表';
+
+  @override
+  String get oneDriveTransferClearUploadsList => '清空上传列表';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive 错误：$message';
   }
@@ -2405,6 +2411,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveDownloadClearHistory => '清空记录';
 
   @override
+  String get oneDriveTransferClearDownloadsList => '清空下载列表';
+
+  @override
+  String get oneDriveTransferClearUploadsList => '清空上传列表';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive 错误：$message';
   }
@@ -4102,6 +4114,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveDownloadClearHistory => '清空紀錄';
+
+  @override
+  String get oneDriveTransferClearDownloadsList => '清空下載列表';
+
+  @override
+  String get oneDriveTransferClearUploadsList => '清空上傳列表';
 
   @override
   String oneDriveError(String message) {

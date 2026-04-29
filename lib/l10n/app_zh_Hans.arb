@@ -251,6 +251,8 @@
   },
   "oneDriveDownloadViewQueue": "查看队列",
   "oneDriveDownloadClearHistory": "清空记录",
+  "oneDriveTransferClearDownloadsList": "清空下载列表",
+  "oneDriveTransferClearUploadsList": "清空上传列表",
   "oneDriveError": "OneDrive 错误：{message}",
   "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
   "oneDriveUp": "上级",

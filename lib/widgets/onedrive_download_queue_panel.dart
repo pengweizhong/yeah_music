@@ -68,10 +68,12 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
           if (tasks.isEmpty) {
             return Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(
-                emptyMessage,
-                style: const TextStyle(color: Colors.white54, height: 1.45),
-                textAlign: TextAlign.center,
+              child: Center(
+                child: Text(
+                  emptyMessage,
+                  style: const TextStyle(color: Colors.white54, height: 1.45),
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
@@ -89,57 +91,60 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
           );
         }
 
-        final listArea = maxListHeight != null
+        final Widget listArea = maxListHeight != null
             ? ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxListHeight!),
                 child: buildList(),
               )
             : Expanded(child: buildList());
 
+        final resumeStale = ctrl.canResumeStaleTasks && !ctrl.canStopDownloads;
+        final stopTooltip = resumeStale
+            ? l10n.oneDriveDownloadContinueAll
+            : l10n.oneDriveDownloadStopAll;
+        final stopIcon = resumeStale ? Icons.play_arrow_rounded : Icons.stop_rounded;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: maxListHeight != null ? MainAxisSize.min : MainAxisSize.max,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: ctrl.canPauseDownloads ? ctrl.pause : null,
-                      icon: const Icon(Icons.pause_rounded, size: 20),
-                      label: Text(l10n.oneDriveDownloadPause),
+                  IconButton.outlined(
+                    icon: const Icon(Icons.pause_rounded, size: 22),
+                    tooltip: l10n.oneDriveDownloadPause,
+                    onPressed: ctrl.canPauseDownloads ? ctrl.pause : null,
+                    style: IconButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0x66FFFFFF)),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: ctrl.canResumeDownloads ? ctrl.resume : null,
-                      icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                      label: Text(l10n.oneDriveDownloadResume),
+                  IconButton.outlined(
+                    icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                    tooltip: l10n.oneDriveDownloadResume,
+                    onPressed: ctrl.canResumeDownloads ? ctrl.resume : null,
+                    style: IconButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0x66FFFFFF)),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: ctrl.canStopDownloads
-                          ? ctrl.requestStop
-                          : ctrl.canResumeStaleTasks
-                              ? ctrl.resumeStaleTasks
-                              : null,
-                      icon: Icon(
-                        ctrl.canResumeStaleTasks && !ctrl.canStopDownloads
-                            ? Icons.play_arrow_rounded
-                            : Icons.stop_rounded,
-                        size: 20,
-                      ),
-                      label: Text(
-                        ctrl.canResumeStaleTasks && !ctrl.canStopDownloads
-                            ? l10n.oneDriveDownloadContinueAll
-                            : l10n.oneDriveDownloadStopAll,
-                      ),
+                  IconButton.filled(
+                    icon: Icon(stopIcon, size: 22),
+                    tooltip: stopTooltip,
+                    onPressed: ctrl.canStopDownloads
+                        ? ctrl.requestStop
+                        : ctrl.canResumeStaleTasks
+                            ? ctrl.resumeStaleTasks
+                            : null,
+                    style: IconButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.22),
                     ),
                   ),
+                  _clearListIconButton(ctrl, l10n, taskFilter),
                 ],
               ),
             ),
@@ -157,23 +162,50 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
                 ),
               ),
             listArea,
-            if (ctrl.hasRecordedTasks)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                child: TextButton.icon(
-                  onPressed: () async {
-                    await ctrl.clearDownloadHistory();
-                  },
-                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.white54, size: 20),
-                  label: Text(
-                    l10n.oneDriveDownloadClearHistory,
-                    style: const TextStyle(color: Colors.white54, fontSize: 13),
-                  ),
-                ),
-              ),
           ],
         );
       },
     );
   }
+}
+
+Widget _clearListIconButton(
+  OneDriveDownloadQueueController ctrl,
+  AppLocalizations l10n,
+  OneDriveQueuePanelTaskFilter filter,
+) {
+  late final bool enabled;
+  late final String tooltip;
+  late final Future<void> Function() onClear;
+
+  switch (filter) {
+    case OneDriveQueuePanelTaskFilter.downloadsOnly:
+      enabled = ctrl.hasDownloadTasks;
+      tooltip = l10n.oneDriveTransferClearDownloadsList;
+      onClear = ctrl.clearDownloadTasksOnly;
+      break;
+    case OneDriveQueuePanelTaskFilter.uploadsOnly:
+      enabled = ctrl.hasUploadTasks;
+      tooltip = l10n.oneDriveTransferClearUploadsList;
+      onClear = ctrl.clearUploadTasksOnly;
+      break;
+    case OneDriveQueuePanelTaskFilter.all:
+      enabled = ctrl.hasRecordedTasks;
+      tooltip = l10n.oneDriveDownloadClearHistory;
+      onClear = ctrl.clearDownloadHistory;
+      break;
+  }
+
+  final color =
+      enabled ? Colors.white70 : Colors.white.withValues(alpha: 0.28);
+
+  return IconButton(
+    icon: Icon(Icons.delete_outline_rounded, size: 22, color: color),
+    tooltip: tooltip,
+    onPressed: enabled
+        ? () async {
+            await onClear();
+          }
+        : null,
+  );
 }

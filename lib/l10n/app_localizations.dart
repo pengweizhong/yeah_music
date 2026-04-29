@@ -1428,6 +1428,18 @@ abstract class AppLocalizations {
   /// **'Clear history'**
   String get oneDriveDownloadClearHistory;
 
+  /// No description provided for @oneDriveTransferClearDownloadsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear download list'**
+  String get oneDriveTransferClearDownloadsList;
+
+  /// No description provided for @oneDriveTransferClearUploadsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear upload list'**
+  String get oneDriveTransferClearUploadsList;
+
   /// No description provided for @oneDriveError.
   ///
   /// In en, this message translates to:

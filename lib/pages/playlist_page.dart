@@ -443,7 +443,9 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const OneDriveDownloadQueuePage(),
+                  builder: (_) => const OneDriveDownloadQueuePage(
+                    initialTab: OneDriveTransferQueueTab.upload,
+                  ),
                 ),
               );
             },

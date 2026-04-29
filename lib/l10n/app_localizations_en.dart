@@ -754,6 +754,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveDownloadClearHistory => 'Clear history';
 
   @override
+  String get oneDriveTransferClearDownloadsList => 'Clear download list';
+
+  @override
+  String get oneDriveTransferClearUploadsList => 'Clear upload list';
+
+  @override
   String oneDriveError(String message) {
     return 'OneDrive error: $message';
   }

@@ -251,6 +251,8 @@
   },
   "oneDriveDownloadViewQueue": "キューを開く",
   "oneDriveDownloadClearHistory": "履歴を消去",
+  "oneDriveTransferClearDownloadsList": "ダウンロード一覧をクリア",
+  "oneDriveTransferClearUploadsList": "アップロード一覧をクリア",
   "oneDriveError": "OneDrive エラー：{message}",
   "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
   "oneDriveUp": "上へ",

@@ -250,6 +250,8 @@
   },
   "oneDriveDownloadViewQueue": "View queue",
   "oneDriveDownloadClearHistory": "Clear history",
+  "oneDriveTransferClearDownloadsList": "Clear download list",
+  "oneDriveTransferClearUploadsList": "Clear upload list",
   "oneDriveError": "OneDrive error: {message}",
   "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
   "oneDriveUp": "Up",
