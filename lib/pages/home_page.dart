@@ -18,6 +18,8 @@ import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/themes/app_locale_provider.dart';
+import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
@@ -34,6 +36,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/wave_progress_bar.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
@@ -56,6 +59,7 @@ class _HomePageState extends State<HomePage> {
   bool _recentReady = false;
   PlayListProvider? _play;
   QuickEntryConfig _quickEntry = QuickEntryConfig.defaultConfig();
+  bool _homeReloadBusy = false;
 
   @override
   void initState() {
@@ -136,6 +140,43 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _quickEntry = c ?? QuickEntryConfig.defaultConfig();
     });
+  }
+
+  /// 下拉刷新：从本机持久化重新载入主题与选项、用户歌单、快捷入口与最近播放（非网络）。
+  Future<void> _reloadPersistedHomeConfig() async {
+    if (!mounted || _homeReloadBusy) return;
+    final themeConfig = context.read<ThemeConfigProvider>();
+    final themeMode = context.read<AppThemeModeProvider>();
+    final locale = context.read<AppLocaleProvider>();
+    final user = context.read<UserPlaylistProvider>();
+
+    setState(() => _homeReloadBusy = true);
+    try {
+      await Future.wait([
+        themeConfig.reloadFromStorage(),
+        themeMode.reloadFromStorage(),
+        locale.reloadFromStorage(),
+        user.reloadFromHive(),
+        _loadRecentPaths(),
+        _loadQuickEntryConfig(),
+      ]);
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context).homePullRefreshDone,
+        kind: AppSnackKind.success,
+      );
+    } catch (e, st) {
+      appLog.e('首页下拉从本机刷新配置失败', error: e, stackTrace: st);
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context).homePullRefreshFailed(e.toString()),
+        kind: AppSnackKind.error,
+      );
+    } finally {
+      if (mounted) setState(() => _homeReloadBusy = false);
+    }
   }
 
   void _goQuickEntrySettings() {
@@ -321,34 +362,100 @@ class _HomePageState extends State<HomePage> {
                     play.playList.isNotEmpty;
                 final miniBottom =
                     showMini ? MiniPlayer.barHeight : 0.0;
-                return RefreshIndicator(
-                  color: context.gradFg(),
-                  backgroundColor: Theme.of(context).brightness == Brightness.light
-                      ? const Color(0x33000000)
-                      : Colors.black54,
-                  onRefresh: _loadRecentPaths,
-                  child: _HomeScrollBody(
-                    quickEntry: _quickEntry,
-                    safeBottom: MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
-                    greeting: _greeting(context),
-                    play: play,
-                    user: user,
-                    recentSongs: recentSongs,
-                    mostPlayedItems: mostPlayedItems,
-                    mostPlayedRaw: _mostPlayedRaw,
-                    showRecentList: _recentReady,
-                    onOpenLibrary: () => _goLibrary(),
-                    onOpenSearch: () => _goLibrary(openSearch: true),
-                    onOpenStorage: _goStoragePlaylists,
-                    onOpenRecent: _goRecentPlays,
-                    onOpenMostPlayed: _goMostPlayed,
-                    onOpenCloudLibrary: _goCloudLibrary,
-                    onOpenOneDrive: _goOneDrive,
-                    onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
-                    onManageQuickEntry: _goQuickEntrySettings,
-                    onOpenUserPlaylist: _goUserPlaylist,
-                    songSubtitle: _songSecondaryLine,
-                  ),
+                return Stack(
+                  children: [
+                    RefreshIndicator(
+                      color: context.gradFg(),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh
+                          .withValues(alpha: 0.92),
+                      displacement: 52,
+                      strokeWidth: 2.5,
+                      onRefresh: _reloadPersistedHomeConfig,
+                      child: _HomeScrollBody(
+                        quickEntry: _quickEntry,
+                        safeBottom:
+                            MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
+                        greeting: _greeting(context),
+                        play: play,
+                        user: user,
+                        recentSongs: recentSongs,
+                        mostPlayedItems: mostPlayedItems,
+                        mostPlayedRaw: _mostPlayedRaw,
+                        showRecentList: _recentReady,
+                        onOpenLibrary: () => _goLibrary(),
+                        onOpenSearch: () => _goLibrary(openSearch: true),
+                        onOpenStorage: _goStoragePlaylists,
+                        onOpenRecent: _goRecentPlays,
+                        onOpenMostPlayed: _goMostPlayed,
+                        onOpenCloudLibrary: _goCloudLibrary,
+                        onOpenOneDrive: _goOneDrive,
+                        onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
+                        onManageQuickEntry: _goQuickEntrySettings,
+                        onOpenUserPlaylist: _goUserPlaylist,
+                        songSubtitle: _songSecondaryLine,
+                      ),
+                    ),
+                    if (_homeReloadBusy)
+                      Positioned.fill(
+                        child: AbsorbPointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surface
+                                  .withValues(alpha: 0.55),
+                            ),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 36),
+                                child: Material(
+                                  elevation: 8,
+                                  shadowColor:
+                                      Colors.black.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHigh,
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        28, 24, 28, 22),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SizedBox(
+                                          width: 36,
+                                          height: 36,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 3,
+                                            color: context.gradFg(),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          l10n.homePullRefreshingLocal,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                                height: 1.4,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
             ),

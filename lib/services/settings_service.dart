@@ -913,6 +913,8 @@ class SettingsService {
       if (prefs.containsKey('theme_type')) 'theme_type': prefs.getInt('theme_type'),
       if (prefs.containsKey('primary_color')) 'primary_color': prefs.getInt('primary_color'),
       if (prefs.containsKey('secondary_color')) 'secondary_color': prefs.getInt('secondary_color'),
+      if (prefs.containsKey('theme_gradient_direction'))
+        'theme_gradient_direction': prefs.getInt('theme_gradient_direction'),
       if (prefs.containsKey('background_image_path'))
         'background_image_path': prefs.getString('background_image_path'),
       if (prefs.containsKey('background_image_effect'))
@@ -995,6 +997,9 @@ class SettingsService {
     }
     if (app.containsKey('secondary_color')) {
       await setIntPref('secondary_color', app['secondary_color']);
+    }
+    if (app.containsKey('theme_gradient_direction')) {
+      await setIntPref('theme_gradient_direction', app['theme_gradient_direction']);
     }
     if (app.containsKey('background_image_path')) {
       final v = app['background_image_path'];

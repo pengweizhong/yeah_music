@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
 
 /// 主题配置提供者
 class ThemeConfigProvider extends ChangeNotifier {
@@ -12,6 +13,9 @@ class ThemeConfigProvider extends ChangeNotifier {
   ThemeType _themeType = ThemeType.solidColor;
   Color _primaryColor = const Color(0xFF121212);
   Color _secondaryColor = const Color(0xFF1A1A1A);
+  /// 与早期版本一致：主对角线 ↘（左上→右下）。
+  PlaylistCoverGradientDirection _gradientDirection =
+      PlaylistCoverGradientDirection.diagonalTlBr;
   String? _backgroundImagePath;
   /// 背景图模式：0~1，控制虚化和压暗程度，越大字越易读（默认 0.45）
   double _backgroundImageEffect = 0.45;
@@ -19,6 +23,7 @@ class ThemeConfigProvider extends ChangeNotifier {
   ThemeType get themeType => _themeType;
   Color get primaryColor => _primaryColor;
   Color get secondaryColor => _secondaryColor;
+  PlaylistCoverGradientDirection get gradientDirection => _gradientDirection;
   String? get backgroundImagePath => _backgroundImagePath;
   double get backgroundImageEffect => _backgroundImageEffect.clamp(0.0, 1.0);
 
@@ -128,6 +133,11 @@ class ThemeConfigProvider extends ChangeNotifier {
     final secondaryColorValue = prefs.getInt('secondary_color') ?? 0xFF1A1A1A;
     _secondaryColor = Color(secondaryColorValue);
 
+    final dirRaw = prefs.getInt('theme_gradient_direction');
+    _gradientDirection = dirRaw == null
+        ? PlaylistCoverGradientDirection.diagonalTlBr
+        : PlaylistCoverGradientDirection.fromStorage(dirRaw);
+
     // 加载背景图片路径
     _backgroundImagePath = prefs.getString('background_image_path');
     _backgroundImageEffect =
@@ -163,6 +173,22 @@ class ThemeConfigProvider extends ChangeNotifier {
     _secondaryColor = color;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('secondary_color', color.value);
+    notifyListeners();
+  }
+
+  /// 一次性写入双色与渐变方向（与 RGB 渐变对话框配套）。
+  Future<void> setGradientColorsAndDirection(
+    Color primary,
+    Color secondary,
+    PlaylistCoverGradientDirection direction,
+  ) async {
+    _primaryColor = primary;
+    _secondaryColor = secondary;
+    _gradientDirection = direction;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('primary_color', primary.value);
+    await prefs.setInt('secondary_color', secondary.value);
+    await prefs.setInt('theme_gradient_direction', direction.index);
     notifyListeners();
   }
 
@@ -289,48 +315,25 @@ class ThemeConfigProvider extends ChangeNotifier {
     );
   }
 
-  /// 获取背景渐变色列表
-  List<Color> getGradientColors() {
-    return [
-      _primaryColor,
-      _secondaryColor,
-      _primaryColor.withOpacity(0.8),
-      _secondaryColor.withOpacity(0.6),
-    ];
-  }
+  LinearGradient _themeBackgroundLinearGradient() => playlistCoverLinearGradient(
+        [_primaryColor, _secondaryColor],
+        direction: _gradientDirection,
+      );
 
   /// 获取背景装饰
   BoxDecoration getBackgroundDecoration() {
     switch (_themeType) {
       case ThemeType.solidColor:
-        return BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: getGradientColors(),
-          ),
-        );
+        return BoxDecoration(gradient: _themeBackgroundLinearGradient());
       case ThemeType.customColor:
-        return BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: getGradientColors(),
-          ),
-        );
+        return BoxDecoration(gradient: _themeBackgroundLinearGradient());
       case ThemeType.backgroundImage:
         if (_backgroundImagePath != null && File(_backgroundImagePath!).existsSync()) {
           // 实际渲染见 [buildThemedBackground]
           return const BoxDecoration(color: Colors.transparent);
         }
         // 如果图片不存在，回退到纯色
-        return BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: getGradientColors(),
-          ),
-        );
+        return BoxDecoration(gradient: _themeBackgroundLinearGradient());
     }
   }
 }

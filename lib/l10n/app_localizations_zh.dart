@@ -845,6 +845,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get secondaryColor => '次色调';
 
   @override
+  String get themeGradientRgbSectionTitle => '渐变背景';
+
+  @override
+  String get themeGradientRgbSectionSubtitle =>
+      '与歌单封面相同的 RGB 滑块，可同时微调两端颜色和渐变方向。';
+
+  @override
+  String get themeGradientRgbFineTune => '编辑双色与方向…';
+
+  @override
+  String get themeGradientRgbDialogTitle => '背景渐变';
+
+  @override
   String get actionSelect => '选择';
 
   @override
@@ -951,6 +964,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeGreetingEvening => '晚上好';
+
+  @override
+  String get homePullRefreshingLocal => '正在从本机读取已保存的配置…';
+
+  @override
+  String get homePullRefreshDone => '已从本机存储重新载入配置。';
+
+  @override
+  String homePullRefreshFailed(String error) {
+    return '本机载入失败：$error';
+  }
 
   @override
   String get homeMenuTooltip => '菜单';
@@ -1487,7 +1511,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playlistCoverStyleSubtitle =>
-      '应用于首页横滑卡片与音乐源歌单列表左侧预览；选择轮换预设则按列表顺序自动配色。';
+      '应用于首页横滑卡片与音乐源歌单列表左侧预览；选择轮换预设则按列表顺序自动配色；渐变可使用自选双色以增强对比。';
 
   @override
   String get playlistCoverUseDefaultPalette => '使用轮换预设配色';
@@ -1497,6 +1521,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playlistCoverGradientSection => '渐变';
+
+  @override
+  String get playlistCoverCustomGradientTitle => '自定义渐变';
+
+  @override
+  String get playlistCoverGradientStartColor => '起始色';
+
+  @override
+  String get playlistCoverGradientEndColor => '结束色';
+
+  @override
+  String get playlistCoverGradientSwapColors => '交换两端颜色';
+
+  @override
+  String get playlistCoverGradientDirectionTitle => '渐变方向';
+
+  @override
+  String get playlistCoverGradientDirHorizontalLR => '左→右';
+
+  @override
+  String get playlistCoverGradientDirHorizontalRL => '右→左';
+
+  @override
+  String get playlistCoverGradientDirVerticalTB => '上→下';
+
+  @override
+  String get playlistCoverGradientDirVerticalBT => '下→上';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTLBR => '对角 ↘（左上→右下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTRBL => '对角 ↙（右上→左下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBRTL => '对角 ↖（右下→左上）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBLTR => '对角 ↗（左下→右上）';
 
   @override
   String get playlistCoverRgbTitle => '自定义 RGB';
@@ -1518,6 +1581,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playlistCoverMenuItem => '封面颜色…';
+
+  @override
+  String get playlistCoverPictureSection => '图片';
+
+  @override
+  String get playlistCoverPickImage => '选择图片…';
+
+  @override
+  String get playlistCoverRemoveImage => '移除图片';
+
+  @override
+  String get imageCropTitle => '裁剪图片';
+
+  @override
+  String get imageCropFailure => '无法裁剪该图片。';
 
   @override
   String get exportCannot => '无法导出该歌单';
@@ -2778,6 +2856,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get secondaryColor => '次色调';
 
   @override
+  String get themeGradientRgbSectionTitle => '渐变背景';
+
+  @override
+  String get themeGradientRgbSectionSubtitle =>
+      '与歌单封面相同的 RGB 滑块，可同时微调两端颜色和渐变方向。';
+
+  @override
+  String get themeGradientRgbFineTune => '编辑双色与方向…';
+
+  @override
+  String get themeGradientRgbDialogTitle => '背景渐变';
+
+  @override
   String get actionSelect => '选择';
 
   @override
@@ -2884,6 +2975,17 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get homeGreetingEvening => '晚上好';
+
+  @override
+  String get homePullRefreshingLocal => '正在从本机读取已保存的配置…';
+
+  @override
+  String get homePullRefreshDone => '已从本机存储重新载入配置。';
+
+  @override
+  String homePullRefreshFailed(String error) {
+    return '本机载入失败：$error';
+  }
 
   @override
   String get homeMenuTooltip => '菜单';
@@ -3420,7 +3522,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get playlistCoverStyleSubtitle =>
-      '应用于首页横滑卡片与音乐源歌单列表左侧预览；选择轮换预设则按列表顺序自动配色。';
+      '应用于首页横滑卡片与音乐源歌单列表左侧预览；选择轮换预设则按列表顺序自动配色；渐变可使用自选双色以增强对比。';
 
   @override
   String get playlistCoverUseDefaultPalette => '使用轮换预设配色';
@@ -3430,6 +3532,45 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get playlistCoverGradientSection => '渐变';
+
+  @override
+  String get playlistCoverCustomGradientTitle => '自定义渐变';
+
+  @override
+  String get playlistCoverGradientStartColor => '起始色';
+
+  @override
+  String get playlistCoverGradientEndColor => '结束色';
+
+  @override
+  String get playlistCoverGradientSwapColors => '交换两端颜色';
+
+  @override
+  String get playlistCoverGradientDirectionTitle => '渐变方向';
+
+  @override
+  String get playlistCoverGradientDirHorizontalLR => '左→右';
+
+  @override
+  String get playlistCoverGradientDirHorizontalRL => '右→左';
+
+  @override
+  String get playlistCoverGradientDirVerticalTB => '上→下';
+
+  @override
+  String get playlistCoverGradientDirVerticalBT => '下→上';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTLBR => '对角 ↘（左上→右下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTRBL => '对角 ↙（右上→左下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBRTL => '对角 ↖（右下→左上）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBLTR => '对角 ↗（左下→右上）';
 
   @override
   String get playlistCoverRgbTitle => '自定义 RGB';
@@ -3451,6 +3592,21 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get playlistCoverMenuItem => '封面颜色…';
+
+  @override
+  String get playlistCoverPictureSection => '图片';
+
+  @override
+  String get playlistCoverPickImage => '选择图片…';
+
+  @override
+  String get playlistCoverRemoveImage => '移除图片';
+
+  @override
+  String get imageCropTitle => '裁剪图片';
+
+  @override
+  String get imageCropFailure => '无法裁剪该图片。';
 
   @override
   String get exportCannot => '无法导出该歌单';
@@ -4711,6 +4867,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get secondaryColor => '次色調';
 
   @override
+  String get themeGradientRgbSectionTitle => '漸層背景';
+
+  @override
+  String get themeGradientRgbSectionSubtitle =>
+      '與歌單封面相同的 RGB 滑桿，可同時微調兩端顏色與漸層方向。';
+
+  @override
+  String get themeGradientRgbFineTune => '編輯雙色與方向…';
+
+  @override
+  String get themeGradientRgbDialogTitle => '背景漸層';
+
+  @override
   String get actionSelect => '選擇';
 
   @override
@@ -4817,6 +4986,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeGreetingEvening => '晚上好';
+
+  @override
+  String get homePullRefreshingLocal => '正在從本機讀取已儲存的設定…';
+
+  @override
+  String get homePullRefreshDone => '已從本機儲存重新載入設定。';
+
+  @override
+  String homePullRefreshFailed(String error) {
+    return '本機載入失敗：$error';
+  }
 
   @override
   String get homeMenuTooltip => '選單';
@@ -5353,7 +5533,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playlistCoverStyleSubtitle =>
-      '套用於首頁橫滑卡片與音樂來源歌單列表左側預覽；選擇輪換預設則依列表順序自動配色。';
+      '套用於首頁橫滑卡片與音樂來源歌單列表左側預覽；選擇輪換預設則依列表順序自動配色；漸層可使用自選雙色以增強對比。';
 
   @override
   String get playlistCoverUseDefaultPalette => '使用輪換預設配色';
@@ -5363,6 +5543,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playlistCoverGradientSection => '漸層';
+
+  @override
+  String get playlistCoverCustomGradientTitle => '自訂漸層';
+
+  @override
+  String get playlistCoverGradientStartColor => '起始色';
+
+  @override
+  String get playlistCoverGradientEndColor => '結束色';
+
+  @override
+  String get playlistCoverGradientSwapColors => '交換兩端顏色';
+
+  @override
+  String get playlistCoverGradientDirectionTitle => '漸層方向';
+
+  @override
+  String get playlistCoverGradientDirHorizontalLR => '左→右';
+
+  @override
+  String get playlistCoverGradientDirHorizontalRL => '右→左';
+
+  @override
+  String get playlistCoverGradientDirVerticalTB => '上→下';
+
+  @override
+  String get playlistCoverGradientDirVerticalBT => '下→上';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTLBR => '對角 ↘（左上→右下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTRBL => '對角 ↙（右上→左下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBRTL => '對角 ↖（右下→左上）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBLTR => '對角 ↗（左下→右上）';
 
   @override
   String get playlistCoverRgbTitle => '自訂 RGB';
@@ -5384,6 +5603,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playlistCoverMenuItem => '封面顏色…';
+
+  @override
+  String get playlistCoverPictureSection => '圖片';
+
+  @override
+  String get playlistCoverPickImage => '選擇圖片…';
+
+  @override
+  String get playlistCoverRemoveImage => '移除圖片';
+
+  @override
+  String get imageCropTitle => '裁剪圖片';
+
+  @override
+  String get imageCropFailure => '無法裁剪該圖片。';
 
   @override
   String get exportCannot => '無法匯出此歌單';

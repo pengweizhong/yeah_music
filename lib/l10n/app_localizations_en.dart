@@ -896,6 +896,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get secondaryColor => 'Secondary color';
 
   @override
+  String get themeGradientRgbSectionTitle => 'Gradient background';
+
+  @override
+  String get themeGradientRgbSectionSubtitle =>
+      'Fine-tune both gradient colors and direction with RGB sliders (same as playlist cover editor).';
+
+  @override
+  String get themeGradientRgbFineTune => 'Edit colors & direction…';
+
+  @override
+  String get themeGradientRgbDialogTitle => 'Background gradient';
+
+  @override
   String get actionSelect => 'Select';
 
   @override
@@ -1008,6 +1021,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGreetingEvening => 'Good evening';
+
+  @override
+  String get homePullRefreshingLocal =>
+      'Reading saved settings on this device…';
+
+  @override
+  String get homePullRefreshDone => 'Reloaded settings from local storage.';
+
+  @override
+  String homePullRefreshFailed(String error) {
+    return 'Could not reload from local storage: $error';
+  }
 
   @override
   String get homeMenuTooltip => 'Menu';
@@ -1556,7 +1581,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistCoverStyleSubtitle =>
-      'Solid or gradient for playlist cards on Home and in the library list. Choose rotating presets to match list order automatically.';
+      'Solid or gradient for playlist cards on Home and in the library list. Rotating presets follow list order; you can also build a custom two-color gradient for stronger contrast.';
 
   @override
   String get playlistCoverUseDefaultPalette => 'Use rotating preset colors';
@@ -1566,6 +1591,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistCoverGradientSection => 'Gradient';
+
+  @override
+  String get playlistCoverCustomGradientTitle => 'Custom gradient';
+
+  @override
+  String get playlistCoverGradientStartColor => 'Start color';
+
+  @override
+  String get playlistCoverGradientEndColor => 'End color';
+
+  @override
+  String get playlistCoverGradientSwapColors => 'Swap colors';
+
+  @override
+  String get playlistCoverGradientDirectionTitle => 'Gradient direction';
+
+  @override
+  String get playlistCoverGradientDirHorizontalLR => 'Left to right';
+
+  @override
+  String get playlistCoverGradientDirHorizontalRL => 'Right to left';
+
+  @override
+  String get playlistCoverGradientDirVerticalTB => 'Top to bottom';
+
+  @override
+  String get playlistCoverGradientDirVerticalBT => 'Bottom to top';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTLBR =>
+      'Diagonal top-left → bottom-right';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTRBL =>
+      'Diagonal top-right → bottom-left';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBRTL =>
+      'Diagonal bottom-right → top-left';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBLTR =>
+      'Diagonal bottom-left → top-right';
 
   @override
   String get playlistCoverRgbTitle => 'Custom RGB color';
@@ -1587,6 +1655,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistCoverMenuItem => 'Cover color…';
+
+  @override
+  String get playlistCoverPictureSection => 'Picture';
+
+  @override
+  String get playlistCoverPickImage => 'Choose image…';
+
+  @override
+  String get playlistCoverRemoveImage => 'Remove picture';
+
+  @override
+  String get imageCropTitle => 'Crop image';
+
+  @override
+  String get imageCropFailure => 'Could not crop this image.';
 
   @override
   String get exportCannot => 'This playlist cannot be exported';

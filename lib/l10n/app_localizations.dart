@@ -1686,6 +1686,30 @@ abstract class AppLocalizations {
   /// **'Secondary color'**
   String get secondaryColor;
 
+  /// No description provided for @themeGradientRgbSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient background'**
+  String get themeGradientRgbSectionTitle;
+
+  /// No description provided for @themeGradientRgbSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine-tune both gradient colors and direction with RGB sliders (same as playlist cover editor).'**
+  String get themeGradientRgbSectionSubtitle;
+
+  /// No description provided for @themeGradientRgbFineTune.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit colors & direction…'**
+  String get themeGradientRgbFineTune;
+
+  /// No description provided for @themeGradientRgbDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background gradient'**
+  String get themeGradientRgbDialogTitle;
+
   /// No description provided for @actionSelect.
   ///
   /// In en, this message translates to:
@@ -1889,6 +1913,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Good evening'**
   String get homeGreetingEvening;
+
+  /// No description provided for @homePullRefreshingLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading saved settings on this device…'**
+  String get homePullRefreshingLocal;
+
+  /// No description provided for @homePullRefreshDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloaded settings from local storage.'**
+  String get homePullRefreshDone;
+
+  /// No description provided for @homePullRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reload from local storage: {error}'**
+  String homePullRefreshFailed(String error);
 
   /// No description provided for @homeMenuTooltip.
   ///
@@ -2883,7 +2925,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistCoverStyleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Solid or gradient for playlist cards on Home and in the library list. Choose rotating presets to match list order automatically.'**
+  /// **'Solid or gradient for playlist cards on Home and in the library list. Rotating presets follow list order; you can also build a custom two-color gradient for stronger contrast.'**
   String get playlistCoverStyleSubtitle;
 
   /// No description provided for @playlistCoverUseDefaultPalette.
@@ -2903,6 +2945,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gradient'**
   String get playlistCoverGradientSection;
+
+  /// No description provided for @playlistCoverCustomGradientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom gradient'**
+  String get playlistCoverCustomGradientTitle;
+
+  /// No description provided for @playlistCoverGradientStartColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Start color'**
+  String get playlistCoverGradientStartColor;
+
+  /// No description provided for @playlistCoverGradientEndColor.
+  ///
+  /// In en, this message translates to:
+  /// **'End color'**
+  String get playlistCoverGradientEndColor;
+
+  /// No description provided for @playlistCoverGradientSwapColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap colors'**
+  String get playlistCoverGradientSwapColors;
+
+  /// No description provided for @playlistCoverGradientDirectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient direction'**
+  String get playlistCoverGradientDirectionTitle;
+
+  /// No description provided for @playlistCoverGradientDirHorizontalLR.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to right'**
+  String get playlistCoverGradientDirHorizontalLR;
+
+  /// No description provided for @playlistCoverGradientDirHorizontalRL.
+  ///
+  /// In en, this message translates to:
+  /// **'Right to left'**
+  String get playlistCoverGradientDirHorizontalRL;
+
+  /// No description provided for @playlistCoverGradientDirVerticalTB.
+  ///
+  /// In en, this message translates to:
+  /// **'Top to bottom'**
+  String get playlistCoverGradientDirVerticalTB;
+
+  /// No description provided for @playlistCoverGradientDirVerticalBT.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom to top'**
+  String get playlistCoverGradientDirVerticalBT;
+
+  /// No description provided for @playlistCoverGradientDirDiagonalTLBR.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonal top-left → bottom-right'**
+  String get playlistCoverGradientDirDiagonalTLBR;
+
+  /// No description provided for @playlistCoverGradientDirDiagonalTRBL.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonal top-right → bottom-left'**
+  String get playlistCoverGradientDirDiagonalTRBL;
+
+  /// No description provided for @playlistCoverGradientDirDiagonalBRTL.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonal bottom-right → top-left'**
+  String get playlistCoverGradientDirDiagonalBRTL;
+
+  /// No description provided for @playlistCoverGradientDirDiagonalBLTR.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonal bottom-left → top-right'**
+  String get playlistCoverGradientDirDiagonalBLTR;
 
   /// No description provided for @playlistCoverRgbTitle.
   ///
@@ -2945,6 +3065,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cover color…'**
   String get playlistCoverMenuItem;
+
+  /// No description provided for @playlistCoverPictureSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture'**
+  String get playlistCoverPictureSection;
+
+  /// No description provided for @playlistCoverPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image…'**
+  String get playlistCoverPickImage;
+
+  /// No description provided for @playlistCoverRemoveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove picture'**
+  String get playlistCoverRemoveImage;
+
+  /// No description provided for @imageCropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop image'**
+  String get imageCropTitle;
+
+  /// No description provided for @imageCropFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not crop this image.'**
+  String get imageCropFailure;
 
   /// No description provided for @exportCannot.
   ///

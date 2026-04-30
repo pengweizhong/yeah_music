@@ -1,11 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' show basename;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
+import 'package:yeah_music/widgets/rgb_gradient_pickers.dart';
 
-/// 底部抽屉：编辑歌单单色 / 渐变封面或恢复默认轮换配色。
+/// 底部抽屉：编辑歌单单色 / 渐变 / 自定义图片封面或恢复默认轮换配色。
 Future<void> showPlaylistCoverStyleSheet(
   BuildContext context,
   UserPlaylist playlist,
@@ -53,6 +59,34 @@ class _PlaylistCoverStyleBody extends StatefulWidget {
 class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
   UserPlaylistCoverStyle? _draft;
 
+  List<List<Color>> get _allPresetGradientPairs => [
+        ...kDefaultPlaylistCoverGradients,
+        ...kPlaylistCoverExtendedGradients,
+      ];
+
+  static String _hex6(Color c) =>
+      (c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase();
+
+  bool _matchesPresetGradient(UserPlaylistCoverStyle d) {
+    if (d.isCustomImage || d.isSolid) return false;
+    if (d.gradientDirection != PlaylistCoverGradientDirection.horizontalLtr) {
+      return false;
+    }
+    final ca = d.gradientColors;
+    for (final g in _allPresetGradientPairs) {
+      if (ca[0].toARGB32() == g[0].toARGB32() &&
+          ca[1].toARGB32() == g[1].toARGB32()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _isCustomGradient(UserPlaylistCoverStyle? d) {
+    if (d == null || d.isSolid || d.isCustomImage) return false;
+    return !_matchesPresetGradient(d);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -75,13 +109,38 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
     if (context.mounted) Navigator.pop(context);
   }
 
+  void _pickGradientRgb(BuildContext outerContext, AppLocalizations l10n) {
+    final pair = _draft != null && _draft!.isGradient
+        ? _draft!.gradientColors
+        : <Color>[const Color(0xFF283593), const Color(0xFFFF7043)];
+    final dir = _draft != null && _draft!.isGradient
+        ? _draft!.gradientDirection
+        : PlaylistCoverGradientDirection.horizontalLtr;
+    showFrostedDialog<void>(
+      context: outerContext,
+      maxWidth: 440,
+      child: GradientRgbPickDialogContent(
+        initialStart: pair[0],
+        initialEnd: pair[1],
+        initialDirection: dir,
+        l10n: l10n,
+        onPick: (a, b, d) {
+          setState(
+            () => _draft =
+                UserPlaylistCoverStyle.gradient(a, b, direction: d),
+          );
+        },
+      ),
+    );
+  }
+
   void _pickRgb(BuildContext outerContext, AppLocalizations l10n) {
     final initial =
         _draft?.isSolid == true ? _draft!.solidColor : Colors.blueGrey.shade400;
     showFrostedDialog<void>(
       context: outerContext,
       maxWidth: 420,
-      child: _RgbPickDialogContent(
+      child: RgbPickDialogContent(
         initial: initial,
         l10n: l10n,
         onPick: (color) {
@@ -104,9 +163,13 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
     return true;
   }
 
-  String _previewSubtitle(AppLocalizations l10n, bool customRgb) {
+  String _previewSubtitle(AppLocalizations l10n) {
     final d = _draft;
     if (d == null) return l10n.playlistCoverUseDefaultPalette;
+    if (d.isCustomImage) {
+      final name = basename(d.imagePath);
+      return '${l10n.playlistCoverPictureSection} · $name';
+    }
     if (d.isSolid) {
       final c = d.solidColor;
       final r = (c.r * 255.0).round().clamp(0, 255);
@@ -114,23 +177,47 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
       final b = (c.b * 255.0).round().clamp(0, 255);
       final hex =
           (c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase();
+      final customRgb = _isCustomRgbSolid(d);
       if (customRgb) {
         return '${l10n.playlistCoverRgbTitle} · #$hex · RGB($r,$g,$b)';
       }
       return '${l10n.playlistCoverSolidSection} · #$hex · RGB($r,$g,$b)';
     }
+    if (_isCustomGradient(d)) {
+      final gc = d.gradientColors;
+      final dir = d.gradientDirection;
+      final dirSuffix = dir == PlaylistCoverGradientDirection.horizontalLtr
+          ? ''
+          : ' · ${linearGradientDirectionLabel(l10n, dir)}';
+      return '${l10n.playlistCoverCustomGradientTitle} · '
+          '#${_hex6(gc[0])} → #${_hex6(gc[1])}$dirSuffix';
+    }
     return l10n.playlistCoverGradientSection;
+  }
+
+  Future<void> _pickCoverImage(
+    BuildContext outerContext,
+    AppLocalizations l10n,
+  ) async {
+    final bytes = await pickImageWithCrop(
+      context: outerContext,
+      l10n: l10n,
+      aspectRatio: kPlaylistCoverCropAspectRatio,
+    );
+    if (bytes == null || !mounted) return;
+    final dir = await getTemporaryDirectory();
+    final tmp = File(
+      '${dir.path}/ym_playlist_cover_${widget.playlist.id.hashCode}_${DateTime.now().millisecondsSinceEpoch}.png',
+    );
+    await tmp.writeAsBytes(bytes);
+    setState(() => _draft = UserPlaylistCoverStyle.customImage(tmp.path));
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final gradients = [
-      ...kDefaultPlaylistCoverGradients,
-      ...kPlaylistCoverExtendedGradients,
-    ];
+    final gradients = _allPresetGradientPairs;
     final fb = _fallbackIndex();
-    final customRgb = _isCustomRgbSolid(_draft);
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final screenH = MediaQuery.sizeOf(context).height;
     // Column(mainAxisSize: min) 子级里，无界 CustomScrollView 会算成零高；给视口一个有限高度。
@@ -170,7 +257,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: AspectRatio(
-                    aspectRatio: 2.55,
+                    aspectRatio: kPlaylistCoverCropAspectRatio,
                     child: DecoratedBox(
                       decoration: playlistCoverCardDecoration(
                         coverStyle: _draft,
@@ -199,7 +286,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _previewSubtitle(l10n, customRgb),
+                  _previewSubtitle(l10n),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.72),
                     fontSize: 12,
@@ -251,7 +338,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
               (context, i) {
                 final presetLen = _presetSolidColors.length;
                 if (i == presetLen) {
-                  final sel = customRgb;
+                  final sel = _isCustomRgbSolid(_draft);
                   return InkWell(
                     onTap: () => _pickRgb(context, l10n),
                     borderRadius: BorderRadius.circular(10),
@@ -332,9 +419,44 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) {
+                final presetLen = gradients.length;
+                if (i == presetLen) {
+                  final sel = _isCustomGradient(_draft);
+                  return InkWell(
+                    onTap: () => _pickGradientRgb(context, l10n),
+                    borderRadius: BorderRadius.circular(12),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: sel && _draft != null && _draft!.isGradient
+                            ? playlistCoverLinearGradient(
+                                _draft!.gradientColors,
+                                direction: _draft!.gradientDirection,
+                              )
+                            : null,
+                        color: sel
+                            ? null
+                            : Colors.white.withValues(alpha: 0.06),
+                        border: Border.all(
+                          color: sel ? Colors.white : Colors.white24,
+                          width: sel ? 2.5 : 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        sel ? Icons.check_rounded : Icons.gradient_rounded,
+                        color: Colors.white.withValues(alpha: sel ? 1 : 0.88),
+                        size: sel ? 26 : 28,
+                      ),
+                    ),
+                  );
+                }
                 final g = gradients[i];
                 final picked = _draft != null &&
-                    !_draft!.isSolid &&
+                    _draft!.isGradient &&
+                    _draft!.gradientDirection ==
+                        PlaylistCoverGradientDirection.horizontalLtr &&
                     _draft!.gradientColors[0].toARGB32() == g[0].toARGB32() &&
                     _draft!.gradientColors[1].toARGB32() == g[1].toARGB32();
                 return InkWell(
@@ -346,11 +468,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                     duration: const Duration(milliseconds: 160),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: g,
-                      ),
+                      gradient: playlistCoverLinearGradient(g),
                       border: Border.all(
                         color: picked ? Colors.white : Colors.white24,
                         width: picked ? 2.5 : 1,
@@ -359,7 +477,50 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                   ),
                 );
               },
-              childCount: gradients.length,
+              childCount: gradients.length + 1,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              l10n.playlistCoverPictureSection,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.72),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _pickCoverImage(context, l10n),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white38),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.image_outlined),
+                    label: Text(l10n.playlistCoverPickImage),
+                  ),
+                ),
+                if (_draft?.isCustomImage == true) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: l10n.playlistCoverRemoveImage,
+                    onPressed: () => setState(() => _draft = null),
+                    icon:
+                        const Icon(Icons.delete_outline, color: Colors.white70),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -386,180 +547,6 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
         ),
       ],
     ),
-    );
-  }
-}
-
-class _RgbPickDialogContent extends StatefulWidget {
-  const _RgbPickDialogContent({
-    required this.initial,
-    required this.l10n,
-    required this.onPick,
-  });
-
-  final Color initial;
-  final AppLocalizations l10n;
-  final ValueChanged<Color> onPick;
-
-  @override
-  State<_RgbPickDialogContent> createState() => _RgbPickDialogContentState();
-}
-
-class _RgbPickDialogContentState extends State<_RgbPickDialogContent> {
-  late Color _c;
-
-  @override
-  void initState() {
-    super.initState();
-    _c = widget.initial;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = widget.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final sliderTheme = SliderTheme.of(context).copyWith(
-      activeTrackColor: scheme.primary.withValues(alpha: 0.95),
-      inactiveTrackColor: Colors.white.withValues(alpha: 0.22),
-      thumbColor: Colors.white,
-      trackHeight: 4,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.playlistCoverRgbTitle,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 14),
-          SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    height: 52,
-                    width: double.infinity,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: _c,
-                        border: Border.all(
-                          color: scheme.outline.withValues(alpha: 0.35),
-                        ),
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Text(
-                            l10n.playlistCoverRgbPreview,
-                            style: TextStyle(
-                              color: _contrastingLabel(_c),
-                              fontWeight: FontWeight.w700,
-                              shadows: const [
-                                Shadow(blurRadius: 4, color: Color(0x66000000)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SliderTheme(
-                  data: sliderTheme,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _RgbSlider(
-                        label: l10n.playlistCoverRgbRed,
-                        value: _c.r,
-                        onChanged: (v) =>
-                            setState(() => _c = _c.withValues(red: v)),
-                      ),
-                      _RgbSlider(
-                        label: l10n.playlistCoverRgbGreen,
-                        value: _c.g,
-                        onChanged: (v) =>
-                            setState(() => _c = _c.withValues(green: v)),
-                      ),
-                      _RgbSlider(
-                        label: l10n.playlistCoverRgbBlue,
-                        value: _c.b,
-                        onChanged: (v) =>
-                            setState(() => _c = _c.withValues(blue: v)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.actionCancel),
-              ),
-              const SizedBox(width: 10),
-              FilledButton(
-                onPressed: () {
-                  widget.onPick(_c);
-                  Navigator.pop(context);
-                },
-                child: Text(l10n.actionOK),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _contrastingLabel(Color bg) {
-    final luminance = bg.computeLuminance();
-    return luminance > 0.55 ? const Color(0xFF111418) : Colors.white;
-  }
-}
-
-class _RgbSlider extends StatelessWidget {
-  const _RgbSlider({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$label (${(value * 255).round()})',
-          style: TextStyle(color: fg, fontSize: 13),
-        ),
-        Slider(
-          value: value.clamp(0.0, 1.0),
-          onChanged: onChanged,
-        ),
-      ],
     );
   }
 }

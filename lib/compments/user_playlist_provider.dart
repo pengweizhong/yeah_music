@@ -1,7 +1,10 @@
 import 'dart:convert';
-import 'dart:io' show File;
+import 'dart:io' show Directory, File;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
@@ -167,6 +170,24 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 从 Hive 重新载入用户歌单与首页横滑顺序（下拉刷新与其它持久化同步）。
+  Future<void> reloadFromHive() async {
+    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+    final rawList =
+        box.get(_storageKey, defaultValue: <dynamic>[]) as List<dynamic>;
+    _playlists
+      ..clear()
+      ..addAll(
+        rawList
+            .whereType<Map<dynamic, dynamic>>()
+            .map(UserPlaylist.fromMap)
+            .where((playlist) => playlist.id.isNotEmpty),
+      );
+    _homeCarouselOrderKeys = _parseCarouselOrderRaw(box.get(_carouselOrderKey));
+    _initialized = true;
+    notifyListeners();
+  }
+
   List<String> _parseCarouselOrderRaw(Object? raw) {
     if (raw is! List<dynamic>) return [];
     final out = <String>[];
@@ -269,18 +290,102 @@ class UserPlaylistProvider extends ChangeNotifier {
     return playlist;
   }
 
+  void _evictCoverImageCache(String absolutePath) {
+    try {
+      final f = File(absolutePath);
+      if (f.existsSync()) {
+        PaintingBinding.instance.imageCache.evict(FileImage(f));
+      }
+    } catch (_) {}
+  }
+
+  void _deleteCoverImageFileIfAny(UserPlaylistCoverStyle? style) {
+    if (style == null || !style.isCustomImage) return;
+    try {
+      final path = style.imagePath;
+      _evictCoverImageCache(path);
+      final file = File(path);
+      if (file.existsSync()) file.deleteSync();
+    } catch (_) {}
+  }
+
+  String _safePlaylistCoverFileId(String playlistId) =>
+      playlistId.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+
+  Future<String> _playlistCoverSupportPath(String playlistId) async {
+    final support = await getApplicationSupportDirectory();
+    final dir = Directory(p.join(support.path, 'playlist_covers'));
+    if (!dir.existsSync()) {
+      await dir.create(recursive: true);
+    }
+    return p.join(dir.path, 'cover_${_safePlaylistCoverFileId(playlistId)}.png');
+  }
+
+  Future<UserPlaylistCoverStyle?> _canonicalizeCoverImageStyle(
+    String playlistId,
+    UserPlaylistCoverStyle style,
+  ) async {
+    if (!style.isCustomImage) return style;
+    final rawPath = style.imagePath;
+    final destPath = await _playlistCoverSupportPath(playlistId);
+    if (p.normalize(rawPath) == p.normalize(destPath)) {
+      final f = File(destPath);
+      if (f.existsSync()) return style;
+      return null;
+    }
+    final src = File(rawPath);
+    if (!await src.exists()) return null;
+    await src.copy(destPath);
+    _evictCoverImageCache(destPath);
+    try {
+      final tmpRoot = (await getTemporaryDirectory()).path;
+      final normSrc = p.normalize(rawPath);
+      final normTmp = p.normalize(tmpRoot);
+      if (normSrc.startsWith('$normTmp${p.separator}')) {
+        await src.delete();
+      }
+    } catch (_) {}
+    return UserPlaylistCoverStyle.customImage(destPath);
+  }
+
   Future<void> setPlaylistCoverStyle(
     String playlistId,
     UserPlaylistCoverStyle? style,
   ) async {
     final playlist = _playlistById(playlistId);
     if (playlist == null) return;
-    playlist.coverStyle = style;
+
+    final prev = playlist.coverStyle;
+    UserPlaylistCoverStyle? next = style;
+
+    if (next?.isCustomImage == true) {
+      next = await _canonicalizeCoverImageStyle(playlistId, next!);
+      if (next == null) {
+        notifyListeners();
+        return;
+      }
+    }
+
+    final prevImg =
+        prev?.isCustomImage == true ? prev!.imagePath : null;
+    final nextImg =
+        next?.isCustomImage == true ? next!.imagePath : null;
+
+    if (prevImg != null &&
+        (nextImg == null || p.normalize(prevImg) != p.normalize(nextImg))) {
+      _deleteCoverImageFileIfAny(prev);
+    }
+
+    playlist.coverStyle = next;
     await _save();
     notifyListeners();
   }
 
   Future<void> deletePlaylist(String playlistId) async {
+    final playlist = _playlistById(playlistId);
+    if (playlist != null) {
+      _deleteCoverImageFileIfAny(playlist.coverStyle);
+    }
     _playlists.removeWhere((playlist) => playlist.id == playlistId);
     _homeCarouselOrderKeys.removeWhere((k) => k == playlistId);
     await _save();
@@ -292,6 +397,11 @@ class UserPlaylistProvider extends ChangeNotifier {
   Future<void> deletePlaylists(Iterable<String> playlistIds) async {
     final idSet = playlistIds.toSet();
     if (idSet.isEmpty) return;
+    for (final playlist in _playlists) {
+      if (idSet.contains(playlist.id)) {
+        _deleteCoverImageFileIfAny(playlist.coverStyle);
+      }
+    }
     _playlists.removeWhere((playlist) => idSet.contains(playlist.id));
     _homeCarouselOrderKeys.removeWhere(idSet.contains);
     await _save();

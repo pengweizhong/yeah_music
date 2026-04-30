@@ -860,6 +860,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get secondaryColor => '補色';
 
   @override
+  String get themeGradientRgbSectionTitle => 'グラデーション背景';
+
+  @override
+  String get themeGradientRgbSectionSubtitle =>
+      'プレイリストカバーと同じ RGB スライダーで、両端の色と向きを調整できます。';
+
+  @override
+  String get themeGradientRgbFineTune => '色と向きを編集…';
+
+  @override
+  String get themeGradientRgbDialogTitle => '背景のグラデーション';
+
+  @override
   String get actionSelect => '選択';
 
   @override
@@ -966,6 +979,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeGreetingEvening => 'こんばんは';
+
+  @override
+  String get homePullRefreshingLocal => '端末に保存した設定を読み込んでいます…';
+
+  @override
+  String get homePullRefreshDone => '端末の保存済み設定を再読み込みしました。';
+
+  @override
+  String homePullRefreshFailed(String error) {
+    return '端末からの再読み込みに失敗しました：$error';
+  }
 
   @override
   String get homeMenuTooltip => 'メニュー';
@@ -1506,7 +1530,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playlistCoverStyleSubtitle =>
-      'ホームのカードと一覧のサムネイルに使います。「プリセット順」では並びに沿って自動配色します。';
+      'ホームのカードと一覧のサムネイルに使います。「プリセット順」では並びに沿って自動配色します。グラデーションは開始・終了の2色を自由に設定できます。';
 
   @override
   String get playlistCoverUseDefaultPalette => 'プリセットを順に使う';
@@ -1516,6 +1540,45 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playlistCoverGradientSection => 'グラデーション';
+
+  @override
+  String get playlistCoverCustomGradientTitle => 'カスタムグラデーション';
+
+  @override
+  String get playlistCoverGradientStartColor => '開始色';
+
+  @override
+  String get playlistCoverGradientEndColor => '終了色';
+
+  @override
+  String get playlistCoverGradientSwapColors => '色を入れ替え';
+
+  @override
+  String get playlistCoverGradientDirectionTitle => 'グラデーションの向き';
+
+  @override
+  String get playlistCoverGradientDirHorizontalLR => '左から右';
+
+  @override
+  String get playlistCoverGradientDirHorizontalRL => '右から左';
+
+  @override
+  String get playlistCoverGradientDirVerticalTB => '上から下';
+
+  @override
+  String get playlistCoverGradientDirVerticalBT => '下から上';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTLBR => '対角（左上→右下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalTRBL => '対角（右上→左下）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBRTL => '対角（右下→左上）';
+
+  @override
+  String get playlistCoverGradientDirDiagonalBLTR => '対角（左下→右上）';
 
   @override
   String get playlistCoverRgbTitle => 'RGB を指定';
@@ -1537,6 +1600,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playlistCoverMenuItem => 'カバー色…';
+
+  @override
+  String get playlistCoverPictureSection => '画像';
+
+  @override
+  String get playlistCoverPickImage => '画像を選ぶ…';
+
+  @override
+  String get playlistCoverRemoveImage => '画像を削除';
+
+  @override
+  String get imageCropTitle => '画像をトリミング';
+
+  @override
+  String get imageCropFailure => 'トリミングできませんでした。';
 
   @override
   String get exportCannot => 'このプレイリストはエクスポートできません';

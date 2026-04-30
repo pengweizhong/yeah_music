@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -8,6 +8,18 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
+import 'package:yeah_music/widgets/rgb_gradient_pickers.dart';
+
+/// 主题主/次色快选：均匀覆盖色相（30 档），饱和与明度足够区分，避免整圈近黑看不出差异。
+List<Color> _themeHueAccentSwatches() {
+  const count = 30;
+  return List<Color>.generate(count, (i) {
+    final hue = (i * 360.0 / count) % 360.0;
+    return HSLColor.fromAHSL(1.0, hue, 0.73, 0.41).toColor();
+  });
+}
 
 /// 主题设置页面
 class ThemeSettingPage extends StatelessWidget {
@@ -58,10 +70,14 @@ class ThemeSettingPage extends StatelessWidget {
                   _buildSectionTitle(context, l10n.sectionPresetColors),
                   const SizedBox(height: 12),
                   _buildPresetColors(context, themeConfig),
+                  const SizedBox(height: 16),
+                  _buildThemeGradientFineTune(context, l10n, themeConfig),
                 ],
                 if (themeConfig.themeType == ThemeType.customColor) ...[
                   _buildSectionTitle(context, l10n.sectionCustomColor),
                   const SizedBox(height: 12),
+                  _buildThemeGradientFineTune(context, l10n, themeConfig),
+                  const SizedBox(height: 16),
                   _buildCustomColorPicker(context, l10n, themeConfig),
                 ],
                 if (themeConfig.themeType == ThemeType.backgroundImage) ...[
@@ -208,6 +224,101 @@ class ThemeSettingPage extends StatelessWidget {
     );
   }
 
+  Widget _buildThemeGradientFineTune(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.themeGradientRgbSectionTitle,
+            style: TextStyle(
+              color: context.gradFg(),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.themeGradientRgbSectionSubtitle,
+            style: TextStyle(
+              color: context.gradFgMuted(0.75),
+              fontSize: 13,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              height: 52,
+              width: double.infinity,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: playlistCoverLinearGradient(
+                    [
+                      themeConfig.primaryColor,
+                      themeConfig.secondaryColor,
+                    ],
+                    direction: themeConfig.gradientDirection,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () =>
+                  _showThemeGradientRgbDialog(context, l10n, themeConfig),
+              icon: Icon(Icons.tune_rounded, color: context.gradFg()),
+              label: Text(
+                l10n.themeGradientRgbFineTune,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.gradFg(),
+                side: BorderSide(color: context.gradBorder(0.35)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showThemeGradientRgbDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider themeConfig,
+  ) {
+    showFrostedDialog<void>(
+      context: context,
+      maxWidth: 440,
+      child: GradientRgbPickDialogContent(
+        initialStart: themeConfig.primaryColor,
+        initialEnd: themeConfig.secondaryColor,
+        initialDirection: themeConfig.gradientDirection,
+        l10n: l10n,
+        dialogTitle: l10n.themeGradientRgbDialogTitle,
+        onPick: (a, b, d) {
+          themeConfig.setGradientColorsAndDirection(a, b, d);
+        },
+      ),
+    );
+  }
+
   Widget _buildPresetColors(BuildContext context, ThemeConfigProvider themeConfig) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -224,9 +335,13 @@ class ThemeSettingPage extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               themeConfig.setPrimaryColor(color);
-              // 自动设置次色调为稍微亮一点的颜色
               final hsl = HSLColor.fromColor(color);
-              final secondaryColor = hsl.withLightness((hsl.lightness + 0.05).clamp(0.0, 1.0)).toColor();
+              final sat = hsl.saturation < 0.38 ? 0.38 : hsl.saturation;
+              final secondaryColor = hsl
+                  .withHue((hsl.hue + 28.0) % 360.0)
+                  .withSaturation(sat.clamp(0.0, 0.92))
+                  .withLightness((hsl.lightness + 0.11).clamp(0.12, 0.52))
+                  .toColor();
               themeConfig.setSecondaryColor(secondaryColor);
             },
             child: Container(
@@ -494,13 +609,20 @@ class ThemeSettingPage extends StatelessWidget {
     AppLocalizations l10n,
     ThemeConfigProvider themeConfig,
   ) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile == null) return;
+    final bytes = await pickImageWithCrop(
+      context: context,
+      l10n: l10n,
+      aspectRatio: null,
+    );
+    if (bytes == null) return;
     if (!context.mounted) return;
     try {
-      await themeConfig.setBackgroundImage(pickedFile.path);
+      final dir = await getTemporaryDirectory();
+      final f = File(
+        '${dir.path}/theme_crop_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await f.writeAsBytes(bytes);
+      await themeConfig.setBackgroundImage(f.path);
     } catch (e) {
       if (!context.mounted) return;
       showAppSnackBar(
@@ -519,9 +641,10 @@ class ThemeSettingPage extends StatelessWidget {
   ) {
     showFrostedDialog<void>(
       context: context,
-      maxWidth: 360,
+      maxWidth: 400,
       child: Builder(
         builder: (ctx) {
+          final swatches = _themeHueAccentSwatches();
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
             child: Column(
@@ -546,32 +669,30 @@ class ThemeSettingPage extends StatelessWidget {
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: List.generate(360, (index) {
-                        final hue = index.toDouble();
-                        final color =
-                            HSLColor.fromAHSL(1.0, hue, 0.5, 0.1).toColor();
-                        return GestureDetector(
-                          onTap: () {
-                            if (isPrimary) {
-                              themeConfig.setPrimaryColor(color);
-                            } else {
-                              themeConfig.setSecondaryColor(color);
-                            }
-                            Navigator.pop(ctx);
-                          },
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
+                      children: [
+                        for (final color in swatches)
+                          GestureDetector(
+                            onTap: () {
+                              if (isPrimary) {
+                                themeConfig.setPrimaryColor(color);
+                              } else {
+                                themeConfig.setSecondaryColor(color);
+                              }
+                              Navigator.pop(ctx);
+                            },
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                               ),
                             ),
                           ),
-                        );
-                      }),
+                      ],
                     ),
                   ),
                 ),
