@@ -551,9 +551,11 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                   await playListProvider
                                       .playAt(originalIndex);
                                 } else {
-                                  await playListProvider.playAt(
-                                    originalIndex,
-                                    listSession:
+                                  await playListProvider
+                                      .setPlaybackQueueAndPlay(
+                                    List<Song>.from(_filteredSongs),
+                                    index,
+                                    session:
                                         PlaybackSessionSurface.library,
                                   );
                                 }
@@ -732,10 +734,6 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
     return Consumer<PlayListProvider>(
       builder: (context, p, _) {
-        final mainList = p.playList;
-        final pathToMainIndex = <String, int>{
-          for (var i = 0; i < mainList.length; i++) mainList[i].path: i,
-        };
         final current = p.currentSong;
         final l10n = AppLocalizations.of(context);
         return ScrollAwareListFrame(
@@ -782,13 +780,16 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                     );
                     return;
                   }
-                  final originalIndex = pathToMainIndex[song.path] ?? -1;
-                  if (originalIndex < 0) return;
+                  final idxSorted = allSongs.indexWhere(
+                    (s) => songPathsEqual(s.path, song.path),
+                  );
+                  if (idxSorted < 0) return;
                   if (!context.mounted) return;
                   p.setPlaybackListSessionForLibrary();
-                  await p.playAt(
-                    originalIndex,
-                    listSession: PlaybackSessionSurface.library,
+                  await p.setPlaybackQueueAndPlay(
+                    List<Song>.from(allSongs),
+                    idxSorted,
+                    session: PlaybackSessionSurface.library,
                   );
                 },
               );

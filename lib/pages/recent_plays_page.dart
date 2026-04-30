@@ -410,10 +410,6 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                   }
                   final items =
                       playList.resolveRecentSongsFromPaths(_paths);
-                  final pathToIdx = <String, int>{
-                    for (var i = 0; i < playList.playList.length; i++)
-                      playList.playList[i].path: i,
-                  };
                   if (items.isNotEmpty &&
                       !_didInitialScrollToCurrent &&
                       !_initialScrollInFlight &&
@@ -485,7 +481,6 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                             itemExtent: kSongPlaylistRowExtent,
                             itemBuilder:
                                 (context, song, index, isCurrent) {
-                              final idx = pathToIdx[song.path] ?? -1;
                               return CompactSongListRow(
                                 key: ValueKey<String>(
                                   'recent_${index}_${normSongPath(song.path)}',
@@ -524,18 +519,17 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                                     _toggleBatchPath(song.path);
                                     return;
                                   }
-                                  if (idx < 0) return;
                                   if (isCurrent) {
                                     await toggleCurrentRowPlayback(
                                       playList,
                                     );
                                     return;
                                   }
-                                  playList.clearPlaybackQueueOverride();
                                   if (!context.mounted) return;
-                                  await playList.playAt(
-                                    idx,
-                                    listSession:
+                                  await playList.setPlaybackQueueAndPlay(
+                                    List<Song>.from(items),
+                                    index,
+                                    session:
                                         PlaybackSessionSurface.recentList,
                                   );
                                 },
