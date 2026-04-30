@@ -1,4 +1,11 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:yeah_music/models/constants.dart';
+import 'package:yeah_music/models/folder.dart';
 
 class HiveUtils {
   HiveUtils._(); // 私有构造，防止实例化
@@ -32,6 +39,37 @@ class HiveUtils {
         return await Hive.openBox<T>(name);
       }
     }
+  }
+
+  /// 音乐源目录 box。[Hive.openBox] 会把整个 `.hive` 一次性读入内存（framesFromFile→readAsBytes），
+  /// 大量曲目 + [Song.imageBytes] 时易 OOM；[LazyBox] 打开时仅流式扫描帧头（keysFromFile）。
+  static Future<LazyBox<Folder>> openFolderBox() async {
+    final name = Constant.hiveFolderBox;
+    if (!Hive.isBoxOpen(name)) {
+      return Hive.openLazyBox<Folder>(name);
+    }
+    return Hive.lazyBox<Folder>(name);
+  }
+
+  /// [Hive.deleteBoxFromDisk] 失败时的兜底：按与 [Hive.initFlutter] 一致的目录删除 `.hive` / `.hivec` / `.lock`。
+  static Future<void> deleteHiveBoxDiskFilesBestEffort(String boxName) async {
+    if (kIsWeb) return;
+    final lower = boxName.trim().toLowerCase();
+    if (lower.isEmpty) return;
+    try {
+      await Hive.deleteBoxFromDisk(boxName);
+      return;
+    } catch (_) {}
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final root = appDir.path;
+      for (final suffix in ['.hive', '.hivec', '.lock']) {
+        try {
+          final f = File(p.join(root, '$lower$suffix'));
+          if (await f.exists()) await f.delete();
+        } catch (_) {}
+      }
+    } catch (_) {}
   }
 
   /// 获取 Box
@@ -79,7 +117,7 @@ class HiveUtils {
     }
   }
 
-  static Future<void> add<T>(Box<T> box, T value) async {
+  static Future<void> add<T>(BoxBase<T> box, T value) async {
     await box.add(value);
   }
 }

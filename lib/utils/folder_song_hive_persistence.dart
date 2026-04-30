@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:yeah_music/logging/app_log.dart';
-import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/folder.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
@@ -51,9 +50,11 @@ Future<void> persistEmbeddedSongPaths(Set<String> paths) async {
   final trimmed = paths.map((p) => p.trim()).where((p) => p.isNotEmpty).toSet();
   if (trimmed.isEmpty) return;
   try {
-    final box = await HiveUtils.openBox<Folder>(Constant.hiveFolderBox);
+    final box = await HiveUtils.openFolderBox();
     final toSave = <Folder>{};
-    for (final f in box.values) {
+    for (final key in box.keys) {
+      final f = await box.get(key);
+      if (f == null) continue;
       final list = f.songList;
       if (list == null || list.isEmpty) continue;
       if (list.any((s) => trimmed.contains(s.path))) {

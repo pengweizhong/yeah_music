@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
+import 'package:yeah_music/models/song.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
-import 'package:yeah_music/models/constants.dart';
-import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/folder_paths_backup.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 import '../config/app_config.dart';
@@ -42,12 +43,13 @@ void mergeEmbeddedFieldsFromPreviousSongList({
 
 class FolderProvider extends ChangeNotifier {
   //main 里调用了 ..init()，也不能保证 UI 构建时 _box 已经就绪。
-  late Box<Folder>? _box;
+  LazyBox<Folder>? _box;
+  final List<Folder> _foldersCache = [];
   bool _initialized = false;
 
   List<Folder> get folders {
     if (_box == null || !_box!.isOpen) return [];
-    return _box!.values.toList();
+    return List<Folder>.unmodifiable(_foldersCache);
   }
 
   bool get initialized => _initialized;
@@ -57,7 +59,20 @@ class FolderProvider extends ChangeNotifier {
     if (_initialized && _box != null && _box!.isOpen) {
       return;
     }
-    _box = await HiveUtils.openBox<Folder>(Constant.hiveFolderBox);
+    final box = await HiveUtils.openFolderBox();
+    final list = <Folder>[];
+    for (final key in box.keys) {
+      final f = await box.get(key);
+      if (f != null) list.add(f);
+    }
+    _foldersCache
+      ..clear()
+      ..addAll(list);
+    _box = box;
+    if (_foldersCache.isEmpty) {
+      await _restoreFoldersFromBackupIfNeeded();
+    }
+    await FolderPathsBackup.save(_foldersCache);
     _initialized = true;
     if (Platform.isMacOS) {
       try {
@@ -70,10 +85,46 @@ class FolderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Hive 被清空（如 OOM 重建）时从 [FolderPathsBackup] 拉回路径。
+  Future<void> _restoreFoldersFromBackupIfNeeded() async {
+    final box = _box;
+    if (box == null || !box.isOpen) return;
+    final entries = await FolderPathsBackup.load();
+    if (entries.isEmpty) return;
+    appLog.w(
+      '音乐源 Hive 为空，从轻量备份恢复 ${entries.length} 条路径（不含曲目数据，扫描可能在稍后完成）',
+    );
+    for (final e in entries) {
+      final folderPath = e.path.trim();
+      if (folderPath.isEmpty) continue;
+      if (await existFolder(box, folderPath)) continue;
+      final displayName = e.name ?? p.basename(folderPath);
+      final f = Folder(folderPath);
+      f.name = displayName;
+      f.createdAt = DateTime.now();
+      try {
+        await flushSongToFolder(f, false, save: false);
+      } catch (err) {
+        appLog.w(
+          '备份恢复：目录暂时无法扫描（仍保留音乐源条目）: $folderPath',
+          error: err,
+        );
+      }
+      try {
+        await HiveUtils.add(box, f);
+        _foldersCache.add(f);
+      } catch (err) {
+        appLog.w('备份恢复：写入 Hive 失败: $folderPath', error: err);
+      }
+    }
+  }
+
   /// 添加文件夹 ,添加成功就返回Folder（优化版本，支持大量歌曲）
   Future<Folder?> addFolder(String folder) async {
+    final box = _box;
+    if (box == null || !box.isOpen) return null;
     //检验文件夹是否已经存在
-    if (await existFolder(_box!, folder)) {
+    if (await existFolder(box, folder)) {
       appLog.d("用户添加了重复的文件夹：$folder");
       return null;
     }
@@ -84,7 +135,9 @@ class FolderProvider extends ChangeNotifier {
     
     try {
       await flushSongToFolder(f, false, save: false);
-      await HiveUtils.add(_box!, f);
+      await HiveUtils.add(box, f);
+      _foldersCache.add(f);
+      await FolderPathsBackup.save(_foldersCache);
       notifyListeners();
       return f;
     } catch (e) {
@@ -97,6 +150,10 @@ class FolderProvider extends ChangeNotifier {
   /// 删除文件夹
   Future<void> deleteFolder(Folder folder) async {
     await folder.delete();
+    _foldersCache.removeWhere(
+      (x) => identical(x, folder) || x.path == folder.path,
+    );
+    await FolderPathsBackup.save(_foldersCache);
     notifyListeners();
   }
 
@@ -104,6 +161,7 @@ class FolderProvider extends ChangeNotifier {
   Future<void> renameFolder(Folder folder, String newName) async {
     folder.name = newName;
     await folder.save();
+    await FolderPathsBackup.save(_foldersCache);
     notifyListeners();
   }
 
@@ -252,8 +310,12 @@ class FolderProvider extends ChangeNotifier {
 
   ///文件夹是否已经存在
   ///存在 true，否则 false
-  Future<bool> existFolder(Box box, String folder) async {
-    return box.values.any((f) => f.path == folder);
+  Future<bool> existFolder(LazyBox<Folder> box, String folder) async {
+    for (final key in box.keys) {
+      final f = await box.get(key);
+      if (f?.path == folder) return true;
+    }
+    return false;
   }
 
   /// 外部工具改写曲目文件后 [Song] 已更新（Hive），通知目录列表等 UI。

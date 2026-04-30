@@ -53,6 +53,9 @@ class PlayListProvider extends ChangeNotifier {
   /// 连点「上一曲」合并。
   int _coalescedPlayPrevSteps = 0;
 
+  /// [_playAtImpl] / [_setPlaybackQueueAndPlayImpl] 执行中；此期间忽略「自然过轨」逻辑，避免误耗「下一曲播放」队列。
+  int _playbackNavDepth = 0;
+
   bool get initialized => _initialized;
 
   /// 当前播放索引（以 playList 为基准）
@@ -322,6 +325,29 @@ class PlayListProvider extends ChangeNotifier {
     required PlaybackSessionSurface session,
     String? userPlaylistId,
   }) async {
+    _playbackNavDepth++;
+    try {
+      await _setPlaybackQueueAndPlayImplBody(
+        songs,
+        index,
+        recordRecent: recordRecent,
+        bumpPlayCount: bumpPlayCount,
+        session: session,
+        userPlaylistId: userPlaylistId,
+      );
+    } finally {
+      _playbackNavDepth--;
+    }
+  }
+
+  Future<void> _setPlaybackQueueAndPlayImplBody(
+    List<Song> songs,
+    int index, {
+    required bool recordRecent,
+    required bool bumpPlayCount,
+    required PlaybackSessionSurface session,
+    String? userPlaylistId,
+  }) async {
     if (songs.isEmpty) return;
     _clearDeferredPlayNext();
     _coalescedPlayNextSteps = 0;
@@ -466,14 +492,116 @@ class PlayListProvider extends ChangeNotifier {
   void _attachPlayerIndexListener() {
     if (!Platform.isAndroid) return;
     _playerIndexSubscription?.cancel();
+    var previousPlayerIndex = MusicService.currentIndex;
     _playerIndexSubscription = MusicService.currentMediaIndexStream.listen((i) {
       if (i == null || i < 0) return;
       if (!MusicService.androidCarQueueActive) return;
-      if (i == _currentIndex) return;
-      _currentIndex = i;
-      notifyListeners();
-      unawaited(_saveCurrentPlaybackSnapshot());
+
+      final prev = previousPlayerIndex;
+      previousPlayerIndex = i;
+
+      if (_playbackNavDepth > 0) {
+        if (i != _currentIndex) {
+          _currentIndex = i;
+          notifyListeners();
+          unawaited(_saveCurrentPlaybackSnapshot());
+        }
+        return;
+      }
+
+      final naturalConcatAdvance =
+          _isNaturalConcatAdvanceForDeferred(prev, i);
+      if (naturalConcatAdvance && _hasDeferredPlayNextQueued()) {
+        unawaited(
+          _consumeDeferredPlayNextAfterAndroidConcatAdvance(
+            fallbackPlayerIndex: i,
+          ),
+        );
+        return;
+      }
+
+      if (i != _currentIndex) {
+        _currentIndex = i;
+        notifyListeners();
+        unawaited(_saveCurrentPlaybackSnapshot());
+      }
     });
+  }
+
+  bool _hasDeferredPlayNextQueued() {
+    if (_playbackMode == PlaybackMode.singleLoop) {
+      return _playNextAfterCurrentSingleLoopPath != null;
+    }
+    return _playNextAfterCurrentStack.isNotEmpty;
+  }
+
+  /// Android 整段 Concatenating 队列下，曲目之间往往不发 [ProcessingState.completed]，
+  /// 用「playlist 顺序上下一首」判断是否自然过轨（与 ExoPlayer 队列一致）。
+  bool _isNaturalConcatAdvanceForDeferred(int? prevPlayerIndex, int newPlayerIndex) {
+    if (prevPlayerIndex == null) return false;
+    if (_playbackMode == PlaybackMode.singleLoop) return false;
+    if (prevPlayerIndex != _currentIndex) return false;
+    if (newPlayerIndex == prevPlayerIndex) return false;
+    final len = playList.length;
+    if (len <= 1) return false;
+    final expectedNext = (prevPlayerIndex + 1) % len;
+    return newPlayerIndex == expectedNext;
+  }
+
+  Future<void> _consumeDeferredPlayNextAfterAndroidConcatAdvance({
+    required int fallbackPlayerIndex,
+  }) async {
+    try {
+      final consumed = await _tryConsumeDeferredPlayNext();
+      if (!consumed && fallbackPlayerIndex != _currentIndex) {
+        _currentIndex = fallbackPlayerIndex;
+        notifyListeners();
+        unawaited(_saveCurrentPlaybackSnapshot());
+      }
+    } catch (e, st) {
+      appLog.e('Android concat 边界消耗「下一曲播放」失败', error: e, stackTrace: st);
+      if (fallbackPlayerIndex != _currentIndex) {
+        _currentIndex = fallbackPlayerIndex;
+        notifyListeners();
+        unawaited(_saveCurrentPlaybackSnapshot());
+      }
+    }
+  }
+
+  Future<bool> _tryConsumeDeferredPlayNext() async {
+    if (_playbackMode == PlaybackMode.singleLoop) {
+      final key = _playNextAfterCurrentSingleLoopPath;
+      if (key == null) return false;
+      _playNextAfterCurrentSingleLoopPath = null;
+      final idx = _indexInPlayListByPathKey(key);
+      if (idx >= 0) {
+        await playAt(idx);
+        return true;
+      }
+      return false;
+    }
+
+    if (_playbackMode == PlaybackMode.playOnce) {
+      while (_playNextAfterCurrentStack.isNotEmpty) {
+        final key = _playNextAfterCurrentStack.removeLast();
+        final idx = _indexInPlayListByPathKey(key);
+        if (idx >= 0) {
+          await playAt(idx);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    while (_playNextAfterCurrentStack.isNotEmpty) {
+      final key = _playNextAfterCurrentStack.removeLast();
+      final idx = _indexInPlayListByPathKey(key);
+      if (idx >= 0) {
+        await playAt(idx);
+        return true;
+      }
+    }
+    return false;
   }
 
   /// 播放结束切下一首 / 单曲循环；挂在 Provider 上，避免仅 SongPage 订阅时在退出页面后失效
@@ -490,39 +618,25 @@ class PlayListProvider extends ChangeNotifier {
 
   Future<void> _onPlaybackTrackCompleted() async {
     if (_playbackMode == PlaybackMode.singleLoop) {
-      if (_playNextAfterCurrentSingleLoopPath != null) {
-        final key = _playNextAfterCurrentSingleLoopPath!;
-        _playNextAfterCurrentSingleLoopPath = null;
-        final idx = _indexInPlayListByPathKey(key);
-        if (idx >= 0) {
-          await playAt(idx);
-          return;
-        }
-      }
+      if (await _tryConsumeDeferredPlayNext()) return;
       MusicService().seek(Duration.zero);
       MusicService().play();
       return;
     }
 
     if (_playbackMode == PlaybackMode.playOnce) {
-      while (_playNextAfterCurrentStack.isNotEmpty) {
-        final key = _playNextAfterCurrentStack.removeLast();
-        final idx = _indexInPlayListByPathKey(key);
-        if (idx >= 0) {
-          await playAt(idx);
-          return;
-        }
-      }
+      if (await _tryConsumeDeferredPlayNext()) return;
       return;
     }
 
-    while (_playNextAfterCurrentStack.isNotEmpty) {
-      final key = _playNextAfterCurrentStack.removeLast();
-      final idx = _indexInPlayListByPathKey(key);
-      if (idx >= 0) {
-        await playAt(idx);
-        return;
-      }
+    if (await _tryConsumeDeferredPlayNext()) return;
+
+    final concatAndroid = !kIsWeb &&
+        Platform.isAndroid &&
+        MusicService.androidCarQueueActive &&
+        playList.length > 1;
+    if (concatAndroid) {
+      return;
     }
 
     await _enqueuePlaybackNav(() async => _applyPlayNextSteps(1));
@@ -689,30 +803,35 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   Future<void> _playAtImpl(int index, {PlaybackSessionSurface? listSession}) async {
-    final list = playList;
-    if (list.isEmpty) return;
-    if (listSession != null) {
-      assert(
-        listSession != PlaybackSessionSurface.userPlaylist,
-        '歌单会话请使用 setPlaybackQueueAndPlay',
+    _playbackNavDepth++;
+    try {
+      final list = playList;
+      if (list.isEmpty) return;
+      if (listSession != null) {
+        assert(
+          listSession != PlaybackSessionSurface.userPlaylist,
+          '歌单会话请使用 setPlaybackQueueAndPlay',
+        );
+        _applyPlaybackSession(listSession);
+      }
+      _currentIndex = index.clamp(0, list.length - 1);
+      notifyListeners();
+      final playing = list[_currentIndex];
+      await MusicService().playCurrentFromPlaylist(
+        queue: list,
+        currentIndex: _currentIndex,
       );
-      _applyPlaybackSession(listSession);
+      await RecentPlayService.recordPath(
+        playing.path,
+        updateRecentList: _statsRecordRecent,
+        bumpPlayCount: _statsBumpPlayCount,
+      );
+      await _saveCurrentPlaybackSnapshot();
+      unawaited(_syncAndroidCarMediaSession());
+      notifyListeners();
+    } finally {
+      _playbackNavDepth--;
     }
-    _currentIndex = index.clamp(0, list.length - 1);
-    notifyListeners();
-    final playing = list[_currentIndex];
-    await MusicService().playCurrentFromPlaylist(
-      queue: list,
-      currentIndex: _currentIndex,
-    );
-    await RecentPlayService.recordPath(
-      playing.path,
-      updateRecentList: _statsRecordRecent,
-      bumpPlayCount: _statsBumpPlayCount,
-    );
-    await _saveCurrentPlaybackSnapshot();
-    unawaited(_syncAndroidCarMediaSession());
-    notifyListeners();
   }
 
   /// 连续「下一曲」合并为一步索引推算后单次 [_playAtImpl]。
