@@ -49,24 +49,51 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
 
   List<Song> _filteredSongs = [];
 
-  List<Song>? _memoSortSourceRef;
-  SongListSortType? _memoSortType;
-  bool? _memoSortAsc;
-  List<Song> _memoSorted = const [];
+  /// Hive 排序偏好是否已读到；未读到前仍 [sortSongsCopy]（短暂，与原先默认行为一致）。
+  bool _sortPrefsLoaded = false;
 
-  /// 在 [playList] 与排序不变时复用结果，避免每次 notify（如切歌）都全量排序
-  List<Song> _sortedForPlayList(List<Song> source) {
-    if (_memoSortSourceRef != null &&
-        identical(_memoSortSourceRef, source) &&
-        _memoSortType == _sortType &&
-        _memoSortAsc == _isAscending) {
-      return _memoSorted;
+  /// 用户规则下的曲库展示顺序（规范化 path key）；仅在偏好首算、用户点排序、或曲库结构大改时重算，
+  /// 顺序播放等 [notifyListeners] 不再全量 sortSongsCopy，避免列表「乱跳」。
+  List<String>? _frozenPathKeys;
+
+  /// 在 [_sortPrefsLoaded] 且 [_frozenPathKeys] 为空时，按当前 [_sortType]/[_isAscending] 做**一次**全量排序并冻结。
+  void _ensureFrozenKeys(List<Song> playList) {
+    if (!_sortPrefsLoaded || playList.isEmpty) return;
+    if (_frozenPathKeys != null) return;
+    final sorted = sortSongsCopy(playList, _sortType, _isAscending);
+    _frozenPathKeys = sorted.map((s) => normSongPath(s.path)).toList();
+  }
+
+  /// 按冻结 key 还原 [Song]，剔除已删曲；新歌仅**追加**在末尾（不触发全库重排）。
+  List<Song> _materializeFromFrozen(List<Song> playList) {
+    final m = <String, Song>{
+      for (final s in playList) normSongPath(s.path): s,
+    };
+    var keys = List<String>.from(_frozenPathKeys!);
+    keys.removeWhere((k) => !m.containsKey(k));
+    final seen = keys.toSet();
+    for (final s in playList) {
+      final k = normSongPath(s.path);
+      if (!seen.contains(k)) {
+        keys.add(k);
+        seen.add(k);
+      }
     }
-    _memoSortSourceRef = source;
-    _memoSortType = _sortType;
-    _memoSortAsc = _isAscending;
-    _memoSorted = _getFilteredAndSortedSongs(source);
-    return _memoSorted;
+    _frozenPathKeys = keys;
+    return keys.map((k) => m[k]!).toList();
+  }
+
+  /// 曲库列表实际展示顺序（冻结 + 增量同步）。
+  List<Song> _libraryRows(List<Song> playList) {
+    if (playList.isEmpty) return [];
+    if (!_sortPrefsLoaded) {
+      return sortSongsCopy(playList, _sortType, _isAscending);
+    }
+    _ensureFrozenKeys(playList);
+    if (_frozenPathKeys == null || _frozenPathKeys!.isEmpty) {
+      return [];
+    }
+    return _materializeFromFrozen(playList);
   }
 
   @override
@@ -94,7 +121,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     final list = pl.playList;
     if (list.isEmpty) return;
     // 不依赖 [Selector] 一定重建：用当前排序现算一份，与列表展示一致
-    final songs = _sortedForPlayList(list);
+    final songs = _libraryRows(list);
     if (songs.isEmpty) return;
     if (_autoscrollInFlight) return;
     _autoscrollInFlight = true;
@@ -130,16 +157,27 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final folderProvider = context.read<FolderProvider>();
       final playListProvider = context.read<PlayListProvider>();
+      var listStructureChanged = false;
       if (!playListProvider.initialized) {
         appLog.d('曲库页: 正在初始化 PlayListProvider');
         await playListProvider.init(
           folderProvider,
           oneDrive: context.read<OneDriveController>(),
         );
+        listStructureChanged = true;
       }
       if (!context.mounted) return;
       if (playListProvider.hasPlaybackQueueOverride) {
         playListProvider.clearPlaybackQueueOverride();
+        listStructureChanged = true;
+      }
+      if (!mounted) return;
+      if (listStructureChanged) {
+        setState(() {
+          _frozenPathKeys = null;
+          _lastAutoScrollPathNorm = null;
+          _autoscrollInFlight = false;
+        });
       }
     });
   }
@@ -151,6 +189,11 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         setState(() {
           _sortType = prefs.type;
           _isAscending = prefs.ascending;
+          _sortPrefsLoaded = true;
+          _frozenPathKeys = null;
+          // 首帧可能已按默认排序滚过；读到真实偏好后允许重新对齐当前曲。
+          _lastAutoScrollPathNorm = null;
+          _autoscrollInFlight = false;
         });
         appLog.d('曲库页: 排序已加载 ($_sortType, asc=$_isAscending)');
       }
@@ -177,19 +220,19 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     super.dispose();
   }
 
-  List<Song> _getFilteredAndSortedSongs(List<Song> songs) {
-    return sortSongsCopy(songs, _sortType, _isAscending);
-  }
-
   void _showSortOptions() {
     showSongSortBottomSheet(
       context,
       sortType: _sortType,
       isAscending: _isAscending,
       onApply: (type, ascending) {
+        final raw = context.read<PlayListProvider>().playList;
         setState(() {
           _sortType = type;
           _isAscending = ascending;
+          final sorted = sortSongsCopy(raw, type, ascending);
+          _frozenPathKeys =
+              sorted.map((s) => normSongPath(s.path)).toList();
           _lastAutoScrollPathNorm = null;
           _autoscrollInFlight = false;
         });
@@ -387,7 +430,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     return Consumer<PlayListProvider>(
       builder: (context, playListProvider, _) {
         final playList = playListProvider.playList;
-        _filteredSongs = _sortedForPlayList(playList);
+        _filteredSongs = _libraryRows(playList);
         final current = playListProvider.currentSong;
         if (current == null) {
           _lastAutoScrollPathNorm = null;
