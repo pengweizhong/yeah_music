@@ -167,7 +167,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         listStructureChanged = true;
       }
       if (!context.mounted) return;
-      if (playListProvider.hasPlaybackQueueOverride) {
+      // 若当前是全库会话且队列已由曲库排序列表覆盖，勿清空：
+      // 否则下一曲按 folder 合并顺序走，与列表冻结排序不一致，表现为「重新进入后顺序乱跳」。
+      if (playListProvider.hasPlaybackQueueOverride &&
+          !playListProvider.playbackSessionIsLibrary) {
         playListProvider.clearPlaybackQueueOverride();
         listStructureChanged = true;
       }
