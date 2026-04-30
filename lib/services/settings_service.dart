@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,12 @@ import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class SettingsService {
+  /// 首页快捷入口 Hive 写入或云端恢复后自增；[HomePage] 监听以刷新顺序与显隐。
+  static final ValueNotifier<int> quickEntryStorageRevision = ValueNotifier<int>(0);
+
+  /// [hiveKeysCloudSliceLyricsUi] 中任一键写入 Hive 或云端恢复后自增；[SongPage] 等监听。
+  static final ValueNotifier<int> lyricsUiStorageRevision = ValueNotifier<int>(0);
+
   static const String _lyricSettingsKey = 'lyric_settings';
   static const String _playbackModeKey = 'playback_mode';
   static const String _timerDurationKey = 'timer_duration';
@@ -31,6 +38,7 @@ class SettingsService {
   static const String _oneDriveMusicUploadFolderLabelKey = 'onedrive_music_upload_folder_label';
   static const String _oneDriveLocalDownloadDirKey = 'onedrive_local_download_dir';
   static const String _oneDriveSyncSettingsKey = 'onedrive_sync_settings_v1';
+  static const String _oneDriveLastConfigSyncAtKey = 'onedrive_last_config_sync_at_iso';
   static const String _oneDriveIndexFoldersKey = 'onedrive_index_folders';
   static const String _oneDriveIndexTracksKey = 'onedrive_index_tracks';
   static const String _oneDriveIndexAtKey = 'onedrive_index_at_iso';
@@ -399,6 +407,38 @@ class SettingsService {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_oneDriveSyncSettingsKey, jsonEncode(s.toJson()));
+      } catch (_) {}
+    }
+  }
+
+  static Future<DateTime?> loadOneDriveLastConfigSyncAt() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final s = box.get(_oneDriveLastConfigSyncAtKey) as String?;
+      if (s == null || s.trim().isEmpty) return null;
+      return DateTime.tryParse(s.trim());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveOneDriveLastConfigSyncAt(DateTime? t) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      if (t == null) {
+        await box.delete(_oneDriveLastConfigSyncAtKey);
+      } else {
+        await box.put(_oneDriveLastConfigSyncAtKey, t.toIso8601String());
+      }
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        if (t == null) {
+          await box.delete(_oneDriveLastConfigSyncAtKey);
+        } else {
+          await box.put(_oneDriveLastConfigSyncAtKey, t.toIso8601String());
+        }
       } catch (_) {}
     }
   }
@@ -802,6 +842,7 @@ class SettingsService {
       c.normalizeInPlace();
       await box.put(_quickEntryOrderKey, c.order);
       await box.put(_quickEntryHiddenKey, c.hidden.toList());
+      quickEntryStorageRevision.value++;
     } catch (e) {
       try {
         await HiveUtils.closeBox(Constant.hiveRootPath);
@@ -809,6 +850,7 @@ class SettingsService {
         c.normalizeInPlace();
         await box.put(_quickEntryOrderKey, c.order);
         await box.put(_quickEntryHiddenKey, c.hidden.toList());
+        quickEntryStorageRevision.value++;
       } catch (_) {}
     }
   }
@@ -1046,6 +1088,23 @@ class SettingsService {
         _quickEntryHiddenKey,
       ];
 
+  /// OneDrive 快捷入口切片：始终带上顺序与显隐，避免 Hive 里缺 [quick_entry_order] 键时上传不完整。
+  static Future<Map<String, dynamic>> buildCloudBackupQuickEntrySliceMap() async {
+    final cfg = await loadQuickEntryConfig() ?? QuickEntryConfig.defaultConfig();
+    cfg.normalizeInPlace();
+    final hiveFlat = <String, dynamic>{
+      _quickEntryOrderKey: _hiveValueToJsonForCloudBackup(cfg.order),
+      _quickEntryHiddenKey: _hiveValueToJsonForCloudBackup(cfg.hidden.toList()),
+    };
+    return <String, dynamic>{
+      'format': yeahMusicAppSettingsBackupFormatId,
+      'version': 1,
+      'app': AppProductInfo.exportMetadataBlock,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'hive': hiveFlat,
+    };
+  }
+
   static List<String> hiveKeysCloudSliceLyricsUi() => <String>[
         _lyricSettingsKey,
         _songPageKeepScreenAwakeKey,
@@ -1059,6 +1118,47 @@ class SettingsService {
         _androidCarLyricsShowCoverKey,
         _androidCarLyricsSyncLyricsKey,
       ];
+
+  /// 歌词 UI 切片：各键始终写出，避免 Hive 缺键（如未改过「播放页常亮」）时无法上传。
+  static Future<Map<String, dynamic>> buildCloudBackupLyricsUiSliceMap() async {
+    final loaded = await loadLyricSettings();
+    final lyric = loaded ?? LyricSettings();
+    lyric.normalizeLayoutFields();
+    final keepAwake = await loadSongPageKeepScreenAwake();
+    final macMenu = await loadMacosMenuBarLyricsEnabled();
+    final deskEn = await loadDesktopFloatingLyricsEnabled();
+    final deskOp = await loadDesktopFloatingLyricsBgOpacity();
+    final deskBefore = await loadDesktopFloatingLyricsLinesBefore();
+    final deskAfter = await loadDesktopFloatingLyricsLinesAfter();
+    final deskLock = await loadDesktopFloatingLyricsDragLocked();
+    final carEn = await loadAndroidCarLyricsEnabled();
+    final carCover = await loadAndroidCarLyricsShowCover();
+    final carSync = await loadAndroidCarLyricsSyncLyrics();
+
+    final hiveFlat = <String, dynamic>{
+      _lyricSettingsKey: _hiveValueToJsonForCloudBackup(lyric),
+      _songPageKeepScreenAwakeKey: _hiveValueToJsonForCloudBackup(keepAwake),
+      _macosMenuBarLyricsKey: _hiveValueToJsonForCloudBackup(macMenu),
+      _desktopFloatingLyricsKey: _hiveValueToJsonForCloudBackup(deskEn),
+      _desktopFloatingLyricsBgOpacityKey: _hiveValueToJsonForCloudBackup(deskOp),
+      _desktopFloatingLyricsLinesBeforeKey:
+          _hiveValueToJsonForCloudBackup(deskBefore),
+      _desktopFloatingLyricsLinesAfterKey:
+          _hiveValueToJsonForCloudBackup(deskAfter),
+      _desktopFloatingLyricsLockedKey: _hiveValueToJsonForCloudBackup(deskLock),
+      _androidCarLyricsEnabledKey: _hiveValueToJsonForCloudBackup(carEn),
+      _androidCarLyricsShowCoverKey: _hiveValueToJsonForCloudBackup(carCover),
+      _androidCarLyricsSyncLyricsKey: _hiveValueToJsonForCloudBackup(carSync),
+    };
+
+    return <String, dynamic>{
+      'format': yeahMusicAppSettingsBackupFormatId,
+      'version': 1,
+      'app': AppProductInfo.exportMetadataBlock,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'hive': hiveFlat,
+    };
+  }
 
   static List<String> hiveKeysCloudSlicePlaybackLists() => <String>[
         RecentPlayService.hiveKeyRecentSongPaths,
@@ -1237,13 +1337,28 @@ class SettingsService {
     if (hiveRaw is Map) {
       final hiveDecoded = Map<String, dynamic>.from(hiveRaw);
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      var touchedQuickEntry = false;
+      var touchedLyricsUi = false;
+      final lyricsUiKeys = hiveKeysCloudSliceLyricsUi();
       for (final entry in hiveDecoded.entries) {
         final key = entry.key;
         if (!_hiveCloudRestoreAllowedKey(key)) continue;
+        if (key == _quickEntryOrderKey || key == _quickEntryHiddenKey) {
+          touchedQuickEntry = true;
+        }
+        if (lyricsUiKeys.contains(key)) {
+          touchedLyricsUi = true;
+        }
         await box.put(
           key,
           _decodeHiveValueForCloudRestore(key, entry.value),
         );
+      }
+      if (touchedQuickEntry) {
+        quickEntryStorageRevision.value++;
+      }
+      if (touchedLyricsUi) {
+        lyricsUiStorageRevision.value++;
       }
     }
 

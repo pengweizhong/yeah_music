@@ -579,14 +579,12 @@ class OneDriveController extends ChangeNotifier {
           );
         }
         if (sync.syncQuickEntry) {
-          final m = await SettingsService.buildCloudBackupHiveSubsetMap(
-            SettingsService.hiveKeysCloudSliceQuickEntry(),
-          );
+          final map = await SettingsService.buildCloudBackupQuickEntrySliceMap();
           await _uploadUtf8JsonToFolder(
             token: token,
             folderItemId: leafId,
             remoteFileName: OneDriveSyncConstants.sliceQuickEntryFileName,
-            utf8Payload: encoder.convert(m),
+            utf8Payload: encoder.convert(map),
           );
         }
         if (sync.syncPlaybackListsAndStats) {
@@ -601,9 +599,7 @@ class OneDriveController extends ChangeNotifier {
           );
         }
         if (sync.syncLyricsUi) {
-          final m = await SettingsService.buildCloudBackupHiveSubsetMap(
-            SettingsService.hiveKeysCloudSliceLyricsUi(),
-          );
+          final m = await SettingsService.buildCloudBackupLyricsUiSliceMap();
           await _uploadUtf8JsonToFolder(
             token: token,
             folderItemId: leafId,
@@ -638,6 +634,7 @@ class OneDriveController extends ChangeNotifier {
         }
       }
 
+      await SettingsService.saveOneDriveLastConfigSyncAt(DateTime.now());
       notifyListeners();
     } finally {
       _immediateSyncBusy = false;

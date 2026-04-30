@@ -75,10 +75,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// 首页问候卡片第二行展示文案（内置默认 + 用户自定义轮询）。
   String? _greetingSubLine;
   bool _advanceSubtitleAfterPausedResume = false;
+  late final VoidCallback _quickEntryRevListener;
 
   @override
   void initState() {
     super.initState();
+    _quickEntryRevListener = () {
+      if (mounted) {
+        unawaited(_loadQuickEntryConfig());
+      }
+    };
+    SettingsService.quickEntryStorageRevision.addListener(_quickEntryRevListener);
     WidgetsBinding.instance.addObserver(this);
     final pre = widget.initial;
     if (pre != null) {
@@ -117,6 +124,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    SettingsService.quickEntryStorageRevision.removeListener(_quickEntryRevListener);
     WidgetsBinding.instance.removeObserver(this);
     _play?.removeListener(_onPlayListChange);
     _homeScrollController.dispose();

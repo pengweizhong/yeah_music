@@ -27,6 +27,22 @@ OneDriveSyncFrequency oneDriveSyncFrequencyParse(
   return orElse;
 }
 
+/// [OneDriveSyncFrequency.manual] 为 null，表示不按间隔自动同步。
+Duration? oneDriveSyncFrequencyAutoInterval(OneDriveSyncFrequency f) {
+  switch (f) {
+    case OneDriveSyncFrequency.manual:
+      return null;
+    case OneDriveSyncFrequency.hourly1:
+      return const Duration(hours: 1);
+    case OneDriveSyncFrequency.hourly6:
+      return const Duration(hours: 6);
+    case OneDriveSyncFrequency.hourly12:
+      return const Duration(hours: 12);
+    case OneDriveSyncFrequency.hourly24:
+      return const Duration(hours: 24);
+  }
+}
+
 class OneDriveSyncSettings {
   const OneDriveSyncSettings({
     required this.cloudSyncEnabled,

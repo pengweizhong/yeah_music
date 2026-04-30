@@ -12,7 +12,9 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
+import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/home_page.dart';
+import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_material_themes.dart';
@@ -274,25 +276,73 @@ class _YeahMusicAppState extends State<YeahMusicApp>
     with WidgetsBindingObserver {
   static bool _androidWireRemoteInited = false;
 
+  Timer? _oneDriveAutoSyncTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _oneDriveAutoSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      _kickOneDriveAutoSyncCheck();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _kickOneDriveAutoSyncCheck();
+    });
   }
 
   @override
   void dispose() {
+    _oneDriveAutoSyncTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _kickOneDriveAutoSyncCheck() {
+    unawaited(_maybeRunOneDriveAutoSync());
+  }
+
+  Future<void> _maybeRunOneDriveAutoSync() async {
+    if (!mounted) return;
+    final od = context.read<OneDriveController>();
+    final sync = od.syncSettings;
+    if (!sync.cloudSyncEnabled) return;
+    final interval = oneDriveSyncFrequencyAutoInterval(sync.frequency);
+    if (interval == null) return;
+    if (!sync.hasConfigurableSlices) return;
+    if (!od.signedIn || od.effectiveClientId.isEmpty) return;
+    final parent = od.cloudAppDataFolderId?.trim();
+    if (parent == null || parent.isEmpty) return;
+    if (od.isImmediateSyncBusy || od.isImmediateRestoreBusy) return;
+
+    final last = await SettingsService.loadOneDriveLastConfigSyncAt();
+    if (!mounted) return;
+    final now = DateTime.now();
+    if (last != null && now.difference(last) < interval) return;
+
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) {
+      await userPl.init();
+    }
+    if (!mounted) return;
+    try {
+      await od.performSyncNow(userPlaylistProvider: userPl);
+    } catch (e, st) {
+      assert(() {
+        debugPrint('OneDrive auto sync failed: $e\n$st');
+        return true;
+      }());
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     // macOS 浏览器 OAuth 回跳后，偶发需等 resumed 再读 token，界面才与登录态一致。
-    if (kIsWeb || !Platform.isMacOS) return;
-    final od = context.read<OneDriveController>();
-    unawaited(od.loadFromStorage());
+    if (!kIsWeb && Platform.isMacOS) {
+      final od = context.read<OneDriveController>();
+      unawaited(od.loadFromStorage());
+    }
+    _kickOneDriveAutoSyncCheck();
   }
 
   @override

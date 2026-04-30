@@ -110,10 +110,16 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   // 手动滚动控制
   bool _isManualScrolling = false;
   Timer? _scrollTimer;
+  late final VoidCallback _lyricsUiRevListener;
 
   @override
   void initState() {
     super.initState();
+    _lyricsUiRevListener = () {
+      if (!mounted) return;
+      unawaited(_reloadLyricsUiFromHiveExternalNotification());
+    };
+    SettingsService.lyricsUiStorageRevision.addListener(_lyricsUiRevListener);
     _scrollController = ScrollController();
     _settings = LyricSettings(); // 初始化默认设置
     final initialPage = widget.initialPage.clamp(0, 2);
@@ -302,6 +308,14 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     unawaited(DesktopFloatingLyricsGlue.reloadFromHive());
   }
 
+  Future<void> _reloadLyricsUiFromHiveExternalNotification() async {
+    await _loadKeepAwakePreference();
+    await _loadSettings();
+    if (!mounted) return;
+    unawaited(MacosMenuBarLyricsGlue.reloadFromHive());
+    unawaited(DesktopFloatingLyricsGlue.reloadFromHive());
+  }
+
   Future<void> _loadKeepAwakePreference() async {
     final v = await SettingsService.loadSongPageKeepScreenAwake();
     if (!mounted) return;
@@ -337,6 +351,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _pendingExternalAudioReloadPath = null;
+    SettingsService.lyricsUiStorageRevision.removeListener(_lyricsUiRevListener);
     unawaited(WakelockPlus.disable());
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
