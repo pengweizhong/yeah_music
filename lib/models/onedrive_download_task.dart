@@ -56,6 +56,9 @@ class OneDriveDownloadTask {
   Object? error;
 
   double get progress {
+    if (status == OneDriveDownloadStatus.completed) {
+      return 1;
+    }
     final t = totalBytes;
     if (t != null && t > 0) {
       return (receivedBytes.clamp(0, t)) / t;

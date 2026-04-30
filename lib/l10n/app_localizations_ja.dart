@@ -497,22 +497,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveRestoreInProgress => '復元中…';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音楽ブラウズのルート（任意）';
-
-  @override
-  String get oneDriveMusicRootHint => 'OneDrive のアイテム ID。空欄の場合はドライブのルートから。';
-
-  @override
-  String get oneDriveMusicRootTileTitle => '音楽ブラウズのルート';
-
-  @override
-  String get oneDriveMusicRootTileSubtitle =>
-      '任意。ファイル一覧はこのフォルダから開きます（ルートではなく）。';
-
-  @override
-  String get oneDriveMusicRootSummaryRoot => 'ドライブのルート';
-
-  @override
   String get oneDriveCloudAppDataTitle => 'クラウドのアプリ用フォルダ';
 
   @override
@@ -768,6 +752,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveUseCurrentFolder => 'このフォルダーを使う';
 
   @override
+  String get oneDrivePickMultipleFoldersHint =>
+      'チェックボックスでフォルダーを選びます。矢印で開いてさらに選べます。';
+
+  @override
+  String get oneDriveIncludeOpenFolderInSelection => '開いているフォルダーを含める';
+
+  @override
+  String oneDriveAddSelectedFoldersAction(int count) {
+    return '追加（$count）';
+  }
+
+  @override
   String get oneDriveAddFolderTooltip => 'クラウドライブラリに追加';
 
   @override
@@ -791,6 +787,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveNoIndexRoots => 'フォルダーが未設定です。先に「フォルダーを選ぶ」から設定してください。';
+
+  @override
+  String get oneDriveLastIndexedNever => '最終スキャン: —';
+
+  @override
+  String get oneDriveIndexFoldersRecursiveHint =>
+      'スキャンはサブフォルダーを含みます。追加したフォルダー配下の音声ファイルがすべて一覧に含まれます。';
+
+  @override
+  String get oneDriveRemoveIndexFolderTitle => 'インデックスから外しますか？';
+
+  @override
+  String oneDriveRemoveIndexFolderMessage(String name) {
+    return '「$name」をインデックスから外しますか？このフォルダーとその下のトラックは一覧から消えます。あとから追加し直せます。';
+  }
+
+  @override
+  String get oneDriveRemoveIndexFolderAction => '外す';
 
   @override
   String get languageSettingsTitle => '言語';
@@ -1160,6 +1174,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tooltipSort => '並べ替え';
+
+  @override
+  String get playbackFailedSnackMessage =>
+      'この曲を再生できません。ファイルがない、読み取れない、または非対応形式の可能性があります。';
 
   @override
   String get languageRestartNotice => '表示言語をすべてに反映するには、アプリの再起動が必要な場合があります。';

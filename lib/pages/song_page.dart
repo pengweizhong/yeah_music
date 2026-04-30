@@ -2283,7 +2283,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   MusicService().resume();
                                 } else {
                                   // 播放新歌曲（不经过 [playAt] 时需补记最近播放）
-                                  await MusicService().playCurrentFromPlaylist(
+                                  final ok =
+                                      await MusicService().playCurrentFromPlaylist(
                                     queue: playListProvider.playList,
                                     currentIndex: playListProvider.currentIndex,
                                     useAndroidConcatQueue:
@@ -2291,6 +2292,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                             PlaybackMode.playOnce,
                                   );
                                   if (!context.mounted) return;
+                                  if (!ok) {
+                                    reportPlaybackFailureToUser(context);
+                                    return;
+                                  }
                                   await playListProvider.recordRecentForCurrent();
                                 }
                               }

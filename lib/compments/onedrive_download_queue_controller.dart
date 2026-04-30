@@ -694,6 +694,14 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       task.song = song;
       task.status = OneDriveDownloadStatus.completed;
       task.error = null;
+      try {
+        final len = await File(song.path).length();
+        task.receivedBytes = len;
+        task.totalBytes = len;
+      } catch (_) {
+        task.receivedBytes = 0;
+        task.totalBytes = 0;
+      }
     } on OneDriveDownloadCancelledException {
       _markCancelledFrom(i);
     } catch (e, st) {

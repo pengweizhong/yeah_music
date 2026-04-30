@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
@@ -13,6 +15,9 @@ import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 /// 从 [OneDriveBrowserPage] 退回时传给「添加到云端索引」的选中文件夹。
+///
+/// [pickMultipleIndexFolders] 为 true 时 [Navigator.pop] 传出 `List<OneDriveFolderPickResult>`，
+/// 否则单选时为单个 [OneDriveFolderPickResult]。
 class OneDriveFolderPickResult {
   OneDriveFolderPickResult({required this.itemId, required this.name});
   final String itemId;
@@ -29,13 +34,17 @@ class OneDriveBrowserPage extends StatefulWidget {
   const OneDriveBrowserPage({
     super.key,
     this.pickFolderForIndex = false,
+    this.pickMultipleIndexFolders = false,
     this.folderPickSubtitle,
-  });
+  }) : assert(!pickMultipleIndexFolders || pickFolderForIndex);
 
-  /// `true` 时用于云端曲库：仅选文件夹返回 [OneDriveFolderPickResult]，点播文件被禁用。
+  /// `true` 时用于云端曲库：仅选文件夹返回结果，点播文件被禁用。
   final bool pickFolderForIndex;
 
-  /// 选文件夹模式下的说明文案；为 `null` 时用默认「云端曲库」提示。
+  /// `true` 时可在同一趟浏览中选多个文件夹（须同时 [pickFolderForIndex]）。
+  final bool pickMultipleIndexFolders;
+
+  /// 选文件夹模式下的说明文案；为 `null` 时用默认提示。
   final String? folderPickSubtitle;
 
   @override
@@ -44,9 +53,21 @@ class OneDriveBrowserPage extends StatefulWidget {
 
 class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
   final List<_NavFrame> _stack = [];
+  final LinkedHashMap<String, String> _selectedFoldersForIndex =
+      LinkedHashMap<String, String>();
   List<OneDriveGraphItem> _items = const [];
   bool _loading = true;
   String? _error;
+
+  bool get _multiPick =>
+      widget.pickFolderForIndex && widget.pickMultipleIndexFolders;
+
+  String _folderPickHint(AppLocalizations l10n) {
+    return widget.folderPickSubtitle ??
+        (_multiPick
+            ? l10n.oneDrivePickMultipleFoldersHint
+            : l10n.oneDrivePickFolderForIndex);
+  }
 
   @override
   void initState() {
@@ -75,6 +96,44 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
         _loading = false;
       });
     }
+  }
+
+  void _toggleFolderPickSelection(OneDriveGraphItem item) {
+    if (!item.isFolder) return;
+    setState(() {
+      if (_selectedFoldersForIndex.containsKey(item.id)) {
+        _selectedFoldersForIndex.remove(item.id);
+      } else {
+        _selectedFoldersForIndex[item.id] = item.name;
+      }
+    });
+  }
+
+  void _navigateIntoFolder(OneDriveGraphItem item) {
+    if (!item.isFolder) return;
+    setState(() {
+      _stack.add(_NavFrame(parentItemId: item.id, title: item.name));
+    });
+    _reload();
+  }
+
+  void _popWithSelectedFolders() {
+    final list = _selectedFoldersForIndex.entries
+        .map(
+          (e) => OneDriveFolderPickResult(itemId: e.key, name: e.value),
+        )
+        .toList();
+    Navigator.pop(context, list);
+  }
+
+  void _includeOpenFolderInSelection() {
+    if (_stack.isEmpty) return;
+    final frame = _stack.last;
+    final id = frame.parentItemId;
+    if (id == null) return;
+    setState(() {
+      _selectedFoldersForIndex[id] = frame.title;
+    });
   }
 
   Future<void> _playFile(OneDriveGraphItem item) async {
@@ -133,6 +192,8 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
     );
   }
 
+  static const Color _checkboxOnDark = Color(0xFFB0BEC5);
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -163,8 +224,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.folderPickSubtitle ??
-                              l10n.oneDrivePickFolderForIndex,
+                          _folderPickHint(l10n),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -213,7 +273,21 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                       );
                     },
                   ),
-                if (widget.pickFolderForIndex && _stack.isNotEmpty)
+                if (_multiPick)
+                  TextButton(
+                    onPressed: _selectedFoldersForIndex.isEmpty || _loading
+                        ? null
+                        : _popWithSelectedFolders,
+                    child: Text(
+                      l10n.oneDriveAddSelectedFoldersAction(
+                        _selectedFoldersForIndex.length,
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                if (widget.pickFolderForIndex &&
+                    !_multiPick &&
+                    _stack.isNotEmpty)
                   TextButton(
                     onPressed: _loading
                         ? null
@@ -231,6 +305,14 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                           },
                     child: Text(
                       l10n.oneDriveUseCurrentFolder,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                if (_multiPick && _stack.isNotEmpty)
+                  TextButton(
+                    onPressed: _loading ? null : _includeOpenFolderInSelection,
+                    child: Text(
+                      l10n.oneDriveIncludeOpenFolderInSelection,
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
@@ -280,6 +362,35 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                           const Divider(height: 1, color: Color(0x22FFFFFF)),
                       itemBuilder: (context, i) {
                         final it = _items[i];
+                        if (it.isFolder && _multiPick) {
+                          final checked =
+                              _selectedFoldersForIndex.containsKey(it.id);
+                          return ListTile(
+                            leading: Checkbox(
+                              value: checked,
+                              onChanged: _loading
+                                  ? null
+                                  : (_) => _toggleFolderPickSelection(it),
+                              side: const BorderSide(color: _checkboxOnDark),
+                              activeColor: const Color(0xFF0078D4),
+                            ),
+                            title: Text(
+                              it.name,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Color(0xFFB0BEC5),
+                              ),
+                              onPressed:
+                                  _loading ? null : () => _navigateIntoFolder(it),
+                            ),
+                            onTap: _loading
+                                ? null
+                                : () => _toggleFolderPickSelection(it),
+                          );
+                        }
                         return ListTile(
                           leading: Icon(
                             it.isFolder

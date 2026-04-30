@@ -233,37 +233,12 @@ class SettingsService {
     }
   }
 
-  /// 进入 OneDrive 浏览页时的根文件夹 item id；`null` 表示个人网盘根「/」。
-  static Future<String?> loadOneDriveMusicRootId() async {
+  /// 移除已废弃的「音乐浏览根目录」Hive 项（设置入口已删除）。
+  static Future<void> migrateRemoveOneDriveMusicRootSetting() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final v = box.get(_oneDriveMusicRootIdKey) as String?;
-      if (v != null && v.trim().isEmpty) return null;
-      return v?.trim();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  static Future<void> saveOneDriveMusicRootId(String? itemId) async {
-    try {
-      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      if (itemId == null || itemId.trim().isEmpty) {
-        await box.delete(_oneDriveMusicRootIdKey);
-      } else {
-        await box.put(_oneDriveMusicRootIdKey, itemId.trim());
-      }
-    } catch (e) {
-      try {
-        await HiveUtils.closeBox(Constant.hiveRootPath);
-        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-        if (itemId == null || itemId.trim().isEmpty) {
-          await box.delete(_oneDriveMusicRootIdKey);
-        } else {
-          await box.put(_oneDriveMusicRootIdKey, itemId.trim());
-        }
-      } catch (_) {}
-    }
+      await box.delete(_oneDriveMusicRootIdKey);
+    } catch (_) {}
   }
 
   /// 云端应用数据目录（设置/歌单备份等预留）：Graph driveItem id 与展示名。
@@ -853,7 +828,6 @@ class SettingsService {
     _quickEntryOrderKey,
     _quickEntryHiddenKey,
     _oneDriveClientIdKey,
-    _oneDriveMusicRootIdKey,
     _oneDriveCloudAppFolderIdKey,
     _oneDriveCloudAppFolderLabelKey,
     _oneDriveMusicUploadFolderIdKey,
@@ -1045,7 +1019,6 @@ class SettingsService {
         if (json is! List) return <dynamic>[];
         return json.map((e) => '$e').where((s) => s.isNotEmpty).toList();
       case _oneDriveClientIdKey:
-      case _oneDriveMusicRootIdKey:
       case _oneDriveCloudAppFolderIdKey:
       case _oneDriveCloudAppFolderLabelKey:
       case _oneDriveMusicUploadFolderIdKey:

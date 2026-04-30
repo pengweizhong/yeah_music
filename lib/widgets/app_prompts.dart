@@ -23,19 +23,13 @@ enum AppSnackKind {
   error,
 }
 
-void showAppSnackBar(
-  BuildContext context,
+void _presentAppSnackBar(
+  ScaffoldMessengerState messenger,
   String message, {
   AppSnackKind kind = AppSnackKind.neutral,
   Duration duration = const Duration(seconds: 3),
   SnackBarAction? action,
 }) {
-  final messenger = (context.mounted
-          ? ScaffoldMessenger.maybeOf(context)
-          : null) ??
-      appScaffoldMessengerKey.currentState;
-  if (messenger == null) return;
-
   final scheme = Theme.of(messenger.context).colorScheme;
   late Color backgroundColor;
   late Color foregroundColor;
@@ -89,6 +83,55 @@ void showAppSnackBar(
             ),
     ),
   );
+}
+
+void showAppSnackBar(
+  BuildContext context,
+  String message, {
+  AppSnackKind kind = AppSnackKind.neutral,
+  Duration duration = const Duration(seconds: 3),
+  SnackBarAction? action,
+}) {
+  final messenger = (context.mounted
+          ? ScaffoldMessenger.maybeOf(context)
+          : null) ??
+      appScaffoldMessengerKey.currentState;
+  if (messenger == null) return;
+  _presentAppSnackBar(messenger, message, kind: kind, duration: duration, action: action);
+}
+
+/// 无页面 [BuildContext] 时使用根 [ScaffoldMessenger]（与 [showAppSnackBar] 样式一致）。
+void showAppSnackBarGlobal(
+  String message, {
+  AppSnackKind kind = AppSnackKind.neutral,
+  Duration duration = const Duration(seconds: 3),
+  SnackBarAction? action,
+}) {
+  final messenger = appScaffoldMessengerKey.currentState;
+  if (messenger == null) return;
+  _presentAppSnackBar(messenger, message, kind: kind, duration: duration, action: action);
+}
+
+String playbackFailedSnackMessageResolved(BuildContext? context) {
+  if (context != null && context.mounted) {
+    return AppLocalizations.of(context).playbackFailedSnackMessage;
+  }
+  final ctx = appScaffoldMessengerKey.currentContext;
+  if (ctx != null) {
+    return AppLocalizations.of(ctx).playbackFailedSnackMessage;
+  }
+  return "Couldn't play this track.";
+}
+
+/// 解码失败、文件缺失或格式不支持等导致未能开始播放时的全局提示。
+void reportPlaybackFailureToUser([BuildContext? context]) {
+  final msg = playbackFailedSnackMessageResolved(context);
+  final messenger = (context != null && context.mounted
+          ? ScaffoldMessenger.maybeOf(context)
+          : null) ??
+      appScaffoldMessengerKey.currentState;
+  if (messenger == null) return;
+  _presentAppSnackBar(messenger, msg, kind: AppSnackKind.error);
 }
 
 /// 双按钮确认（磨砂圆角卡片，与 [showFrostedDialog] 一致）。

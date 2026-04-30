@@ -173,11 +173,6 @@
   "oneDriveRestoreLoadingList": "正在讀取備份列表…",
   "oneDriveSyncNowInProgress": "同步中…",
   "oneDriveRestoreInProgress": "還原中…",
-  "oneDriveMusicRootIdLabel": "音樂瀏覽根目錄（選填）",
-  "oneDriveMusicRootHint": "OneDrive 項目 id，留空則從雲端根目錄進入。",
-  "oneDriveMusicRootTileTitle": "音樂瀏覽根目錄",
-  "oneDriveMusicRootTileSubtitle": "選填。檔案瀏覽器從此資料夾開始，而非雲端根目錄。",
-  "oneDriveMusicRootSummaryRoot": "雲端根目錄",
   "oneDriveCloudAppDataTitle": "雲端應用程式資料夾",
   "oneDriveCloudAppDataSubtitle": "預留：設定備份、歌單與同步等。",
   "oneDriveCloudAppFolderUnset": "未設定",
@@ -266,6 +261,14 @@
   "oneDriveBrowseFolders": "在網路磁碟選擇資料夾",
   "oneDrivePickFolderForIndex": "點資料夾右側 +，或進入資料夾後點「使用此資料夾」。",
   "oneDriveUseCurrentFolder": "使用此資料夾",
+  "oneDrivePickMultipleFoldersHint": "勾選資料夾；點右側箭頭進入子資料夾繼續選擇。",
+  "oneDriveIncludeOpenFolderInSelection": "包含目前資料夾",
+  "oneDriveAddSelectedFoldersAction": "新增（{count}）",
+  "@oneDriveAddSelectedFoldersAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "oneDriveAddFolderTooltip": "加入雲端曲庫",
   "oneDriveIndexingEllipsis": "正在掃描目錄…",
   "oneDriveLastIndexed": "上次掃描：{time}",
@@ -275,6 +278,16 @@
   "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
   "oneDriveCloudSearchHint": "搜尋檔名或路徑…",
   "oneDriveNoIndexRoots": "尚未設定目錄，請先用「在網路磁碟選擇資料夾」。",
+  "oneDriveLastIndexedNever": "上次掃描：—",
+  "oneDriveIndexFoldersRecursiveHint": "掃描會遞迴包含各資料夾及其子目錄下的所有音訊檔案。",
+  "oneDriveRemoveIndexFolderTitle": "移除索引資料夾？",
+  "oneDriveRemoveIndexFolderMessage": "要從索引中移除「{name}」嗎？該資料夾及其子資料夾中的曲目將不再出現在列表中，需要時可重新新增。",
+  "@oneDriveRemoveIndexFolderMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "oneDriveRemoveIndexFolderAction": "移除",
   "languageSettingsTitle": "語言",
   "languageSettingsDescription": "選擇應用程式介面顯示語言。選擇「跟隨系統」時，在已提供翻譯的情況下將跟隨裝置語言。",
   "langFollowSystem": "跟隨系統",
@@ -432,6 +445,7 @@
   "homeEmptyPlaylist": "空歌單",
   "songsListEmpty": "暫無歌曲",
   "tooltipSort": "排序",
+  "playbackFailedSnackMessage": "無法播放此曲目，檔案可能遺失、無法讀取或格式不支援。",
   "languageRestartNotice": "部分介面需重新啟動應用程式後才會完全套用所選語言。",
   "locateNotInList": "目前播放不在本清單",
   "locateToCurrent": "定位到目前",

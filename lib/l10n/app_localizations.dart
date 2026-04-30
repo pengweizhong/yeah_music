@@ -1020,36 +1020,6 @@ abstract class AppLocalizations {
   /// **'Restoring…'**
   String get oneDriveRestoreInProgress;
 
-  /// No description provided for @oneDriveMusicRootIdLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Music browse root (optional)'**
-  String get oneDriveMusicRootIdLabel;
-
-  /// No description provided for @oneDriveMusicRootHint.
-  ///
-  /// In en, this message translates to:
-  /// **'OneDrive item id, or leave empty for drive root.'**
-  String get oneDriveMusicRootHint;
-
-  /// No description provided for @oneDriveMusicRootTileTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Music browse root'**
-  String get oneDriveMusicRootTileTitle;
-
-  /// No description provided for @oneDriveMusicRootTileSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Optional folder id. The file browser starts here instead of the drive root.'**
-  String get oneDriveMusicRootTileSubtitle;
-
-  /// No description provided for @oneDriveMusicRootSummaryRoot.
-  ///
-  /// In en, this message translates to:
-  /// **'Drive root'**
-  String get oneDriveMusicRootSummaryRoot;
-
   /// No description provided for @oneDriveCloudAppDataTitle.
   ///
   /// In en, this message translates to:
@@ -1512,6 +1482,24 @@ abstract class AppLocalizations {
   /// **'Use this folder'**
   String get oneDriveUseCurrentFolder;
 
+  /// No description provided for @oneDrivePickMultipleFoldersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the checkboxes to select folders. Use the arrow to open a folder and select more inside.'**
+  String get oneDrivePickMultipleFoldersHint;
+
+  /// No description provided for @oneDriveIncludeOpenFolderInSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Include open folder'**
+  String get oneDriveIncludeOpenFolderInSelection;
+
+  /// No description provided for @oneDriveAddSelectedFoldersAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add ({count})'**
+  String oneDriveAddSelectedFoldersAction(int count);
+
   /// No description provided for @oneDriveAddFolderTooltip.
   ///
   /// In en, this message translates to:
@@ -1553,6 +1541,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No folders configured. Tap “Choose folders” first.'**
   String get oneDriveNoIndexRoots;
+
+  /// No description provided for @oneDriveLastIndexedNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scanned: —'**
+  String get oneDriveLastIndexedNever;
+
+  /// No description provided for @oneDriveIndexFoldersRecursiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan includes all subfolders; every audio file under each bound folder is listed.'**
+  String get oneDriveIndexFoldersRecursiveHint;
+
+  /// No description provided for @oneDriveRemoveIndexFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this folder?'**
+  String get oneDriveRemoveIndexFolderTitle;
+
+  /// No description provided for @oneDriveRemoveIndexFolderMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from the index? Tracks under this folder (including subfolders) will disappear until you add it again.'**
+  String oneDriveRemoveIndexFolderMessage(String name);
+
+  /// No description provided for @oneDriveRemoveIndexFolderAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get oneDriveRemoveIndexFolderAction;
 
   /// No description provided for @languageSettingsTitle.
   ///
@@ -2249,6 +2267,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sort'**
   String get tooltipSort;
+
+  /// No description provided for @playbackFailedSnackMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play this track. It may be missing, unreadable, or in an unsupported format.'**
+  String get playbackFailedSnackMessage;
 
   /// No description provided for @languageRestartNotice.
   ///

@@ -118,7 +118,6 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                         _pickCloudAppFolder(context, l10n, od),
                     onPickMusicUploadFolder: () =>
                         _pickMusicUploadFolder(context, l10n, od),
-                    onEditMusicRoot: () => _editMusicRootId(context, l10n, od),
                     onPickLocalDir: () =>
                         _pickLocalDownloadDir(context, l10n, od),
                     onClearCloudAppFolder: () =>
@@ -253,24 +252,6 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     if (path != null && path.isNotEmpty) {
       await od.setLocalDownloadDir(path);
     }
-  }
-
-  Future<void> _editMusicRootId(
-    BuildContext context,
-    AppLocalizations l10n,
-    OneDriveController od,
-  ) async {
-    final v = await showAppTextPromptDialog(
-      context: context,
-      title: l10n.oneDriveMusicRootIdLabel,
-      hintText: l10n.oneDriveMusicRootHint,
-      initialValue: od.musicRootItemId ?? '',
-      maxLines: 2,
-      cancelLabel: l10n.actionCancel,
-      confirmLabel: l10n.actionSave,
-    );
-    if (!context.mounted || v == null) return;
-    await od.setMusicRootItemId(v.isEmpty ? null : v);
   }
 
   Future<void> _handleSyncNow(
@@ -1232,7 +1213,6 @@ class _PathsCard extends StatelessWidget {
     required this.od,
     required this.onPickCloudAppFolder,
     required this.onPickMusicUploadFolder,
-    required this.onEditMusicRoot,
     required this.onPickLocalDir,
     required this.onClearCloudAppFolder,
     required this.onClearMusicUploadFolder,
@@ -1243,19 +1223,10 @@ class _PathsCard extends StatelessWidget {
   final OneDriveController od;
   final VoidCallback onPickCloudAppFolder;
   final VoidCallback onPickMusicUploadFolder;
-  final VoidCallback onEditMusicRoot;
   final VoidCallback onPickLocalDir;
   final VoidCallback onClearCloudAppFolder;
   final VoidCallback onClearMusicUploadFolder;
   final VoidCallback onClearLocalDir;
-
-  String _musicRootSummary() {
-    final id = od.musicRootItemId;
-    if (id == null || id.isEmpty) {
-      return l10n.oneDriveMusicRootSummaryRoot;
-    }
-    return id.length > 36 ? '${id.substring(0, 18)}…' : id;
-  }
 
   String _cloudAppSummary() {
     if (od.cloudAppDataFolderId == null || od.cloudAppDataFolderId!.isEmpty) {
@@ -1376,15 +1347,6 @@ class _PathsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _pathBlock(
-            icon: Icons.library_music_outlined,
-            iconColor: Colors.amber.shade200,
-            title: l10n.oneDriveMusicRootTileTitle,
-            subtitle: l10n.oneDriveMusicRootTileSubtitle,
-            valueLine: _musicRootSummary(),
-            onTapRow: onEditMusicRoot,
-          ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           _pathBlock(
             icon: Icons.folder_special_outlined,
             iconColor: Colors.lightBlue.shade200,

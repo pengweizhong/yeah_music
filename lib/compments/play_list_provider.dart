@@ -376,11 +376,15 @@ class PlayListProvider extends ChangeNotifier {
     _shuffledPlayedIndices = [];
     notifyListeners();
     final song = _playbackQueueOverride![_currentIndex];
-    await MusicService().playCurrentFromPlaylist(
+    final ok = await MusicService().playCurrentFromPlaylist(
       queue: _playbackQueueOverride!,
       currentIndex: _currentIndex,
       useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
     );
+    if (!ok) {
+      reportPlaybackFailureToUser();
+      return;
+    }
     await RecentPlayService.recordPath(
       song.path,
       updateRecentList: recordRecent,
@@ -470,11 +474,15 @@ class PlayListProvider extends ChangeNotifier {
       if (list.isEmpty || list.length <= 1) return;
       final idx = _currentIndex.clamp(0, list.length - 1);
       final pos = MusicService.lastPosition;
-      await MusicService().playCurrentFromPlaylist(
+      final ok = await MusicService().playCurrentFromPlaylist(
         queue: list,
         currentIndex: idx,
         useAndroidConcatQueue: false,
       );
+      if (!ok) {
+        reportPlaybackFailureToUser();
+        return;
+      }
       if (pos > Duration.zero) {
         await Future<void>.delayed(const Duration(milliseconds: 48));
         await MusicService().seek(pos);
@@ -914,11 +922,15 @@ class PlayListProvider extends ChangeNotifier {
       _currentIndex = index.clamp(0, list.length - 1);
       notifyListeners();
       final playing = list[_currentIndex];
-      await MusicService().playCurrentFromPlaylist(
+      final ok = await MusicService().playCurrentFromPlaylist(
         queue: list,
         currentIndex: _currentIndex,
         useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
       );
+      if (!ok) {
+        reportPlaybackFailureToUser();
+        return;
+      }
       await RecentPlayService.recordPath(
         playing.path,
         updateRecentList: _statsRecordRecent,

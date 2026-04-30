@@ -52,7 +52,8 @@ class MusicService {
   /// 最近一次成功构建 Android 整队列时的 [queue] 引用；与本次调用 [identical] 时用 [seek] 切索引，避免整轨重建卡顿。
   static List<Song>? _lastAndroidQueueRef;
 
-  static Future<void> _playChain = Future.value();
+  /// 串行化换源；链上任务的返回值由各 API（如 [playSong]）自行向外透出。
+  static Future _playChain = Future.value();
 
   static void _invalidateAndroidQueueReuse() {
     _lastAndroidQueueRef = null;
@@ -60,17 +61,20 @@ class MusicService {
 
   /// 按当前播放列表与索引开始播放。
   ///
+  /// 返回 `true` 表示已成功 [setAudioSource] 并已触发 [AudioPlayer.play]
+  /// （不包含解码器等异步阶段的后续报错）。
+  ///
   /// Android 且列表多于一首时默认构建 [ConcatenatingAudioSource]，使通知/车机上的上一首、下一首与
   /// 真实曲目对应。
   ///
   /// 「仅播放一次」等业务场景须传 [useAndroidConcatQueue] 为 false：否则会由系统在曲目末尾自动连播
   /// 下一首，应用层无法在原生 concatenating 队列之前拦截。
-  Future<void> playCurrentFromPlaylist({
+  Future<bool> playCurrentFromPlaylist({
     required List<Song> queue,
     required int currentIndex,
     bool useAndroidConcatQueue = true,
   }) async {
-    if (queue.isEmpty) return;
+    if (queue.isEmpty) return false;
     final i = currentIndex.clamp(0, queue.length - 1);
     final useFullPlayerQueue =
         useAndroidConcatQueue && Platform.isAndroid && queue.length > 1;
@@ -86,7 +90,8 @@ class MusicService {
     return playSong(queue[i]);
   }
 
-  Future<void> playQueue(List<Song> queue, int index) async {
+  Future<bool> playQueue(List<Song> queue, int index) async {
+    if (queue.isEmpty) return false;
     final f = _playChain
         .catchError((Object? e) {
           appLog.d('playQueue 前序(可忽略): $e');
@@ -96,7 +101,7 @@ class MusicService {
     return f;
   }
 
-  Future<void> playSong(Song song) {
+  Future<bool> playSong(Song song) {
     final f = _playChain
         .catchError((Object? e) {
           appLog.d('playSong 前序(可忽略): $e');
@@ -106,7 +111,7 @@ class MusicService {
     return f;
   }
 
-  Future<void> _playSongBody(Song song) async {
+  Future<bool> _playSongBody(Song song) async {
     androidCarQueueActive = false;
     _invalidateAndroidQueueReuse();
     for (var attempt = 0; attempt < 3; attempt++) {
@@ -129,7 +134,7 @@ class MusicService {
           final g = ++_androidMediaSessionSyncGeneration;
           unawaited(pushAndroidNotificationForSong(song, abortIfStaleGeneration: g));
         }
-        return;
+        return true;
       } catch (e) {
         final msg = e.toString();
         if (attempt == 0 && msg.contains('interrupted')) {
@@ -148,13 +153,14 @@ class MusicService {
           continue;
         }
         appLog.e('设置音频并播放失败', error: e);
-        return;
+        return false;
       }
     }
+    return false;
   }
 
-  Future<void> _playQueueBody(List<Song> queue, int index) async {
-    if (queue.isEmpty) return;
+  Future<bool> _playQueueBody(List<Song> queue, int index) async {
+    if (queue.isEmpty) return false;
     final idx = index.clamp(0, queue.length - 1);
 
     // 同一 [queue] 实例（曲库缓存列表或同一用户歌单覆盖队列）内切歌：只 seek，避免全量 MediaItem + setAudioSources。
@@ -186,7 +192,7 @@ class MusicService {
           final s = queue[idx];
           unawaited(pushAndroidNotificationForSong(s, abortIfStaleGeneration: g));
         }
-        return;
+        return true;
       } catch (e) {
         appLog.d('Android 队列内快速切曲不可用，整轨重建: $e');
         _invalidateAndroidQueueReuse();
@@ -230,7 +236,7 @@ class MusicService {
           final s = queue[idx];
           unawaited(pushAndroidNotificationForSong(s, abortIfStaleGeneration: g));
         }
-        return;
+        return true;
       } catch (e) {
         final msg = e.toString();
         if (attempt == 0 && msg.contains('interrupted')) {
@@ -239,9 +245,10 @@ class MusicService {
         }
         appLog.e('设置队列音频并播放失败', error: e);
         _invalidateAndroidQueueReuse();
-        return;
+        return false;
       }
     }
+    return false;
   }
 
   Future<Object?> _tagForSong(Song song) async {

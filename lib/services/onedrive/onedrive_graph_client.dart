@@ -433,6 +433,7 @@ class OneDriveGraphClient {
           receivedTotal += chunk.length;
           onProgress(receivedTotal, totalBytes);
         }
+        onProgress(receivedTotal, totalBytes);
       } finally {
         await sink.flush();
         await sink.close();

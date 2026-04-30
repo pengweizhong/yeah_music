@@ -205,14 +205,181 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     );
   }
 
-  Future<void> _browseAdd(BuildContext context, OneDriveController od) async {
-    final picked = await Navigator.of(context).push<OneDriveFolderPickResult>(
-      MaterialPageRoute(
-        builder: (_) => const OneDriveBrowserPage(pickFolderForIndex: true),
+  Future<void> _confirmRemoveFolder(
+    BuildContext context,
+    AppLocalizations l10n,
+    OneDriveController od,
+    OneDriveIndexFolder folder,
+  ) async {
+    final ok = await showAppConfirmDialog(
+      context: context,
+      title: l10n.oneDriveRemoveIndexFolderTitle,
+      message: l10n.oneDriveRemoveIndexFolderMessage(
+        folder.label.isEmpty ? folder.itemId : folder.label,
+      ),
+      confirmIsDestructive: true,
+      confirmLabel: l10n.oneDriveRemoveIndexFolderAction,
+    );
+    if (ok != true || !context.mounted) return;
+    await od.removeIndexFolder(folder.itemId);
+  }
+
+  Widget _buildPinnedCloudLibraryHeader(
+    BuildContext context, {
+    required AppLocalizations l10n,
+    required OneDriveController od,
+    required List<OneDriveCloudTrack> tracks,
+    required String localeTag,
+  }) {
+    final topInset = songPlaylistUnderlapTopInset(context);
+    final lastScanText = od.cloudIndexAt != null
+        ? l10n.oneDriveLastIndexed(
+            DateFormat.yMMMd(localeTag).add_jm().format(od.cloudIndexAt!),
+          )
+        : l10n.oneDriveLastIndexedNever;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: topInset + (od.cloudIndexBuilding ? 8 : 12),
+        bottom: 10,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            lastScanText,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.45),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.oneDriveTracksCount(tracks.length),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.oneDriveIndexRootsLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: od.signedIn && !od.cloudIndexBuilding
+                    ? () => _browseAdd(context, od)
+                    : null,
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: Text(l10n.oneDriveBrowseFolders),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white.withValues(alpha: 0.92),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            l10n.oneDriveIndexFoldersRecursiveHint,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.42),
+              fontSize: 11,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (od.indexFolders.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                l10n.oneDriveNoIndexRoots,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: od.indexFolders.length,
+                separatorBuilder: (_, _) => Divider(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+                itemBuilder: (ctx, i) {
+                  final folder = od.indexFolders[i];
+                  final label =
+                      folder.label.isEmpty ? folder.itemId : folder.label;
+                  return ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    leading: const Icon(
+                      Icons.folder_rounded,
+                      color: Color(0xFFFFB74D),
+                      size: 22,
+                    ),
+                    title: Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    trailing: IconButton(
+                      tooltip: l10n.oneDriveRemoveIndexFolderAction,
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.white.withValues(alpha: 0.65),
+                      ),
+                      onPressed: od.cloudIndexBuilding
+                          ? null
+                          : () => _confirmRemoveFolder(
+                                context,
+                                l10n,
+                                od,
+                                folder,
+                              ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
-    if (!context.mounted || picked == null) return;
-    await od.addIndexFolder(picked.itemId, picked.name);
+  }
+
+  Future<void> _browseAdd(BuildContext context, OneDriveController od) async {
+    final picked =
+        await Navigator.of(context).push<List<OneDriveFolderPickResult>>(
+      MaterialPageRoute(
+        builder: (_) => const OneDriveBrowserPage(
+          pickFolderForIndex: true,
+          pickMultipleIndexFolders: true,
+        ),
+      ),
+    );
+    if (!context.mounted || picked == null || picked.isEmpty) return;
+    for (final p in picked) {
+      await od.addIndexFolder(p.itemId, p.name);
+    }
     if (!context.mounted) return;
     await _runRescan(context, od);
   }
@@ -261,9 +428,6 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     return Consumer2<ThemeConfigProvider, OneDriveController>(
       builder: (context, theme, od, _) {
         final localeTag = Localizations.localeOf(context).toLanguageTag();
-        final lastFmt = od.cloudIndexAt != null
-            ? DateFormat.yMMMd(localeTag).add_jm().format(od.cloudIndexAt!)
-            : '';
         final tracks = _ordered(od);
 
         return PopScope(
@@ -326,7 +490,7 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
                     color: Colors.white,
                   ),
                   color: const Color(0xFF1E1E1E),
-                  onSelected: od.signedIn && !od.cloudIndexBuilding
+                  onSelected: od.signedIn
                       ? (value) async {
                           if (value == 'rescan') {
                             await _runRescan(context, od);
@@ -345,7 +509,8 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
                   itemBuilder: (ctx) => [
                     PopupMenuItem(
                       value: 'rescan',
-                      enabled: od.indexFolders.isNotEmpty,
+                      enabled:
+                          od.indexFolders.isNotEmpty && !od.cloudIndexBuilding,
                       child: Text(l10n.oneDriveRescanIndex),
                     ),
                     PopupMenuItem(
@@ -401,39 +566,12 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
                         ),
                       ),
                     ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      top:
-                          songPlaylistUnderlapTopInset(ctx) +
-                          (od.cloudIndexBuilding ? 8 : 12),
-                      bottom: 6,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (lastFmt.isNotEmpty && !od.cloudIndexBuilding) ...[
-                          Text(
-                            l10n.oneDriveLastIndexed(lastFmt),
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.45),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.oneDriveTracksCount(tracks.length),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                      ],
-                    ),
+                  _buildPinnedCloudLibraryHeader(
+                    ctx,
+                    l10n: l10n,
+                    od: od,
+                    tracks: tracks,
+                    localeTag: localeTag,
                   ),
                   Expanded(
                     child: Column(
@@ -478,16 +616,10 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     }
     if (od.indexFolders.isEmpty && !od.cloudIndexBuilding) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            l10n.oneDriveNoIndexRoots,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.65),
-              height: 1.45,
-            ),
-          ),
+        child: Icon(
+          Icons.library_music_outlined,
+          size: 56,
+          color: Colors.white.withValues(alpha: 0.2),
         ),
       );
     }

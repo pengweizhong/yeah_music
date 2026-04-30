@@ -488,21 +488,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveRestoreInProgress => '恢复中…';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
-
-  @override
-  String get oneDriveMusicRootHint => 'OneDrive 文件项 id，留空则从网盘根目录进入。';
-
-  @override
-  String get oneDriveMusicRootTileTitle => '音乐浏览根目录';
-
-  @override
-  String get oneDriveMusicRootTileSubtitle => '可选。文件浏览器从此文件夹开始，而不是网盘根目录。';
-
-  @override
-  String get oneDriveMusicRootSummaryRoot => '网盘根目录';
-
-  @override
   String get oneDriveCloudAppDataTitle => '云端应用数据文件夹';
 
   @override
@@ -753,6 +738,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveUseCurrentFolder => '使用此文件夹';
 
   @override
+  String get oneDrivePickMultipleFoldersHint => '勾选文件夹进行选择；点右侧箭头进入子文件夹继续选择。';
+
+  @override
+  String get oneDriveIncludeOpenFolderInSelection => '包含当前文件夹';
+
+  @override
+  String oneDriveAddSelectedFoldersAction(int count) {
+    return '添加（$count）';
+  }
+
+  @override
   String get oneDriveAddFolderTooltip => '加入云端曲库';
 
   @override
@@ -776,6 +772,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
+
+  @override
+  String get oneDriveLastIndexedNever => '上次扫描：—';
+
+  @override
+  String get oneDriveIndexFoldersRecursiveHint => '扫描会递归包含各文件夹及其子目录下的所有音频文件。';
+
+  @override
+  String get oneDriveRemoveIndexFolderTitle => '移除索引文件夹？';
+
+  @override
+  String oneDriveRemoveIndexFolderMessage(String name) {
+    return '要从索引中移除「$name」吗？该文件夹及其子文件夹中的曲目将不再出现在列表中，需要时可重新添加。';
+  }
+
+  @override
+  String get oneDriveRemoveIndexFolderAction => '移除';
 
   @override
   String get languageSettingsTitle => '语言';
@@ -1143,6 +1156,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tooltipSort => '排序';
+
+  @override
+  String get playbackFailedSnackMessage => '无法播放该曲目，文件可能缺失、无法读取或格式不支持。';
 
   @override
   String get languageRestartNotice => '部分界面需重启应用后才会完全应用所选语言。';
@@ -2605,21 +2621,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveRestoreInProgress => '恢复中…';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音乐浏览根目录（可选）';
-
-  @override
-  String get oneDriveMusicRootHint => 'OneDrive 文件项 id，留空则从网盘根目录进入。';
-
-  @override
-  String get oneDriveMusicRootTileTitle => '音乐浏览根目录';
-
-  @override
-  String get oneDriveMusicRootTileSubtitle => '可选。文件浏览器从此文件夹开始，而不是网盘根目录。';
-
-  @override
-  String get oneDriveMusicRootSummaryRoot => '网盘根目录';
-
-  @override
   String get oneDriveCloudAppDataTitle => '云端应用数据文件夹';
 
   @override
@@ -2870,6 +2871,17 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveUseCurrentFolder => '使用此文件夹';
 
   @override
+  String get oneDrivePickMultipleFoldersHint => '勾选文件夹进行选择；点右侧箭头进入子文件夹继续选择。';
+
+  @override
+  String get oneDriveIncludeOpenFolderInSelection => '包含当前文件夹';
+
+  @override
+  String oneDriveAddSelectedFoldersAction(int count) {
+    return '添加（$count）';
+  }
+
+  @override
   String get oneDriveAddFolderTooltip => '加入云端曲库';
 
   @override
@@ -2893,6 +2905,23 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
+
+  @override
+  String get oneDriveLastIndexedNever => '上次扫描：—';
+
+  @override
+  String get oneDriveIndexFoldersRecursiveHint => '扫描会递归包含各文件夹及其子目录下的所有音频文件。';
+
+  @override
+  String get oneDriveRemoveIndexFolderTitle => '移除索引文件夹？';
+
+  @override
+  String oneDriveRemoveIndexFolderMessage(String name) {
+    return '要从索引中移除「$name」吗？该文件夹及其子文件夹中的曲目将不再出现在列表中，需要时可重新添加。';
+  }
+
+  @override
+  String get oneDriveRemoveIndexFolderAction => '移除';
 
   @override
   String get languageSettingsTitle => '语言';
@@ -3260,6 +3289,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get tooltipSort => '排序';
+
+  @override
+  String get playbackFailedSnackMessage => '无法播放该曲目，文件可能缺失、无法读取或格式不支持。';
 
   @override
   String get languageRestartNotice => '部分界面需重启应用后才会完全应用所选语言。';
@@ -4722,21 +4754,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveRestoreInProgress => '還原中…';
 
   @override
-  String get oneDriveMusicRootIdLabel => '音樂瀏覽根目錄（選填）';
-
-  @override
-  String get oneDriveMusicRootHint => 'OneDrive 項目 id，留空則從雲端根目錄進入。';
-
-  @override
-  String get oneDriveMusicRootTileTitle => '音樂瀏覽根目錄';
-
-  @override
-  String get oneDriveMusicRootTileSubtitle => '選填。檔案瀏覽器從此資料夾開始，而非雲端根目錄。';
-
-  @override
-  String get oneDriveMusicRootSummaryRoot => '雲端根目錄';
-
-  @override
   String get oneDriveCloudAppDataTitle => '雲端應用程式資料夾';
 
   @override
@@ -4987,6 +5004,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveUseCurrentFolder => '使用此資料夾';
 
   @override
+  String get oneDrivePickMultipleFoldersHint => '勾選資料夾；點右側箭頭進入子資料夾繼續選擇。';
+
+  @override
+  String get oneDriveIncludeOpenFolderInSelection => '包含目前資料夾';
+
+  @override
+  String oneDriveAddSelectedFoldersAction(int count) {
+    return '新增（$count）';
+  }
+
+  @override
   String get oneDriveAddFolderTooltip => '加入雲端曲庫';
 
   @override
@@ -5010,6 +5038,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveNoIndexRoots => '尚未設定目錄，請先用「在網路磁碟選擇資料夾」。';
+
+  @override
+  String get oneDriveLastIndexedNever => '上次掃描：—';
+
+  @override
+  String get oneDriveIndexFoldersRecursiveHint => '掃描會遞迴包含各資料夾及其子目錄下的所有音訊檔案。';
+
+  @override
+  String get oneDriveRemoveIndexFolderTitle => '移除索引資料夾？';
+
+  @override
+  String oneDriveRemoveIndexFolderMessage(String name) {
+    return '要從索引中移除「$name」嗎？該資料夾及其子資料夾中的曲目將不再出現在列表中，需要時可重新新增。';
+  }
+
+  @override
+  String get oneDriveRemoveIndexFolderAction => '移除';
 
   @override
   String get languageSettingsTitle => '語言';
@@ -5378,6 +5423,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tooltipSort => '排序';
+
+  @override
+  String get playbackFailedSnackMessage => '無法播放此曲目，檔案可能遺失、無法讀取或格式不支援。';
 
   @override
   String get languageRestartNotice => '部分介面需重新啟動應用程式後才會完全套用所選語言。';

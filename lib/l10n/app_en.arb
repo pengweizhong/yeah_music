@@ -172,11 +172,6 @@
   "oneDriveRestoreLoadingList": "Loading backups…",
   "oneDriveSyncNowInProgress": "Syncing…",
   "oneDriveRestoreInProgress": "Restoring…",
-  "oneDriveMusicRootIdLabel": "Music browse root (optional)",
-  "oneDriveMusicRootHint": "OneDrive item id, or leave empty for drive root.",
-  "oneDriveMusicRootTileTitle": "Music browse root",
-  "oneDriveMusicRootTileSubtitle": "Optional folder id. The file browser starts here instead of the drive root.",
-  "oneDriveMusicRootSummaryRoot": "Drive root",
   "oneDriveCloudAppDataTitle": "Cloud app folder",
   "oneDriveCloudAppDataSubtitle": "Reserved for settings backup, playlists, and sync.",
   "oneDriveCloudAppFolderUnset": "Not set",
@@ -265,6 +260,14 @@
   "oneDriveBrowseFolders": "Choose folders",
   "oneDrivePickFolderForIndex": "Tap a folder’s + icon, or enter a folder and use “Use this folder”.",
   "oneDriveUseCurrentFolder": "Use this folder",
+  "oneDrivePickMultipleFoldersHint": "Tap the checkboxes to select folders. Use the arrow to open a folder and select more inside.",
+  "oneDriveIncludeOpenFolderInSelection": "Include open folder",
+  "oneDriveAddSelectedFoldersAction": "Add ({count})",
+  "@oneDriveAddSelectedFoldersAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "oneDriveAddFolderTooltip": "Add folder to cloud library",
   "oneDriveIndexingEllipsis": "Scanning folders…",
   "oneDriveLastIndexed": "Last scanned: {time}",
@@ -274,6 +277,16 @@
   "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
   "oneDriveCloudSearchHint": "Search file names or paths…",
   "oneDriveNoIndexRoots": "No folders configured. Tap “Choose folders” first.",
+  "oneDriveLastIndexedNever": "Last scanned: —",
+  "oneDriveIndexFoldersRecursiveHint": "Scan includes all subfolders; every audio file under each bound folder is listed.",
+  "oneDriveRemoveIndexFolderTitle": "Remove this folder?",
+  "oneDriveRemoveIndexFolderMessage": "Remove \"{name}\" from the index? Tracks under this folder (including subfolders) will disappear until you add it again.",
+  "@oneDriveRemoveIndexFolderMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "oneDriveRemoveIndexFolderAction": "Remove",
   "languageSettingsTitle": "Language",
   "languageSettingsDescription": "Choose the app interface language. “Follow system” uses your device language when a translation is available.",
   "langFollowSystem": "Follow system",
@@ -431,6 +444,7 @@
   "homeEmptyPlaylist": "Empty",
   "songsListEmpty": "No songs in the library",
   "tooltipSort": "Sort",
+  "playbackFailedSnackMessage": "Couldn't play this track. It may be missing, unreadable, or in an unsupported format.",
   "languageRestartNotice": "You may need to restart the app for all interface text to update.",
   "locateNotInList": "The playing track is not in this list",
   "locateToCurrent": "Scroll to now playing",

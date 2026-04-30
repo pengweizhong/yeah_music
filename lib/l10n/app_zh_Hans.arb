@@ -173,11 +173,6 @@
   "oneDriveRestoreLoadingList": "正在读取备份列表…",
   "oneDriveSyncNowInProgress": "同步中…",
   "oneDriveRestoreInProgress": "恢复中…",
-  "oneDriveMusicRootIdLabel": "音乐浏览根目录（可选）",
-  "oneDriveMusicRootHint": "OneDrive 文件项 id，留空则从网盘根目录进入。",
-  "oneDriveMusicRootTileTitle": "音乐浏览根目录",
-  "oneDriveMusicRootTileSubtitle": "可选。文件浏览器从此文件夹开始，而不是网盘根目录。",
-  "oneDriveMusicRootSummaryRoot": "网盘根目录",
   "oneDriveCloudAppDataTitle": "云端应用数据文件夹",
   "oneDriveCloudAppDataSubtitle": "预留：设置备份、歌单与同步等。",
   "oneDriveCloudAppFolderUnset": "未设置",
@@ -266,6 +261,14 @@
   "oneDriveBrowseFolders": "在网盘中选择文件夹",
   "oneDrivePickFolderForIndex": "点文件夹右侧的 +，或进入文件夹后点「使用此文件夹」。",
   "oneDriveUseCurrentFolder": "使用此文件夹",
+  "oneDrivePickMultipleFoldersHint": "勾选文件夹进行选择；点右侧箭头进入子文件夹继续选择。",
+  "oneDriveIncludeOpenFolderInSelection": "包含当前文件夹",
+  "oneDriveAddSelectedFoldersAction": "添加（{count}）",
+  "@oneDriveAddSelectedFoldersAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "oneDriveAddFolderTooltip": "加入云端曲库",
   "oneDriveIndexingEllipsis": "正在扫描目录…",
   "oneDriveLastIndexed": "上次扫描：{time}",
@@ -275,6 +278,16 @@
   "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
   "oneDriveCloudSearchHint": "搜索文件名或路径…",
   "oneDriveNoIndexRoots": "尚未配置目录，请先「在网盘中选择文件夹」。",
+  "oneDriveLastIndexedNever": "上次扫描：—",
+  "oneDriveIndexFoldersRecursiveHint": "扫描会递归包含各文件夹及其子目录下的所有音频文件。",
+  "oneDriveRemoveIndexFolderTitle": "移除索引文件夹？",
+  "oneDriveRemoveIndexFolderMessage": "要从索引中移除「{name}」吗？该文件夹及其子文件夹中的曲目将不再出现在列表中，需要时可重新添加。",
+  "@oneDriveRemoveIndexFolderMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "oneDriveRemoveIndexFolderAction": "移除",
   "languageSettingsTitle": "语言",
   "languageSettingsDescription": "选择应用界面显示语言。选择「跟随系统」时，在已提供翻译的情况下将跟随设备语言。",
   "langFollowSystem": "跟随系统",
@@ -432,6 +445,7 @@
   "homeEmptyPlaylist": "空歌单",
   "songsListEmpty": "暂无歌曲",
   "tooltipSort": "排序",
+  "playbackFailedSnackMessage": "无法播放该曲目，文件可能缺失、无法读取或格式不支持。",
   "languageRestartNotice": "部分界面需重启应用后才会完全应用所选语言。",
   "locateNotInList": "当前播放不在本列表",
   "locateToCurrent": "定位到当前",

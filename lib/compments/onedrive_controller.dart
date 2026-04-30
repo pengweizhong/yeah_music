@@ -32,7 +32,6 @@ class OneDriveController extends ChangeNotifier {
 
   /// 旧版在设置中保存的 Client ID；仅当 [OneDriveConfig.applicationClientId] 为空时作为回退。
   String _legacyClientId = '';
-  String? _musicRootItemId;
   String? _cloudAppDataFolderId;
   String _cloudAppDataFolderLabel = '';
   String? _musicUploadFolderId;
@@ -58,8 +57,6 @@ class OneDriveController extends ChangeNotifier {
   bool get isImmediateSyncBusy => _immediateSyncBusy;
 
   bool get isImmediateRestoreBusy => _immediateRestoreBusy;
-
-  String? get musicRootItemId => _musicRootItemId;
 
   /// 云端「应用数据」目录（设置/歌单备份等预留），Graph driveItem id。
   String? get cloudAppDataFolderId => _cloudAppDataFolderId;
@@ -99,7 +96,7 @@ class OneDriveController extends ChangeNotifier {
 
   Future<void> loadFromStorage() async {
     _legacyClientId = (await SettingsService.loadOneDriveClientId()) ?? '';
-    _musicRootItemId = await SettingsService.loadOneDriveMusicRootId();
+    await SettingsService.migrateRemoveOneDriveMusicRootSetting();
     final appFolder = await SettingsService.loadOneDriveCloudAppFolder();
     _cloudAppDataFolderId = appFolder.$1;
     _cloudAppDataFolderLabel = appFolder.$2;
@@ -392,12 +389,6 @@ class OneDriveController extends ChangeNotifier {
     }
   }
 
-  Future<void> setMusicRootItemId(String? id) async {
-    _musicRootItemId = id;
-    await SettingsService.saveOneDriveMusicRootId(id);
-    notifyListeners();
-  }
-
   Future<void> setCloudAppDataFolder(
     String? itemId, {
     String label = '',
@@ -663,9 +654,6 @@ class OneDriveController extends ChangeNotifier {
     final t = await getAccessToken();
     if (t == null) {
       throw StateError('not signed in');
-    }
-    if (parentItemId == null && _musicRootItemId != null) {
-      return _graph.listChildren(accessToken: t, parentId: _musicRootItemId);
     }
     return _graph.listChildren(accessToken: t, parentId: parentItemId);
   }

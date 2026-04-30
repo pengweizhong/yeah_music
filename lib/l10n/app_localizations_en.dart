@@ -523,23 +523,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveRestoreInProgress => 'Restoring…';
 
   @override
-  String get oneDriveMusicRootIdLabel => 'Music browse root (optional)';
-
-  @override
-  String get oneDriveMusicRootHint =>
-      'OneDrive item id, or leave empty for drive root.';
-
-  @override
-  String get oneDriveMusicRootTileTitle => 'Music browse root';
-
-  @override
-  String get oneDriveMusicRootTileSubtitle =>
-      'Optional folder id. The file browser starts here instead of the drive root.';
-
-  @override
-  String get oneDriveMusicRootSummaryRoot => 'Drive root';
-
-  @override
   String get oneDriveCloudAppDataTitle => 'Cloud app folder';
 
   @override
@@ -802,6 +785,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveUseCurrentFolder => 'Use this folder';
 
   @override
+  String get oneDrivePickMultipleFoldersHint =>
+      'Tap the checkboxes to select folders. Use the arrow to open a folder and select more inside.';
+
+  @override
+  String get oneDriveIncludeOpenFolderInSelection => 'Include open folder';
+
+  @override
+  String oneDriveAddSelectedFoldersAction(int count) {
+    return 'Add ($count)';
+  }
+
+  @override
   String get oneDriveAddFolderTooltip => 'Add folder to cloud library';
 
   @override
@@ -826,6 +821,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get oneDriveNoIndexRoots =>
       'No folders configured. Tap “Choose folders” first.';
+
+  @override
+  String get oneDriveLastIndexedNever => 'Last scanned: —';
+
+  @override
+  String get oneDriveIndexFoldersRecursiveHint =>
+      'Scan includes all subfolders; every audio file under each bound folder is listed.';
+
+  @override
+  String get oneDriveRemoveIndexFolderTitle => 'Remove this folder?';
+
+  @override
+  String oneDriveRemoveIndexFolderMessage(String name) {
+    return 'Remove \"$name\" from the index? Tracks under this folder (including subfolders) will disappear until you add it again.';
+  }
+
+  @override
+  String get oneDriveRemoveIndexFolderAction => 'Remove';
 
   @override
   String get languageSettingsTitle => 'Language';
@@ -1209,6 +1222,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipSort => 'Sort';
+
+  @override
+  String get playbackFailedSnackMessage =>
+      'Couldn\'t play this track. It may be missing, unreadable, or in an unsupported format.';
 
   @override
   String get languageRestartNotice =>
