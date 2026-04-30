@@ -3948,6 +3948,54 @@ abstract class AppLocalizations {
   /// **'Renamed'**
   String get libraryRenameSingleDone;
 
+  /// No description provided for @libraryCloneSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone song'**
+  String get libraryCloneSong;
+
+  /// No description provided for @libraryCloneSongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone to new file'**
+  String get libraryCloneSongTitle;
+
+  /// No description provided for @libraryCloneSongHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name for the copy (extension is kept). Saved next to the original.'**
+  String get libraryCloneSongHint;
+
+  /// No description provided for @libraryCloneSongDefaultSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' copy'**
+  String get libraryCloneSongDefaultSuffix;
+
+  /// No description provided for @libraryCloneSongDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Song cloned'**
+  String get libraryCloneSongDone;
+
+  /// No description provided for @libraryCloneSongFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clone song'**
+  String get libraryCloneSongFailed;
+
+  /// No description provided for @libraryCloneSongProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloning song'**
+  String get libraryCloneSongProgressTitle;
+
+  /// No description provided for @libraryCloneSongProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying file and refreshing library…'**
+  String get libraryCloneSongProgressMessage;
+
   /// No description provided for @libraryBatchUploadNeedSignIn.
   ///
   /// In en, this message translates to:

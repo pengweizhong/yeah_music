@@ -6,6 +6,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
@@ -29,10 +30,13 @@ void showAppSnackBar(
   Duration duration = const Duration(seconds: 3),
   SnackBarAction? action,
 }) {
-  final messenger = ScaffoldMessenger.maybeOf(context);
+  final messenger = (context.mounted
+          ? ScaffoldMessenger.maybeOf(context)
+          : null) ??
+      appScaffoldMessengerKey.currentState;
   if (messenger == null) return;
 
-  final scheme = Theme.of(context).colorScheme;
+  final scheme = Theme.of(messenger.context).colorScheme;
   late Color backgroundColor;
   late Color foregroundColor;
 
@@ -395,10 +399,13 @@ Future<T?> showAppCustomDialog<T>({
 }
 
 /// 不可手动关闭的阻塞进度；完成后由调用方 `Navigator.pop` 关闭。
+///
+/// [linearProgressBar] 为 true 时使用条形不确定进度，否则为环形。
 void showAppBlockingProgressDialog({
   required BuildContext context,
   required String title,
   String? message,
+  bool linearProgressBar = false,
 }) {
   showFrostedDialog<void>(
     context: context,
@@ -426,7 +433,21 @@ void showAppBlockingProgressDialog({
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const CircularProgressIndicator(),
+                  if (linearProgressBar)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          minHeight: 8,
+                          backgroundColor: scheme.surfaceContainerHighest
+                              .withValues(alpha: 0.45),
+                          color: scheme.primary,
+                        ),
+                      ),
+                    )
+                  else
+                    const CircularProgressIndicator(),
                   if (msg != null && msg.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(

@@ -2054,6 +2054,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get libraryRenameSingleDone => '已重命名';
 
   @override
+  String get libraryCloneSong => '克隆歌曲';
+
+  @override
+  String get libraryCloneSongTitle => '克隆为新文件';
+
+  @override
+  String get libraryCloneSongHint => '输入副本的主文件名（扩展名与原文件相同），保存在同一文件夹。';
+
+  @override
+  String get libraryCloneSongDefaultSuffix => ' 副本';
+
+  @override
+  String get libraryCloneSongDone => '已克隆';
+
+  @override
+  String get libraryCloneSongFailed => '克隆失败';
+
+  @override
+  String get libraryCloneSongProgressTitle => '正在克隆歌曲';
+
+  @override
+  String get libraryCloneSongProgressMessage => '正在复制文件并刷新曲库…';
+
+  @override
   String get libraryBatchUploadNeedSignIn => '请先在设置中登录 OneDrive';
 
   @override
@@ -4145,6 +4169,30 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get libraryRenameSingleDone => '已重命名';
+
+  @override
+  String get libraryCloneSong => '克隆歌曲';
+
+  @override
+  String get libraryCloneSongTitle => '克隆为新文件';
+
+  @override
+  String get libraryCloneSongHint => '输入副本的主文件名（扩展名与原文件相同），保存在同一文件夹。';
+
+  @override
+  String get libraryCloneSongDefaultSuffix => ' 副本';
+
+  @override
+  String get libraryCloneSongDone => '已克隆';
+
+  @override
+  String get libraryCloneSongFailed => '克隆失败';
+
+  @override
+  String get libraryCloneSongProgressTitle => '正在克隆歌曲';
+
+  @override
+  String get libraryCloneSongProgressMessage => '正在复制文件并刷新曲库…';
 
   @override
   String get libraryBatchUploadNeedSignIn => '请先在设置中登录 OneDrive';
@@ -6239,6 +6287,30 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get libraryRenameSingleDone => '已重新命名';
+
+  @override
+  String get libraryCloneSong => '複製歌曲';
+
+  @override
+  String get libraryCloneSongTitle => '複製為新檔案';
+
+  @override
+  String get libraryCloneSongHint => '輸入副本的主檔名（副檔名與原檔相同），儲存在同一資料夾。';
+
+  @override
+  String get libraryCloneSongDefaultSuffix => ' 副本';
+
+  @override
+  String get libraryCloneSongDone => '已複製';
+
+  @override
+  String get libraryCloneSongFailed => '複製失敗';
+
+  @override
+  String get libraryCloneSongProgressTitle => '正在複製歌曲';
+
+  @override
+  String get libraryCloneSongProgressMessage => '正在複製檔案並重新整理曲庫…';
 
   @override
   String get libraryBatchUploadNeedSignIn => '請先在設定中登入 OneDrive';

@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
+import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -160,6 +161,16 @@ Future<void> showLibrarySongMoreActionsSheet(
                       afterMutation?.call();
                     },
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.copy_all_outlined, color: Colors.white),
+                    title: Text(l10n.libraryCloneSong,
+                        style: const TextStyle(color: Colors.white)),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      final ok = await _cloneSongStem(context, song);
+                      if (ok) afterMutation?.call();
+                    },
+                  ),
                   const Divider(height: 1, color: Color(0x33FFFFFF)),
                   ListTile(
                     leading: Icon(
@@ -255,6 +266,69 @@ Future<bool> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
       showAppSnackBar(context, '$e', kind: AppSnackKind.error);
     }
     return false;
+  }
+}
+
+Future<bool> _cloneSongStem(BuildContext context, Song song) async {
+  final l10n = AppLocalizations.of(context);
+  final base = p.basenameWithoutExtension(song.path);
+  final scheme = Theme.of(context).colorScheme;
+  final initial = '$base${l10n.libraryCloneSongDefaultSuffix}';
+  final newStem = await showAppTextPromptDialog(
+    context: context,
+    title: l10n.libraryCloneSongTitle,
+    subtitle: Text(
+      l10n.libraryCloneSongHint,
+      style: TextStyle(
+        color: scheme.onSurfaceVariant,
+        fontSize: 13,
+        height: 1.4,
+      ),
+    ),
+    initialValue: initial.isEmpty ? base : initial,
+    fieldLabel: l10n.libraryRenameSingleFieldLabel,
+  );
+  if (newStem == null || !context.mounted) return false;
+  final folder = context.read<FolderProvider>();
+  final playList = context.read<PlayListProvider>();
+  showAppBlockingProgressDialog(
+    context: context,
+    title: l10n.libraryCloneSongProgressTitle,
+    message: l10n.libraryCloneSongProgressMessage,
+    linearProgressBar: true,
+  );
+  try {
+    final dest = await cloneLibrarySongToStem(
+      folderProvider: folder,
+      playListProvider: playList,
+      song: song,
+      newStem: newStem,
+    );
+    final failed = dest == null;
+    final feedbackMsg =
+        failed ? l10n.libraryCloneSongFailed : l10n.libraryCloneSongDone;
+    final feedbackKind =
+        failed ? AppSnackKind.error : AppSnackKind.success;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mountedCtx =
+          context.mounted ? context : appScaffoldMessengerKey.currentContext;
+      if (mountedCtx == null) return;
+      showAppSnackBar(mountedCtx, feedbackMsg, kind: feedbackKind);
+    });
+    return !failed;
+  } catch (e) {
+    appLog.e('single clone failed', error: e);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mountedCtx =
+          context.mounted ? context : appScaffoldMessengerKey.currentContext;
+      if (mountedCtx == null) return;
+      showAppSnackBar(mountedCtx, '$e', kind: AppSnackKind.error);
+    });
+    return false;
+  } finally {
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
   }
 }
 

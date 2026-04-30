@@ -2146,6 +2146,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryRenameSingleDone => 'Renamed';
 
   @override
+  String get libraryCloneSong => 'Clone song';
+
+  @override
+  String get libraryCloneSongTitle => 'Clone to new file';
+
+  @override
+  String get libraryCloneSongHint =>
+      'Enter a name for the copy (extension is kept). Saved next to the original.';
+
+  @override
+  String get libraryCloneSongDefaultSuffix => ' copy';
+
+  @override
+  String get libraryCloneSongDone => 'Song cloned';
+
+  @override
+  String get libraryCloneSongFailed => 'Could not clone song';
+
+  @override
+  String get libraryCloneSongProgressTitle => 'Cloning song';
+
+  @override
+  String get libraryCloneSongProgressMessage =>
+      'Copying file and refreshing library…';
+
+  @override
   String get libraryBatchUploadNeedSignIn => 'Sign in to OneDrive in Settings';
 
   @override

@@ -2075,6 +2075,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryRenameSingleDone => '名前を変更しました';
 
   @override
+  String get libraryCloneSong => '曲を複製';
+
+  @override
+  String get libraryCloneSongTitle => '新しいファイルとして複製';
+
+  @override
+  String get libraryCloneSongHint =>
+      'コピーの名前を入力してください（拡張子は元と同じです）。同じフォルダに保存されます。';
+
+  @override
+  String get libraryCloneSongDefaultSuffix => ' のコピー';
+
+  @override
+  String get libraryCloneSongDone => '複製しました';
+
+  @override
+  String get libraryCloneSongFailed => '複製できませんでした';
+
+  @override
+  String get libraryCloneSongProgressTitle => '曲を複製しています';
+
+  @override
+  String get libraryCloneSongProgressMessage => 'ファイルをコピーしてライブラリを更新しています…';
+
+  @override
   String get libraryBatchUploadNeedSignIn => '設定から OneDrive にサインインしてください';
 
   @override

@@ -115,6 +115,67 @@ Future<void> renameLibrarySongToStem({
     playListProvider.flushPlaylist(folder);
   }
 }
+
+/// 在同一文件夹复制曲目为新主文件名（保留扩展名）；不改用户歌单与最近播放。
+///
+/// 成功返回目标路径；路径无效、源不存在或与原名冲突导致目标等于源路径时返回 `null`。
+Future<String?> cloneLibrarySongToStem({
+  required FolderProvider folderProvider,
+  required PlayListProvider playListProvider,
+  required Song song,
+  required String newStem,
+}) async {
+  final oldPath = song.path.trim();
+  if (oldPath.isEmpty) return null;
+  if (Platform.isAndroid) {
+    await ensureAndroidManageExternalStorageAccess();
+  }
+  final src = File(oldPath);
+  if (!await src.exists()) return null;
+  final ext = p.extension(oldPath);
+  final dir = p.dirname(oldPath);
+  var stem = newStem.trim();
+  if (stem.isEmpty) stem = 'track';
+  var dest = p.join(dir, '$stem$ext');
+  if (await File(dest).exists()) {
+    var k = 1;
+    while (await File(dest).exists()) {
+      dest = p.join(dir, '${stem}_$k$ext');
+      k++;
+      if (k > 9999) break;
+    }
+  }
+  if (normSongPath(dest) == normSongPath(oldPath)) {
+    return null;
+  }
+  try {
+    await src.copy(dest);
+  } catch (_) {
+    return null;
+  }
+  SongLibraryMetadataHydrator.invalidatePath(dest);
+
+  final normOld = normSongPath(oldPath);
+  final foldersToRefresh = <Folder>[];
+  for (final folder in folderProvider.folders) {
+    final list = folder.songList;
+    if (list == null || list.isEmpty) continue;
+    if (list.any((s) => normSongPath(s.path) == normOld)) {
+      foldersToRefresh.add(folder);
+    }
+  }
+  for (var i = 0; i < foldersToRefresh.length; i++) {
+    await folderProvider.flushSongToFolder(
+      foldersToRefresh[i],
+      i == foldersToRefresh.length - 1,
+    );
+  }
+  for (final folder in foldersToRefresh) {
+    playListProvider.flushPlaylist(folder);
+  }
+  return dest;
+}
+
 /// 按列表顺序重命名；[namePattern] 含 `%n` 时替换为递增序号，否则为 `pattern_序号`。
 Future<void> renameLibrarySongsWithPattern({
   required FolderProvider folderProvider,
