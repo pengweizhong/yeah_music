@@ -6,8 +6,10 @@ import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/models/onedrive_download_task.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/widgets/onedrive_download_queue_panel.dart';
+import 'package:yeah_music/widgets/onedrive_download_task_row.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 /// 全屏传输队列页打开时默认选中的 Tab（与 [DefaultTabController.initialIndex] 一致）。
@@ -20,6 +22,59 @@ enum OneDriveTransferQueueTab {
 
   const OneDriveTransferQueueTab(this.tabIndex);
   final int tabIndex;
+}
+
+/// 全屏传输队列 Tab：任务列表 + 底部留白一体滚动；短列表用 [SliverFillRemaining] 铺满视口剩余高度。
+List<Widget> _transferQueueTaskSlivers({
+  required List<OneDriveDownloadTask> tasks,
+  required AppLocalizations l10n,
+  required double viewportBottomInset,
+  required String emptyMessage,
+}) {
+  if (tasks.isEmpty) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + viewportBottomInset),
+          child: Center(
+            child: Text(
+              emptyMessage,
+              style: const TextStyle(color: Colors.white54, height: 1.45),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+  return [
+    SliverPadding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index.isOdd) {
+              return const Divider(height: 1, color: Color(0x22FFFFFF));
+            }
+            final ti = index ~/ 2;
+            return OneDriveDownloadTaskRow(
+              task: tasks[ti],
+              formatBytes: formatOneDriveDownloadBytes,
+              l10n: l10n,
+            );
+          },
+          childCount: tasks.length * 2 - 1,
+        ),
+      ),
+    ),
+    SliverToBoxAdapter(child: SizedBox(height: viewportBottomInset)),
+    const SliverFillRemaining(
+      hasScrollBody: false,
+      fillOverscroll: true,
+      child: SizedBox.expand(),
+    ),
+  ];
 }
 
 /// 全屏查看 / 控制 OneDrive 传输队列（关闭抽屉后任务仍在此继续）。
@@ -75,94 +130,153 @@ class OneDriveDownloadQueuePage extends StatelessWidget {
                     final bottomPad = MediaQuery.paddingOf(context).bottom +
                         8 +
                         (showMini ? MiniPlayer.barHeight : 0.0);
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: bottomPad),
-                      child: Column(
-                        children: [
-                          SizedBox(height: songPlaylistUnderlapTopInset(ctx)),
-                          Expanded(
-                            child: TabBarView(
+                    return Column(
+                      children: [
+                        SizedBox(height: songPlaylistUnderlapTopInset(ctx)),
+                        Expanded(
+                          child: TabBarView(
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                                      child: Text(
-                                        l10n.oneDriveDownloadQueuePageHint,
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.55),
-                                          fontSize: 13,
-                                          height: 1.4,
-                                        ),
+                                Consumer2<OneDriveDownloadQueueController,
+                                    PlayListProvider>(
+                                  builder: (context, ctrl, playList, _) {
+                                    final tracks =
+                                        filterOneDriveQueueTasks(
+                                      ctrl,
+                                      OneDriveQueuePanelTaskFilter
+                                          .downloadsOnly,
+                                    );
+                                    final emptyDl =
+                                        oneDriveQueueTabEmptyMessage(
+                                      l10n,
+                                      OneDriveQueuePanelTaskFilter
+                                          .downloadsOnly,
+                                    );
+                                    return CustomScrollView(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(
+                                        parent: BouncingScrollPhysics(),
                                       ),
-                                    ),
-                                    Consumer2<OneDriveDownloadQueueController, PlayListProvider>(
-                                      builder: (context, ctrl, playList, _) {
-                                        if (!ctrl.hasCompletedSongs) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return Padding(
-                                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                                          child: SizedBox(
-                                            width: double.infinity,
-                                            child: FilledButton.tonalIcon(
-                                              onPressed: () async {
-                                                await playList.setPlaybackQueueAndPlay(
-                                                  ctrl.completedSongs,
-                                                  0,
-                                                  session: PlaybackSessionSurface.adHoc,
-                                                );
-                                              },
-                                              icon: const Icon(Icons.play_arrow_rounded),
-                                              label: Text(l10n.oneDriveDownloadPlayDownloaded),
+                                      slivers: [
+                                        SliverToBoxAdapter(
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                                16, 8, 16, 8),
+                                            child: Text(
+                                              l10n.oneDriveDownloadQueuePageHint,
+                                              style: TextStyle(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.55),
+                                                fontSize: 13,
+                                                height: 1.4,
+                                              ),
                                             ),
                                           ),
-                                        );
-                                      },
-                                    ),
-                                    const Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(top: 4),
-                                        child: OneDriveDownloadQueuePanel(
-                                          maxListHeight: null,
-                                          taskFilter: OneDriveQueuePanelTaskFilter.downloadsOnly,
                                         ),
-                                      ),
-                                    ),
-                                  ],
+                                        SliverToBoxAdapter(
+                                          child: ctrl.hasCompletedSongs
+                                              ? Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          16, 0, 16, 8),
+                                                  child: SizedBox(
+                                                    width: double.infinity,
+                                                    child:
+                                                        FilledButton.tonalIcon(
+                                                      onPressed: () async {
+                                                        await playList
+                                                            .setPlaybackQueueAndPlay(
+                                                          ctrl.completedSongs,
+                                                          0,
+                                                          session:
+                                                              PlaybackSessionSurface
+                                                                  .adHoc,
+                                                        );
+                                                      },
+                                                      icon: const Icon(Icons
+                                                          .play_arrow_rounded),
+                                                      label: Text(l10n
+                                                          .oneDriveDownloadPlayDownloaded),
+                                                    ),
+                                                  ),
+                                                )
+                                              : const SizedBox.shrink(),
+                                        ),
+                                        SliverToBoxAdapter(
+                                          child: OneDriveTransferQueueToolbar(
+                                            ctrl: ctrl,
+                                            l10n: l10n,
+                                            taskFilter:
+                                                OneDriveQueuePanelTaskFilter
+                                                    .downloadsOnly,
+                                          ),
+                                        ),
+                                        ..._transferQueueTaskSlivers(
+                                          tasks: tracks,
+                                          l10n: l10n,
+                                          viewportBottomInset: bottomPad,
+                                          emptyMessage: emptyDl,
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                                      child: Text(
-                                        l10n.oneDriveUploadQueuePageHint,
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.55),
-                                          fontSize: 13,
-                                          height: 1.4,
-                                        ),
+                                Consumer<OneDriveDownloadQueueController>(
+                                  builder: (context, ctrl, _) {
+                                    final tracks =
+                                        filterOneDriveQueueTasks(
+                                      ctrl,
+                                      OneDriveQueuePanelTaskFilter.uploadsOnly,
+                                    );
+                                    final emptyUp =
+                                        oneDriveQueueTabEmptyMessage(
+                                      l10n,
+                                      OneDriveQueuePanelTaskFilter.uploadsOnly,
+                                    );
+                                    return CustomScrollView(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(
+                                        parent: BouncingScrollPhysics(),
                                       ),
-                                    ),
-                                    const Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(top: 4),
-                                        child: OneDriveDownloadQueuePanel(
-                                          maxListHeight: null,
-                                          taskFilter: OneDriveQueuePanelTaskFilter.uploadsOnly,
+                                      slivers: [
+                                        SliverToBoxAdapter(
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                                16, 8, 16, 8),
+                                            child: Text(
+                                              l10n.oneDriveUploadQueuePageHint,
+                                              style: TextStyle(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.55),
+                                                fontSize: 13,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                  ],
+                                        SliverToBoxAdapter(
+                                          child: OneDriveTransferQueueToolbar(
+                                            ctrl: ctrl,
+                                            l10n: l10n,
+                                            taskFilter:
+                                                OneDriveQueuePanelTaskFilter
+                                                    .uploadsOnly,
+                                          ),
+                                        ),
+                                        ..._transferQueueTaskSlivers(
+                                          tasks: tracks,
+                                          l10n: l10n,
+                                          viewportBottomInset: bottomPad,
+                                          emptyMessage: emptyUp,
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ],
                             ),
                           ),
                         ],
-                      ),
-                    );
+                      );
                   },
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/models/onedrive_download_task.dart';
 import 'package:yeah_music/widgets/onedrive_download_task_row.dart';
 
 String formatOneDriveDownloadBytes(int n) {
@@ -15,6 +16,99 @@ enum OneDriveQueuePanelTaskFilter {
   all,
   downloadsOnly,
   uploadsOnly,
+}
+
+/// 按 Tab / 抽屉过滤后的任务列表（与面板展示顺序一致）。
+List<OneDriveDownloadTask> filterOneDriveQueueTasks(
+  OneDriveDownloadQueueController ctrl,
+  OneDriveQueuePanelTaskFilter taskFilter,
+) {
+  final allSorted = ctrl.tasksSortedForDisplay;
+  return switch (taskFilter) {
+    OneDriveQueuePanelTaskFilter.all => allSorted,
+    OneDriveQueuePanelTaskFilter.downloadsOnly =>
+      allSorted.where((t) => !t.isUpload).toList(),
+    OneDriveQueuePanelTaskFilter.uploadsOnly =>
+      allSorted.where((t) => t.isUpload).toList(),
+  };
+}
+
+String oneDriveQueueTabEmptyMessage(
+  AppLocalizations l10n,
+  OneDriveQueuePanelTaskFilter taskFilter,
+) {
+  return switch (taskFilter) {
+    OneDriveQueuePanelTaskFilter.downloadsOnly =>
+      l10n.oneDriveDownloadQueueEmpty,
+    OneDriveQueuePanelTaskFilter.uploadsOnly =>
+      l10n.oneDriveUploadQueueEmpty,
+    OneDriveQueuePanelTaskFilter.all => l10n.oneDriveTransferQueueEmpty,
+  };
+}
+
+/// 暂停 / 继续 / 停止 / 清空 工具条（全屏滚动 Tab 与面板共用）。
+class OneDriveTransferQueueToolbar extends StatelessWidget {
+  const OneDriveTransferQueueToolbar({
+    super.key,
+    required this.ctrl,
+    required this.l10n,
+    required this.taskFilter,
+  });
+
+  final OneDriveDownloadQueueController ctrl;
+  final AppLocalizations l10n;
+  final OneDriveQueuePanelTaskFilter taskFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final resumeStale = ctrl.canResumeStaleTasks && !ctrl.canStopDownloads;
+    final stopTooltip = resumeStale
+        ? l10n.oneDriveDownloadContinueAll
+        : l10n.oneDriveDownloadStopAll;
+    final stopIcon =
+        resumeStale ? Icons.play_arrow_rounded : Icons.stop_rounded;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          IconButton.outlined(
+            icon: const Icon(Icons.pause_rounded, size: 22),
+            tooltip: l10n.oneDriveDownloadPause,
+            onPressed: ctrl.canPauseDownloads ? ctrl.pause : null,
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Color(0x66FFFFFF)),
+            ),
+          ),
+          IconButton.outlined(
+            icon: const Icon(Icons.play_arrow_rounded, size: 22),
+            tooltip: l10n.oneDriveDownloadResume,
+            onPressed: ctrl.canResumeDownloads ? ctrl.resume : null,
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Color(0x66FFFFFF)),
+            ),
+          ),
+          IconButton.filled(
+            icon: Icon(stopIcon, size: 22),
+            tooltip: stopTooltip,
+            onPressed: ctrl.canStopDownloads
+                ? ctrl.requestStop
+                : ctrl.canResumeStaleTasks
+                    ? ctrl.resumeStaleTasks
+                    : null,
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.white.withValues(alpha: 0.22),
+            ),
+          ),
+          _clearListIconButton(ctrl, l10n, taskFilter),
+        ],
+      ),
+    );
+  }
 }
 
 /// 下载控制区 + 任务列表（抽屉与全屏页共用）。
@@ -49,20 +143,8 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
 
     return Consumer<OneDriveDownloadQueueController>(
       builder: (context, ctrl, _) {
-        final allSorted = ctrl.tasksSortedForDisplay;
-        final tasks = switch (taskFilter) {
-          OneDriveQueuePanelTaskFilter.all => allSorted,
-          OneDriveQueuePanelTaskFilter.downloadsOnly =>
-            allSorted.where((t) => !t.isUpload).toList(),
-          OneDriveQueuePanelTaskFilter.uploadsOnly =>
-            allSorted.where((t) => t.isUpload).toList(),
-        };
-        final emptyMessage = switch (taskFilter) {
-          OneDriveQueuePanelTaskFilter.downloadsOnly =>
-            l10n.oneDriveDownloadQueueEmpty,
-          OneDriveQueuePanelTaskFilter.uploadsOnly => l10n.oneDriveUploadQueueEmpty,
-          OneDriveQueuePanelTaskFilter.all => l10n.oneDriveTransferQueueEmpty,
-        };
+        final tasks = filterOneDriveQueueTasks(ctrl, taskFilter);
+        final emptyMessage = oneDriveQueueTabEmptyMessage(l10n, taskFilter);
 
         Widget buildList() {
           if (tasks.isEmpty) {
@@ -98,55 +180,14 @@ class OneDriveDownloadQueuePanel extends StatelessWidget {
               )
             : Expanded(child: buildList());
 
-        final resumeStale = ctrl.canResumeStaleTasks && !ctrl.canStopDownloads;
-        final stopTooltip = resumeStale
-            ? l10n.oneDriveDownloadContinueAll
-            : l10n.oneDriveDownloadStopAll;
-        final stopIcon = resumeStale ? Icons.play_arrow_rounded : Icons.stop_rounded;
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: maxListHeight != null ? MainAxisSize.min : MainAxisSize.max,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton.outlined(
-                    icon: const Icon(Icons.pause_rounded, size: 22),
-                    tooltip: l10n.oneDriveDownloadPause,
-                    onPressed: ctrl.canPauseDownloads ? ctrl.pause : null,
-                    style: IconButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0x66FFFFFF)),
-                    ),
-                  ),
-                  IconButton.outlined(
-                    icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                    tooltip: l10n.oneDriveDownloadResume,
-                    onPressed: ctrl.canResumeDownloads ? ctrl.resume : null,
-                    style: IconButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0x66FFFFFF)),
-                    ),
-                  ),
-                  IconButton.filled(
-                    icon: Icon(stopIcon, size: 22),
-                    tooltip: stopTooltip,
-                    onPressed: ctrl.canStopDownloads
-                        ? ctrl.requestStop
-                        : ctrl.canResumeStaleTasks
-                            ? ctrl.resumeStaleTasks
-                            : null,
-                    style: IconButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.white.withValues(alpha: 0.22),
-                    ),
-                  ),
-                  _clearListIconButton(ctrl, l10n, taskFilter),
-                ],
-              ),
+            OneDriveTransferQueueToolbar(
+              ctrl: ctrl,
+              l10n: l10n,
+              taskFilter: taskFilter,
             ),
             ?autoPlaySwitch,
             if (showPlayDownloadedButton && onPlayDownloaded != null)

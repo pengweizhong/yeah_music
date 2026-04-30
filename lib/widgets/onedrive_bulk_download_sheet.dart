@@ -71,55 +71,63 @@ class _OneDriveBulkDownloadSheetState extends State<OneDriveBulkDownloadSheet> {
 
     return Consumer<OneDriveDownloadQueueController>(
       builder: (context, ctrl, _) {
-        final h = MediaQuery.sizeOf(context).height;
+        final maxH = MediaQuery.sizeOf(context).height - bottomInset;
         return SafeArea(
           child: Padding(
             padding: EdgeInsets.only(bottom: bottomInset),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.oneDriveDownloadQueueTitle,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxH),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.oneDriveDownloadQueueTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        tooltip: l10n.oneDriveDownloadCloseJustPanel,
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close_rounded, color: Colors.white54),
-                      ),
-                    ],
-                  ),
-                ),
-                OneDriveDownloadQueuePanel(
-                  maxListHeight: h * 0.52,
-                  taskFilter: OneDriveQueuePanelTaskFilter.downloadsOnly,
-                  showPlayDownloadedButton: _runEnded && ctrl.hasCompletedSongs,
-                  onPlayDownloaded: () => _playDownloaded(context),
-                  autoPlaySwitch: SwitchListTile.adaptive(
-                    value: _autoPlayOnFinish,
-                    onChanged: _runEnded
-                        ? null
-                        : (v) {
-                            setState(() => _autoPlayOnFinish = v);
-                          },
-                    title: Text(
-                      l10n.oneDriveDownloadAutoPlayWhenDone,
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                        IconButton(
+                          tooltip: l10n.oneDriveDownloadCloseJustPanel,
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon:
+                              const Icon(Icons.close_rounded, color: Colors.white54),
+                        ),
+                      ],
                     ),
-                    activeThumbColor: const Color(0xFF64B5F6),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: OneDriveDownloadQueuePanel(
+                      maxListHeight: null,
+                      taskFilter: OneDriveQueuePanelTaskFilter.downloadsOnly,
+                      showPlayDownloadedButton:
+                          _runEnded && ctrl.hasCompletedSongs,
+                      onPlayDownloaded: () => _playDownloaded(context),
+                      autoPlaySwitch: SwitchListTile.adaptive(
+                        value: _autoPlayOnFinish,
+                        onChanged: _runEnded
+                            ? null
+                            : (v) {
+                                setState(() => _autoPlayOnFinish = v);
+                              },
+                        title: Text(
+                          l10n.oneDriveDownloadAutoPlayWhenDone,
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 14),
+                        ),
+                        activeThumbColor: const Color(0xFF64B5F6),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
