@@ -189,6 +189,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'App name and version, acknowledgements, and open-source license texts.';
 
   @override
+  String get settingsHomeGreetingTitle => 'Home greeting';
+
+  @override
+  String get settingsHomeGreetingListSubtitle =>
+      'Custom lines rotate with the built-in default';
+
+  @override
+  String get settingsHomeGreetingHelp =>
+      'The greeting card always includes one built-in localized line. Each row below is an optional extra line; together they rotate with that default. Choose sequential order or random rotation below.';
+
+  @override
+  String get settingsHomeGreetingLineHint => 'Greeting text';
+
+  @override
+  String get settingsHomeGreetingRotationTitle => 'Rotation';
+
+  @override
+  String get settingsHomeGreetingRotationSequential => 'Sequential';
+
+  @override
+  String get settingsHomeGreetingRotationRandom => 'Random';
+
+  @override
+  String get settingsHomeGreetingEmptyHint =>
+      'No custom lines yet. Tap below to add.';
+
+  @override
+  String get settingsHomeGreetingAddLine => 'Add a line';
+
+  @override
+  String get settingsHomeGreetingSave => 'Save';
+
+  @override
+  String get settingsHomeGreetingSaved => 'Saved';
+
+  @override
   String get settingsAboutDialogAuthor => 'Author';
 
   @override

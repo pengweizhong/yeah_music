@@ -426,6 +426,72 @@ abstract class AppLocalizations {
   /// **'App name and version, acknowledgements, and open-source license texts.'**
   String get settingsAboutDesc;
 
+  /// No description provided for @settingsHomeGreetingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home greeting'**
+  String get settingsHomeGreetingTitle;
+
+  /// No description provided for @settingsHomeGreetingListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom lines rotate with the built-in default'**
+  String get settingsHomeGreetingListSubtitle;
+
+  /// No description provided for @settingsHomeGreetingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The greeting card always includes one built-in localized line. Each row below is an optional extra line; together they rotate with that default. Choose sequential order or random rotation below.'**
+  String get settingsHomeGreetingHelp;
+
+  /// No description provided for @settingsHomeGreetingLineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Greeting text'**
+  String get settingsHomeGreetingLineHint;
+
+  /// No description provided for @settingsHomeGreetingRotationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotation'**
+  String get settingsHomeGreetingRotationTitle;
+
+  /// No description provided for @settingsHomeGreetingRotationSequential.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequential'**
+  String get settingsHomeGreetingRotationSequential;
+
+  /// No description provided for @settingsHomeGreetingRotationRandom.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get settingsHomeGreetingRotationRandom;
+
+  /// No description provided for @settingsHomeGreetingEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom lines yet. Tap below to add.'**
+  String get settingsHomeGreetingEmptyHint;
+
+  /// No description provided for @settingsHomeGreetingAddLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a line'**
+  String get settingsHomeGreetingAddLine;
+
+  /// No description provided for @settingsHomeGreetingSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get settingsHomeGreetingSave;
+
+  /// No description provided for @settingsHomeGreetingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get settingsHomeGreetingSaved;
+
   /// No description provided for @settingsAboutDialogAuthor.
   ///
   /// In en, this message translates to:

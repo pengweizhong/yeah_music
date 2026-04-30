@@ -64,6 +64,18 @@ class SettingsService {
   /// 播放页是否保持屏幕常亮。
   static const String _songPageKeepScreenAwakeKey = 'song_page_keep_screen_awake';
 
+  /// 首页问候卡片第二行：用户自定义条目（不含内置默认句）。
+  static const String _homeGreetingCustomSubsKey =
+      'home_greeting_custom_subtitles_v1';
+
+  /// 与 [homeGreetingSub] 一同轮询时的游标（Hive）。
+  static const String _homeGreetingSubCycleCursorKey =
+      'home_greeting_sub_cycle_cursor_v1';
+
+  /// `true`：随机展示；`false`：顺序轮播（仍写入游标）。
+  static const String _homeGreetingRotationRandomKey =
+      'home_greeting_rotation_random_v1';
+
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
   static const int desktopFloatingLyricsLinesAfterDefault = 2;
@@ -820,6 +832,89 @@ class SettingsService {
     }
   }
 
+  /// 首页问候副文案：用户自定义（每则一行）；不含应用内置本地化默认句。
+  static Future<List<String>> loadHomeGreetingCustomSubtitles() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_homeGreetingCustomSubsKey);
+      if (raw is List) {
+        return raw
+            .map((e) => '$e'.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveHomeGreetingCustomSubtitles(
+    List<String> lines,
+  ) async {
+    final cleaned =
+        lines.map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_homeGreetingCustomSubsKey, cleaned);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_homeGreetingCustomSubsKey, cleaned);
+      } catch (_) {}
+    }
+  }
+
+  static Future<int> loadHomeGreetingSubCycleCursor() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_homeGreetingSubCycleCursorKey, defaultValue: 0);
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  static Future<void> saveHomeGreetingSubCycleCursor(int value) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_homeGreetingSubCycleCursorKey, value);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_homeGreetingSubCycleCursorKey, value);
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> loadHomeGreetingRotationRandom() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_homeGreetingRotationRandomKey, defaultValue: false);
+      if (v is bool) return v;
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> saveHomeGreetingRotationRandom(bool value) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_homeGreetingRotationRandomKey, value);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_homeGreetingRotationRandomKey, value);
+      } catch (_) {}
+    }
+  }
+
   /// 参与云端「应用设置」备份的 Hive 键（排除体积巨大的索引曲目与普通下载队列历史）。
   static const List<String> _hiveKeysForCloudBackup = <String>[
     _lyricSettingsKey,
@@ -850,6 +945,9 @@ class SettingsService {
     _playbackShortcutsKey,
     _wireRemoteControlKey,
     _songPageKeepScreenAwakeKey,
+    _homeGreetingCustomSubsKey,
+    _homeGreetingSubCycleCursorKey,
+    _homeGreetingRotationRandomKey,
   ];
 
   static const String yeahMusicAppSettingsBackupFormatId = 'yeah_music_app_settings_v1';
@@ -1079,6 +1177,13 @@ class SettingsService {
           return jsonEncode(Map<String,dynamic>.from(json));
         }
         return '{}';
+      case _homeGreetingCustomSubsKey:
+        if (json is! List) return <dynamic>[];
+        return json.map((e) => '$e').where((s) => s.isNotEmpty).toList();
+      case _homeGreetingSubCycleCursorKey:
+        return _asIntForCloudRestore(json, 0).clamp(0, 999999);
+      case _homeGreetingRotationRandomKey:
+        return _asBoolForCloudRestore(json, false);
       default:
         return json;
     }

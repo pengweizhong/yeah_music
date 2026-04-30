@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -63,7 +64,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _homeScrollController = ScrollController();
   List<String> _recentPaths = [];
@@ -71,10 +72,14 @@ class _HomePageState extends State<HomePage> {
   bool _recentReady = false;
   PlayListProvider? _play;
   QuickEntryConfig _quickEntry = QuickEntryConfig.defaultConfig();
+  /// 首页问候卡片第二行展示文案（内置默认 + 用户自定义轮询）。
+  String? _greetingSubLine;
+  bool _advanceSubtitleAfterPausedResume = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final pre = widget.initial;
     if (pre != null) {
       _recentPaths = pre.recentPaths;
@@ -90,6 +95,9 @@ class _HomePageState extends State<HomePage> {
         if (!mounted) return;
         await _bootstrapPlayAfterSplash();
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_advanceHomeGreetingSubtitle());
+      });
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -97,6 +105,9 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       _play = context.read<PlayListProvider>();
       _play!.addListener(_onPlayListChange);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_advanceHomeGreetingSubtitle());
     });
   }
 
@@ -106,9 +117,22 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _play?.removeListener(_onPlayListChange);
     _homeScrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _advanceSubtitleAfterPausedResume = true;
+      return;
+    }
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    if (!_advanceSubtitleAfterPausedResume) return;
+    _advanceSubtitleAfterPausedResume = false;
+    unawaited(_advanceHomeGreetingSubtitle());
   }
 
   /// 欢迎页预载后补跑；与无 [initial] 时的 [_bootstrap] 共用合并逻辑。
@@ -185,6 +209,32 @@ class _HomePageState extends State<HomePage> {
       _mostPlayedRaw = top;
       _recentReady = true;
     });
+  }
+
+  Future<void> _advanceHomeGreetingSubtitle() async {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final defaultLine = l10n.homeGreetingSub;
+    final customs = await SettingsService.loadHomeGreetingCustomSubtitles();
+    final randomRotation =
+        await SettingsService.loadHomeGreetingRotationRandom();
+    final pool = <String>[defaultLine, ...customs];
+    final len = pool.length;
+    if (len == 0) return;
+
+    if (randomRotation) {
+      final idx = len <= 1 ? 0 : math.Random().nextInt(len);
+      if (!mounted) return;
+      setState(() => _greetingSubLine = pool[idx]);
+      return;
+    }
+
+    final cursor = await SettingsService.loadHomeGreetingSubCycleCursor();
+    final idx = cursor % len;
+    final next = (cursor + 1) % len;
+    await SettingsService.saveHomeGreetingSubCycleCursor(next);
+    if (!mounted) return;
+    setState(() => _greetingSubLine = pool[idx]);
   }
 
   String _greeting(BuildContext context) {
@@ -359,6 +409,8 @@ class _HomePageState extends State<HomePage> {
                                 8 +
                                 miniBottom,
                         greeting: _greeting(context),
+                        greetingSub: _greetingSubLine ??
+                            AppLocalizations.of(context).homeGreetingSub,
                         play: play,
                         user: user,
                         recentSongs: recentSongs,
@@ -409,6 +461,7 @@ class _HomeScrollBody extends StatefulWidget {
     required this.quickEntry,
     required this.safeBottom,
     required this.greeting,
+    required this.greetingSub,
     required this.play,
     required this.user,
     required this.recentSongs,
@@ -432,6 +485,7 @@ class _HomeScrollBody extends StatefulWidget {
   final QuickEntryConfig quickEntry;
   final double safeBottom;
   final String greeting;
+  final String greetingSub;
   final PlayListProvider play;
   final UserPlaylistProvider user;
   final List<Song> recentSongs;
@@ -676,7 +730,10 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 0),
-            child: _GreetingBlock(greeting: widget.greeting),
+            child: _GreetingBlock(
+              greeting: widget.greeting,
+              subtitle: widget.greetingSub,
+            ),
           ),
         ),
         SliverToBoxAdapter(child: SizedBox(height: _gapM)),
@@ -1259,8 +1316,9 @@ class _PlaylistCarousels extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _GreetingBlock extends StatelessWidget {
-  const _GreetingBlock({required this.greeting});
+  const _GreetingBlock({required this.greeting, required this.subtitle});
   final String greeting;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -1292,7 +1350,7 @@ class _GreetingBlock extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.homeGreetingSub,
+            subtitle,
             style: TextStyle(
               color: context.gradFg(0.45),
               fontSize: 13,

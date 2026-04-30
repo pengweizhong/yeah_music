@@ -183,6 +183,40 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAboutDesc => 'アプリ名とバージョン、クレジット、オープンソースライセンスの全文です。';
 
   @override
+  String get settingsHomeGreetingTitle => 'ホームのあいさつ';
+
+  @override
+  String get settingsHomeGreetingListSubtitle => '自作の一文が既定文と順に表示されます';
+
+  @override
+  String get settingsHomeGreetingHelp =>
+      'ホームのあいさつカード2行目には、組み込みのローカライズ済みの既定文が必ず含まれます。下の各行は任意の追加文です（件数の上限なし）。保存後は既定文とあわせて表示され、順番かランダムかを下で選べます。';
+
+  @override
+  String get settingsHomeGreetingLineHint => 'あいさつの文章';
+
+  @override
+  String get settingsHomeGreetingRotationTitle => '切り替え';
+
+  @override
+  String get settingsHomeGreetingRotationSequential => '順番';
+
+  @override
+  String get settingsHomeGreetingRotationRandom => 'ランダム';
+
+  @override
+  String get settingsHomeGreetingEmptyHint => 'まだありません。下のボタンで追加してください。';
+
+  @override
+  String get settingsHomeGreetingAddLine => '行を追加';
+
+  @override
+  String get settingsHomeGreetingSave => '保存';
+
+  @override
+  String get settingsHomeGreetingSaved => '保存しました';
+
+  @override
   String get settingsAboutDialogAuthor => '作者';
 
   @override

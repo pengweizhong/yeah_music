@@ -10,6 +10,7 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
+import 'package:yeah_music/pages/setting/home_greeting_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/setting/playback_shortcuts_section.dart';
 import 'package:yeah_music/pages/setting/sponsor_support_page.dart';
@@ -283,6 +284,32 @@ class SettingPage extends StatelessWidget {
                           context,
                           MaterialPageRoute<void>(
                             builder: (context) => const LanguageSettingsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      title: Text(
+                        l10n.settingsHomeGreetingTitle,
+                        style: TextStyle(color: context.gradFg()),
+                      ),
+                      subtitle: Text(
+                        l10n.settingsHomeGreetingListSubtitle,
+                        style: TextStyle(
+                          color: context.gradFg(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        color: context.gradFg(),
+                      ),
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                const HomeGreetingSettingsPage(),
                           ),
                         );
                       },

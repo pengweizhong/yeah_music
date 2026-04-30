@@ -180,6 +180,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAboutDesc => '应用名称与版本、致谢与开源协议全文。';
 
   @override
+  String get settingsHomeGreetingTitle => '首页问候';
+
+  @override
+  String get settingsHomeGreetingListSubtitle => '自定义句子与内置默认轮换展示';
+
+  @override
+  String get settingsHomeGreetingHelp =>
+      '首页问候卡片第二行会先有一条内置、随界面语言变化的默认文案。下列每一条为你的自定义句子（不限条数）；保存后与默认文案一起轮播，轮播方式可在下方选择顺序或随机。';
+
+  @override
+  String get settingsHomeGreetingLineHint => '输入问候文案';
+
+  @override
+  String get settingsHomeGreetingRotationTitle => '轮播方式';
+
+  @override
+  String get settingsHomeGreetingRotationSequential => '顺序';
+
+  @override
+  String get settingsHomeGreetingRotationRandom => '随机';
+
+  @override
+  String get settingsHomeGreetingEmptyHint => '暂无自定义句子，点击下方添加一行';
+
+  @override
+  String get settingsHomeGreetingAddLine => '添加一行';
+
+  @override
+  String get settingsHomeGreetingSave => '保存';
+
+  @override
+  String get settingsHomeGreetingSaved => '已保存';
+
+  @override
   String get settingsAboutDialogAuthor => '作者';
 
   @override
@@ -2521,6 +2555,40 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsAboutDesc => '应用名称与版本、致谢与开源协议全文。';
 
   @override
+  String get settingsHomeGreetingTitle => '首页问候';
+
+  @override
+  String get settingsHomeGreetingListSubtitle => '自定义句子与内置默认轮换展示';
+
+  @override
+  String get settingsHomeGreetingHelp =>
+      '首页问候卡片第二行会先有一条内置、随界面语言变化的默认文案。下列每一条为你的自定义句子（不限条数）；保存后与默认文案一起轮播，轮播方式可在下方选择顺序或随机。';
+
+  @override
+  String get settingsHomeGreetingLineHint => '输入问候文案';
+
+  @override
+  String get settingsHomeGreetingRotationTitle => '轮播方式';
+
+  @override
+  String get settingsHomeGreetingRotationSequential => '顺序';
+
+  @override
+  String get settingsHomeGreetingRotationRandom => '随机';
+
+  @override
+  String get settingsHomeGreetingEmptyHint => '暂无自定义句子，点击下方添加一行';
+
+  @override
+  String get settingsHomeGreetingAddLine => '添加一行';
+
+  @override
+  String get settingsHomeGreetingSave => '保存';
+
+  @override
+  String get settingsHomeGreetingSaved => '已保存';
+
+  @override
   String get settingsAboutDialogAuthor => '作者';
 
   @override
@@ -4860,6 +4928,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsAboutDesc => '應用程式名稱與版本、致謝與開源授權全文。';
+
+  @override
+  String get settingsHomeGreetingTitle => '首頁問候';
+
+  @override
+  String get settingsHomeGreetingListSubtitle => '自訂句子與內建預設輪換展示';
+
+  @override
+  String get settingsHomeGreetingHelp =>
+      '首頁問候卡片第二行會先有一句內建、隨介面語言變化的預設文案。下列每一則為你的自訂句子（不限則數）；儲存後與預設文案一起輪播，輪播方式可在下方選擇順序或隨機。';
+
+  @override
+  String get settingsHomeGreetingLineHint => '輸入問候文案';
+
+  @override
+  String get settingsHomeGreetingRotationTitle => '輪播方式';
+
+  @override
+  String get settingsHomeGreetingRotationSequential => '順序';
+
+  @override
+  String get settingsHomeGreetingRotationRandom => '隨機';
+
+  @override
+  String get settingsHomeGreetingEmptyHint => '尚無自訂句子，點下方新增一行';
+
+  @override
+  String get settingsHomeGreetingAddLine => '新增一行';
+
+  @override
+  String get settingsHomeGreetingSave => '儲存';
+
+  @override
+  String get settingsHomeGreetingSaved => '已儲存';
 
   @override
   String get settingsAboutDialogAuthor => '作者';
