@@ -39,6 +39,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statisticsReloadTooltip => '更新';
 
   @override
+  String get statisticsReloadStarted => '再生統計を更新しています…';
+
+  @override
+  String get statisticsReloadDone => '再生統計を更新しました';
+
+  @override
+  String get statisticsReloadFailed => '再生統計を更新できませんでした';
+
+  @override
   String get statisticsSectionLibrary => 'ライブラリ';
 
   @override

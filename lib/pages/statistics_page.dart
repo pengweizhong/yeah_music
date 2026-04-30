@@ -12,6 +12,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/song_audio_quality.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 
 class _PlaybackHiveSlice {
@@ -58,10 +59,29 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }
   }
 
-  void _reload(OneDriveController od) {
+  Future<void> _reload(BuildContext context, OneDriveController od) async {
+    final l10n = AppLocalizations.of(context);
+    showAppSnackBar(context, l10n.statisticsReloadStarted);
+    final fut = _loadSlice(od);
     setState(() {
-      _sliceFuture = _loadSlice(od);
+      _sliceFuture = fut;
     });
+    try {
+      await fut;
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        l10n.statisticsReloadDone,
+        kind: AppSnackKind.success,
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        l10n.statisticsReloadFailed,
+        kind: AppSnackKind.error,
+      );
+    }
   }
 
   Future<_PlaybackHiveSlice> _loadSlice(OneDriveController od) async {
@@ -174,8 +194,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 IconButton(
                   tooltip: l10n.statisticsReloadTooltip,
                   icon: Icon(Icons.refresh_rounded, color: context.gradFg()),
-                  onPressed: () =>
-                      _reload(context.read<OneDriveController>()),
+                  onPressed: () => _reload(
+                    context,
+                    context.read<OneDriveController>(),
+                  ),
                 ),
               ],
             ),

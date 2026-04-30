@@ -39,6 +39,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statisticsReloadTooltip => '刷新';
 
   @override
+  String get statisticsReloadStarted => '正在刷新播放统计…';
+
+  @override
+  String get statisticsReloadDone => '播放统计已更新';
+
+  @override
+  String get statisticsReloadFailed => '无法刷新播放统计';
+
+  @override
   String get statisticsSectionLibrary => '曲库';
 
   @override
@@ -2279,6 +2288,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get statisticsReloadTooltip => '刷新';
 
   @override
+  String get statisticsReloadStarted => '正在刷新播放统计…';
+
+  @override
+  String get statisticsReloadDone => '播放统计已更新';
+
+  @override
+  String get statisticsReloadFailed => '无法刷新播放统计';
+
+  @override
   String get statisticsSectionLibrary => '曲库';
 
   @override
@@ -4517,6 +4535,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get statisticsReloadTooltip => '重新整理';
+
+  @override
+  String get statisticsReloadStarted => '正在重新整理播放統計…';
+
+  @override
+  String get statisticsReloadDone => '播放統計已更新';
+
+  @override
+  String get statisticsReloadFailed => '無法重新整理播放統計';
 
   @override
   String get statisticsSectionLibrary => '曲庫';

@@ -162,6 +162,24 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get statisticsReloadTooltip;
 
+  /// No description provided for @statisticsReloadStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing playback statistics…'**
+  String get statisticsReloadStarted;
+
+  /// No description provided for @statisticsReloadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback statistics updated.'**
+  String get statisticsReloadDone;
+
+  /// No description provided for @statisticsReloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh playback statistics.'**
+  String get statisticsReloadFailed;
+
   /// No description provided for @statisticsSectionLibrary.
   ///
   /// In en, this message translates to:

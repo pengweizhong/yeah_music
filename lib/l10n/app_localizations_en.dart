@@ -40,6 +40,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsReloadTooltip => 'Refresh';
 
   @override
+  String get statisticsReloadStarted => 'Refreshing playback statistics…';
+
+  @override
+  String get statisticsReloadDone => 'Playback statistics updated.';
+
+  @override
+  String get statisticsReloadFailed => 'Couldn\'t refresh playback statistics.';
+
+  @override
   String get statisticsSectionLibrary => 'Library';
 
   @override
