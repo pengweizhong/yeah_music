@@ -52,6 +52,47 @@ class LyricSettings extends HiveObject {
   @HiveField(12)
   int lyricTextAlignIndex = 1;
 
+  /// 为 true 时「正在播放」高亮行（原文与译文）使用下方渐变，而非 [activeOriginalColor] / [activeTranslationColor]。
+  @HiveField(13)
+  bool activeLyricUseGradient = false;
+
+  /// 渐变起始色 ARGB（与 [PlaylistCoverGradientDirection] 搭配）。
+  @HiveField(14)
+  int activeLyricGradientStart = 0xFFFFFFFF;
+
+  @HiveField(15)
+  int activeLyricGradientEnd = 0xFFFFB74D;
+
+  /// [PlaylistCoverGradientDirection.index]，持久化与歌单封面渐变方向一致。
+  @HiveField(16)
+  int activeLyricGradientDirectionIndex = 0;
+
+  /// 「已播过」行：开启时原文/译文共用下方渐变，优先于 [playedOriginalColor] / [playedTranslationColor]。
+  @HiveField(17)
+  bool playedLyricUseGradient = false;
+
+  @HiveField(18)
+  int playedLyricGradientStart = 0xFF81C784;
+
+  @HiveField(19)
+  int playedLyricGradientEnd = 0xFFC8E6C9;
+
+  @HiveField(20)
+  int playedLyricGradientDirectionIndex = 0;
+
+  /// 「未播到」行：同上，优先于 upcoming 纯色。
+  @HiveField(21)
+  bool upcomingLyricUseGradient = false;
+
+  @HiveField(22)
+  int upcomingLyricGradientStart = 0xFF64B5F6;
+
+  @HiveField(23)
+  int upcomingLyricGradientEnd = 0xFFBBDEFB;
+
+  @HiveField(24)
+  int upcomingLyricGradientDirectionIndex = 0;
+
   LyricSettings();
 
   /// 将字号、行距限制在可编辑范围内（与 UI 滑条、历史存盘数据对齐）
@@ -117,6 +158,18 @@ class LyricSettings extends HiveObject {
         'lyricDisplayModeList': List<String>.from(lyricDisplayModeList),
         'lyricLineSpacing': lyricLineSpacing,
         'lyricTextAlignIndex': lyricTextAlignIndex,
+        'activeLyricUseGradient': activeLyricUseGradient,
+        'activeLyricGradientStart': activeLyricGradientStart,
+        'activeLyricGradientEnd': activeLyricGradientEnd,
+        'activeLyricGradientDirectionIndex': activeLyricGradientDirectionIndex,
+        'playedLyricUseGradient': playedLyricUseGradient,
+        'playedLyricGradientStart': playedLyricGradientStart,
+        'playedLyricGradientEnd': playedLyricGradientEnd,
+        'playedLyricGradientDirectionIndex': playedLyricGradientDirectionIndex,
+        'upcomingLyricUseGradient': upcomingLyricUseGradient,
+        'upcomingLyricGradientStart': upcomingLyricGradientStart,
+        'upcomingLyricGradientEnd': upcomingLyricGradientEnd,
+        'upcomingLyricGradientDirectionIndex': upcomingLyricGradientDirectionIndex,
       };
 
   factory LyricSettings.fromBackupMap(Map<String, dynamic> m) {
@@ -132,7 +185,31 @@ class LyricSettings extends HiveObject {
       ..upcomingOriginalColor = (m['upcomingOriginalColor'] as num?)?.toInt() ?? 0xFF7A7A7A
       ..upcomingTranslationColor = (m['upcomingTranslationColor'] as num?)?.toInt() ?? 0xFF6A6A6A
       ..lyricLineSpacing = (m['lyricLineSpacing'] as num?)?.toDouble() ?? 12.0
-      ..lyricTextAlignIndex = (m['lyricTextAlignIndex'] as num?)?.toInt() ?? 1;
+      ..lyricTextAlignIndex = (m['lyricTextAlignIndex'] as num?)?.toInt() ?? 1
+      ..activeLyricUseGradient =
+          m['activeLyricUseGradient'] as bool? ?? false
+      ..activeLyricGradientStart =
+          (m['activeLyricGradientStart'] as num?)?.toInt() ?? 0xFFFFFFFF
+      ..activeLyricGradientEnd =
+          (m['activeLyricGradientEnd'] as num?)?.toInt() ?? 0xFFFFB74D
+      ..activeLyricGradientDirectionIndex =
+          (m['activeLyricGradientDirectionIndex'] as num?)?.toInt() ?? 0
+      ..playedLyricUseGradient =
+          m['playedLyricUseGradient'] as bool? ?? false
+      ..playedLyricGradientStart =
+          (m['playedLyricGradientStart'] as num?)?.toInt() ?? 0xFF81C784
+      ..playedLyricGradientEnd =
+          (m['playedLyricGradientEnd'] as num?)?.toInt() ?? 0xFFC8E6C9
+      ..playedLyricGradientDirectionIndex =
+          (m['playedLyricGradientDirectionIndex'] as num?)?.toInt() ?? 0
+      ..upcomingLyricUseGradient =
+          m['upcomingLyricUseGradient'] as bool? ?? false
+      ..upcomingLyricGradientStart =
+          (m['upcomingLyricGradientStart'] as num?)?.toInt() ?? 0xFF64B5F6
+      ..upcomingLyricGradientEnd =
+          (m['upcomingLyricGradientEnd'] as num?)?.toInt() ?? 0xFFBBDEFB
+      ..upcomingLyricGradientDirectionIndex =
+          (m['upcomingLyricGradientDirectionIndex'] as num?)?.toInt() ?? 0;
     final modeListRaw = m['lyricDisplayModeList'];
     if (modeListRaw is List) {
       s.lyricDisplayModeList = modeListRaw.map((e) => '$e').toList();

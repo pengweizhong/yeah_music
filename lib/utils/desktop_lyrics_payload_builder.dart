@@ -2,6 +2,7 @@ import 'package:flutter/painting.dart' show TextAlign;
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/utils/lyric_highlight_gradient.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 
 /// 供独立歌词窗口渲染：结构需可 JSON 序列化（仅 Map / List / num / String / bool）。
@@ -244,12 +245,37 @@ abstract final class DesktopLyricsPayloadBuilder {
           ? activeColor
           : (played ? playedColor : upcomingColor);
 
-      spans.add({
+      final rowKind = shouldHighlight
+          ? LyricRowVisualKind.active
+          : (played
+              ? LyricRowVisualKind.played
+              : LyricRowVisualKind.upcoming);
+      final rowGradient = lyricRowGradientOrNull(settings, rowKind);
+
+      final span = <String, dynamic>{
         'text': linesToShow[i],
         'fs': fs,
         'c': color,
         'wt': shouldHighlight ? 600 : 400,
-      });
+      };
+      if (rowGradient != null) {
+        span['grad'] = true;
+        switch (rowKind) {
+          case LyricRowVisualKind.active:
+            span['g0'] = settings.activeLyricGradientStart;
+            span['g1'] = settings.activeLyricGradientEnd;
+            span['gd'] = settings.activeLyricGradientDirectionIndex;
+          case LyricRowVisualKind.played:
+            span['g0'] = settings.playedLyricGradientStart;
+            span['g1'] = settings.playedLyricGradientEnd;
+            span['gd'] = settings.playedLyricGradientDirectionIndex;
+          case LyricRowVisualKind.upcoming:
+            span['g0'] = settings.upcomingLyricGradientStart;
+            span['g1'] = settings.upcomingLyricGradientEnd;
+            span['gd'] = settings.upcomingLyricGradientDirectionIndex;
+        }
+      }
+      spans.add(span);
     }
 
     return {'spans': spans};

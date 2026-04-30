@@ -6,6 +6,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/utils/desktop_lyrics_payload_builder.dart';
 import 'package:yeah_music/utils/desktop_lyrics_window_geometry_store.dart';
 import 'package:yeah_music/welcome/app_startup_clock.dart';
@@ -381,20 +382,50 @@ class _DesktopLyricsSubWindowPageState extends State<DesktopLyricsSubWindowPage>
       }
       final s = spansRaw[i];
       if (s is! Map) continue;
+      final useGrad = s['grad'] == true;
       final text = s['text'] as String? ?? '';
       final fs = (s['fs'] as num?)?.toDouble() ?? 18;
       final c = (s['c'] as num?)?.toInt() ?? 0xFFFFFFFF;
       final wt = (s['wt'] as num?)?.toInt() ?? 400;
-      children.add(
-        TextSpan(
-          text: text,
-          style: TextStyle(
-            fontSize: fs,
-            color: Color(c),
-            fontWeight: wt >= 600 ? FontWeight.w600 : FontWeight.w400,
-          ),
-        ),
+      final tw = wt >= 600 ? FontWeight.w600 : FontWeight.w400;
+      final baseStyle = TextStyle(
+        fontSize: fs,
+        height: 1.35,
+        letterSpacing: 0.2,
+        fontWeight: tw,
       );
+      if (useGrad) {
+        final g0 = (s['g0'] as num?)?.toInt() ?? 0xFFFFFFFF;
+        final g1 = (s['g1'] as num?)?.toInt() ?? 0xFFFFB74D;
+        final gd = (s['gd'] as num?)?.toInt();
+        final lg = playlistCoverLinearGradient(
+          [Color(g0), Color(g1)],
+          direction: PlaylistCoverGradientDirection.fromStorage(gd),
+        );
+        children.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => lg.createShader(
+                Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+              ),
+              child: Text(
+                text,
+                style: baseStyle.merge(const TextStyle(color: Colors.white)),
+              ),
+            ),
+          ),
+        );
+      } else {
+        children.add(
+          TextSpan(
+            text: text,
+            style: baseStyle.merge(TextStyle(color: Color(c))),
+          ),
+        );
+      }
     }
 
     return Padding(

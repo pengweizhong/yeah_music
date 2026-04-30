@@ -2048,6 +2048,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Colors are saved locally and kept after you change tracks.';
 
   @override
+  String get lyricStyleActiveGradientTitle => 'Gradient: current line';
+
+  @override
+  String get lyricStyleStateGradientSub =>
+      'When on, this two-color gradient overrides the solid picks above for both original and translation. Direction and RGB sliders match the playlist cover editor.';
+
+  @override
+  String get lyricStyleActiveGradientTune => 'Edit gradient';
+
+  @override
+  String get lyricStyleActiveGradientDialogTitle => 'Current line gradient';
+
+  @override
+  String get lyricStylePlayedGradientTitle => 'Gradient: played lines';
+
+  @override
+  String get lyricStyleUpcomingGradientTitle => 'Gradient: upcoming lines';
+
+  @override
+  String get lyricStylePlayedGradientDialogTitle => 'Played lines gradient';
+
+  @override
+  String get lyricStyleUpcomingGradientDialogTitle => 'Upcoming lines gradient';
+
+  @override
   String get lyricColorPickerHint => 'Tap a swatch';
 
   @override

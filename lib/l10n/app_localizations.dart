@@ -3762,6 +3762,54 @@ abstract class AppLocalizations {
   /// **'Colors are saved locally and kept after you change tracks.'**
   String get lyricStyleColorPersistNote;
 
+  /// No description provided for @lyricStyleActiveGradientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient: current line'**
+  String get lyricStyleActiveGradientTitle;
+
+  /// No description provided for @lyricStyleStateGradientSub.
+  ///
+  /// In en, this message translates to:
+  /// **'When on, this two-color gradient overrides the solid picks above for both original and translation. Direction and RGB sliders match the playlist cover editor.'**
+  String get lyricStyleStateGradientSub;
+
+  /// No description provided for @lyricStyleActiveGradientTune.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit gradient'**
+  String get lyricStyleActiveGradientTune;
+
+  /// No description provided for @lyricStyleActiveGradientDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current line gradient'**
+  String get lyricStyleActiveGradientDialogTitle;
+
+  /// No description provided for @lyricStylePlayedGradientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient: played lines'**
+  String get lyricStylePlayedGradientTitle;
+
+  /// No description provided for @lyricStyleUpcomingGradientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient: upcoming lines'**
+  String get lyricStyleUpcomingGradientTitle;
+
+  /// No description provided for @lyricStylePlayedGradientDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Played lines gradient'**
+  String get lyricStylePlayedGradientDialogTitle;
+
+  /// No description provided for @lyricStyleUpcomingGradientDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming lines gradient'**
+  String get lyricStyleUpcomingGradientDialogTitle;
+
   /// No description provided for @lyricColorPickerHint.
   ///
   /// In en, this message translates to:

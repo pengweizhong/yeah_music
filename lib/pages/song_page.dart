@@ -33,6 +33,7 @@ import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
+import 'package:yeah_music/utils/lyric_highlight_gradient.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
@@ -277,6 +278,21 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       ..playedTranslationColor = _settings.playedTranslationColor
       ..upcomingOriginalColor = _settings.upcomingOriginalColor
       ..upcomingTranslationColor = _settings.upcomingTranslationColor
+      ..activeLyricUseGradient = _settings.activeLyricUseGradient
+      ..activeLyricGradientStart = _settings.activeLyricGradientStart
+      ..activeLyricGradientEnd = _settings.activeLyricGradientEnd
+      ..activeLyricGradientDirectionIndex =
+          _settings.activeLyricGradientDirectionIndex
+      ..playedLyricUseGradient = _settings.playedLyricUseGradient
+      ..playedLyricGradientStart = _settings.playedLyricGradientStart
+      ..playedLyricGradientEnd = _settings.playedLyricGradientEnd
+      ..playedLyricGradientDirectionIndex =
+          _settings.playedLyricGradientDirectionIndex
+      ..upcomingLyricUseGradient = _settings.upcomingLyricUseGradient
+      ..upcomingLyricGradientStart = _settings.upcomingLyricGradientStart
+      ..upcomingLyricGradientEnd = _settings.upcomingLyricGradientEnd
+      ..upcomingLyricGradientDirectionIndex =
+          _settings.upcomingLyricGradientDirectionIndex
       ..lyricDisplayMode = _lyricDisplayMode;
 
     await SettingsService.saveLyricSettings(newSettings);
@@ -1754,6 +1770,19 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             ? _settings.upcomingOriginalColor
                             : _settings.upcomingTranslationColor,
                       );
+                      final rowKind = shouldHighlight
+                          ? LyricRowVisualKind.active
+                          : (played
+                              ? LyricRowVisualKind.played
+                              : LyricRowVisualKind.upcoming);
+                      final rowGradient =
+                          lyricRowGradientOrNull(_settings, rowKind);
+                      final useRowGradient = rowGradient != null;
+                      final solidColor = shouldHighlight
+                          ? activeColor
+                          : (played ? playedColor : upcomingColor);
+                      final displayColor =
+                          useRowGradient ? Colors.white : solidColor;
                       return SizedBox(
                         width: double.infinity,
                         child: AnimatedDefaultTextStyle(
@@ -1767,18 +1796,31 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             fontWeight: shouldHighlight
                                 ? FontWeight.w600
                                 : FontWeight.w400,
-                            color: shouldHighlight
-                                ? activeColor
-                                : (played
-                                    ? playedColor
-                                    : upcomingColor),
+                            color: displayColor,
                             height: 1.35,
                             letterSpacing: 0.2,
                           ),
-                          child: Text(
-                            linesToShow[i],
-                            textAlign: _settings.lyricTextAlign,
-                          ),
+                          child: useRowGradient
+                              ? ShaderMask(
+                                  blendMode: BlendMode.srcIn,
+                                  shaderCallback: (bounds) =>
+                                      rowGradient.createShader(
+                                    Rect.fromLTWH(
+                                      0,
+                                      0,
+                                      bounds.width,
+                                      bounds.height,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    linesToShow[i],
+                                    textAlign: _settings.lyricTextAlign,
+                                  ),
+                                )
+                              : Text(
+                                  linesToShow[i],
+                                  textAlign: _settings.lyricTextAlign,
+                                ),
                         ),
                       );
                     },

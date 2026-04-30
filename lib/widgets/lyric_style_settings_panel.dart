@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
+import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/widgets/rgb_gradient_pickers.dart';
 
 int _argbFromColor(Color c) {
   // ARGB 32 位，与 [LyricSettings] 存 Hive 的 int 一致
@@ -225,6 +227,23 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                   ),
                   _softDivider(),
+                  _stateGradientControls(
+                    l10n: l10n,
+                    title: l10n.lyricStyleActiveGradientTitle,
+                    useGradient: settings.activeLyricUseGradient,
+                    onToggle: (v) =>
+                        _apply(() => settings.activeLyricUseGradient = v),
+                    startArgb: settings.activeLyricGradientStart,
+                    endArgb: settings.activeLyricGradientEnd,
+                    dirIndex: settings.activeLyricGradientDirectionIndex,
+                    dialogTitle: l10n.lyricStyleActiveGradientDialogTitle,
+                    onGradientSaved: (a, b, d) {
+                      settings.activeLyricGradientStart = a;
+                      settings.activeLyricGradientEnd = b;
+                      settings.activeLyricGradientDirectionIndex = d;
+                    },
+                  ),
+                  _softDivider(),
                   _colorStateBlock(
                     accent: const Color(0xFF81C784),
                     title: l10n.lyricStyleStatePlayed,
@@ -252,6 +271,23 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                   ),
                   _softDivider(),
+                  _stateGradientControls(
+                    l10n: l10n,
+                    title: l10n.lyricStylePlayedGradientTitle,
+                    useGradient: settings.playedLyricUseGradient,
+                    onToggle: (v) =>
+                        _apply(() => settings.playedLyricUseGradient = v),
+                    startArgb: settings.playedLyricGradientStart,
+                    endArgb: settings.playedLyricGradientEnd,
+                    dirIndex: settings.playedLyricGradientDirectionIndex,
+                    dialogTitle: l10n.lyricStylePlayedGradientDialogTitle,
+                    onGradientSaved: (a, b, d) {
+                      settings.playedLyricGradientStart = a;
+                      settings.playedLyricGradientEnd = b;
+                      settings.playedLyricGradientDirectionIndex = d;
+                    },
+                  ),
+                  _softDivider(),
                   _colorStateBlock(
                     accent: const Color(0xFF64B5F6),
                     title: l10n.lyricStyleStateUpcoming,
@@ -277,6 +313,23 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                             _argbFromColor(c),
                       ),
                     ),
+                  ),
+                  _softDivider(),
+                  _stateGradientControls(
+                    l10n: l10n,
+                    title: l10n.lyricStyleUpcomingGradientTitle,
+                    useGradient: settings.upcomingLyricUseGradient,
+                    onToggle: (v) =>
+                        _apply(() => settings.upcomingLyricUseGradient = v),
+                    startArgb: settings.upcomingLyricGradientStart,
+                    endArgb: settings.upcomingLyricGradientEnd,
+                    dirIndex: settings.upcomingLyricGradientDirectionIndex,
+                    dialogTitle: l10n.lyricStyleUpcomingGradientDialogTitle,
+                    onGradientSaved: (a, b, d) {
+                      settings.upcomingLyricGradientStart = a;
+                      settings.upcomingLyricGradientEnd = b;
+                      settings.upcomingLyricGradientDirectionIndex = d;
+                    },
                   ),
                 ],
               ),
@@ -439,6 +492,84 @@ class LyricStyleSettingsPanel extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _stateGradientControls({
+    required AppLocalizations l10n,
+    required String title,
+    required bool useGradient,
+    required ValueChanged<bool> onToggle,
+    required int startArgb,
+    required int endArgb,
+    required int dirIndex,
+    required String dialogTitle,
+    required void Function(int start, int end, int dirIdx) onGradientSaved,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _switchRow(
+          icon: Icons.gradient_rounded,
+          label: title,
+          sub: l10n.lyricStyleStateGradientSub,
+          value: useGradient,
+          onChanged: onToggle,
+        ),
+        if (useGradient) ...[
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              height: 44,
+              width: double.infinity,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: playlistCoverLinearGradient(
+                    [
+                      Color(startArgb),
+                      Color(endArgb),
+                    ],
+                    direction:
+                        PlaylistCoverGradientDirection.fromStorage(dirIndex),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showStateGradientPicker(
+                pageContext,
+                l10n,
+                dialogTitle: dialogTitle,
+                startArgb: startArgb,
+                endArgb: endArgb,
+                directionIndex: dirIndex,
+                apply: onGradientSaved,
+              ),
+              icon: Icon(
+                Icons.tune_rounded,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+              label: Text(
+                l10n.lyricStyleActiveGradientTune,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -709,5 +840,33 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     if (result != null) {
       onPick(result);
     }
+  }
+
+  Future<void> _showStateGradientPicker(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required String dialogTitle,
+    required int startArgb,
+    required int endArgb,
+    required int directionIndex,
+    required void Function(int start, int end, int dirIdx) apply,
+  }) async {
+    await showFrostedDialog<void>(
+      context: context,
+      maxWidth: 440,
+      child: GradientRgbPickDialogContent(
+        initialStart: Color(startArgb),
+        initialEnd: Color(endArgb),
+        initialDirection:
+            PlaylistCoverGradientDirection.fromStorage(directionIndex),
+        l10n: l10n,
+        dialogTitle: dialogTitle,
+        onPick: (a, b, d) {
+          _apply(() {
+            apply(_argbFromColor(a), _argbFromColor(b), d.index);
+          });
+        },
+      ),
+    );
   }
 }

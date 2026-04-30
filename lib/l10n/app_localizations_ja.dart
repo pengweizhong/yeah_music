@@ -1980,6 +1980,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get lyricStyleColorPersistNote => '色は端末に保存され、切り替え後も保持されます。';
 
   @override
+  String get lyricStyleActiveGradientTitle => '再生中行のグラデーション';
+
+  @override
+  String get lyricStyleStateGradientSub =>
+      'オンにすると、この二色グラデーションが上の原文・訳文の単色より優先されます。オフのときは単色のみ。方向と RGB はプレイリストカバー編集と共通です。';
+
+  @override
+  String get lyricStyleActiveGradientTune => 'グラデーションを編集';
+
+  @override
+  String get lyricStyleActiveGradientDialogTitle => '再生中行のグラデーション';
+
+  @override
+  String get lyricStylePlayedGradientTitle => '過去の行のグラデーション';
+
+  @override
+  String get lyricStyleUpcomingGradientTitle => 'これからの行のグラデーション';
+
+  @override
+  String get lyricStylePlayedGradientDialogTitle => '過去の行のグラデーション';
+
+  @override
+  String get lyricStyleUpcomingGradientDialogTitle => 'これからの行のグラデーション';
+
+  @override
   String get lyricColorPickerHint => '色をタップ';
 
   @override

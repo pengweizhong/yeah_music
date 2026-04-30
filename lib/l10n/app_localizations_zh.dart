@@ -1960,6 +1960,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lyricStyleColorPersistNote => '颜色将写入本地设置，切歌后仍保留。';
 
   @override
+  String get lyricStyleActiveGradientTitle => '正在播放行渐变';
+
+  @override
+  String get lyricStyleStateGradientSub =>
+      '开启后，该双色渐变优先于上方原文/译文纯色；关闭则仅用纯色。方向与 RGB 滑块与歌单封面编辑器一致。';
+
+  @override
+  String get lyricStyleActiveGradientTune => '编辑渐变';
+
+  @override
+  String get lyricStyleActiveGradientDialogTitle => '正在播放行渐变';
+
+  @override
+  String get lyricStylePlayedGradientTitle => '已播过行渐变';
+
+  @override
+  String get lyricStyleUpcomingGradientTitle => '未播到行渐变';
+
+  @override
+  String get lyricStylePlayedGradientDialogTitle => '已播过行渐变';
+
+  @override
+  String get lyricStyleUpcomingGradientDialogTitle => '未播到行渐变';
+
+  @override
   String get lyricColorPickerHint => '点选色块';
 
   @override
@@ -4014,6 +4039,31 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get lyricStyleColorPersistNote => '颜色将写入本地设置，切歌后仍保留。';
+
+  @override
+  String get lyricStyleActiveGradientTitle => '正在播放行渐变';
+
+  @override
+  String get lyricStyleStateGradientSub =>
+      '开启后，该双色渐变优先于上方原文/译文纯色；关闭则仅用纯色。方向与 RGB 滑块与歌单封面编辑器一致。';
+
+  @override
+  String get lyricStyleActiveGradientTune => '编辑渐变';
+
+  @override
+  String get lyricStyleActiveGradientDialogTitle => '正在播放行渐变';
+
+  @override
+  String get lyricStylePlayedGradientTitle => '已播过行渐变';
+
+  @override
+  String get lyricStyleUpcomingGradientTitle => '未播到行渐变';
+
+  @override
+  String get lyricStylePlayedGradientDialogTitle => '已播过行渐变';
+
+  @override
+  String get lyricStyleUpcomingGradientDialogTitle => '未播到行渐变';
 
   @override
   String get lyricColorPickerHint => '点选色块';
@@ -6071,6 +6121,31 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lyricStyleColorPersistNote => '顏色會寫入本機設定，換歌後仍保留。';
+
+  @override
+  String get lyricStyleActiveGradientTitle => '正在播放行漸層';
+
+  @override
+  String get lyricStyleStateGradientSub =>
+      '開啟後，此雙色漸層優先於上方原文/譯文純色；關閉則僅用純色。方向與 RGB 滑桿與歌單封面編輯器一致。';
+
+  @override
+  String get lyricStyleActiveGradientTune => '編輯漸層';
+
+  @override
+  String get lyricStyleActiveGradientDialogTitle => '正在播放行漸層';
+
+  @override
+  String get lyricStylePlayedGradientTitle => '已播過行漸層';
+
+  @override
+  String get lyricStyleUpcomingGradientTitle => '未播到行漸層';
+
+  @override
+  String get lyricStylePlayedGradientDialogTitle => '已播過行漸層';
+
+  @override
+  String get lyricStyleUpcomingGradientDialogTitle => '未播到行漸層';
 
   @override
   String get lyricColorPickerHint => '點選色塊';
