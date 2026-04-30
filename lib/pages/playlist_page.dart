@@ -488,24 +488,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     }
   }
 
-  Future<void> _renameHomeLibrary(
-    BuildContext context,
-    UserPlaylistProvider user,
-    AppLocalizations l10n,
-  ) async {
-    final name = await showAppTextPromptDialog(
-      context: context,
-      title: l10n.playlistRenameTitle,
-      initialValue: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
-      fieldLabel: l10n.fieldName,
-      cancelLabel: l10n.actionCancel,
-      confirmLabel: l10n.actionSave,
-    );
-    if (name != null && name.isNotEmpty && context.mounted) {
-      await user.setHomeLibraryDisplayName(name);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer2<PlayListProvider, UserPlaylistProvider>(
@@ -617,16 +599,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                           ),
                         ),
                       );
-                    } else if (value == 'rename') {
-                      if (!userPlaylistProvider.initialized) {
-                        await userPlaylistProvider.init();
-                      }
-                      if (!context.mounted) return;
-                      await _renameHomeLibrary(
-                        context,
-                        userPlaylistProvider,
-                        AppLocalizations.of(context),
-                      );
                     } else if (value == 'export') {
                       await _exportLibraryAllSongs(
                         context,
@@ -644,6 +616,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                       ),
                       PopupMenuItem(
                         value: 'rename',
+                        enabled: false,
                         child: Text(l10n.menuRename),
                       ),
                       PopupMenuItem(
