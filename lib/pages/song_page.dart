@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -1995,6 +1996,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             playListProvider.playbackMode == PlaybackMode.playOnce;
         // 使用StreamBuilder来监听播放状态，确保按钮状态正确
         final effectivePos = _effectivePosition();
+        final compactChrome =
+            MediaQuery.orientationOf(context) == Orientation.landscape;
 
         final sp = song.path;
         if (sp != _lyricsBoundSongPath) {
@@ -2017,9 +2020,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                 children: [
                   // 顶部栏：与主页一致，浅色字叠在全局背景上
                   Padding(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 12,
+                      vertical: compactChrome ? 6 : 12,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2123,12 +2126,24 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         }
                       },
                       children: [
-                        // 封皮页面（第0页）：与 [_buildCoverArt] 全屏形态一致
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32.0),
-                            child: _buildCoverArt(song),
-                          ),
+                        // 封皮页面（第0页）：横屏可用高度小，需按宽高中较小边限制，避免 AspectRatio 溢出
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            const outerPad = 32.0;
+                            const maxSide = 400.0;
+                            final innerW = constraints.maxWidth - outerPad * 2;
+                            final innerH =
+                                constraints.maxHeight - outerPad * 2;
+                            final side = math
+                                .min(math.min(innerW, innerH), maxSide)
+                                .clamp(1.0, maxSide);
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(outerPad),
+                                child: _buildCoverArt(song, side: side),
+                              ),
+                            );
+                          },
                         ),
                         // 歌词页面（第1页）：与 [_buildLyricsScrollStack] 分屏复用
                         _lyrics.isEmpty
@@ -2172,242 +2187,297 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                     ),
                   ),
 
-                // 播放进度条
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 4,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            LyricsUtils.formatDuration(effectivePos),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.55),
-                            ),
-                          ),
-                          Text(
-                            LyricsUtils.formatDuration(_totalDuration),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.55),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 6,
-                          ),
-                          trackHeight: 2,
-                        ),
-                        child: Slider(
-                          value: _totalDuration.inMilliseconds > 0
-                              ? (effectivePos.inMilliseconds /
-                                        _totalDuration.inMilliseconds)
-                                    .clamp(0.0, 1.0)
-                              : 0.0,
-                          min: 0.0,
-                          max: 1.0,
-                          activeColor: Theme.of(context).colorScheme.primary,
-                          inactiveColor: Colors.white.withValues(alpha: 0.25),
-                          onChangeStart: (_) {
-                            _isSeeking = true;
-                            _seekPreview = effectivePos;
-                            setState(() {});
-                          },
-                          onChanged: (value) {
-                            if (_totalDuration.inMilliseconds > 0) {
-                              final newPosition = Duration(
-                                milliseconds:
-                                    (value * _totalDuration.inMilliseconds)
-                                        .toInt(),
-                              );
-                              _seekPreview = newPosition;
-                              // 拖动时即时更新“预览高亮/已播放颜色”
-                              _updateCurrentLyric(_seekPreview);
-                              setState(() {});
-                            }
-                          },
-                          onChangeEnd: (value) async {
-                            if (_totalDuration.inMilliseconds > 0) {
-                              final newPosition = Duration(
-                                milliseconds:
-                                    ((value.clamp(0.0, 1.0)) *
-                                            _totalDuration.inMilliseconds)
-                                        .toInt(),
-                              );
-                              await _seekTo(newPosition);
-                            } else {
-                              _isSeeking = false;
-                              setState(() {});
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 播放控制按钮
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 上一曲
-                      IconButton(
-                        icon: const Icon(Icons.skip_previous),
-                        color: Colors.white,
-                        iconSize: 32,
-                        onPressed: skipDisabled
-                            ? null
-                            : () async {
-                                await playListProvider.playPrev();
-                                _initLyrics();
-                                _updateDuration();
-                              },
-                      ),
-                      const SizedBox(width: 24),
-                      // 播放/暂停 - 使用StreamBuilder确保状态正确
-                      StreamBuilder<bool>(
-                        stream: MusicService.playingStream,
-                        initialData: MusicService.isPlaying,
-                        builder: (context, snapshot) {
-                          final isPlayingNow = snapshot.data ?? false;
-                          return GestureDetector(
-                            onTap: () async {
-                              if (isPlayingNow) {
-                                MusicService().pause();
-                              } else {
-                                // 如果当前没有播放，检查是否需要从当前位置继续
-                                if (MusicService.duration != null &&
-                                    _currentPosition.inMilliseconds > 0) {
-                                  // 从当前位置继续播放
-                                  MusicService().seek(_currentPosition);
-                                  MusicService().resume();
-                                } else {
-                                  // 播放新歌曲（不经过 [playAt] 时需补记最近播放）
-                                  final ok =
-                                      await MusicService().playCurrentFromPlaylist(
-                                    queue: playListProvider.playList,
-                                    currentIndex: playListProvider.currentIndex,
-                                    useAndroidConcatQueue:
-                                        playListProvider.playbackMode !=
-                                            PlaybackMode.playOnce,
-                                  );
-                                  if (!context.mounted) return;
-                                  if (!ok) {
-                                    reportPlaybackFailureToUser(context);
-                                    return;
-                                  }
-                                  await playListProvider.recordRecentForCurrent();
-                                }
-                              }
-                            },
-                            child: Container(
-                              width: 64,
-                              height: 64,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.12),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.38),
-                                  width: 1.25,
-                                ),
+                // 横屏时剩余高度小，底部固定区总高度易超过 [Column] 可用空间；整体 scaleDown + 紧缩竖向边距
+                LayoutBuilder(
+                  builder: (context, chromeConstraints) {
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.bottomCenter,
+                      child: SizedBox(
+                        width: chromeConstraints.maxWidth,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: compactChrome ? 2 : 4,
                               ),
-                              child: Icon(
-                                isPlayingNow ? Icons.pause : Icons.play_arrow,
-                                size: 34,
-                                color: Colors.white,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        LyricsUtils.formatDuration(
+                                            effectivePos),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.55),
+                                        ),
+                                      ),
+                                      Text(
+                                        LyricsUtils.formatDuration(
+                                            _totalDuration),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.55),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      thumbShape:
+                                          const RoundSliderThumbShape(
+                                        enabledThumbRadius: 6,
+                                      ),
+                                      trackHeight: 2,
+                                    ),
+                                    child: Slider(
+                                      value: _totalDuration.inMilliseconds > 0
+                                          ? (effectivePos.inMilliseconds /
+                                                  _totalDuration
+                                                      .inMilliseconds)
+                                              .clamp(0.0, 1.0)
+                                          : 0.0,
+                                      min: 0.0,
+                                      max: 1.0,
+                                      activeColor: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      inactiveColor: Colors.white
+                                          .withValues(alpha: 0.25),
+                                      onChangeStart: (_) {
+                                        _isSeeking = true;
+                                        _seekPreview = effectivePos;
+                                        setState(() {});
+                                      },
+                                      onChanged: (value) {
+                                        if (_totalDuration.inMilliseconds >
+                                            0) {
+                                          final newPosition = Duration(
+                                            milliseconds: (value *
+                                                    _totalDuration
+                                                        .inMilliseconds)
+                                                .toInt(),
+                                          );
+                                          _seekPreview = newPosition;
+                                          _updateCurrentLyric(
+                                              _seekPreview);
+                                          setState(() {});
+                                        }
+                                      },
+                                      onChangeEnd: (value) async {
+                                        if (_totalDuration.inMilliseconds >
+                                            0) {
+                                          final newPosition = Duration(
+                                            milliseconds: ((value.clamp(
+                                                        0.0, 1.0)) *
+                                                    _totalDuration
+                                                        .inMilliseconds)
+                                                .toInt(),
+                                          );
+                                          await _seekTo(newPosition);
+                                        } else {
+                                          _isSeeking = false;
+                                          setState(() {});
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 24),
-                      // 下一曲
-                      IconButton(
-                        icon: const Icon(Icons.skip_next),
-                        color: Colors.white,
-                        iconSize: 32,
-                        onPressed: skipDisabled
-                            ? null
-                            : () async {
-                                await playListProvider.playNext();
-                                _initLyrics();
-                                _updateDuration();
-                              },
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 底栏无背景，悬停/按压见 [_SongToolIcon] 高亮
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _SongToolIcon(
-                        icon: Icons.translate_rounded,
-                        onPressed: _showLyricStyleSheet,
-                        tooltip: l10n.tooltipLyricStyle,
-                      ),
-                      _SongToolIcon(
-                        icon: _lyricLineDisplayModeIcon(),
-                        iconColor: _globalDisplayMode < 0
-                            ? null
-                            : Theme.of(context).colorScheme.primary,
-                        onPressed: _toggleDisplayMode,
-                        tooltip: _lyricLineDisplayModeTooltip(l10n),
-                      ),
-                      Consumer<PlayListProvider>(
-                        builder: (context, provider, _) {
-                          final t = AppLocalizations.of(context);
-                          return _SongToolIcon(
-                            icon: _getPlaybackModeIcon(provider.playbackMode),
-                            onPressed: () {
-                              _showPlaybackModeSheet(context, provider);
-                            },
-                            tooltip: playbackModeLabel(
-                              provider.playbackMode,
-                              t,
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: compactChrome ? 4 : 12,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.skip_previous),
+                                    color: Colors.white,
+                                    iconSize: 32,
+                                    onPressed: skipDisabled
+                                        ? null
+                                        : () async {
+                                            await playListProvider
+                                                .playPrev();
+                                            _initLyrics();
+                                            _updateDuration();
+                                          },
+                                  ),
+                                  const SizedBox(width: 24),
+                                  StreamBuilder<bool>(
+                                    stream: MusicService.playingStream,
+                                    initialData: MusicService.isPlaying,
+                                    builder: (context, snapshot) {
+                                      final isPlayingNow =
+                                          snapshot.data ?? false;
+                                      return GestureDetector(
+                                        onTap: () async {
+                                          if (isPlayingNow) {
+                                            MusicService().pause();
+                                          } else {
+                                            if (MusicService.duration !=
+                                                    null &&
+                                                _currentPosition
+                                                        .inMilliseconds >
+                                                    0) {
+                                              MusicService()
+                                                  .seek(_currentPosition);
+                                              MusicService().resume();
+                                            } else {
+                                              final ok = await MusicService()
+                                                  .playCurrentFromPlaylist(
+                                                queue: playListProvider
+                                                    .playList,
+                                                currentIndex:
+                                                    playListProvider
+                                                        .currentIndex,
+                                                useAndroidConcatQueue:
+                                                    playListProvider
+                                                            .playbackMode !=
+                                                        PlaybackMode.playOnce,
+                                              );
+                                              if (!context.mounted) return;
+                                              if (!ok) {
+                                                reportPlaybackFailureToUser(
+                                                    context);
+                                                return;
+                                              }
+                                              await playListProvider
+                                                  .recordRecentForCurrent();
+                                            }
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 64,
+                                          height: 64,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.12),
+                                            border: Border.all(
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.38),
+                                              width: 1.25,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            isPlayingNow
+                                                ? Icons.pause
+                                                : Icons.play_arrow,
+                                            size: 34,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(width: 24),
+                                  IconButton(
+                                    icon: const Icon(Icons.skip_next),
+                                    color: Colors.white,
+                                    iconSize: 32,
+                                    onPressed: skipDisabled
+                                        ? null
+                                        : () async {
+                                            await playListProvider
+                                                .playNext();
+                                            _initLyrics();
+                                            _updateDuration();
+                                          },
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                12,
+                                compactChrome ? 4 : 8,
+                                12,
+                                compactChrome ? 2 : 4,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _SongToolIcon(
+                                    icon: Icons.translate_rounded,
+                                    onPressed: _showLyricStyleSheet,
+                                    tooltip: l10n.tooltipLyricStyle,
+                                  ),
+                                  _SongToolIcon(
+                                    icon: _lyricLineDisplayModeIcon(),
+                                    iconColor: _globalDisplayMode < 0
+                                        ? null
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                    onPressed: _toggleDisplayMode,
+                                    tooltip: _lyricLineDisplayModeTooltip(
+                                        l10n),
+                                  ),
+                                  Consumer<PlayListProvider>(
+                                    builder: (context, provider, _) {
+                                      final t =
+                                          AppLocalizations.of(context);
+                                      return _SongToolIcon(
+                                        icon: _getPlaybackModeIcon(
+                                            provider.playbackMode),
+                                        onPressed: () {
+                                          _showPlaybackModeSheet(
+                                              context, provider);
+                                        },
+                                        tooltip: playbackModeLabel(
+                                          provider.playbackMode,
+                                          t,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  _SongToolIcon(
+                                    icon: Icons.library_add_rounded,
+                                    onPressed: () {
+                                      final song =
+                                          playListProvider.currentSong;
+                                      if (song == null) return;
+                                      showAddToUserPlaylistsSheet(
+                                          context, song);
+                                    },
+                                    tooltip: l10n.tooltipAddToPlaylist,
+                                  ),
+                                  _SongToolIcon(
+                                    icon: Icons.more_horiz_rounded,
+                                    onPressed: () {
+                                      _showSongMoreSheet(
+                                          context, playListProvider);
+                                    },
+                                    tooltip: l10n.tooltipMore,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                    MediaQuery.of(context).padding.bottom),
+                          ],
+                        ),
                       ),
-                      _SongToolIcon(
-                        icon: Icons.library_add_rounded,
-                        onPressed: () {
-                          final song = playListProvider.currentSong;
-                          if (song == null) return;
-                          showAddToUserPlaylistsSheet(context, song);
-                        },
-                        tooltip: l10n.tooltipAddToPlaylist,
-                      ),
-                      _SongToolIcon(
-                        icon: Icons.more_horiz_rounded,
-                        onPressed: () {
-                          _showSongMoreSheet(context, playListProvider);
-                        },
-                        tooltip: l10n.tooltipMore,
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-                SizedBox(height: MediaQuery.of(context).padding.bottom),
               ],
             ),
           ),

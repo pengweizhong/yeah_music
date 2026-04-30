@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -17,6 +19,32 @@ class MenuPage extends StatefulWidget {
 }
 
 class _MenuPageState extends State<MenuPage> {
+  static const double _kDrawerContentMaxWidth = 340;
+  /// 略加大左侧留白、收紧右侧，让图标+文字整块视觉上更落在抽屉中线偏右（仍左对齐文案）。
+  static const double _kListPadLeft = 34;
+  static const double _kListPadRight = 12;
+  static const double _kIconTextGap = 24;
+
+  Widget _menuTile({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      minLeadingWidth: 32,
+      horizontalTitleGap: _kIconTextGap,
+      leading: Icon(icon, color: context.gradFg()),
+      title: Text(
+        label,
+        textAlign: TextAlign.left,
+        style: TextStyle(color: context.gradFg()),
+      ),
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -24,127 +52,115 @@ class _MenuPageState extends State<MenuPage> {
       backgroundColor: Colors.transparent,
       child: FrostedGlassPanel.drawer(
         child: SafeArea(
-          child: ListView(
-            //这里放一个Music的Logo
-            children: [
-              Container(
-                padding: const EdgeInsets.only(top: 30),
-                height: 180,
-                width: 180,
-                child: DrawerHeader(
-                  child: Center(
-                    child: Image.asset("assets/icons/icon_512x512@2x.png"),
-                  ),
-                ),
-              ),
-
-              //主页
-              Padding(
-                padding: const EdgeInsets.only(left: 80, right: 80, top: 20),
-                child: ListTile(
-                  title: Text(
-                    l10n.menuHome,
-                    style: TextStyle(color: context.gradFg()),
-                  ),
-                  leading: Icon(Icons.home, color: context.gradFg()),
-                  onTap: () => Navigator.pop(context),
-                ),
-              ),
-              //歌曲列表
-              Padding(
-                padding: const EdgeInsets.only(left: 80, right: 65, top: 5),
-                child: ListTile(
-                  title: Text(
-                    l10n.menuSongList,
-                    style: TextStyle(color: context.gradFg()),
-                  ),
-                  leading: Icon(Icons.list, color: context.gradFg()),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const PlayListPage()),
-                    );
-                  },
-                ),
-              ),
-              //歌单
-              Padding(
-                padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
-                child: ListTile(
-                  title: Text(
-                    l10n.menuPlaylists,
-                    style: TextStyle(color: context.gradFg()),
-                  ),
-                  leading: Icon(
-                    Icons.folder_copy_outlined,
-                    color: context.gradFg(),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StoragePlayListPage(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final drawerW = constraints.maxWidth;
+              final contentW = math.min(_kDrawerContentMaxWidth, drawerW);
+              // 窄于 max 时略偏右对齐，避免几何居中仍显「贴左」；与左右非对称 padding 一起做视觉平衡
+              final alignX =
+                  contentW < drawerW - 1 ? 0.14 : 0.08;
+              return Align(
+                alignment: Alignment(alignX, -1),
+                child: SizedBox(
+                  width: contentW,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      _kListPadLeft,
+                      12,
+                      _kListPadRight,
+                      12,
+                    ),
+                    children: [
+                      SizedBox(
+                        height: 168,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Image.asset(
+                              'assets/icons/icon_512x512@2x.png',
+                              height: 112,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                ),
-              ),
-              //音乐源
-              Padding(
-                padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
-                child: ListTile(
-                  title: Text(
-                    l10n.menuMusicSource,
-                    style: TextStyle(color: context.gradFg()),
-                  ),
-                  leading: Icon(Icons.source, color: context.gradFg()),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FolderPageSettings(),
+                      const SizedBox(height: 12),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.home,
+                        label: l10n.menuHome,
+                        onTap: () => Navigator.pop(context),
                       ),
-                    );
-                  },
-                ),
-              ),
-              //统计
-              Padding(
-                padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
-                child: ListTile(
-                  title: Text(
-                    l10n.menuStatistics,
-                    style: TextStyle(color: context.gradFg()),
-                  ),
-                  leading: Icon(Icons.insights_outlined, color: context.gradFg()),
-                  onTap: () {
-                    Navigator.push<void>(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const StatisticsPage(),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.list,
+                        label: l10n.menuSongList,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const PlayListPage(),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              ),
-              //设置
-              Padding(
-                padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
-                child: ListTile(
-                  title: Text(
-                    l10n.menuSettings,
-                    style: TextStyle(color: context.gradFg()),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.folder_copy_outlined,
+                        label: l10n.menuPlaylists,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const StoragePlayListPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.source,
+                        label: l10n.menuMusicSource,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => FolderPageSettings(),
+                            ),
+                          );
+                        },
+                      ),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.insights_outlined,
+                        label: l10n.menuStatistics,
+                        onTap: () {
+                          Navigator.push<void>(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const StatisticsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.settings,
+                        label: l10n.menuSettings,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => SettingPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  leading: Icon(Icons.settings, color: context.gradFg()),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SettingPage()),
-                    );
-                  },
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
