@@ -462,6 +462,12 @@ abstract class AppLocalizations {
   /// **'v{version}'**
   String settingsAboutDialogVersionLabel(String version);
 
+  /// No description provided for @settingsAboutDialogBuildLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Build {buildNumber}'**
+  String settingsAboutDialogBuildLabel(String buildNumber);
+
   /// No description provided for @settingsSysinfoSectionDevice.
   ///
   /// In en, this message translates to:

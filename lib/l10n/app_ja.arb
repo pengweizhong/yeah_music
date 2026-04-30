@@ -87,6 +87,12 @@
       "version": { "type": "String" }
     }
   },
+  "settingsAboutDialogBuildLabel": "ビルド {buildNumber}",
+  "@settingsAboutDialogBuildLabel": {
+    "placeholders": {
+      "buildNumber": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "端末情報",
   "settingsSysinfoSectionStorage": "ストレージ",
   "settingsSysinfoPlatformLabel": "実行プラットフォーム",

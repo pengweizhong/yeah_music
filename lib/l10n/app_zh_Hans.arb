@@ -87,6 +87,12 @@
       "version": { "type": "String" }
     }
   },
+  "settingsAboutDialogBuildLabel": "构建号 {buildNumber}",
+  "@settingsAboutDialogBuildLabel": {
+    "placeholders": {
+      "buildNumber": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "设备信息",
   "settingsSysinfoSectionStorage": "存储空间",
   "settingsSysinfoPlatformLabel": "运行平台",

@@ -86,6 +86,12 @@
       "version": { "type": "String" }
     }
   },
+  "settingsAboutDialogBuildLabel": "Build {buildNumber}",
+  "@settingsAboutDialogBuildLabel": {
+    "placeholders": {
+      "buildNumber": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "Device",
   "settingsSysinfoSectionStorage": "Storage",
   "settingsSysinfoPlatformLabel": "Platform",

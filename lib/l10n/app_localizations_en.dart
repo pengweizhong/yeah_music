@@ -209,6 +209,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String settingsAboutDialogBuildLabel(String buildNumber) {
+    return 'Build $buildNumber';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => 'Device';
 
   @override

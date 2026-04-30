@@ -644,7 +644,7 @@ void showAppAboutDialog(BuildContext context) {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Build ${AppProductInfo.buildNumber}',
+                  l10n.settingsAboutDialogBuildLabel(AppProductInfo.buildNumber),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: muted),
                 ),

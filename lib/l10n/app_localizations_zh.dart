@@ -200,6 +200,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String settingsAboutDialogBuildLabel(String buildNumber) {
+    return '构建号 $buildNumber';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => '设备信息';
 
   @override
@@ -2456,6 +2461,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String settingsAboutDialogBuildLabel(String buildNumber) {
+    return '构建号 $buildNumber';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => '设备信息';
 
   @override
@@ -4709,6 +4719,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String settingsAboutDialogVersionLabel(String version) {
     return 'v$version';
+  }
+
+  @override
+  String settingsAboutDialogBuildLabel(String buildNumber) {
+    return '建置編號 $buildNumber';
   }
 
   @override
