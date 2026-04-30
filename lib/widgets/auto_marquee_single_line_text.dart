@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 /// [UnconstrainedBox]/[OverflowBox] 在 debug 下对「内容超出父级」的断言。
 ///
 /// [enableMarquee] 为 false 时不滚动（单行省略），用于「仅当前播放行跑马灯」等场景。
+///
+/// 动画状态混用 [TickerProviderStateMixin]：[LayoutBuilder] 在同一布局阶段可能对子树多次
+/// 回调 build；若在此期间销毁并重建 [AnimationController]，[SingleTickerProviderStateMixin]
+/// 会在尚未释放前一 ticker 槽位时误判「多 ticker」断言。
 class AutoMarqueeSingleLineText extends StatefulWidget {
   const AutoMarqueeSingleLineText({
     super.key,
@@ -32,7 +36,7 @@ class AutoMarqueeSingleLineText extends StatefulWidget {
 }
 
 class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   AnimationController? _ctrl;
   final ScrollController _scrollCtrl = ScrollController();
   String? _trackedText;
