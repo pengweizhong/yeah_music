@@ -431,6 +431,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '使うキーの組み合わせを押してください。Esc でキャンセル。';
 
   @override
+  String get settingsPlaybackShortcutsUnavailableBody =>
+      'キーボードショートカットは Windows / macOS / Linux のデスクトップ版でのみ変更できます。';
+
+  @override
   String get settingsWireRemoteTitle => 'ヘッドセット操作';
 
   @override

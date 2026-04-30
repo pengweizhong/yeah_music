@@ -446,6 +446,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Press the key combination to use. Esc cancels.';
 
   @override
+  String get settingsPlaybackShortcutsUnavailableBody =>
+      'Keyboard shortcuts can be customized on Windows, macOS, and Linux desktop builds.';
+
+  @override
   String get settingsWireRemoteTitle => 'Headset controls';
 
   @override

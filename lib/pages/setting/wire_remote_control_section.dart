@@ -56,127 +56,128 @@ class WireRemoteControlSection extends StatelessWidget {
     final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
     final supportedHere = !kIsWeb && Platform.isAndroid;
 
-    return ExpansionTile(
-      leading: Icon(Icons.headset_outlined, color: context.gradFg()),
-      title: Text(
-        l10n.settingsWireRemoteTitle,
-        style: TextStyle(color: context.gradFg()),
-      ),
-      subtitle: Text(
-        supportedHere
-            ? l10n.settingsWireRemoteSubtitle
-            : l10n.settingsWireRemoteSubtitleOtherPlatforms,
-        style: subStyle,
-      ),
-      iconColor: context.gradFg(),
-      collapsedIconColor: context.gradFg(),
-      children: [
-        if (!supportedHere)
-          ListTile(
-            title: Text(
-              l10n.settingsWireRemoteUnavailableTitle,
-              style: TextStyle(color: context.gradFg()),
+    return Opacity(
+      opacity: supportedHere ? 1.0 : 0.48,
+      child: ExpansionTile(
+        leading: Icon(Icons.headset_outlined, color: context.gradFg()),
+        title: Text(
+          l10n.settingsWireRemoteTitle,
+          style: TextStyle(color: context.gradFg()),
+        ),
+        subtitle: Text(
+          supportedHere
+              ? l10n.settingsWireRemoteSubtitle
+              : l10n.settingsWireRemoteSubtitleOtherPlatforms,
+          style: subStyle,
+        ),
+        iconColor: context.gradFg(),
+        collapsedIconColor: context.gradFg(),
+        children: [
+          if (!supportedHere)
+            ListTile(
+              title: Text(
+                l10n.settingsWireRemoteUnavailableTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                l10n.settingsWireRemoteUnavailableBody,
+                style: subStyle,
+              ),
+            )
+          else ...[
+            SwitchListTile(
+              secondary: Icon(Icons.tune, color: context.gradFg(0.75)),
+              title: Text(
+                l10n.settingsWireRemoteUseCustom,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                l10n.settingsWireRemoteUseCustomSubtitle,
+                style: subStyle,
+              ),
+              value: cfg.enabled,
+              onChanged: (v) => ctrl.setWireRemote(cfg.copyWith(enabled: v)),
+              activeThumbColor: context.gradFg(0.95),
+              activeTrackColor: context.gradFg(0.35),
             ),
-            subtitle: Text(
-              l10n.settingsWireRemoteUnavailableBody,
-              style: subStyle,
-            ),
-          )
-        else ...[
-          SwitchListTile(
-            secondary: Icon(
-              Icons.tune,
-              color: context.gradFg(0.75),
-            ),
-            title: Text(
-              l10n.settingsWireRemoteUseCustom,
-              style: TextStyle(color: context.gradFg()),
-            ),
-            subtitle: Text(
-              l10n.settingsWireRemoteUseCustomSubtitle,
-              style: subStyle,
-            ),
-            value: cfg.enabled,
-            onChanged: (v) => ctrl.setWireRemote(cfg.copyWith(enabled: v)),
-            activeThumbColor: context.gradFg(0.95),
-            activeTrackColor: context.gradFg(0.35),
-          ),
-          ListTile(
-            title: Text(
-              l10n.wireRemoteSingleTitle,
-              style: TextStyle(color: context.gradFg()),
-            ),
-            subtitle: Text(
-              _actionLabel(l10n, cfg.singleClick),
-              style: subStyle,
-            ),
-            enabled: cfg.enabled,
-            onTap: cfg.enabled
-                ? () => _pickAction(context, l10n, cfg.singleClick, (a) {
+            ListTile(
+              title: Text(
+                l10n.wireRemoteSingleTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                _actionLabel(l10n, cfg.singleClick),
+                style: subStyle,
+              ),
+              enabled: cfg.enabled,
+              onTap: cfg.enabled
+                  ? () => _pickAction(context, l10n, cfg.singleClick, (a) {
                       ctrl.setWireRemote(cfg.copyWith(singleClick: a));
                     })
-                : null,
-          ),
-          ListTile(
-            title: Text(
-              l10n.wireRemoteDoubleTitle,
-              style: TextStyle(color: context.gradFg()),
+                  : null,
             ),
-            subtitle: Text(
-              _actionLabel(l10n, cfg.doubleClick),
-              style: subStyle,
-            ),
-            enabled: cfg.enabled,
-            onTap: cfg.enabled
-                ? () => _pickAction(context, l10n, cfg.doubleClick, (a) {
+            ListTile(
+              title: Text(
+                l10n.wireRemoteDoubleTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                _actionLabel(l10n, cfg.doubleClick),
+                style: subStyle,
+              ),
+              enabled: cfg.enabled,
+              onTap: cfg.enabled
+                  ? () => _pickAction(context, l10n, cfg.doubleClick, (a) {
                       ctrl.setWireRemote(cfg.copyWith(doubleClick: a));
                     })
-                : null,
-          ),
-          ListTile(
-            title: Text(
-              l10n.wireRemoteTripleTitle,
-              style: TextStyle(color: context.gradFg()),
+                  : null,
             ),
-            subtitle: Text(
-              _actionLabel(l10n, cfg.tripleClick),
-              style: subStyle,
-            ),
-            enabled: cfg.enabled,
-            onTap: cfg.enabled
-                ? () => _pickAction(context, l10n, cfg.tripleClick, (a) {
+            ListTile(
+              title: Text(
+                l10n.wireRemoteTripleTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                _actionLabel(l10n, cfg.tripleClick),
+                style: subStyle,
+              ),
+              enabled: cfg.enabled,
+              onTap: cfg.enabled
+                  ? () => _pickAction(context, l10n, cfg.tripleClick, (a) {
                       ctrl.setWireRemote(cfg.copyWith(tripleClick: a));
                     })
-                : null,
-          ),
-          ListTile(
-            title: Text(
-              l10n.wireRemoteMediaNextTitle,
-              style: TextStyle(color: context.gradFg()),
+                  : null,
             ),
-            subtitle: Text(
-              _actionLabel(l10n, cfg.mediaNextKeyAction),
-              style: subStyle,
-            ),
-            enabled: cfg.enabled,
-            onTap: cfg.enabled
-                ? () => _pickAction(context, l10n, cfg.mediaNextKeyAction, (a) {
+            ListTile(
+              title: Text(
+                l10n.wireRemoteMediaNextTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                _actionLabel(l10n, cfg.mediaNextKeyAction),
+                style: subStyle,
+              ),
+              enabled: cfg.enabled,
+              onTap: cfg.enabled
+                  ? () => _pickAction(context, l10n, cfg.mediaNextKeyAction, (
+                      a,
+                    ) {
                       ctrl.setWireRemote(cfg.copyWith(mediaNextKeyAction: a));
                     })
-                : null,
-          ),
-          ListTile(
-            title: Text(
-              l10n.wireRemoteMediaPreviousTitle,
-              style: TextStyle(color: context.gradFg()),
+                  : null,
             ),
-            subtitle: Text(
-              _actionLabel(l10n, cfg.mediaPreviousKeyAction),
-              style: subStyle,
-            ),
-            enabled: cfg.enabled,
-            onTap: cfg.enabled
-                ? () => _pickAction(
+            ListTile(
+              title: Text(
+                l10n.wireRemoteMediaPreviousTitle,
+                style: TextStyle(color: context.gradFg()),
+              ),
+              subtitle: Text(
+                _actionLabel(l10n, cfg.mediaPreviousKeyAction),
+                style: subStyle,
+              ),
+              enabled: cfg.enabled,
+              onTap: cfg.enabled
+                  ? () => _pickAction(
                       context,
                       l10n,
                       cfg.mediaPreviousKeyAction,
@@ -186,10 +187,11 @@ class WireRemoteControlSection extends StatelessWidget {
                         );
                       },
                     )
-                : null,
-          ),
+                  : null,
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

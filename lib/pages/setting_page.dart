@@ -108,7 +108,7 @@ class _AndroidCarLyricsSettingsSectionState
         : '${l10n.settingsCarLyricsGroupDetail}\n\n${l10n.settingsCarLyricsOnlyAndroidHint}';
     final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
     if (!_loaded) {
-      return ListTile(
+      final tile = ListTile(
         leading: Icon(Icons.directions_car_outlined, color: context.gradFg()),
         title: Text(
           l10n.settingsCarLyricsGroupTitle,
@@ -122,9 +122,10 @@ class _AndroidCarLyricsSettingsSectionState
           dialogBody: detailBody,
         ),
       );
+      return Opacity(opacity: interactive ? 1.0 : 0.48, child: tile);
     }
     final showDetailSwitches = !interactive || _enabled;
-    return ExpansionTile(
+    final expansion = ExpansionTile(
       leading: Icon(Icons.directions_car_outlined, color: context.gradFg()),
       title: Row(
         children: [
@@ -195,14 +196,12 @@ class _AndroidCarLyricsSettingsSectionState
         ],
       ],
     );
+    return Opacity(opacity: interactive ? 1.0 : 0.48, child: expansion);
   }
 }
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
-
-  static bool get _showDesktopLyricsSection =>
-      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
   @override
   Widget build(BuildContext context) {
@@ -345,15 +344,10 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
-                    if (!kIsWeb &&
-                        (Platform.isMacOS ||
-                            Platform.isWindows ||
-                            Platform.isLinux))
-                      const PlaybackShortcutsSettingsSection(),
+                    const PlaybackShortcutsSettingsSection(),
                     const _AndroidCarLyricsSettingsSection(),
-                    if (!kIsWeb) const WireRemoteControlSection(),
-                    if (_showDesktopLyricsSection)
-                      const _DesktopLyricsSettingsSection(),
+                    const WireRemoteControlSection(),
+                    const _DesktopLyricsSettingsSection(),
                     ListTile(
                       title: Text(
                         l10n.settingsSponsorTitle,
@@ -545,8 +539,11 @@ class _DesktopLyricsSettingsSectionState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final desktopApplicable =
+        !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+
     if (!_loaded) {
-      return ListTile(
+      final tile = ListTile(
         leading: Icon(Icons.lyrics_outlined, color: context.gradFg()),
         title: Text(
           l10n.settingsDesktopLyricsGroupTitle,
@@ -563,9 +560,10 @@ class _DesktopLyricsSettingsSectionState
           dialogBody: l10n.settingsDesktopLyricsGroupDetail,
         ),
       );
+      return Opacity(opacity: desktopApplicable ? 1.0 : 0.48, child: tile);
     }
 
-    return ExpansionTile(
+    final expansion = ExpansionTile(
       leading: Icon(Icons.lyrics_outlined, color: context.gradFg()),
       title: Row(
         children: [
@@ -601,7 +599,9 @@ class _DesktopLyricsSettingsSectionState
             style: subStyle,
           ),
           value: _floating,
-          onChanged: desktopFloatingLyricsSupported ? _onFloatingChanged : null,
+          onChanged: desktopApplicable && desktopFloatingLyricsSupported
+              ? _onFloatingChanged
+              : null,
           activeThumbColor: context.gradFg(0.95),
           activeTrackColor: context.gradFg(0.35),
         ),
@@ -670,23 +670,23 @@ class _DesktopLyricsSettingsSectionState
             },
           ),
         ],
-        if (Platform.isMacOS)
-          SwitchListTile(
-            secondary: Icon(Icons.podcasts_rounded, color: context.gradFg()),
-            title: Text(
-              l10n.settingsMacosMenuBarLyrics,
-              style: TextStyle(color: context.gradFg()),
-            ),
-            subtitle: Text(
-              l10n.settingsMacosMenuBarLyricsSubtitle,
-              style: subStyle,
-            ),
-            value: _menuBar,
-            onChanged: MacosMenuBarLyrics.supported ? _onMenuBarChanged : null,
-            activeThumbColor: context.gradFg(0.95),
-            activeTrackColor: context.gradFg(0.35),
+        SwitchListTile(
+          secondary: Icon(Icons.podcasts_rounded, color: context.gradFg()),
+          title: Text(
+            l10n.settingsMacosMenuBarLyrics,
+            style: TextStyle(color: context.gradFg()),
           ),
+          subtitle: Text(
+            l10n.settingsMacosMenuBarLyricsSubtitle,
+            style: subStyle,
+          ),
+          value: _menuBar,
+          onChanged: MacosMenuBarLyrics.supported ? _onMenuBarChanged : null,
+          activeThumbColor: context.gradFg(0.95),
+          activeTrackColor: context.gradFg(0.35),
+        ),
       ],
     );
+    return Opacity(opacity: desktopApplicable ? 1.0 : 0.48, child: expansion);
   }
 }

@@ -894,6 +894,12 @@ abstract class AppLocalizations {
   /// **'Press the key combination to use. Esc cancels.'**
   String get settingsPlaybackShortcutsPressKeyHint;
 
+  /// No description provided for @settingsPlaybackShortcutsUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts can be customized on Windows, macOS, and Linux desktop builds.'**
+  String get settingsPlaybackShortcutsUnavailableBody;
+
   /// No description provided for @settingsWireRemoteTitle.
   ///
   /// In en, this message translates to:

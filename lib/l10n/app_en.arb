@@ -169,6 +169,7 @@
   "settingsPlaybackShortcutsDisabledLabel": "Off",
   "settingsPlaybackShortcutsPressKey": "New shortcut",
   "settingsPlaybackShortcutsPressKeyHint": "Press the key combination to use. Esc cancels.",
+  "settingsPlaybackShortcutsUnavailableBody": "Keyboard shortcuts can be customized on Windows, macOS, and Linux desktop builds.",
   "settingsWireRemoteTitle": "Headset controls",
   "settingsWireRemoteSubtitle": "Wired multi-press and Bluetooth next/prev keys while the app is open",
   "settingsWireRemoteSubtitleOtherPlatforms": "Customization works on the Android app in the foreground.",

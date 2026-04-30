@@ -1,5 +1,8 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/playback_shortcut_controller.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -94,8 +97,10 @@ class PlaybackShortcutsSettingsSection extends StatelessWidget {
     final ctrl = context.watch<PlaybackShortcutController>();
     final cfg = ctrl.config;
     final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final supported =
+        !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
-    return ExpansionTile(
+    final expansion = ExpansionTile(
       leading: Icon(Icons.keyboard_outlined, color: context.gradFg()),
       title: Text(
         l10n.settingsPlaybackShortcutsTitle,
@@ -104,69 +109,81 @@ class PlaybackShortcutsSettingsSection extends StatelessWidget {
       subtitle: Text(l10n.settingsPlaybackShortcutsSubtitle, style: subStyle),
       iconColor: context.gradFg(),
       collapsedIconColor: context.gradFg(),
-      children: [
-        _ShortcutTile(
-          label: l10n.settingsPlaybackShortcutsPlayPause,
-          binding: cfg.playPause,
-          onChange: () async {
-            final a = await _recordShortcut(context);
-            if (!context.mounted || a == null) return;
-            await ctrl.setBinding(
-              PlaybackShortcutKind.playPause,
-              PlaybackShortcutBinding(enabled: true, activator: a),
-            );
-          },
-          onDisable: () => ctrl.setBinding(
-            PlaybackShortcutKind.playPause,
-            const PlaybackShortcutBinding.disabled(),
-          ),
-          onEnableDefault: () => ctrl.setBinding(
-            PlaybackShortcutKind.playPause,
-            PlaybackShortcutBinding.defaultPlayPause(),
-          ),
-        ),
-        _ShortcutTile(
-          label: l10n.settingsPlaybackShortcutsPrevious,
-          binding: cfg.previous,
-          onChange: () async {
-            final a = await _recordShortcut(context);
-            if (!context.mounted || a == null) return;
-            await ctrl.setBinding(
-              PlaybackShortcutKind.previous,
-              PlaybackShortcutBinding(enabled: true, activator: a),
-            );
-          },
-          onDisable: () => ctrl.setBinding(
-            PlaybackShortcutKind.previous,
-            const PlaybackShortcutBinding.disabled(),
-          ),
-          onEnableDefault: () => ctrl.setBinding(
-            PlaybackShortcutKind.previous,
-            PlaybackShortcutBinding.defaultPrevious(),
-          ),
-        ),
-        _ShortcutTile(
-          label: l10n.settingsPlaybackShortcutsNext,
-          binding: cfg.next,
-          onChange: () async {
-            final a = await _recordShortcut(context);
-            if (!context.mounted || a == null) return;
-            await ctrl.setBinding(
-              PlaybackShortcutKind.next,
-              PlaybackShortcutBinding(enabled: true, activator: a),
-            );
-          },
-          onDisable: () => ctrl.setBinding(
-            PlaybackShortcutKind.next,
-            const PlaybackShortcutBinding.disabled(),
-          ),
-          onEnableDefault: () => ctrl.setBinding(
-            PlaybackShortcutKind.next,
-            PlaybackShortcutBinding.defaultNext(),
-          ),
-        ),
-      ],
+      children: supported
+          ? [
+              _ShortcutTile(
+                label: l10n.settingsPlaybackShortcutsPlayPause,
+                binding: cfg.playPause,
+                onChange: () async {
+                  final a = await _recordShortcut(context);
+                  if (!context.mounted || a == null) return;
+                  await ctrl.setBinding(
+                    PlaybackShortcutKind.playPause,
+                    PlaybackShortcutBinding(enabled: true, activator: a),
+                  );
+                },
+                onDisable: () => ctrl.setBinding(
+                  PlaybackShortcutKind.playPause,
+                  const PlaybackShortcutBinding.disabled(),
+                ),
+                onEnableDefault: () => ctrl.setBinding(
+                  PlaybackShortcutKind.playPause,
+                  PlaybackShortcutBinding.defaultPlayPause(),
+                ),
+              ),
+              _ShortcutTile(
+                label: l10n.settingsPlaybackShortcutsPrevious,
+                binding: cfg.previous,
+                onChange: () async {
+                  final a = await _recordShortcut(context);
+                  if (!context.mounted || a == null) return;
+                  await ctrl.setBinding(
+                    PlaybackShortcutKind.previous,
+                    PlaybackShortcutBinding(enabled: true, activator: a),
+                  );
+                },
+                onDisable: () => ctrl.setBinding(
+                  PlaybackShortcutKind.previous,
+                  const PlaybackShortcutBinding.disabled(),
+                ),
+                onEnableDefault: () => ctrl.setBinding(
+                  PlaybackShortcutKind.previous,
+                  PlaybackShortcutBinding.defaultPrevious(),
+                ),
+              ),
+              _ShortcutTile(
+                label: l10n.settingsPlaybackShortcutsNext,
+                binding: cfg.next,
+                onChange: () async {
+                  final a = await _recordShortcut(context);
+                  if (!context.mounted || a == null) return;
+                  await ctrl.setBinding(
+                    PlaybackShortcutKind.next,
+                    PlaybackShortcutBinding(enabled: true, activator: a),
+                  );
+                },
+                onDisable: () => ctrl.setBinding(
+                  PlaybackShortcutKind.next,
+                  const PlaybackShortcutBinding.disabled(),
+                ),
+                onEnableDefault: () => ctrl.setBinding(
+                  PlaybackShortcutKind.next,
+                  PlaybackShortcutBinding.defaultNext(),
+                ),
+              ),
+            ]
+          : [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Text(
+                  l10n.settingsPlaybackShortcutsUnavailableBody,
+                  style: subStyle,
+                ),
+              ),
+            ],
     );
+
+    return Opacity(opacity: supported ? 1.0 : 0.48, child: expansion);
   }
 }
 

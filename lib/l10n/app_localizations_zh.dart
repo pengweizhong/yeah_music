@@ -425,6 +425,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
 
   @override
+  String get settingsPlaybackShortcutsUnavailableBody =>
+      '快捷键仅在 Windows / macOS / Linux 桌面版可自定义。';
+
+  @override
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
@@ -2798,6 +2802,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get settingsPlaybackShortcutsPressKeyHint => '请按下新的组合键。Esc 取消。';
+
+  @override
+  String get settingsPlaybackShortcutsUnavailableBody =>
+      '快捷键仅在 Windows / macOS / Linux 桌面版可自定义。';
 
   @override
   String get settingsWireRemoteTitle => '耳机线控';
@@ -5174,6 +5182,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsPlaybackShortcutsPressKeyHint => '請按下新的組合鍵。Esc 取消。';
+
+  @override
+  String get settingsPlaybackShortcutsUnavailableBody =>
+      '快捷鍵僅在 Windows / macOS / Linux 桌面版可自訂。';
 
   @override
   String get settingsWireRemoteTitle => '耳機線控';

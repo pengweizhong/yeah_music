@@ -170,6 +170,7 @@
   "settingsPlaybackShortcutsDisabledLabel": "オフ",
   "settingsPlaybackShortcutsPressKey": "新しいショートカット",
   "settingsPlaybackShortcutsPressKeyHint": "使うキーの組み合わせを押してください。Esc でキャンセル。",
+  "settingsPlaybackShortcutsUnavailableBody": "キーボードショートカットは Windows / macOS / Linux のデスクトップ版でのみ変更できます。",
   "settingsWireRemoteTitle": "ヘッドセット操作",
   "settingsWireRemoteSubtitle": "有線の連打と Bluetooth の次へ／戻るキー（アプリが手前のとき）",
   "settingsWireRemoteSubtitleOtherPlatforms": "カスタム割り当ては Android アプリが手前のときのみ有効です。",
