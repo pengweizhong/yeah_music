@@ -325,6 +325,8 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
         playList,
         playbackContextQueue: items,
         playbackQueueSession: PlaybackSessionSurface.recentList,
+        playbackQueueRecordRecent: false,
+        playbackQueueBumpPlayCount: true,
         searchFieldLabelText: l10n.playlistSearchHint,
         onSongMore: (ctx, song) {
           showLibrarySongMoreActionsSheet(
@@ -529,6 +531,8 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                                   await playList.setPlaybackQueueAndPlay(
                                     List<Song>.from(items),
                                     index,
+                                    recordRecent: false,
+                                    bumpPlayCount: true,
                                     session:
                                         PlaybackSessionSurface.recentList,
                                   );

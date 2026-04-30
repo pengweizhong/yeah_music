@@ -870,11 +870,16 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 将当前曲目写入最近播放并通知（用于直调 [MusicService.playSong] 而未经过 [playAt] 的场景）
+  /// 将当前曲目写入最近播放并通知（用于直调 [MusicService.playSong] 而未经过 [playAt] 的场景）。
+  /// 沿用 [_statsRecordRecent] / [_statsBumpPlayCount]，与 [setPlaybackQueueAndPlay] 会话一致。
   Future<void> recordRecentForCurrent() async {
     final s = currentSong;
     if (s == null) return;
-    await RecentPlayService.recordPath(s.path);
+    await RecentPlayService.recordPath(
+      s.path,
+      updateRecentList: _statsRecordRecent,
+      bumpPlayCount: _statsBumpPlayCount,
+    );
     notifyListeners();
   }
 
