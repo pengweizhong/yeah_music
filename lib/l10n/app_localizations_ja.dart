@@ -1234,6 +1234,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songPageInlineTagsFieldAlbum => 'アルバム';
 
   @override
+  String get songPageInlineTagsCoverSection => '埋め込みカバー';
+
+  @override
+  String get songPageInlineTagsCoverReplace => '画像を選んでトリミング…';
+
+  @override
+  String get songPageInlineTagsCoverRemove => 'カバーを削除';
+
+  @override
+  String get songPageInlineTagsCoverInvalid => 'JPEG または PNG を選んでください。';
+
+  @override
   String get songPageInlineTagsFieldYear => '年';
 
   @override

@@ -7,7 +7,7 @@ import 'package:audio_metadata_reader/src/parsers/id3v2.dart';
 import 'package:audio_metadata_reader/src/parsers/mp4.dart';
 import 'package:audio_metadata_reader/src/parsers/riff.dart';
 import 'package:audio_metadata_reader/src/writers/id3v1_writer.dart';
-import 'package:audio_metadata_reader/src/writers/mp4_writer.dart';
+import 'package:yeah_music/third_party/audio_metadata_reader/mp4_writer_fixed.dart';
 import 'package:audio_metadata_reader/src/writers/riff_writer.dart';
 
 import 'flac_writer_with_lyrics.dart';
@@ -21,7 +21,7 @@ void writeMetadataWithLyricsFix(File track, ParserTag metadata) {
     if (ID3v2Parser.canUserParser(reader)) {
       Id3v4WriterWithUslt().write(track, metadata as Mp3Metadata);
     } else if (MP4Parser.canUserParser(reader)) {
-      Mp4Writer().write(track, metadata as Mp4Metadata);
+      Mp4WriterFixed().write(track, metadata as Mp4Metadata);
     } else if (FlacParser.canUserParser(reader)) {
       FlacWriterWithLyrics().write(track, metadata as VorbisMetadata);
     } else if (RiffParser.canUserParser(reader)) {

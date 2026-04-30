@@ -9,6 +9,9 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 /// [Crop] 的 [aspectRatio] 为 **宽 ÷ 高**，故为竖长方形（小于 1）。
 const double kPlaylistCoverCropAspectRatio = 128 / 168;
 
+/// 内嵌封面裁剪：正方形框（宽 ÷ 高 = 1）。
+const double kEmbeddedCoverCropAspectRatio = 1.0;
+
 /// 主题壁纸：初始裁剪框相对最大可用区域的比例（略缩小，减轻贴屏幕/图片边缘误触）。
 const double _kWallpaperInitialCropSizeRatio = 0.92;
 
@@ -16,10 +19,13 @@ const double _kWallpaperInitialCropSizeRatio = 0.92;
 ///
 /// [aspectRatio] 固定裁剪框宽高比（宽÷高）。传 `null` 时表示主题壁纸：**按当前屏幕宽高比**
 /// 作为默认比例，初始框居中且为 [_kWallpaperInitialCropSizeRatio] 倍最大可用区域。
+///
+/// 当 [aspectRatio] 非 null 且传入 [fixedAspectInitialRect] 时，用于居中初始化裁剪框（如正方形封面）。
 Future<Uint8List?> pickImageWithCrop({
   required BuildContext context,
   required AppLocalizations l10n,
   double? aspectRatio,
+  InitialRectBuilder? fixedAspectInitialRect,
 }) async {
   final picker = ImagePicker();
   final xfile = await picker.pickImage(source: ImageSource.gallery);
@@ -38,7 +44,7 @@ Future<Uint8List?> pickImageWithCrop({
               size: _kWallpaperInitialCropSizeRatio,
               aspectRatio: effectiveAspect,
             )
-          : null;
+          : fixedAspectInitialRect;
 
   return Navigator.of(context).push<Uint8List>(
     MaterialPageRoute(
@@ -49,6 +55,22 @@ Future<Uint8List?> pickImageWithCrop({
         initialRectBuilder: initialRectBuilder,
         l10n: l10n,
       ),
+    ),
+  );
+}
+
+/// 内嵌标签封面：相册 → **正方形**裁剪（复用 [ImageCropEditorPage] / `crop_your_image`）。
+Future<Uint8List?> pickSquareEmbeddedCoverImage({
+  required BuildContext context,
+  required AppLocalizations l10n,
+}) {
+  return pickImageWithCrop(
+    context: context,
+    l10n: l10n,
+    aspectRatio: kEmbeddedCoverCropAspectRatio,
+    fixedAspectInitialRect: InitialRectBuilder.withSizeAndRatio(
+      size: 0.92,
+      aspectRatio: kEmbeddedCoverCropAspectRatio,
     ),
   );
 }

@@ -1217,6 +1217,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songPageInlineTagsFieldAlbum => '专辑';
 
   @override
+  String get songPageInlineTagsCoverSection => '内嵌封面';
+
+  @override
+  String get songPageInlineTagsCoverReplace => '选择图片并裁剪…';
+
+  @override
+  String get songPageInlineTagsCoverRemove => '移除封面';
+
+  @override
+  String get songPageInlineTagsCoverInvalid => '请选择 JPEG 或 PNG 图片。';
+
+  @override
   String get songPageInlineTagsFieldYear => '年份';
 
   @override
@@ -3296,6 +3308,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get songPageInlineTagsFieldAlbum => '专辑';
+
+  @override
+  String get songPageInlineTagsCoverSection => '内嵌封面';
+
+  @override
+  String get songPageInlineTagsCoverReplace => '选择图片并裁剪…';
+
+  @override
+  String get songPageInlineTagsCoverRemove => '移除封面';
+
+  @override
+  String get songPageInlineTagsCoverInvalid => '请选择 JPEG 或 PNG 图片。';
 
   @override
   String get songPageInlineTagsFieldYear => '年份';
@@ -5378,6 +5402,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get songPageInlineTagsFieldAlbum => '專輯';
+
+  @override
+  String get songPageInlineTagsCoverSection => '內嵌封面';
+
+  @override
+  String get songPageInlineTagsCoverReplace => '選擇圖片並裁剪…';
+
+  @override
+  String get songPageInlineTagsCoverRemove => '移除封面';
+
+  @override
+  String get songPageInlineTagsCoverInvalid => '請選擇 JPEG 或 PNG 圖片。';
 
   @override
   String get songPageInlineTagsFieldYear => '年份';

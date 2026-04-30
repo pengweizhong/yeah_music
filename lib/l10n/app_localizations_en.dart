@@ -1286,6 +1286,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPageInlineTagsFieldAlbum => 'Album';
 
   @override
+  String get songPageInlineTagsCoverSection => 'Embedded cover';
+
+  @override
+  String get songPageInlineTagsCoverReplace => 'Choose image to crop…';
+
+  @override
+  String get songPageInlineTagsCoverRemove => 'Remove cover';
+
+  @override
+  String get songPageInlineTagsCoverInvalid =>
+      'Please choose a JPEG or PNG image.';
+
+  @override
   String get songPageInlineTagsFieldYear => 'Year';
 
   @override

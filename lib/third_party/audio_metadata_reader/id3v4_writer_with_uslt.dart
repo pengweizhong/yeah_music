@@ -6,6 +6,8 @@ import 'package:audio_metadata_reader/src/metadata/base.dart';
 import 'package:audio_metadata_reader/src/parsers/tag_parser.dart';
 import 'package:audio_metadata_reader/src/writers/base_writer.dart';
 
+import 'mp3_strip_id3v2_prefix.dart';
+
 class TagHeader {
   final int majorVersion;
   final int minorVersion;
@@ -39,9 +41,10 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
       file.writeAsBytesSync(finalBuilder.toBytes());
     } else {
       final oldData = file.readAsBytesSync();
+      final audioPayload = stripLeadingId3v2Blocks(oldData);
       file.writeAsBytesSync([
         ...finalBuilder.toBytes(),
-        ...oldData,
+        ...audioPayload,
       ]);
     }
   }

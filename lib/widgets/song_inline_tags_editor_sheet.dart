@@ -1,5 +1,11 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:audio_metadata_reader/audio_metadata_reader.dart'
+    show Picture, PictureType, readAllMetadata;
+import 'package:audio_metadata_reader/src/metadata/base.dart'
+    show Mp3Metadata, Mp4Metadata, ParserTag, RiffMetadata, VorbisMetadata;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -9,6 +15,7 @@ import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/song_embedded_metadata_writer.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
 
 /// 底部表单：编辑内嵌标签（写入磁盘后再由调用方刷新内存/Hive）。
 Future<void> showSongInlineTagsEditorSheet({
@@ -48,6 +55,39 @@ Future<void> showSongInlineTagsEditorSheet({
   );
 }
 
+Picture? _primaryEmbeddedPicture(ParserTag meta) {
+  if (meta is Mp3Metadata) {
+    for (final p in meta.pictures) {
+      if (p.pictureType == PictureType.coverFront) return p;
+    }
+    return meta.pictures.isNotEmpty ? meta.pictures.first : null;
+  }
+  if (meta is Mp4Metadata) {
+    return meta.picture;
+  }
+  if (meta is VorbisMetadata) {
+    for (final p in meta.pictures) {
+      if (p.pictureType == PictureType.coverFront) return p;
+    }
+    return meta.pictures.isNotEmpty ? meta.pictures.first : null;
+  }
+  if (meta is RiffMetadata) {
+    for (final p in meta.pictures) {
+      if (p.pictureType == PictureType.coverFront) return p;
+    }
+    return meta.pictures.isNotEmpty ? meta.pictures.first : null;
+  }
+  return null;
+}
+
+Picture? _primaryFromSongPictures(List<Picture>? pics) {
+  if (pics == null || pics.isEmpty) return null;
+  for (final p in pics) {
+    if (p.pictureType == PictureType.coverFront) return p;
+  }
+  return pics.first;
+}
+
 class _SongInlineTagsEditorBody extends StatefulWidget {
   const _SongInlineTagsEditorBody({
     required this.song,
@@ -74,6 +114,10 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
   late final TextEditingController _discNumber;
   late final TextEditingController _discTotal;
   late final TextEditingController _lyrics;
+
+  Uint8List? _diskCoverPreviewBytes;
+  EmbeddedCoverEditKind _coverEdit = EmbeddedCoverEditKind.unchanged;
+  Uint8List? _replacementCoverBytes;
 
   bool _saving = false;
 
@@ -104,6 +148,76 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
       text: s.totalDisc != null ? '${s.totalDisc}' : '',
     );
     _lyrics = TextEditingController(text: s.lyrics ?? '');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_loadEmbeddedCoverPreview());
+    });
+  }
+
+  Future<void> _loadEmbeddedCoverPreview() async {
+    try {
+      final meta = readAllMetadata(File(widget.song.path.trim()));
+      final pic = _primaryEmbeddedPicture(meta);
+      if (!mounted) return;
+      setState(() {
+        _diskCoverPreviewBytes =
+            pic != null ? Uint8List.fromList(pic.bytes) : null;
+      });
+    } catch (_) {
+      final fallback = _primaryFromSongPictures(widget.song.pictures);
+      if (!mounted) return;
+      setState(() {
+        _diskCoverPreviewBytes =
+            fallback != null ? Uint8List.fromList(fallback.bytes) : null;
+      });
+    }
+  }
+
+  Uint8List? _previewCoverBytes() {
+    switch (_coverEdit) {
+      case EmbeddedCoverEditKind.removed:
+        return null;
+      case EmbeddedCoverEditKind.replacedWithBytes:
+        return _replacementCoverBytes;
+      case EmbeddedCoverEditKind.unchanged:
+        return _diskCoverPreviewBytes;
+    }
+  }
+
+  Future<void> _pickCoverReplacement(AppLocalizations l10n) async {
+    final cropped = await pickSquareEmbeddedCoverImage(
+      context: context,
+      l10n: l10n,
+    );
+    if (cropped == null || !mounted || cropped.isEmpty) return;
+    final jpeg = cropped.length >= 2 &&
+        cropped[0] == 0xff &&
+        cropped[1] == 0xd8;
+    final png = cropped.length >= 8 &&
+        cropped[0] == 0x89 &&
+        cropped[1] == 0x50 &&
+        cropped[2] == 0x4e &&
+        cropped[3] == 0x47;
+    if (!jpeg && !png) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        l10n.songPageInlineTagsCoverInvalid,
+        kind: AppSnackKind.error,
+      );
+      return;
+    }
+    setState(() {
+      _coverEdit = EmbeddedCoverEditKind.replacedWithBytes;
+      _replacementCoverBytes = Uint8List.fromList(cropped);
+    });
+  }
+
+  void _removeEmbeddedCover() {
+    setState(() {
+      _coverEdit = EmbeddedCoverEditKind.removed;
+      _replacementCoverBytes = null;
+    });
   }
 
   @override
@@ -174,6 +288,8 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
           discNumber: _parseOptionalPositive(_discNumber.text),
           totalDisc: _parseOptionalPositive(_discTotal.text),
           lyrics: _lyrics.text.trim().isEmpty ? null : _lyrics.text,
+          coverEdit: _coverEdit,
+          replacementCoverBytes: _replacementCoverBytes,
         );
       }
 
@@ -237,6 +353,7 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
     final l10n = AppLocalizations.of(context);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final scrollBottomPad = 16.0 + (bottomInset > 0 ? 8.0 : 0.0);
+    final preview = _previewCoverBytes();
     return SafeArea(
       top: false,
       bottom: false,
@@ -287,6 +404,61 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
               decoration: _dec(l10n.songPageInlineTagsFieldAlbum),
               textInputAction: TextInputAction.next,
               enabled: !_saving,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.songPageInlineTagsCoverSection,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 96,
+                    height: 96,
+                    child: preview != null && preview.isNotEmpty
+                        ? Image.memory(
+                            preview,
+                            fit: BoxFit.cover,
+                          )
+                        : ColoredBox(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            child: Icon(
+                              Icons.album_rounded,
+                              size: 40,
+                              color: Colors.white.withValues(alpha: 0.35),
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      OutlinedButton(
+                        onPressed: _saving
+                            ? null
+                            : () => _pickCoverReplacement(l10n),
+                        child: Text(l10n.songPageInlineTagsCoverReplace),
+                      ),
+                      const SizedBox(height: 6),
+                      TextButton(
+                        onPressed:
+                            _saving ? null : _removeEmbeddedCover,
+                        child: Text(l10n.songPageInlineTagsCoverRemove),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             TextField(
               controller: _year,

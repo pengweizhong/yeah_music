@@ -2394,6 +2394,30 @@ abstract class AppLocalizations {
   /// **'Album'**
   String get songPageInlineTagsFieldAlbum;
 
+  /// No description provided for @songPageInlineTagsCoverSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded cover'**
+  String get songPageInlineTagsCoverSection;
+
+  /// No description provided for @songPageInlineTagsCoverReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image to crop…'**
+  String get songPageInlineTagsCoverReplace;
+
+  /// No description provided for @songPageInlineTagsCoverRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove cover'**
+  String get songPageInlineTagsCoverRemove;
+
+  /// No description provided for @songPageInlineTagsCoverInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a JPEG or PNG image.'**
+  String get songPageInlineTagsCoverInvalid;
+
   /// No description provided for @songPageInlineTagsFieldYear.
   ///
   /// In en, this message translates to:
