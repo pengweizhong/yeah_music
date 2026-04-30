@@ -61,7 +61,7 @@ class _MenuPageState extends State<MenuPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => PlayListPage()),
+                      MaterialPageRoute(builder: (context) => const PlayListPage()),
                     );
                   },
                 ),

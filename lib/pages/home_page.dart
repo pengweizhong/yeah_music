@@ -191,10 +191,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _goLibrary({bool openSearch = false}) {
+    if (openSearch) {
+      Future<void>(() async {
+        if (!mounted) return;
+        await showLibrarySearch(context);
+      });
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PlayListPage(openSearchOnOpen: openSearch),
+        builder: (context) => const PlayListPage(),
       ),
     );
   }

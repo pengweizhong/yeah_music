@@ -28,10 +28,7 @@ import '../widgets/song_playlist_page_shell.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
 
 class PlayListPage extends StatefulWidget {
-  const PlayListPage({super.key, this.openSearchOnOpen = false});
-
-  /// 为 true 时在进入页后自动打开搜索（如主页「发现/搜索」）
-  final bool openSearchOnOpen;
+  const PlayListPage({super.key});
 
   @override
   State<PlayListPage> createState() => _PlayListProviderState();
@@ -143,21 +140,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       if (!context.mounted) return;
       if (playListProvider.hasPlaybackQueueOverride) {
         playListProvider.clearPlaybackQueueOverride();
-      }
-      if (!mounted) return;
-      if (widget.openSearchOnOpen) {
-        if (!context.mounted) return;
-        final sorted = _getFilteredAndSortedSongs(playListProvider.playList);
-        final l10n = AppLocalizations.of(context);
-        showSearch(
-          context: context,
-          delegate: SongSearchDelegate(
-            sorted,
-            playListProvider,
-            searchFieldLabelText: l10n.playlistSearchHint,
-            onSongMore: showLibrarySongMoreActionsSheet,
-          ),
-        );
       }
     });
   }
@@ -816,4 +798,37 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
       },
     );
   }
+}
+
+/// 在当前 Navigator 上打开曲库搜索，不压入 [PlayListPage]（供主页搜索入口：关闭搜索后仍停留在主页）。
+Future<void> showLibrarySearch(BuildContext context) async {
+  final folderProvider = context.read<FolderProvider>();
+  final playListProvider = context.read<PlayListProvider>();
+  if (!playListProvider.initialized) {
+    await playListProvider.init(
+      folderProvider,
+      oneDrive: context.read<OneDriveController>(),
+    );
+  }
+  if (!context.mounted) return;
+  if (playListProvider.hasPlaybackQueueOverride) {
+    playListProvider.clearPlaybackQueueOverride();
+  }
+  final prefs = await loadSongSortPreferences();
+  if (!context.mounted) return;
+  final sorted = sortSongsCopy(
+    playListProvider.playList,
+    prefs.type,
+    prefs.ascending,
+  );
+  final l10n = AppLocalizations.of(context);
+  showSearch(
+    context: context,
+    delegate: SongSearchDelegate(
+      sorted,
+      playListProvider,
+      searchFieldLabelText: l10n.playlistSearchHint,
+      onSongMore: showLibrarySongMoreActionsSheet,
+    ),
+  );
 }
