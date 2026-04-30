@@ -58,9 +58,14 @@ class FileUtils {
         try {
           metadata = readMetadata(file, getImage: false);
           resolvedEmbedImages = false;
-        } catch (e2, st2) {
+        } catch (e2) {
           song.title = filename;
-          appLog.e('读取歌曲元信息失败', error: e2, stackTrace: st2);
+          final msg = e2.toString();
+          final short =
+              msg.length > 140 ? '${msg.substring(0, 140)}…' : msg;
+          appLog.w(
+            '读取歌曲元信息失败（文件损坏或不完整）: $filename — $short',
+          );
           return;
         }
       } else {

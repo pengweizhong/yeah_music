@@ -13,6 +13,7 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : AudioServiceFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        DiskSpaceChannel.register(flutterEngine.dartExecutor.binaryMessenger)
         MusicTagEditorBridge.register(this, flutterEngine)
     }
 

@@ -137,7 +137,10 @@ class AppInit {
       await openWithRecovery(
         Constant.hiveFolderBox,
         () async {
-          await Hive.openLazyBox<Folder>(Constant.hiveFolderBox);
+          await Hive.openLazyBox<Folder>(
+            Constant.hiveFolderBox,
+            compactionStrategy: hiveFolderLazyBoxCompactionStrategy,
+          );
         },
         attemptsBeforeDelete: 8,
         wipeDiskOnFirstOOM: true,
