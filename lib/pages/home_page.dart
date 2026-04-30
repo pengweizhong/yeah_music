@@ -685,7 +685,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
             padding: const EdgeInsets.only(left: _hPad, right: 8, top: _gapL + 4),
             child: _SectionTitle(
               title: l10n.homeSectionMyPlaylists,
-              actionLabel: l10n.homeActionMore,
+              actionLabel: l10n.homeActionManage,
               onAction: widget.onOpenStorage,
             ),
           ),
@@ -1134,7 +1134,42 @@ class _PlaylistCarousels extends StatelessWidget {
       ),
       onTap: onOpenAllSongs,
     );
+    final order = user.resolvedHomeCarouselOrder();
     final list = user.playlists;
+    final rowChildren = <Widget>[];
+
+    void pushSpacingIfNeeded() {
+      if (rowChildren.isNotEmpty) {
+        rowChildren.add(const SizedBox(width: 12));
+      }
+    }
+
+    var playlistOrdinal = 0;
+    for (final key in order) {
+      if (key == UserPlaylistProvider.homeCarouselLibrarySentinel) {
+        pushSpacingIfNeeded();
+        rowChildren.add(allCard);
+        continue;
+      }
+      final p = user.playlistById(key);
+      if (p == null) continue;
+      pushSpacingIfNeeded();
+      final pi = playlistOrdinal++;
+      final n = p.songPaths.length;
+      rowChildren.add(
+        _MixCard(
+          title: p.name,
+          subtitle:
+              n == 0 ? l10n.homeEmptyPlaylist : l10n.homeTrackCount(n),
+          decoration: playlistCoverCardDecoration(
+            coverStyle: p.coverStyle,
+            fallbackGradientIndex: pi,
+          ),
+          onTap: () => onOpenPlaylist(p.id),
+        ),
+      );
+    }
+
     if (list.isEmpty) {
       return SizedBox(
         height: 168,
@@ -1149,7 +1184,7 @@ class _PlaylistCarousels extends StatelessWidget {
             ),
             clipBehavior: Clip.hardEdge,
             children: [
-              allCard,
+              ...rowChildren,
               const SizedBox(width: 12),
               _MixCard(
                 title: l10n.homeCreatePlaylist,
@@ -1172,7 +1207,7 @@ class _PlaylistCarousels extends StatelessWidget {
       height: 168,
       child: ScrollConfiguration(
         behavior: const _HomeHorizontalScrollBehavior(),
-        child: ListView.separated(
+        child: ListView(
           primary: false,
           padding: const EdgeInsets.only(left: 20, right: 8),
           scrollDirection: Axis.horizontal,
@@ -1180,25 +1215,7 @@ class _PlaylistCarousels extends StatelessWidget {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           clipBehavior: Clip.hardEdge,
-          itemCount: 1 + list.length,
-          separatorBuilder: (context, i) => const SizedBox(width: 12),
-          itemBuilder: (context, i) {
-            if (i == 0) return allCard;
-            final pi = i - 1;
-            final p = list[pi];
-            final n = p.songPaths.length;
-            return _MixCard(
-              title: p.name,
-              subtitle: n == 0
-                  ? l10n.homeEmptyPlaylist
-                  : l10n.homeTrackCount(n),
-              decoration: playlistCoverCardDecoration(
-                coverStyle: p.coverStyle,
-                fallbackGradientIndex: pi,
-              ),
-              onTap: () => onOpenPlaylist(p.id),
-            );
-          },
+          children: rowChildren,
         ),
       ),
     );

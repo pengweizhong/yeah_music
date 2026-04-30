@@ -137,8 +137,13 @@ Map<String, dynamic> parseUserPlaylistExportJson(String jsonStr) {
 
 class UserPlaylistProvider extends ChangeNotifier {
   static const String _storageKey = 'user_playlists';
+  static const String _carouselOrderKey = 'home_playlist_carousel_order';
+
+  /// 首页与管理页横滑顺序中表示「本地全部歌曲」的占位键（非用户歌单 id）。
+  static const String homeCarouselLibrarySentinel = '__ym_home_library__';
 
   final List<UserPlaylist> _playlists = [];
+  List<String> _homeCarouselOrderKeys = [];
   bool _initialized = false;
 
   List<UserPlaylist> get playlists => List.unmodifiable(_playlists);
@@ -157,8 +162,94 @@ class UserPlaylistProvider extends ChangeNotifier {
             .map(UserPlaylist.fromMap)
             .where((playlist) => playlist.id.isNotEmpty),
       );
+    _homeCarouselOrderKeys = _parseCarouselOrderRaw(box.get(_carouselOrderKey));
     _initialized = true;
     notifyListeners();
+  }
+
+  List<String> _parseCarouselOrderRaw(Object? raw) {
+    if (raw is! List<dynamic>) return [];
+    final out = <String>[];
+    final seen = <String>{};
+    for (final e in raw) {
+      if (e is! String) continue;
+      final t = e.trim();
+      if (t.isEmpty) continue;
+      if (!seen.add(t)) continue;
+      out.add(t);
+    }
+    return out;
+  }
+
+  Future<void> _persistCarouselOrderKeys() async {
+    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+    await box.put(_carouselOrderKey, List<String>.from(_homeCarouselOrderKeys));
+  }
+
+  /// 首页与管理页共用的横滑顺序键（含 [homeCarouselLibrarySentinel] 表示「全部歌曲」）。
+  List<String> resolvedHomeCarouselOrder() {
+    final idOrder = _playlists.map((p) => p.id).toList();
+    final idSet = idOrder.toSet();
+    final seen = <String>{};
+    final out = <String>[];
+
+    for (final key in _homeCarouselOrderKeys) {
+      if (key == homeCarouselLibrarySentinel) {
+        if (seen.add(key)) out.add(key);
+      } else if (idSet.contains(key) && seen.add(key)) {
+        out.add(key);
+      }
+    }
+    if (!seen.contains(homeCarouselLibrarySentinel)) {
+      out.insert(0, homeCarouselLibrarySentinel);
+      seen.add(homeCarouselLibrarySentinel);
+    }
+    for (final id in idOrder) {
+      if (!seen.contains(id)) {
+        out.add(id);
+        seen.add(id);
+      }
+    }
+    return out;
+  }
+
+  UserPlaylist? playlistById(String playlistId) => _playlistById(playlistId);
+
+  /// [ReorderableListView.onReorder] 约定（向下拖时框架会先修正 [newIndex]）
+  Future<void> reorderHomeCarousel(int oldIndex, int newIndex) async {
+    final order = List<String>.from(resolvedHomeCarouselOrder());
+    if (oldIndex < 0 || oldIndex >= order.length) return;
+    if (newIndex < 0) return;
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    if (oldIndex == newIndex) return;
+    if (newIndex < 0 || newIndex >= order.length) return;
+    final item = order.removeAt(oldIndex);
+    order.insert(newIndex, item);
+    _homeCarouselOrderKeys = order;
+    _syncPlaylistsOrderFromCarouselKeys(order);
+    await _persistCarouselOrderKeys();
+    await _save();
+    notifyListeners();
+  }
+
+  void _syncPlaylistsOrderFromCarouselKeys(List<String> orderKeys) {
+    final idsInOrder = orderKeys
+        .where((k) => k != homeCarouselLibrarySentinel)
+        .toList();
+    final byId = {for (final p in _playlists) p.id: p};
+    final next = <UserPlaylist>[];
+    for (final id in idsInOrder) {
+      final p = byId[id];
+      if (p != null) next.add(p);
+    }
+    for (final p in _playlists) {
+      if (!next.any((x) => x.id == p.id)) next.add(p);
+    }
+    _playlists
+      ..clear()
+      ..addAll(next);
   }
 
   Future<UserPlaylist> createPlaylist(
@@ -191,7 +282,9 @@ class UserPlaylistProvider extends ChangeNotifier {
 
   Future<void> deletePlaylist(String playlistId) async {
     _playlists.removeWhere((playlist) => playlist.id == playlistId);
+    _homeCarouselOrderKeys.removeWhere((k) => k == playlistId);
     await _save();
+    await _persistCarouselOrderKeys();
     notifyListeners();
   }
 
@@ -200,23 +293,9 @@ class UserPlaylistProvider extends ChangeNotifier {
     final idSet = playlistIds.toSet();
     if (idSet.isEmpty) return;
     _playlists.removeWhere((playlist) => idSet.contains(playlist.id));
+    _homeCarouselOrderKeys.removeWhere(idSet.contains);
     await _save();
-    notifyListeners();
-  }
-
-  /// 调整歌单在列表中的顺序（与本地存储数组一致，[首页-我的歌单]横滑取前几位同序）
-  /// [onReorder] 的约定与 [ReorderableListView] 相同（向下拖时 [newIndex] 需由调用方在框架侧先或此处统一修正）
-  Future<void> reorderPlaylists(int oldIndex, int newIndex) async {
-    if (oldIndex < 0 || oldIndex >= _playlists.length) return;
-    if (newIndex < 0) return;
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    if (oldIndex == newIndex) return;
-    if (newIndex < 0 || newIndex >= _playlists.length) return;
-    final item = _playlists.removeAt(oldIndex);
-    _playlists.insert(newIndex, item);
-    await _save();
+    await _persistCarouselOrderKeys();
     notifyListeners();
   }
 
@@ -464,6 +543,11 @@ class UserPlaylistProvider extends ChangeNotifier {
             ),
           ),
         );
+      _homeCarouselOrderKeys = [
+        homeCarouselLibrarySentinel,
+        ..._playlists.map((p) => p.id),
+      ];
+      await _persistCarouselOrderKeys();
     } else {
       for (final imp in imported) {
         final existing = _playlistById(imp.id);
