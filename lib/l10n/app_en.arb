@@ -653,6 +653,7 @@
   "pageUnknownTitle": "Unknown title",
   "queueNoTracks": "No tracks in queue",
   "playQueueTitle": "Play queue",
+  "queuePendingPlayAfterCurrentSection": "Play next (queued)",
   "playbackModeTitle": "Playback mode",
   "playbackSequential": "Play in order",
   "playbackShuffle": "Shuffle",

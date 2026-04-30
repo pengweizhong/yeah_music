@@ -3426,6 +3426,12 @@ abstract class AppLocalizations {
   /// **'Play queue'**
   String get playQueueTitle;
 
+  /// No description provided for @queuePendingPlayAfterCurrentSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Play next (queued)'**
+  String get queuePendingPlayAfterCurrentSection;
+
   /// No description provided for @playbackModeTitle.
   ///
   /// In en, this message translates to:

@@ -84,11 +84,13 @@ class PlayListProvider extends ChangeNotifier {
   /// 随机播放时的当前随机列表
   List<int>? _shuffledIndices;
 
-  /// 单曲循环时「下一曲播放」只保留最近一次指定的曲目（[_libraryPathKey]）。
-  String? _playNextAfterCurrentSingleLoopPath;
+  /// 「下一曲播放」临时队列（FIFO）：当前曲自然结束后优先播放队列中的曲目；
+  /// 队列为空时仍按原有播放模式继续当前列表（不打断原有顺序逻辑）。
+  /// 元素为 [_libraryPathKey]。
+  final List<String> _playNextAfterCurrentQueue = [];
 
-  /// 非单曲循环：后进先出；当前曲播放完毕后依次弹出并播放。
-  final List<String> _playNextAfterCurrentStack = [];
+  /// 本轮插播开始前「本应播放」的下一首索引；插播队列清空后 [playAt] 回到此处。
+  int? _resumePlaylistIndexAfterDeferred;
 
   /// 缓存的播放列表（文件夹合并 + OneDrive 本地缓存叠加，不含临时队列）
   List<Song>? _cachedPlayList;
@@ -260,8 +262,8 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   void _clearDeferredPlayNext() {
-    _playNextAfterCurrentSingleLoopPath = null;
-    _playNextAfterCurrentStack.clear();
+    _playNextAfterCurrentQueue.clear();
+    _resumePlaylistIndexAfterDeferred = null;
   }
 
   int _indexInPlayListByPathKey(String pathKey) {
@@ -275,21 +277,28 @@ class PlayListProvider extends ChangeNotifier {
 
   /// 当前曲播放结束后紧接着播放 [song]（见「更多」菜单）。
   ///
-  /// - 单曲循环：多次指定仅保留最后一次，播放完毕后单曲循环该曲。
-  /// - 其它模式：后进先出排队。
+  /// 加入全局 **FIFO** 临时队列；轮到下一曲时若队列非空则先播放队列中的曲目，
+  /// 否则仍按当前播放模式（顺序 / 随机 / 单曲循环等）在原列表继续。
   ///
   /// 若 [song] 不在当前 [playList]（含临时歌单队列）中则返回 false。
   bool enqueuePlayAfterCurrent(Song song) {
     final key = _libraryPathKey(song.path);
     if (key.isEmpty) return false;
     if (_indexInPlayListByPathKey(key) < 0) return false;
-    if (_playbackMode == PlaybackMode.singleLoop) {
-      _playNextAfterCurrentSingleLoopPath = key;
-    } else {
-      _playNextAfterCurrentStack.add(key);
-    }
+    _playNextAfterCurrentQueue.add(key);
     notifyListeners();
     return true;
+  }
+
+  /// 「下一曲播放」队列当前待播条目（顺序与 FIFO 一致）；仅供 UI。
+  List<Song> get pendingPlayAfterCurrentSongs {
+    final list = playList;
+    final out = <Song>[];
+    for (final key in _playNextAfterCurrentQueue) {
+      final i = _indexInPlayListByPathKey(key);
+      if (i >= 0) out.add(list[i]);
+    }
+    return List<Song>.unmodifiable(out);
   }
 
   /// 将播放队列设为 [songs]（顺序与列表一致），并从 [index] 开始播放。
@@ -456,6 +465,9 @@ class PlayListProvider extends ChangeNotifier {
     }
     _initialized = true;
 
+    // 进程重启后不保留上一会话的「下一曲播放」插播队列（仅供当次会话）。
+    _clearDeferredPlayNext();
+
     // 加载上次播放（路径优先，兼容旧版仅索引）
     await _restoreLastPlayedSnapshot();
 
@@ -511,13 +523,20 @@ class PlayListProvider extends ChangeNotifier {
 
       final naturalConcatAdvance =
           _isNaturalConcatAdvanceForDeferred(prev, i);
-      if (naturalConcatAdvance && _hasDeferredPlayNextQueued()) {
-        unawaited(
-          _consumeDeferredPlayNextAfterAndroidConcatAdvance(
-            fallbackPlayerIndex: i,
-          ),
-        );
-        return;
+      if (naturalConcatAdvance) {
+        if (_hasDeferredPlayNextQueued()) {
+          unawaited(
+            _consumeDeferredPlayNextAfterAndroidConcatAdvance(
+              fallbackPlayerIndex: i,
+            ),
+          );
+          return;
+        }
+        final resume = _takeResumeAfterDeferredIfApplicable();
+        if (resume != null) {
+          unawaited(playAt(resume));
+          return;
+        }
       }
 
       if (i != _currentIndex) {
@@ -528,19 +547,15 @@ class PlayListProvider extends ChangeNotifier {
     });
   }
 
-  bool _hasDeferredPlayNextQueued() {
-    if (_playbackMode == PlaybackMode.singleLoop) {
-      return _playNextAfterCurrentSingleLoopPath != null;
-    }
-    return _playNextAfterCurrentStack.isNotEmpty;
-  }
+  bool _hasDeferredPlayNextQueued() =>
+      _playNextAfterCurrentQueue.isNotEmpty;
 
   /// Android 整段 Concatenating 队列下，曲目之间往往不发 [ProcessingState.completed]，
   /// 用「playlist 顺序上下一首」判断是否自然过轨（与 ExoPlayer 队列一致）。
+  /// 不强制要求 prev 与 [_currentIndex] 相等，避免 Provider 索引偶发漂移时漏触发。
   bool _isNaturalConcatAdvanceForDeferred(int? prevPlayerIndex, int newPlayerIndex) {
     if (prevPlayerIndex == null) return false;
     if (_playbackMode == PlaybackMode.singleLoop) return false;
-    if (prevPlayerIndex != _currentIndex) return false;
     if (newPlayerIndex == prevPlayerIndex) return false;
     final len = playList.length;
     if (len <= 1) return false;
@@ -552,8 +567,17 @@ class PlayListProvider extends ChangeNotifier {
     required int fallbackPlayerIndex,
   }) async {
     try {
-      final consumed = await _tryConsumeDeferredPlayNext();
-      if (!consumed && fallbackPlayerIndex != _currentIndex) {
+      final hint =
+          _playbackMode == PlaybackMode.shuffle ? null : fallbackPlayerIndex;
+      if (await _tryConsumeDeferredPlayNext(concatResumeHintIndex: hint)) {
+        return;
+      }
+      final resume = _takeResumeAfterDeferredIfApplicable();
+      if (resume != null) {
+        await playAt(resume);
+        return;
+      }
+      if (fallbackPlayerIndex != _currentIndex) {
         _currentIndex = fallbackPlayerIndex;
         notifyListeners();
         unawaited(_saveCurrentPlaybackSnapshot());
@@ -568,36 +592,56 @@ class PlayListProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> _tryConsumeDeferredPlayNext() async {
-    if (_playbackMode == PlaybackMode.singleLoop) {
-      final key = _playNextAfterCurrentSingleLoopPath;
-      if (key == null) return false;
-      _playNextAfterCurrentSingleLoopPath = null;
+  /// 插播开始前记下「下一首」；随机模式走 [_getNextShuffledIndex]（与手动下一曲一致）。
+  /// [concatResumeHintIndex]：Android concat 物理顺序下一首（随机模式下不可用）。
+  int _peekNextPlaylistIndexAfterCurrent({int? concatResumeHintIndex}) {
+    final list = playList;
+    final len = list.length;
+    if (len <= 0) return 0;
+    if (concatResumeHintIndex != null &&
+        concatResumeHintIndex >= 0 &&
+        concatResumeHintIndex < len) {
+      return concatResumeHintIndex;
+    }
+    final cur = _currentIndex.clamp(0, len - 1);
+    switch (_playbackMode) {
+      case PlaybackMode.playOnce:
+      case PlaybackMode.sequential:
+      case PlaybackMode.timerShutdown:
+        return (cur + 1) % len;
+      case PlaybackMode.singleLoop:
+        return cur;
+      case PlaybackMode.shuffle:
+        return _getNextShuffledIndex(len);
+    }
+  }
+
+  int? _takeResumeAfterDeferredIfApplicable() {
+    if (_playNextAfterCurrentQueue.isNotEmpty) return null;
+    final r = _resumePlaylistIndexAfterDeferred;
+    _resumePlaylistIndexAfterDeferred = null;
+    return r;
+  }
+
+  /// 消费插播队列头部并真实换源。
+  ///
+  /// **禁止**在此处调用 [playAt]：它会再通过 [_enqueuePlaybackNav] 挂到 [_playbackNavChain]，
+  /// 而 [playNext] 正是在 chain 的 `.then` 里 `await` 本方法 —— 会形成「等待自身」的死锁，
+  /// 表现为列表点歌、上一曲/下一曲均无响应。
+  Future<bool> _tryConsumeDeferredPlayNext({int? concatResumeHintIndex}) async {
+    while (_playNextAfterCurrentQueue.isNotEmpty) {
+      if (_resumePlaylistIndexAfterDeferred == null) {
+        _resumePlaylistIndexAfterDeferred = _peekNextPlaylistIndexAfterCurrent(
+          concatResumeHintIndex: concatResumeHintIndex,
+        );
+      }
+      final key = _playNextAfterCurrentQueue.removeAt(0);
       final idx = _indexInPlayListByPathKey(key);
       if (idx >= 0) {
-        await playAt(idx);
-        return true;
-      }
-      return false;
-    }
-
-    if (_playbackMode == PlaybackMode.playOnce) {
-      while (_playNextAfterCurrentStack.isNotEmpty) {
-        final key = _playNextAfterCurrentStack.removeLast();
-        final idx = _indexInPlayListByPathKey(key);
-        if (idx >= 0) {
-          await playAt(idx);
-          return true;
-        }
-      }
-      return false;
-    }
-
-    while (_playNextAfterCurrentStack.isNotEmpty) {
-      final key = _playNextAfterCurrentStack.removeLast();
-      final idx = _indexInPlayListByPathKey(key);
-      if (idx >= 0) {
-        await playAt(idx);
+        _coalescedPlayNextSteps = 0;
+        _coalescedPlayPrevSteps = 0;
+        await _playAtImpl(idx, clearDeferredResume: false);
+        notifyListeners();
         return true;
       }
     }
@@ -619,6 +663,11 @@ class PlayListProvider extends ChangeNotifier {
   Future<void> _onPlaybackTrackCompleted() async {
     if (_playbackMode == PlaybackMode.singleLoop) {
       if (await _tryConsumeDeferredPlayNext()) return;
+      final resume = _takeResumeAfterDeferredIfApplicable();
+      if (resume != null) {
+        await playAt(resume);
+        return;
+      }
       MusicService().seek(Duration.zero);
       MusicService().play();
       return;
@@ -626,10 +675,21 @@ class PlayListProvider extends ChangeNotifier {
 
     if (_playbackMode == PlaybackMode.playOnce) {
       if (await _tryConsumeDeferredPlayNext()) return;
+      final resume = _takeResumeAfterDeferredIfApplicable();
+      if (resume != null) {
+        await playAt(resume);
+        return;
+      }
       return;
     }
 
     if (await _tryConsumeDeferredPlayNext()) return;
+
+    final resume = _takeResumeAfterDeferredIfApplicable();
+    if (resume != null) {
+      await playAt(resume);
+      return;
+    }
 
     final concatAndroid = !kIsWeb &&
         Platform.isAndroid &&
@@ -792,19 +852,37 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   /// 播放指定索引；[listSession] 非空时（例如从「最近播放」切到全库索引后 [playAt]）会更新会话面。
-  Future<void> playAt(int index, {PlaybackSessionSurface? listSession}) async {
+  ///
+  /// [preserveDeferredResumeTarget]：为 true 时不丢弃 [_resumePlaylistIndexAfterDeferred]，
+  /// 供「下一曲播放」插播链使用。
+  Future<void> playAt(
+    int index, {
+    PlaybackSessionSurface? listSession,
+    bool preserveDeferredResumeTarget = false,
+  }) async {
     final idx = index;
     final ls = listSession;
     return _enqueuePlaybackNav(() async {
       _coalescedPlayNextSteps = 0;
       _coalescedPlayPrevSteps = 0;
-      await _playAtImpl(idx, listSession: ls);
+      await _playAtImpl(
+        idx,
+        listSession: ls,
+        clearDeferredResume: !preserveDeferredResumeTarget,
+      );
     });
   }
 
-  Future<void> _playAtImpl(int index, {PlaybackSessionSurface? listSession}) async {
+  Future<void> _playAtImpl(
+    int index, {
+    PlaybackSessionSurface? listSession,
+    bool clearDeferredResume = true,
+  }) async {
     _playbackNavDepth++;
     try {
+      if (clearDeferredResume) {
+        _resumePlaylistIndexAfterDeferred = null;
+      }
       final list = playList;
       if (list.isEmpty) return;
       if (listSession != null) {
@@ -955,7 +1033,16 @@ class PlayListProvider extends ChangeNotifier {
             final steps = _coalescedPlayNextSteps;
             _coalescedPlayNextSteps = 0;
             if (steps <= 0) return;
-            await _applyPlayNextSteps(steps);
+            var remaining = steps;
+            while (remaining > 0 && _playNextAfterCurrentQueue.isNotEmpty) {
+              final consumed =
+                  await _tryConsumeDeferredPlayNext();
+              if (!consumed) break;
+              remaining--;
+            }
+            if (remaining > 0) {
+              await _applyPlayNextSteps(remaining);
+            }
           } catch (e, st) {
             appLog.e('playNext 合并步骤失败', error: e, stackTrace: st);
           }

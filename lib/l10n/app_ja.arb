@@ -653,6 +653,7 @@
   "pageUnknownTitle": "不明なタイトル",
   "queueNoTracks": "キューに曲がありません",
   "playQueueTitle": "再生キュー",
+  "queuePendingPlayAfterCurrentSection": "次に再生（予約）",
   "playbackModeTitle": "再生モード",
   "playbackSequential": "順番に再生",
   "playbackShuffle": "シャッフル",

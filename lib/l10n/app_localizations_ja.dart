@@ -1798,6 +1798,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playQueueTitle => '再生キュー';
 
   @override
+  String get queuePendingPlayAfterCurrentSection => '次に再生（予約）';
+
+  @override
   String get playbackModeTitle => '再生モード';
 
   @override

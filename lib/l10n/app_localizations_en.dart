@@ -1859,6 +1859,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playQueueTitle => 'Play queue';
 
   @override
+  String get queuePendingPlayAfterCurrentSection => 'Play next (queued)';
+
+  @override
   String get playbackModeTitle => 'Playback mode';
 
   @override

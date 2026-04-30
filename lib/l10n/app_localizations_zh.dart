@@ -1778,6 +1778,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playQueueTitle => '播放队列';
 
   @override
+  String get queuePendingPlayAfterCurrentSection => '下一曲播放（待播）';
+
+  @override
   String get playbackModeTitle => '播放模式';
 
   @override
@@ -3829,6 +3832,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get playQueueTitle => '播放队列';
+
+  @override
+  String get queuePendingPlayAfterCurrentSection => '下一曲播放（待播）';
 
   @override
   String get playbackModeTitle => '播放模式';
@@ -5883,6 +5889,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playQueueTitle => '播放佇列';
+
+  @override
+  String get queuePendingPlayAfterCurrentSection => '下一曲播放（待播）';
 
   @override
   String get playbackModeTitle => '播放模式';

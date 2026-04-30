@@ -2432,6 +2432,40 @@ class _SongToolIcon extends StatelessWidget {
   }
 }
 
+/// 插播区与下方主队列之间的柔和过渡（无硬分割「栅栏」）。
+class _PendingMainBlend extends StatelessWidget {
+  const _PendingMainBlend();
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox(
+          height: 12,
+          width: double.infinity,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  primary.withValues(alpha: 0.13),
+                  primary.withValues(alpha: 0.03),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.45, 1.0],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 播放队列底部表单：定位当前曲目、高亮当前行、动态播放指示器
 class _PlaybackQueueSheet extends StatefulWidget {
   const _PlaybackQueueSheet({
@@ -2450,6 +2484,12 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   static const double _kQueueRowH = 72;
   static const double _kQueueSepH = 1;
   static const double _kQueueItemExtent = _kQueueRowH + _kQueueSepH;
+
+  /// 与 [CustomScrollView] 顶部标题 [SliverToBoxAdapter] 视觉高度对齐（用于滚动定位）。
+  static const double _kPlayQueueTitleBlock = 46;
+  static const double _kPendingSectionTitleBlock = 30;
+  /// 与 [_PendingMainBlend] 纵向占位一致（padding 2+6 + 渐变条 12）。
+  static const double _kBlendBelowPending = 20;
 
   late final ScrollController _queueScroll;
   late int _lastHeardDisplayIndex;
@@ -2499,14 +2539,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     final pb = _displayCurrentIndex(provider);
     _lastHeardDisplayIndex =
         _displayIdxForPlaybackIdx(pb, raw, display, aligned);
-    final n = display.length;
-    final i = n == 0
-        ? 0
-        : _displayIdxForPlaybackIdx(pb, raw, display, aligned).clamp(0, n - 1);
-    // 首帧即接近目标行，避免从 0 全量再 jump 造成一帧大布局与多帧重排
-    _queueScroll = ScrollController(
-      initialScrollOffset: i * _kQueueItemExtent,
-    );
+    _queueScroll = ScrollController();
     widget.provider.addListener(_onProviderChanged);
     _playerQueueIndexSub =
         MusicService.currentMediaIndexStream.listen((int? i) {
@@ -2557,6 +2590,15 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     }
   }
 
+  double _leadingPixelsBeforeMainQueue(PlayListProvider provider) {
+    var y = _kPlayQueueTitleBlock;
+    final pend = provider.pendingPlayAfterCurrentSongs.length;
+    if (pend > 0) {
+      y += _kPendingSectionTitleBlock + pend * _kQueueItemExtent + _kBlendBelowPending;
+    }
+    return y;
+  }
+
   /// Android 车载整队列时以播放器当前段索引为准，否则以 [PlayListProvider.currentIndex] 为准。
   int _displayCurrentIndex(PlayListProvider p, {int? playerIdxOverride}) {
     final listLen = p.playList.length;
@@ -2569,9 +2611,6 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     }
     return p.currentIndex.clamp(0, listLen - 1);
   }
-
-  /// 定高行 + [itemExtent]，与 [_kQueueItemExtent] 一致
-  double _rowTopForIndex(int index) => index * _kQueueItemExtent;
 
   void _refineQueueScroll({required bool animated}) {
     if (!mounted) return;
@@ -2590,10 +2629,20 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
         )
         .clamp(0, display.length - 1);
     final pos = _queueScroll.position;
-    final rowTop = _rowTopForIndex(i);
     final viewH = pos.viewportDimension;
-    final target =
-        (rowTop - viewH * 0.22).clamp(0.0, pos.maxScrollExtent);
+
+    // 合并为单一滚动列表后：若仍按当前曲在主队列中的偏移滚动，会把上方的插播整段滚出视口。
+    // 有待播插播时固定在顶部，便于始终能看到插播区（当前曲请手动向下滚动查看）。
+    final pendingQueued = provider.pendingPlayAfterCurrentSongs;
+    final double target;
+    if (pendingQueued.isNotEmpty) {
+      target = 0;
+    } else {
+      final leading = _leadingPixelsBeforeMainQueue(provider);
+      final rowTop = leading + i * _kQueueItemExtent;
+      target =
+          (rowTop - viewH * 0.22).clamp(0.0, pos.maxScrollExtent);
+    }
     if (animated) {
       _queueScroll.animateTo(
         target,
@@ -2629,103 +2678,204 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     final curDisplay =
         _displayIdxForPlaybackIdx(curPlayback, rawList, displayList, sortAlignedUi);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-          child: Text(
-            l10n.playQueueTitle,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+    final pendingPlayNext = provider.pendingPlayAfterCurrentSongs;
+
+    return CustomScrollView(
+      controller: _queueScroll,
+      cacheExtent: 280,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+            child: Text(
+              l10n.playQueueTitle,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-            controller: _queueScroll,
-            itemExtent: _kQueueItemExtent,
-            cacheExtent: 180,
-            padding: const EdgeInsets.only(bottom: 12),
-            itemCount: displayList.length,
-            itemBuilder: (context, index) {
-              final s = displayList[index];
-              final isCurrent = index == curDisplay;
-              return Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  SizedBox(
-                    key: ValueKey<String>('q_${index}_${s.path}'),
-                    height: _kQueueRowH,
-                    child: Material(
-                      color: isCurrent
-                          ? primary.withValues(alpha: 0.16)
-                          : Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          final pb = sortAlignedUi
-                              ? rawList.indexWhere((x) => x.path == s.path)
-                              : index;
-                          if (pb >= 0) widget.onPick(pb);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SongListCover(
-                                song: s,
-                                size: 48,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      s.title ?? l10n.pageUnknownTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontWeight: isCurrent
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                        color: isCurrent
-                                            ? primary
-                                            : Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      s.artist ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: isCurrent
-                                            ? primary.withValues(alpha: 0.8)
-                                            : Colors.white
-                                                .withValues(alpha: 0.5),
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
+        if (pendingPlayNext.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                l10n.queuePendingPlayAfterCurrentSection,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.55),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            sliver: SliverFixedExtentList(
+              itemExtent: _kQueueItemExtent,
+              delegate: SliverChildBuilderDelegate(
+                (context, pi) {
+                  final s = pendingPlayNext[pi];
+                  final sepSoft =
+                      Colors.white.withValues(alpha: 0.055);
+                  return Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      SizedBox(
+                        height: _kQueueRowH,
+                        child: Material(
+                          color: primary.withValues(alpha: 0.09),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SongListCover(
+                                  song: s,
+                                  size: 48,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ),
-                              if (isCurrent)
-                                ListRowPlayingIndicator(color: primary),
-                            ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        s.title ?? l10n.pageUnknownTitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: primary.withValues(
+                                              alpha: 0.95),
+                                        ),
+                                      ),
+                                      Text(
+                                        s.artist ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.5),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(height: _kQueueSepH, color: sepSoft),
+                    ],
+                  );
+                },
+                childCount: pendingPlayNext.length,
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: _PendingMainBlend()),
+        ],
+        SliverPadding(
+          padding: const EdgeInsets.only(bottom: 12),
+          sliver: SliverFixedExtentList(
+            itemExtent: _kQueueItemExtent,
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final s = displayList[index];
+                final isCurrent = index == curDisplay;
+                return Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    SizedBox(
+                      key: ValueKey<String>('q_${index}_${s.path}'),
+                      height: _kQueueRowH,
+                      child: Material(
+                        color: isCurrent
+                            ? primary.withValues(alpha: 0.16)
+                            : Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            final pb = sortAlignedUi
+                                ? rawList.indexWhere(
+                                    (x) => x.path == s.path)
+                                : index;
+                            if (pb >= 0) widget.onPick(pb);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SongListCover(
+                                  song: s,
+                                  size: 48,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        s.title ?? l10n.pageUnknownTitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: isCurrent
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                          color: isCurrent
+                                              ? primary
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        s.artist ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: isCurrent
+                                              ? primary.withValues(
+                                                  alpha: 0.8)
+                                              : Colors.white.withValues(
+                                                  alpha: 0.5),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isCurrent)
+                                  ListRowPlayingIndicator(color: primary),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(height: _kQueueSepH, color: divColor),
-                ],
-              );
-            },
+                    Container(height: _kQueueSepH, color: divColor),
+                  ],
+                );
+              },
+              childCount: displayList.length,
+            ),
           ),
         ),
       ],

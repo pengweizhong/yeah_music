@@ -653,6 +653,7 @@
   "pageUnknownTitle": "未知标题",
   "queueNoTracks": "暂无曲目",
   "playQueueTitle": "播放队列",
+  "queuePendingPlayAfterCurrentSection": "下一曲播放（待播）",
   "playbackModeTitle": "播放模式",
   "playbackSequential": "顺序播放",
   "playbackShuffle": "随机播放",
