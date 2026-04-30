@@ -899,6 +899,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get themeWallpaperSavedRestartHint =>
+      '壁紙を保存しました。画面が変わらない場合は、アプリを完全に終了してから開き直してください。';
+
+  @override
   String get colorDialogTitlePrimary => '主色';
 
   @override

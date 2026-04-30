@@ -314,6 +314,7 @@
       "error": {"type": "String"}
     }
   },
+  "themeWallpaperSavedRestartHint": "桌布已儲存。若畫面仍未更新，請完全關閉 App 後再重新開啟。",
   "colorDialogTitlePrimary": "選擇主色調",
   "colorDialogTitleSecondary": "選擇次色調",
   "actionCancel": "取消",

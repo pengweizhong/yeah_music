@@ -1758,6 +1758,12 @@ abstract class AppLocalizations {
   /// **'Could not save the background image. Try again or use another: {error}'**
   String cannotSaveBackground(String error);
 
+  /// No description provided for @themeWallpaperSavedRestartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper saved. If it doesn\'t show yet, fully quit the app and reopen.'**
+  String get themeWallpaperSavedRestartHint;
+
   /// No description provided for @colorDialogTitlePrimary.
   ///
   /// In en, this message translates to:

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -564,6 +563,7 @@ class ThemeSettingPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: Image.file(
                 File(themeConfig.backgroundImagePath!),
+                key: ValueKey<int>(themeConfig.themeBackgroundImageGeneration),
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -617,12 +617,14 @@ class ThemeSettingPage extends StatelessWidget {
     if (bytes == null) return;
     if (!context.mounted) return;
     try {
-      final dir = await getTemporaryDirectory();
-      final f = File(
-        '${dir.path}/theme_crop_${DateTime.now().millisecondsSinceEpoch}.png',
+      await themeConfig.setBackgroundImageFromBytes(bytes);
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        l10n.themeWallpaperSavedRestartHint,
+        kind: AppSnackKind.neutral,
+        duration: const Duration(seconds: 5),
       );
-      await f.writeAsBytes(bytes);
-      await themeConfig.setBackgroundImage(f.path);
     } catch (e) {
       if (!context.mounted) return;
       showAppSnackBar(

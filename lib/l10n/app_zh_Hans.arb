@@ -314,6 +314,7 @@
       "error": {"type": "String"}
     }
   },
+  "themeWallpaperSavedRestartHint": "壁纸已保存。若界面仍未更新，请完全退出应用后重新打开。",
   "colorDialogTitlePrimary": "选择主色调",
   "colorDialogTitleSecondary": "选择次色调",
   "actionCancel": "取消",

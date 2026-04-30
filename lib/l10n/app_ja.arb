@@ -314,6 +314,7 @@
       "error": {"type": "String"}
     }
   },
+  "themeWallpaperSavedRestartHint": "壁紙を保存しました。画面が変わらない場合は、アプリを完全に終了してから開き直してください。",
   "colorDialogTitlePrimary": "主色",
   "colorDialogTitleSecondary": "補色",
   "actionCancel": "キャンセル",

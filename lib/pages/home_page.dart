@@ -38,23 +38,6 @@ import 'package:yeah_music/widgets/wave_progress_bar.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
 
-/// 下拉略超过该值才显示彩蛋文案（无任何逻辑，仅展示）。
-const double _kLoftDragRevealPx = 20;
-
-/// 阁楼与列表背后的主题色填充。
-Color _homeLoftThemeMid(ThemeConfigProvider tc) {
-  return Color.lerp(tc.primaryColor, tc.secondaryColor, 0.38)!;
-}
-
-Color _homeLoftPanelSurface(
-    ThemeConfigProvider tc, Brightness brightness) {
-  final mid = _homeLoftThemeMid(tc);
-  final base = brightness == Brightness.dark
-      ? const Color(0xFF0C0C0C)
-      : const Color(0xFFEEF0F4);
-  return Color.alphaBlend(mid.withValues(alpha: 0.82), base);
-}
-
 /// 去掉 ScrollBehavior 外包层。
 class _HomeBodyScrollBehavior extends MaterialScrollBehavior {
   const _HomeBodyScrollBehavior();
@@ -83,7 +66,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _homeScrollController = ScrollController();
-  final ValueNotifier<double> _loftPullPx = ValueNotifier<double>(0);
   List<String> _recentPaths = [];
   List<({String path, int count})> _mostPlayedRaw = [];
   bool _recentReady = false;
@@ -125,7 +107,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _play?.removeListener(_onPlayListChange);
-    _loftPullPx.dispose();
     _homeScrollController.dispose();
     super.dispose();
   }
@@ -171,72 +152,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _quickEntry = c ?? QuickEntryConfig.defaultConfig();
     });
-  }
-
-  void _onHomeLoftTopPull(double px) {
-    _loftPullPx.value = px;
-  }
-
-  Widget _buildHomeLoftBand(
-    BuildContext context,
-    AppLocalizations l10n,
-    ThemeConfigProvider tc,
-  ) {
-    final brightness = Theme.of(context).brightness;
-    final muted = context.gradFg(0.58);
-    final panelBg = _homeLoftPanelSurface(tc, brightness);
-    final borderFg = context.gradBorder(0.22);
-    return AnimatedBuilder(
-      animation: _loftPullPx,
-      builder: (context, _) {
-        final pullPx = _loftPullPx.value;
-        final showTease = pullPx > _kLoftDragRevealPx;
-        return AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          clipBehavior: Clip.none,
-          child: !showTease
-              ? const SizedBox(width: double.infinity)
-              : Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                  child: ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(bottom: Radius.circular(18)),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: panelBg,
-                        border: Border(
-                          bottom: BorderSide(color: borderFg),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 10,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            l10n.homePullEmptyTease,
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.35,
-                              color: muted,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-        );
-      },
-    );
   }
 
   void _goQuickEntrySettings() {
@@ -409,7 +324,6 @@ class _HomePageState extends State<HomePage> {
             ),
             body: Consumer2<PlayListProvider, UserPlaylistProvider>(
               builder: (context, play, user, _) {
-                final tc = context.watch<ThemeConfigProvider>();
                 final recentSongs = play.resolveRecentSongsFromPaths(
                   _recentPaths,
                   maxSongs: 8,
@@ -423,14 +337,9 @@ class _HomePageState extends State<HomePage> {
                     play.playList.isNotEmpty;
                 final miniBottom =
                     showMini ? MiniPlayer.barHeight : 0.0;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildHomeLoftBand(context, l10n, tc),
-                    Expanded(
-                      child: _HomeScrollBody(
+                return SizedBox.expand(
+                  child: _HomeScrollBody(
                         scrollController: _homeScrollController,
-                        onTopOverscrollPx: _onHomeLoftTopPull,
                         quickEntry: _quickEntry,
                         safeBottom:
                             MediaQuery.paddingOf(context).bottom +
@@ -456,8 +365,6 @@ class _HomePageState extends State<HomePage> {
                         onOpenUserPlaylist: _goUserPlaylist,
                         songSubtitle: _songSecondaryLine,
                       ),
-                    ),
-                  ],
                 );
               },
             ),
@@ -486,7 +393,6 @@ class _HomePageState extends State<HomePage> {
 class _HomeScrollBody extends StatefulWidget {
   const _HomeScrollBody({
     required this.scrollController,
-    required this.onTopOverscrollPx,
     required this.quickEntry,
     required this.safeBottom,
     required this.greeting,
@@ -510,7 +416,6 @@ class _HomeScrollBody extends StatefulWidget {
   });
 
   final ScrollController scrollController;
-  final ValueChanged<double> onTopOverscrollPx;
   final QuickEntryConfig quickEntry;
   final double safeBottom;
   final String greeting;
@@ -568,9 +473,6 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
     final c = widget.scrollController;
     if (c.hasClients) {
       _lastScrollOffset = c.offset;
-      widget.onTopOverscrollPx(c.offset < 0 ? -c.offset : 0);
-    } else {
-      widget.onTopOverscrollPx(0);
     }
     setState(() {});
   }

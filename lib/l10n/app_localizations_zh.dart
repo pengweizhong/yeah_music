@@ -884,6 +884,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get themeWallpaperSavedRestartHint => '壁纸已保存。若界面仍未更新，请完全退出应用后重新打开。';
+
+  @override
   String get colorDialogTitlePrimary => '选择主色调';
 
   @override
@@ -2925,6 +2928,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get themeWallpaperSavedRestartHint => '壁纸已保存。若界面仍未更新，请完全退出应用后重新打开。';
+
+  @override
   String get colorDialogTitlePrimary => '选择主色调';
 
   @override
@@ -4964,6 +4970,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String cannotSaveBackground(String error) {
     return '無法儲存背景圖（請重試或換一張）：$error';
   }
+
+  @override
+  String get themeWallpaperSavedRestartHint =>
+      '桌布已儲存。若畫面仍未更新，請完全關閉 App 後再重新開啟。';
 
   @override
   String get colorDialogTitlePrimary => '選擇主色調';

@@ -936,6 +936,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get themeWallpaperSavedRestartHint =>
+      'Wallpaper saved. If it doesn\'t show yet, fully quit the app and reopen.';
+
+  @override
   String get colorDialogTitlePrimary => 'Primary color';
 
   @override

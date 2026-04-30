@@ -313,6 +313,7 @@
       "error": {"type": "String"}
     }
   },
+  "themeWallpaperSavedRestartHint": "Wallpaper saved. If it doesn't show yet, fully quit the app and reopen.",
   "colorDialogTitlePrimary": "Primary color",
   "colorDialogTitleSecondary": "Secondary color",
   "actionCancel": "Cancel",

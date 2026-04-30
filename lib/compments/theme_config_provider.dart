@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -55,11 +56,25 @@ class ThemeConfigProvider extends ChangeNotifier {
   /// [Image.file] 缓存键随重载递增，路径不变但文件被覆盖时仍能换图。
   int _themeBackgroundImageFrame = 0;
 
+  /// 壁纸文件写入磁盘后的代数（路径不变仅覆盖文件时也会增加）。用于预览图 [ValueKey] 等与全页背景同步刷新。
+  int get themeBackgroundImageGeneration => _themeBackgroundImageFrame;
+
   void _evictThemeBackgroundImageCache(String? path) {
     if (path == null || path.isEmpty) return;
     final f = File(path);
     if (!f.existsSync()) return;
     PaintingBinding.instance.imageCache.evict(FileImage(f));
+  }
+
+  /// [ResizeImage(FileImage)] 等与路径绑定的解码缓存需在换壁纸后失效。
+  /// 禁止在 [notifyListeners] 触发的同步布局阶段调用 [ImageCache.clear]，部分机型会断言崩溃；
+  /// 延后到当前帧绘制结束再清空。
+  void _scheduleDeferredWallpaperImageCacheClear() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        PaintingBinding.instance.imageCache.clear();
+      } catch (_) {}
+    });
   }
 
   /// 外部队路径、相册/云盘路径在冷启动后可能 [Operation not permitted]；可读的会复制到应用支持目录
@@ -116,6 +131,7 @@ class ThemeConfigProvider extends ChangeNotifier {
     ]) {
       final f = File(p.join(support.path, name));
       if (f.existsSync()) {
+        _evictThemeBackgroundImageCache(f.path);
         try {
           await f.delete();
         } catch (_) {}
@@ -204,7 +220,7 @@ class ThemeConfigProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 设置背景图片（复制到应用支持目录，避免 OneDrive/相册 等路径冷启动后无权限）
+  /// 设置背景图片（写入应用支持目录固定文件名，避免 OneDrive/相册等路径冷启动后无权限）
   Future<void> setBackgroundImage(String? path) async {
     final prefs = await SharedPreferences.getInstance();
     if (path == null) {
@@ -213,6 +229,7 @@ class ThemeConfigProvider extends ChangeNotifier {
       _backgroundImagePath = null;
       await prefs.remove('background_image_path');
       _themeBackgroundImageFrame++;
+      _scheduleDeferredWallpaperImageCacheClear();
       notifyListeners();
       return;
     }
@@ -225,14 +242,31 @@ class ThemeConfigProvider extends ChangeNotifier {
       final support = await getApplicationSupportDirectory();
       final ext = _themeImageExtension(path);
       final destPath = p.join(support.path, '$_cacheBaseName$ext');
-      await source.copy(destPath);
+      // 不用 File.copy：覆盖固定缓存路径时部分环境下解码缓存不易失效；读出再写入并 bump frame。
+      final rawBytes = await source.readAsBytes();
+      await File(destPath).writeAsBytes(rawBytes, flush: true);
       _backgroundImagePath = destPath;
       await prefs.setString('background_image_path', destPath);
       _themeBackgroundImageFrame++;
-      _evictThemeBackgroundImageCache(destPath);
+      _scheduleDeferredWallpaperImageCacheClear();
     } catch (e) {
       rethrow;
     }
+    notifyListeners();
+  }
+
+  /// 裁剪页输出的字节直接写入应用支持目录（当前为 PNG），避免临时文件再读取造成峰值内存翻倍。
+  Future<void> setBackgroundImageFromBytes(Uint8List bytes) async {
+    if (bytes.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await _removeOldThemeCacheFiles();
+    final support = await getApplicationSupportDirectory();
+    final destPath = p.join(support.path, '$_cacheBaseName.png');
+    await File(destPath).writeAsBytes(bytes, flush: true);
+    _backgroundImagePath = destPath;
+    await prefs.setString('background_image_path', destPath);
+    _themeBackgroundImageFrame++;
+    _scheduleDeferredWallpaperImageCacheClear();
     notifyListeners();
   }
 
@@ -261,6 +295,7 @@ class ThemeConfigProvider extends ChangeNotifier {
       final sigma = e * 12.0;
       final scrim = e * 0.68;
       return Stack(
+        key: ValueKey<int>(_themeBackgroundImageFrame),
         fit: StackFit.expand,
         children: [
           Positioned.fill(
