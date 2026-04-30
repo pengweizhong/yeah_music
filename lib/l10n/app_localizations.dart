@@ -468,6 +468,108 @@ abstract class AppLocalizations {
   /// **'Build {buildNumber}'**
   String settingsAboutDialogBuildLabel(String buildNumber);
 
+  /// No description provided for @settingsSponsorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get settingsSponsorTitle;
+
+  /// No description provided for @settingsSponsorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free app · Stars & optional tips'**
+  String get settingsSponsorSubtitle;
+
+  /// No description provided for @settingsSponsorSectionFreeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yeah Music is completely free'**
+  String get settingsSponsorSectionFreeTitle;
+
+  /// No description provided for @settingsSponsorSectionFreeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Yeah Music is free to use. There is no paid unlock or subscription required for core features. Do not pay third parties claiming to sell this app—unofficial paid listings may be impersonation. Maintenance is done in spare time; anything below is voluntary and does not change features.'**
+  String get settingsSponsorSectionFreeBody;
+
+  /// No description provided for @settingsSponsorSectionStarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Star on GitHub'**
+  String get settingsSponsorSectionStarTitle;
+
+  /// No description provided for @settingsSponsorSectionStarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A GitHub Star costs nothing and helps others discover the repositories.'**
+  String get settingsSponsorSectionStarHint;
+
+  /// No description provided for @settingsSponsorRepoYeahMusicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yeah Music'**
+  String get settingsSponsorRepoYeahMusicTitle;
+
+  /// No description provided for @settingsSponsorRepoYeahMusicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Source code for this music player'**
+  String get settingsSponsorRepoYeahMusicSubtitle;
+
+  /// No description provided for @settingsSponsorRepoDynamicSql2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'dynamic-sql2'**
+  String get settingsSponsorRepoDynamicSql2Title;
+
+  /// No description provided for @settingsSponsorRepoDynamicSql2Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic SQL / Java DSL library'**
+  String get settingsSponsorRepoDynamicSql2Subtitle;
+
+  /// No description provided for @settingsSponsorEasterEggTriggerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'How to pay / tip'**
+  String get settingsSponsorEasterEggTriggerLine;
+
+  /// No description provided for @settingsSponsorEasterEggDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice try'**
+  String get settingsSponsorEasterEggDialogTitle;
+
+  /// No description provided for @settingsSponsorEasterEggDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to pay? Fat chance—there\'s nothing to buy. This project runs on enthusiasm.'**
+  String get settingsSponsorEasterEggDialogBody;
+
+  /// No description provided for @settingsSponsorExternalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Links open outside this app. Only complete transactions on pages you trust. Tipping does not unlock anything.'**
+  String get settingsSponsorExternalHint;
+
+  /// No description provided for @settingsSponsorCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get settingsSponsorCopyLink;
+
+  /// No description provided for @settingsSponsorLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get settingsSponsorLinkCopied;
+
+  /// No description provided for @settingsSponsorLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link'**
+  String get settingsSponsorLaunchFailed;
+
   /// No description provided for @settingsSysinfoSectionDevice.
   ///
   /// In en, this message translates to:

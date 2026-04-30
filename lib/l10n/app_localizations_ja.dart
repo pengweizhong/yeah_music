@@ -208,6 +208,62 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get settingsSponsorTitle => '支援・スポンサー';
+
+  @override
+  String get settingsSponsorSubtitle => '無料アプリ · Star と任意のチップ';
+
+  @override
+  String get settingsSponsorSectionFreeTitle => 'Yeah Music は完全無料';
+
+  @override
+  String get settingsSponsorSectionFreeBody =>
+      'Yeah Music は無料で利用でき、「有料で機能解放」のような仕組みはありません。非公式の「購入」をうたう第三者への支払いは避けてください。開発は趣味時間での運用です。以下は任意の支援であり、機能には一切影響しません。';
+
+  @override
+  String get settingsSponsorSectionStarTitle => 'GitHub で Star';
+
+  @override
+  String get settingsSponsorSectionStarHint =>
+      'Star は無料で、リポジトリの発見やリリース情報の把握に役立ちます。';
+
+  @override
+  String get settingsSponsorRepoYeahMusicTitle => 'Yeah Music';
+
+  @override
+  String get settingsSponsorRepoYeahMusicSubtitle => 'このプレーヤーのソースコード';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Subtitle =>
+      '動的 SQL / Java DSL の OSS';
+
+  @override
+  String get settingsSponsorEasterEggTriggerLine => 'お支払い／チップの方法';
+
+  @override
+  String get settingsSponsorEasterEggDialogTitle => '残念';
+
+  @override
+  String get settingsSponsorEasterEggDialogBody =>
+      'お金？ お断りです。このプロジェクトは趣味と愛で回しています。';
+
+  @override
+  String get settingsSponsorExternalHint =>
+      'ブラウザなど外部で開きます。信頼できるページだけで操作してください。チップで機能が解放されることはありません。';
+
+  @override
+  String get settingsSponsorCopyLink => 'リンクをコピー';
+
+  @override
+  String get settingsSponsorLinkCopied => 'コピーしました';
+
+  @override
+  String get settingsSponsorLaunchFailed => 'リンクを開けませんでした';
+
+  @override
   String get settingsSysinfoSectionDevice => '端末情報';
 
   @override

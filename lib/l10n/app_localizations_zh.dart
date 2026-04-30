@@ -205,6 +205,60 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get settingsSponsorTitle => '赞助与支持';
+
+  @override
+  String get settingsSponsorSubtitle => '应用免费 · Star 或自愿打赏';
+
+  @override
+  String get settingsSponsorSectionFreeTitle => 'Yeah Music 完全免费';
+
+  @override
+  String get settingsSponsorSectionFreeBody =>
+      'Yeah Music 免费提供完整功能，不设「付费解锁」或「必须订阅」。请勿向声称「售卖本软件」的第三方付费；商店中出现的收费上架如遇非官方账号请谨慎甄别。维护占用业余时间；下列支持均为自愿，不影响任何功能。';
+
+  @override
+  String get settingsSponsorSectionStarTitle => '在 GitHub 点 Star';
+
+  @override
+  String get settingsSponsorSectionStarHint =>
+      'Star 不花钱，能帮助仓库被更多人看到，也方便你接收动态与发行说明。';
+
+  @override
+  String get settingsSponsorRepoYeahMusicTitle => 'Yeah Music';
+
+  @override
+  String get settingsSponsorRepoYeahMusicSubtitle => '本播放器源码仓库';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Subtitle => '动态 SQL / Java DSL 开源仓库';
+
+  @override
+  String get settingsSponsorEasterEggTriggerLine => '查看付费打赏方法';
+
+  @override
+  String get settingsSponsorEasterEggDialogTitle => '想得美';
+
+  @override
+  String get settingsSponsorEasterEggDialogBody => '想付钱？门都没有！此项目用爱发电。';
+
+  @override
+  String get settingsSponsorExternalHint =>
+      '打开链接后将离开本应用，请在可信页面完成操作；打赏不会解锁任何功能。';
+
+  @override
+  String get settingsSponsorCopyLink => '复制链接';
+
+  @override
+  String get settingsSponsorLinkCopied => '已复制链接';
+
+  @override
+  String get settingsSponsorLaunchFailed => '无法打开链接';
+
+  @override
   String get settingsSysinfoSectionDevice => '设备信息';
 
   @override
@@ -2466,6 +2520,60 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get settingsSponsorTitle => '赞助与支持';
+
+  @override
+  String get settingsSponsorSubtitle => '应用免费 · Star 或自愿打赏';
+
+  @override
+  String get settingsSponsorSectionFreeTitle => 'Yeah Music 完全免费';
+
+  @override
+  String get settingsSponsorSectionFreeBody =>
+      'Yeah Music 免费提供完整功能，不设「付费解锁」或「必须订阅」。请勿向声称「售卖本软件」的第三方付费；商店中出现的收费上架如遇非官方账号请谨慎甄别。维护占用业余时间；下列支持均为自愿，不影响任何功能。';
+
+  @override
+  String get settingsSponsorSectionStarTitle => '在 GitHub 点 Star';
+
+  @override
+  String get settingsSponsorSectionStarHint =>
+      'Star 不花钱，能帮助仓库被更多人看到，也方便你接收动态与发行说明。';
+
+  @override
+  String get settingsSponsorRepoYeahMusicTitle => 'Yeah Music';
+
+  @override
+  String get settingsSponsorRepoYeahMusicSubtitle => '本播放器源码仓库';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Subtitle => '动态 SQL / Java DSL 开源仓库';
+
+  @override
+  String get settingsSponsorEasterEggTriggerLine => '查看付费打赏方法';
+
+  @override
+  String get settingsSponsorEasterEggDialogTitle => '想得美';
+
+  @override
+  String get settingsSponsorEasterEggDialogBody => '想付钱？门都没有！此项目用爱发电。';
+
+  @override
+  String get settingsSponsorExternalHint =>
+      '打开链接后将离开本应用，请在可信页面完成操作；打赏不会解锁任何功能。';
+
+  @override
+  String get settingsSponsorCopyLink => '复制链接';
+
+  @override
+  String get settingsSponsorLinkCopied => '已复制链接';
+
+  @override
+  String get settingsSponsorLaunchFailed => '无法打开链接';
+
+  @override
   String get settingsSysinfoSectionDevice => '设备信息';
 
   @override
@@ -4725,6 +4833,61 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String settingsAboutDialogBuildLabel(String buildNumber) {
     return '建置編號 $buildNumber';
   }
+
+  @override
+  String get settingsSponsorTitle => '贊助與支援';
+
+  @override
+  String get settingsSponsorSubtitle => '應用程式免費 · Star 或自願打賞';
+
+  @override
+  String get settingsSponsorSectionFreeTitle => 'Yeah Music 完全免費';
+
+  @override
+  String get settingsSponsorSectionFreeBody =>
+      'Yeah Music 免費提供完整功能，沒有「付費解鎖」或「必須訂閱」。請勿向聲稱「販售本軟體」的第三方付費；商店若出現收費上架且非官方帳號請謹慎辨識。維護占用業餘時間；下列支援皆為自願，不影響任何功能。';
+
+  @override
+  String get settingsSponsorSectionStarTitle => '在 GitHub 點 Star';
+
+  @override
+  String get settingsSponsorSectionStarHint =>
+      'Star 不需要費用，能讓更多人看見專案，也方便您接收更新與發行說明。';
+
+  @override
+  String get settingsSponsorRepoYeahMusicTitle => 'Yeah Music';
+
+  @override
+  String get settingsSponsorRepoYeahMusicSubtitle => '本播放器原始碼存放庫';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Subtitle =>
+      '動態 SQL / Java DSL 開源存放庫';
+
+  @override
+  String get settingsSponsorEasterEggTriggerLine => '查看付費打賞方法';
+
+  @override
+  String get settingsSponsorEasterEggDialogTitle => '想得美';
+
+  @override
+  String get settingsSponsorEasterEggDialogBody => '想付錢？門都沒有！此專案用愛發電。';
+
+  @override
+  String get settingsSponsorExternalHint =>
+      '開啟連結後將離開本應用程式，請在可信頁面操作；打賞不會解鎖任何功能。';
+
+  @override
+  String get settingsSponsorCopyLink => '複製連結';
+
+  @override
+  String get settingsSponsorLinkCopied => '已複製連結';
+
+  @override
+  String get settingsSponsorLaunchFailed => '無法開啟連結';
 
   @override
   String get settingsSysinfoSectionDevice => '裝置資訊';

@@ -214,6 +214,63 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsSponsorTitle => 'Support';
+
+  @override
+  String get settingsSponsorSubtitle => 'Free app · Stars & optional tips';
+
+  @override
+  String get settingsSponsorSectionFreeTitle => 'Yeah Music is completely free';
+
+  @override
+  String get settingsSponsorSectionFreeBody =>
+      'Yeah Music is free to use. There is no paid unlock or subscription required for core features. Do not pay third parties claiming to sell this app—unofficial paid listings may be impersonation. Maintenance is done in spare time; anything below is voluntary and does not change features.';
+
+  @override
+  String get settingsSponsorSectionStarTitle => 'Star on GitHub';
+
+  @override
+  String get settingsSponsorSectionStarHint =>
+      'A GitHub Star costs nothing and helps others discover the repositories.';
+
+  @override
+  String get settingsSponsorRepoYeahMusicTitle => 'Yeah Music';
+
+  @override
+  String get settingsSponsorRepoYeahMusicSubtitle =>
+      'Source code for this music player';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+
+  @override
+  String get settingsSponsorRepoDynamicSql2Subtitle =>
+      'Dynamic SQL / Java DSL library';
+
+  @override
+  String get settingsSponsorEasterEggTriggerLine => 'How to pay / tip';
+
+  @override
+  String get settingsSponsorEasterEggDialogTitle => 'Nice try';
+
+  @override
+  String get settingsSponsorEasterEggDialogBody =>
+      'Want to pay? Fat chance—there\'s nothing to buy. This project runs on enthusiasm.';
+
+  @override
+  String get settingsSponsorExternalHint =>
+      'Links open outside this app. Only complete transactions on pages you trust. Tipping does not unlock anything.';
+
+  @override
+  String get settingsSponsorCopyLink => 'Copy link';
+
+  @override
+  String get settingsSponsorLinkCopied => 'Link copied';
+
+  @override
+  String get settingsSponsorLaunchFailed => 'Could not open link';
+
+  @override
   String get settingsSysinfoSectionDevice => 'Device';
 
   @override

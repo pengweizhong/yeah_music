@@ -12,6 +12,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/setting/playback_shortcuts_section.dart';
+import 'package:yeah_music/pages/setting/sponsor_support_page.dart';
 import 'package:yeah_music/pages/setting/wire_remote_control_section.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
@@ -326,6 +327,31 @@ class SettingPage extends StatelessWidget {
                     if (!kIsWeb) const WireRemoteControlSection(),
                     if (_showDesktopLyricsSection)
                       const _DesktopLyricsSettingsSection(),
+                    ListTile(
+                      title: Text(
+                        l10n.settingsSponsorTitle,
+                        style: TextStyle(color: context.gradFg()),
+                      ),
+                      subtitle: Text(
+                        l10n.settingsSponsorSubtitle,
+                        style: TextStyle(
+                          color: context.gradFg(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: Icon(
+                        Icons.volunteer_activism_outlined,
+                        color: context.gradFg(),
+                      ),
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) => const SponsorSupportPage(),
+                          ),
+                        );
+                      },
+                    ),
                     ListTile(
                       title: Text(
                         l10n.settingsAbout,
