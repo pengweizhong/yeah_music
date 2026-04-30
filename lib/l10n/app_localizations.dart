@@ -1695,12 +1695,6 @@ abstract class AppLocalizations {
   /// **'Uses cloud app folder'**
   String get oneDriveMusicUploadFolderFallback;
 
-  /// No description provided for @oneDriveTroubleshootTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Having trouble signing in?'**
-  String get oneDriveTroubleshootTitle;
-
   /// No description provided for @oneDriveAppMissingClientConfig.
   ///
   /// In en, this message translates to:
@@ -1758,38 +1752,8 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn’t finish signing in—check your connection and try again, or skim the tips under “Having trouble signing in?”'**
+  /// **'Couldn’t sign in. Check your connection and try again.'**
   String get oneDriveSignInFailed;
-
-  /// No description provided for @oneDriveTroubleshootUpload403.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload HTTP 403: In Azure → App registration → API permissions, add Microsoft Graph delegated Files.ReadWrite.All (and grant admin consent if required), then sign out and sign in again in this app.'**
-  String get oneDriveTroubleshootUpload403;
-
-  /// No description provided for @oneDriveAzureRedirectIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Nine times out of ten it’s the network: switch Wi‑Fi, pause VPN for a moment, or update the app. If the page says the link is invalid or you keep bouncing back without finishing, keep the line below—you might need it for your own troubleshooting or if you report the issue somewhere.'**
-  String get oneDriveAzureRedirectIntro;
-
-  /// No description provided for @oneDriveAzureRedirectUriCaption.
-  ///
-  /// In en, this message translates to:
-  /// **'Technical link (only for deeper troubleshooting):'**
-  String get oneDriveAzureRedirectUriCaption;
-
-  /// No description provided for @oneDriveRedirectCopyTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy link'**
-  String get oneDriveRedirectCopyTooltip;
-
-  /// No description provided for @oneDriveRedirectCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Copied'**
-  String get oneDriveRedirectCopied;
 
   /// No description provided for @oneDriveCacheNote.
   ///

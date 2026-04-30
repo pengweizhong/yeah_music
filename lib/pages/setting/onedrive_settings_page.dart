@@ -2,7 +2,6 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -15,7 +14,6 @@ import 'package:yeah_music/models/onedrive_restore_selection.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
-import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
@@ -360,7 +358,6 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                     ),
                     const SizedBox(height: 8),
                   ],
-                  _TroubleshootExpansion(l10n: l10n),
                   const SizedBox(height: 20),
                   _SectionLabel(text: l10n.oneDriveSectionPaths),
                   const SizedBox(height: 8),
@@ -1752,114 +1749,6 @@ class _AccountCard extends StatelessWidget {
                   ),
                 ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TroubleshootExpansion extends StatelessWidget {
-  const _TroubleshootExpansion({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          iconColor: Colors.white70,
-          collapsedIconColor: Colors.white54,
-          title: Text(
-            l10n.oneDriveTroubleshootTitle,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
-          ),
-          children: [
-            Text(
-              l10n.oneDriveAzureRedirectIntro,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
-                fontSize: 12,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l10n.oneDriveAzureRedirectUriCaption,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.45),
-                fontSize: 11,
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.oneDriveTroubleshootUpload403,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
-                fontSize: 12,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      child: SelectableText(
-                        OneDriveConfig.redirectUrl,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 12,
-                          height: 1.3,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: l10n.oneDriveRedirectCopyTooltip,
-                  onPressed: () async {
-                    await Clipboard.setData(
-                      ClipboardData(text: OneDriveConfig.redirectUrl),
-                    );
-                    if (!context.mounted) return;
-                    showAppSnackBar(
-                      context,
-                      l10n.oneDriveRedirectCopied,
-                      kind: AppSnackKind.success,
-                    );
-                  },
-                  icon: Icon(
-                    Icons.copy_outlined,
-                    color: Colors.white.withValues(alpha: 0.75),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),

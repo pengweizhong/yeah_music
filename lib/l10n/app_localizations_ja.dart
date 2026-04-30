@@ -867,9 +867,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveMusicUploadFolderFallback => 'アプリ用フォルダーと同じ';
 
   @override
-  String get oneDriveTroubleshootTitle => 'サインインがうまくいかないとき';
-
-  @override
   String get oneDriveAppMissingClientConfig =>
       'この版ではまだ Microsoft サインインが使えません。ストア版に更新するか、最新版を入れ直してみてください。';
 
@@ -899,26 +896,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveLinuxUnsupported => 'このプラットフォームでは OneDrive サインインに未対応です。';
 
   @override
-  String get oneDriveSignInFailed =>
-      '今回はサインインできませんでした。通信を確認して再試行するか、下のヒントも見てみてください。';
-
-  @override
-  String get oneDriveTroubleshootUpload403 =>
-      'アップロードが 403 のとき: Azure Portal → アプリの登録 → API の権限で、Microsoft Graph の委任権限 Files.ReadWrite.All を追加し（職場・学校アカウントでは管理者の同意が必要な場合あり）、アプリ内で OneDrive から一度サインアウトして再サインインしてください。';
-
-  @override
-  String get oneDriveAzureRedirectIntro =>
-      'だいたいは通信か環境のせいです。Wi‑Fi に切り替える、VPN を少しオフにする、アプリと OS を最新にする、で直ることが多いです。リンクが無効と出たり、何度も戻されて終わらないときは、下の行をコピーしておくと自分で調べたり、不具合を書き留めたりするときに便利です。';
-
-  @override
-  String get oneDriveAzureRedirectUriCaption =>
-      '普段は不要です。うまくいかないときの確認用で、必要ならこの「リダイレクト URL」を控えてください。';
-
-  @override
-  String get oneDriveRedirectCopyTooltip => 'コピー';
-
-  @override
-  String get oneDriveRedirectCopied => 'コピーしました';
+  String get oneDriveSignInFailed => 'サインインできませんでした。通信を確認して再度お試しください。';
 
   @override
   String get oneDriveCacheNote =>

@@ -375,10 +375,14 @@ class _YeahMusicAppState extends State<YeahMusicApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-    // macOS 浏览器 OAuth 回跳后，偶发需等 resumed 再读 token，界面才与登录态一致。
+    // macOS：浏览器 OAuth 回跳时 keychain 写入与 resumed 几乎同时发生，立刻 loadFromStorage
+    // 会偶发读不到新令牌并把 _signedIn 刷成 false（Android 无此窗口）。稍晚再读并配合控制器内重试。
     if (!kIsWeb && Platform.isMacOS) {
-      final od = context.read<OneDriveController>();
-      unawaited(od.loadFromStorage());
+      Future<void>.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        final od = context.read<OneDriveController>();
+        unawaited(od.loadFromStorage());
+      });
     }
     _kickOneDriveAutoSyncCheck();
     _tryConsumeAndroidOpenWith();

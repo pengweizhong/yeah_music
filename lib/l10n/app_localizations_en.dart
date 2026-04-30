@@ -910,9 +910,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveMusicUploadFolderFallback => 'Uses cloud app folder';
 
   @override
-  String get oneDriveTroubleshootTitle => 'Having trouble signing in?';
-
-  @override
   String get oneDriveAppMissingClientConfig =>
       'Microsoft sign-in isn’t available in this copy of the app. Grab the version from the store or check for an update.';
 
@@ -944,25 +941,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSignInFailed =>
-      'Couldn’t finish signing in—check your connection and try again, or skim the tips under “Having trouble signing in?”';
-
-  @override
-  String get oneDriveTroubleshootUpload403 =>
-      'Upload HTTP 403: In Azure → App registration → API permissions, add Microsoft Graph delegated Files.ReadWrite.All (and grant admin consent if required), then sign out and sign in again in this app.';
-
-  @override
-  String get oneDriveAzureRedirectIntro =>
-      'Nine times out of ten it’s the network: switch Wi‑Fi, pause VPN for a moment, or update the app. If the page says the link is invalid or you keep bouncing back without finishing, keep the line below—you might need it for your own troubleshooting or if you report the issue somewhere.';
-
-  @override
-  String get oneDriveAzureRedirectUriCaption =>
-      'Technical link (only for deeper troubleshooting):';
-
-  @override
-  String get oneDriveRedirectCopyTooltip => 'Copy link';
-
-  @override
-  String get oneDriveRedirectCopied => 'Copied';
+      'Couldn’t sign in. Check your connection and try again.';
 
   @override
   String get oneDriveCacheNote =>

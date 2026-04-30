@@ -853,9 +853,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveMusicUploadFolderFallback => '与云端应用文件夹相同';
 
   @override
-  String get oneDriveTroubleshootTitle => '登录不顺利？';
-
-  @override
   String get oneDriveAppMissingClientConfig =>
       '这一版暂时还不能用微软账号登录，试试应用商店的正式版或更新到最新。';
 
@@ -884,25 +881,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
 
   @override
-  String get oneDriveSignInFailed => '这次没登录成功，看看网络或稍后再试；也可以翻翻下面「登录不顺利」里的小提示。';
-
-  @override
-  String get oneDriveTroubleshootUpload403 =>
-      '若上传返回 403：在 Azure 门户 → 应用注册 → API 权限中，为 Microsoft Graph 添加委托权限 Files.ReadWrite.All（工作/学校账号可能需管理员同意），然后在应用内退出 OneDrive 并重新登录以使新权限生效。';
-
-  @override
-  String get oneDriveAzureRedirectIntro =>
-      '多半是网络或小限制：换个 Wi‑Fi、暂时关掉 VPN、把系统和应用更新到最新，往往就好了。如果页面提示链接无效、或者一直跳回却登不上，可以把下面整行复制留着，自己排查或发反馈时也许用得上。';
-
-  @override
-  String get oneDriveAzureRedirectUriCaption =>
-      '下面的链接一般用不上，只有需要核对「重定向地址」、或自己深入排障时再复制：';
-
-  @override
-  String get oneDriveRedirectCopyTooltip => '复制';
-
-  @override
-  String get oneDriveRedirectCopied => '已复制';
+  String get oneDriveSignInFailed => '未能登录，请检查网络后重试。';
 
   @override
   String get oneDriveCacheNote =>
@@ -3310,9 +3289,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveMusicUploadFolderFallback => '与云端应用文件夹相同';
 
   @override
-  String get oneDriveTroubleshootTitle => '登录不顺利？';
-
-  @override
   String get oneDriveAppMissingClientConfig =>
       '这一版暂时还不能用微软账号登录，试试应用商店的正式版或更新到最新。';
 
@@ -3341,25 +3317,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
 
   @override
-  String get oneDriveSignInFailed => '这次没登录成功，看看网络或稍后再试；也可以翻翻下面「登录不顺利」里的小提示。';
-
-  @override
-  String get oneDriveTroubleshootUpload403 =>
-      '若上传返回 403：在 Azure 门户 → 应用注册 → API 权限中，为 Microsoft Graph 添加委托权限 Files.ReadWrite.All（工作/学校账号可能需管理员同意），然后在应用内退出 OneDrive 并重新登录以使新权限生效。';
-
-  @override
-  String get oneDriveAzureRedirectIntro =>
-      '多半是网络或小限制：换个 Wi‑Fi、暂时关掉 VPN、把系统和应用更新到最新，往往就好了。如果页面提示链接无效、或者一直跳回却登不上，可以把下面整行复制留着，自己排查或发反馈时也许用得上。';
-
-  @override
-  String get oneDriveAzureRedirectUriCaption =>
-      '下面的链接一般用不上，只有需要核对「重定向地址」、或自己深入排障时再复制：';
-
-  @override
-  String get oneDriveRedirectCopyTooltip => '复制';
-
-  @override
-  String get oneDriveRedirectCopied => '已复制';
+  String get oneDriveSignInFailed => '未能登录，请检查网络后重试。';
 
   @override
   String get oneDriveCacheNote =>
@@ -5768,9 +5726,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveMusicUploadFolderFallback => '與雲端應用程式資料夾相同';
 
   @override
-  String get oneDriveTroubleshootTitle => '登入不順利？';
-
-  @override
   String get oneDriveAppMissingClientConfig =>
       '這一版暫時無法使用 Microsoft 登入，請試試商店正式版或更新到最新。';
 
@@ -5799,25 +5754,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveLinuxUnsupported => '此平台尚不支援 OneDrive 登入。';
 
   @override
-  String get oneDriveSignInFailed => '這次沒登入成功，檢查網路或稍後再試；也可看看下方「登入不順利」的提示。';
-
-  @override
-  String get oneDriveTroubleshootUpload403 =>
-      '若上傳出現 403：在 Azure 入口網站 → 應用程式註冊 → API 權限，為 Microsoft Graph 新增委派的 Files.ReadWrite.All（公司或學校帳戶可能需管理員同意），然後於應用程式內登出 OneDrive 並重新登入以套用新權限。';
-
-  @override
-  String get oneDriveAzureRedirectIntro =>
-      '多半是網路或小限制：換個 Wi‑Fi、暫時關閉 VPN、把系統與 App 更新到最新，通常就沒問題。若頁面說連結無效、或一直跳回卻無法完成，可把下面整行複製留著，自行排查或回報問題時也許用得上。';
-
-  @override
-  String get oneDriveAzureRedirectUriCaption =>
-      '下面的連結一般用不到，只有要核對「重新導向網址」、或自行深入除錯時再複製：';
-
-  @override
-  String get oneDriveRedirectCopyTooltip => '複製';
-
-  @override
-  String get oneDriveRedirectCopied => '已複製';
+  String get oneDriveSignInFailed => '未能登入，請檢查網路後再試。';
 
   @override
   String get oneDriveCacheNote =>

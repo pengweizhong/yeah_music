@@ -131,7 +131,11 @@ class OneDriveController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final t = await _auth.getValidAccessToken(effectiveClientId);
+    var t = await _auth.getValidAccessToken(effectiveClientId);
+    if (t == null && Platform.isMacOS) {
+      await Future<void>.delayed(const Duration(milliseconds: 320));
+      t = await _auth.getValidAccessToken(effectiveClientId);
+    }
     _signedIn = t != null;
     if (_signedIn) {
       _accountHint = 'Microsoft';
@@ -1046,10 +1050,8 @@ class OneDriveController extends ChangeNotifier {
       if (res == null) {
         return false;
       }
-      _signedIn = true;
-      _accountHint = 'Microsoft';
-      notifyListeners();
-      return true;
+      await loadFromStorage();
+      return _signedIn;
     } catch (_) {
       return false;
     }
