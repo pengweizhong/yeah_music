@@ -41,7 +41,7 @@ import 'package:yeah_music/widgets/recent_play_list_row.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.initial});
 
-  /// 由 [WelcomeEntryPage] 预拉取时传入，避免首屏二次等待。
+  /// 若传入则可跳过首页内对部分数据的冷启动拉取。
   final HomeInitialData? initial;
 
   @override

@@ -1,10 +1,6 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
-import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -13,9 +9,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
-import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
-import 'package:yeah_music/utils/song_metadata_reload_utils.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/onedrive_controller.dart';
 import '../compments/play_list_provider.dart';
@@ -27,15 +21,11 @@ import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
 import '../widgets/compact_song_list_row.dart';
-import '../widgets/song_inline_tags_editor_sheet.dart';
-import '../widgets/song_metadata_dialog.dart';
+import '../widgets/library_song_more_actions_sheet.dart';
 import '../widgets/scroll_aware_list_frame.dart';
 import '../widgets/song_playlist_page_shell.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
 
-const int _kLibraryReloadMetaMaxEmbeddedArtBytes = 512 * 1024;
-
-@immutable
 class PlayListPage extends StatefulWidget {
   const PlayListPage({super.key, this.openSearchOnOpen = false});
 
@@ -164,7 +154,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
             sorted,
             playListProvider,
             searchFieldLabelText: l10n.playlistSearchHint,
-            onSongMore: _showLibrarySongMoreSheet,
+            onSongMore: showLibrarySongMoreActionsSheet,
           ),
         );
       }
@@ -330,257 +320,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     }
   }
 
-  Future<void> _reloadSongMetadataFromDisk(BuildContext context, Song song) async {
-    final l10n = AppLocalizations.of(context);
-    final path = song.path.trim();
-    if (path.isEmpty) return;
-    await reloadAllSongInstancesAfterFileMetadataChanged(
-      context,
-      path,
-      maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
-    );
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.libraryReloadMetadataDone)),
-    );
-  }
-
-  void _showLibrarySongMoreSheet(BuildContext context, Song song) {
-    final l10n = AppLocalizations.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: false,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-          ),
-          child: FrostedGlassBottomSheet(
-            child: Theme(
-              data: frostedBottomSheetContentTheme(sheetContext),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                      child: Text(
-                        l10n.songPageMoreSheetTitle,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.drive_file_rename_outline, color: Colors.white),
-                      title: Text(l10n.menuRename, style: const TextStyle(color: Colors.white)),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        _renameSingleSongSheet(context, song);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.playlist_add, color: Colors.white),
-                      title: Text(l10n.tooltipAddToPlaylist, style: const TextStyle(color: Colors.white)),
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await showAddToUserPlaylistsSheet(context, song);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.edit_attributes_outlined, color: Colors.white),
-                      title: Text(
-                        l10n.songPageMoreEditMusicTagsInline,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await showSongInlineTagsEditorSheet(
-                          navigatorContext: context,
-                          song: song,
-                          onSavedReload: (path) async {
-                            await reloadAllSongInstancesAfterFileMetadataChanged(
-                              context,
-                              path,
-                              maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    if (Platform.isAndroid)
-                      ListTile(
-                        leading: const Icon(Icons.edit_note_outlined, color: Colors.white),
-                        title: Text(
-                          l10n.songPageMoreEditMusicTagsExternal,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onTap: () async {
-                          Navigator.pop(sheetContext);
-                          await MusicTagEditorLauncher.openMusicTagEditorWithFeedback(
-                            context,
-                            song,
-                          );
-                        },
-                      ),
-                    ListTile(
-                      leading: const Icon(Icons.info_outline_rounded, color: Colors.white),
-                      title: Text(l10n.songPageMoreQueryMetadata, style: const TextStyle(color: Colors.white)),
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await tryShowAudioMetadataDialogForSong(context, song);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.refresh_rounded, color: Colors.white),
-                      title: Text(l10n.libraryReloadMetadata, style: const TextStyle(color: Colors.white)),
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await _reloadSongMetadataFromDisk(context, song);
-                      },
-                    ),
-                    const Divider(height: 1, color: Color(0x33FFFFFF)),
-                    ListTile(
-                      leading: Icon(
-                        Icons.delete_outline_rounded,
-                        color: Theme.of(sheetContext).colorScheme.error,
-                      ),
-                      title: Text(
-                        l10n.actionDelete,
-                        style: TextStyle(color: Theme.of(sheetContext).colorScheme.error),
-                      ),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (!mounted) return;
-                          _confirmDeleteLibrarySong(context, song);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
-    final l10n = AppLocalizations.of(context);
-    final displayName =
-        (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
-
-    final step1 = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.songPageDeleteDiskWarningTitle),
-        content: Text(l10n.songPageDeleteDiskWarningBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.songPageDeleteContinue),
-          ),
-        ],
-      ),
-    );
-    if (step1 != true || !context.mounted) return;
-
-    final step2 = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.songPageDeleteFinalConfirmTitle),
-        content: Text(l10n.songPageDeleteFinalConfirmBody(displayName)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.actionDelete),
-          ),
-        ],
-      ),
-    );
-    if (step2 != true || !context.mounted) return;
-
-    final folder = context.read<FolderProvider>();
-    final playList = context.read<PlayListProvider>();
-    final userPl = context.read<UserPlaylistProvider>();
-    if (!userPl.initialized) await userPl.init();
-    try {
-      await deleteLibrarySongsAndRefresh(
-        folderProvider: folder,
-        playListProvider: playList,
-        userPlaylistProvider: userPl,
-        songs: [song],
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.playlistDeletedOne)),
-        );
-      }
-    } catch (e) {
-      appLog.e('library song delete failed', error: e);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _renameSingleSongSheet(BuildContext context, Song song) async {
-    if (_batchSelect) return;
-    final l10n = AppLocalizations.of(context);
-    final base = p.basenameWithoutExtension(song.path);
-    final newStem = await showDialog<String?>(
-      context: context,
-      builder: (ctx) => _SingleSongRenameDialog(
-        l10n: l10n,
-        initialStem: base,
-      ),
-    );
-    if (newStem == null || !context.mounted) return;
-    final folder = context.read<FolderProvider>();
-    final playList = context.read<PlayListProvider>();
-    final userPl = context.read<UserPlaylistProvider>();
-    if (!userPl.initialized) await userPl.init();
-    try {
-      await renameLibrarySongToStem(
-        folderProvider: folder,
-        playListProvider: playList,
-        userPlaylistProvider: userPl,
-        song: song,
-        newStem: newStem,
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.libraryRenameSingleDone)),
-        );
-      }
-    } catch (e) {
-      appLog.e('single rename failed', error: e);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
-      }
-    }
-  }
 
   Future<void> _batchUploadOneDrive(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
@@ -758,7 +497,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                         _filteredSongs,
                         playListProvider,
                         searchFieldLabelText: l10n.playlistSearchHint,
-                        onSongMore: _showLibrarySongMoreSheet,
+                        onSongMore: showLibrarySongMoreActionsSheet,
                       ),
                     );
                   },
@@ -815,7 +554,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                               isCurrent: isRowCurrent,
                               showAddToPlaylist: false,
                               onMoreMenuTap: () =>
-                                  _showLibrarySongMoreSheet(context, song),
+                                  showLibrarySongMoreActionsSheet(context, song),
                               selectionMode: _batchSelect,
                               isSelected: _selectedNormPaths
                                   .contains(normSongPath(song.path)),

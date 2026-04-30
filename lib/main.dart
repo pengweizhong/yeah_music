@@ -12,14 +12,12 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
-import 'package:yeah_music/pages/welcome_entry_page.dart';
+import 'package:yeah_music/pages/home_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_material_themes.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/welcome/app_startup_clock.dart';
-import 'package:yeah_music/welcome/pre_hive_startup_view.dart';
-
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
 import 'compments/onedrive_controller.dart';
@@ -94,7 +92,7 @@ Future<void> main(List<String> args) async {
   );
 }
 
-/// 先尽快出首帧（渐变/进度），再异步完成 Hive 后再挂载 [MultiProvider] + 主应用，避免冷启动长时间纯黑屏。
+/// Hive 就绪前先出一帧纯色占位，再挂载 [MultiProvider] + 主应用，避免长时间纯黑屏。
 class AppStartupGate extends StatefulWidget {
   const AppStartupGate({super.key});
 
@@ -102,43 +100,19 @@ class AppStartupGate extends StatefulWidget {
   State<AppStartupGate> createState() => _AppStartupGateState();
 }
 
-class _AppStartupGateState extends State<AppStartupGate>
-    with SingleTickerProviderStateMixin {
+class _AppStartupGateState extends State<AppStartupGate> {
   Object? _error;
   bool _ready = false;
-
-  AnimationController? _glow;
-
-  void _initPreHiveVisuals() {
-    _glow?.dispose();
-    _glow = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    )..repeat(reverse: true);
-  }
 
   @override
   void initState() {
     super.initState();
-    _initPreHiveVisuals();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_bootstrap());
     });
   }
 
-  @override
-  void dispose() {
-    _glow?.dispose();
-    super.dispose();
-  }
-
-  void _teardownPreHiveOnly() {
-    _glow?.dispose();
-    _glow = null;
-  }
-
   void _disposePreHiveResources() {
-    _teardownPreHiveOnly();
     if (!mounted) return;
     setState(() {
       _ready = true;
@@ -147,7 +121,6 @@ class _AppStartupGateState extends State<AppStartupGate>
   }
 
   void _onHiveInitError(Object e) {
-    _teardownPreHiveOnly();
     if (mounted) setState(() => _error = e);
   }
 
@@ -168,8 +141,6 @@ class _AppStartupGateState extends State<AppStartupGate>
 
   void _retry() {
     AppStartupClock.reset();
-    _teardownPreHiveOnly();
-    _initPreHiveVisuals();
     if (mounted) {
       setState(() {
         _error = null;
@@ -237,8 +208,9 @@ class _AppStartupGateState extends State<AppStartupGate>
               brightness: Brightness.dark,
               scaffoldBackgroundColor: const Color(0xFF0A0E14),
             ),
-            home: PreHiveStartupView(
-              glow: _glow!,
+            home: const Scaffold(
+              backgroundColor: Color(0xFF0A0E14),
+              body: SizedBox.shrink(),
             ),
           );
         },
@@ -354,7 +326,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
               ),
             );
           },
-          home: const WelcomeEntryPage(),
+          home: const HomePage(),
           theme: AppMaterialThemes.light,
           darkTheme: AppMaterialThemes.dark,
           themeMode: appearance.themeMode,

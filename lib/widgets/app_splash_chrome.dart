@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
-/// 与 [WelcomeEntryPage]、Hive 阶段启动层共用，避免多段全屏切主题时「闪黑 / 白屏」。
+/// 全屏渐变壳层；主题色与启动占位一致，避免切场景时闪黑 / 白屏。
 ///
 /// 若提供 [statusListenable]，只重建副标题行，[CircularProgressIndicator] 所在子树不随状态文案重复构建，减轻掉帧感。
 class AppSplashChrome extends StatelessWidget {
