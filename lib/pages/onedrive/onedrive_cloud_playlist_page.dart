@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
@@ -202,6 +203,85 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       sortType: _sortType,
       isAscending: _ascending,
       onApply: _applySort,
+    );
+  }
+
+  Future<void> _showCloudLibraryMoreSheet(
+    BuildContext context,
+    OneDriveController od,
+    AppLocalizations l10n,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final headerStyle = Theme.of(sheetContext).textTheme.titleMedium
+            ?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(sheetContext).colorScheme.onSurface,
+            );
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: FrostedGlassBottomSheet(
+            child: Theme(
+              data: frostedBottomSheetContentTheme(sheetContext),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                      child: Text(
+                        l10n.songPageMoreSheetTitle,
+                        style: headerStyle,
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.refresh_rounded),
+                      title: Text(l10n.oneDriveRescanIndex),
+                      enabled:
+                          od.indexFolders.isNotEmpty && !od.cloudIndexBuilding,
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await _runRescan(context, od);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.drive_folder_upload_outlined),
+                      title: Text(l10n.oneDriveBrowseFolders),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await _browseAdd(context, od);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.cloud_outlined),
+                      title: Text(l10n.oneDriveBrowserTitle),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        if (!context.mounted) return;
+                        await Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const OneDriveBrowserPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -484,44 +564,15 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
                         }
                       : null,
                 ),
-                PopupMenuButton<String>(
+                IconButton(
+                  tooltip: l10n.tooltipMore,
                   icon: const Icon(
                     Icons.more_vert_rounded,
                     color: Colors.white,
                   ),
-                  color: const Color(0xFF1E1E1E),
-                  onSelected: od.signedIn
-                      ? (value) async {
-                          if (value == 'rescan') {
-                            await _runRescan(context, od);
-                          } else if (value == 'add') {
-                            await _browseAdd(context, od);
-                          } else if (value == 'browse' && context.mounted) {
-                            await Navigator.push<void>(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (_) => const OneDriveBrowserPage(),
-                              ),
-                            );
-                          }
-                        }
+                  onPressed: od.signedIn
+                      ? () => _showCloudLibraryMoreSheet(context, od, l10n)
                       : null,
-                  itemBuilder: (ctx) => [
-                    PopupMenuItem(
-                      value: 'rescan',
-                      enabled:
-                          od.indexFolders.isNotEmpty && !od.cloudIndexBuilding,
-                      child: Text(l10n.oneDriveRescanIndex),
-                    ),
-                    PopupMenuItem(
-                      value: 'add',
-                      child: Text(l10n.oneDriveBrowseFolders),
-                    ),
-                    PopupMenuItem(
-                      value: 'browse',
-                      child: Text(l10n.oneDriveBrowserTitle),
-                    ),
-                  ],
                 ),
                 IconButton(
                   tooltip: l10n.homeSearchTooltip,
