@@ -1895,10 +1895,10 @@ class _QuickEntryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: context.gradBorder(0.08),
+            color: context.gradBorder(0.16),
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(
-              color: context.gradBorder(0.1),
+              color: context.gradBorder(0.18),
             ),
           ),
           child: Padding(
