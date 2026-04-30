@@ -4,17 +4,23 @@ import 'package:flutter/material.dart';
 ///
 /// 使用 [ScrollController] + 横向 [SingleChildScrollView] 承载宽内容，避免
 /// [UnconstrainedBox]/[OverflowBox] 在 debug 下对「内容超出父级」的断言。
+///
+/// [enableMarquee] 为 false 时不滚动（单行省略），用于「仅当前播放行跑马灯」等场景。
 class AutoMarqueeSingleLineText extends StatefulWidget {
   const AutoMarqueeSingleLineText({
     super.key,
     required this.text,
     required this.style,
+    this.enableMarquee = true,
     this.gapBetweenLoops = 40,
     this.pixelsPerSecond = 36,
   });
 
   final String text;
   final TextStyle style;
+
+  /// 为 false 时始终使用省略号，不启动滚动动画。
+  final bool enableMarquee;
   final double gapBetweenLoops;
 
   /// 滚动速率（像素/秒），越小越慢。
@@ -52,6 +58,16 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
         (_trackedLoop != null && (loop - _trackedLoop!).abs() > 0.5);
   }
 
+  @override
+  void didUpdateWidget(AutoMarqueeSingleLineText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enableMarquee && !widget.enableMarquee) {
+      _disposeAnim();
+      _trackedText = null;
+      _trackedLoop = null;
+    }
+  }
+
   void _ensureAnim(double loopDistance) {
     if (!_needsNewAnim(loopDistance)) return;
     _disposeAnim();
@@ -87,6 +103,14 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
       builder: (context, constraints) {
         final maxW = constraints.maxWidth;
         if (!maxW.isFinite || maxW <= 1) {
+          return Text(
+            widget.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: widget.style,
+          );
+        }
+        if (!widget.enableMarquee) {
           return Text(
             widget.text,
             maxLines: 1,

@@ -4,6 +4,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/song_audio_quality.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
+import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
 
 Color songAudioQualityAccent(SongAudioQualityTier tier, BuildContext context) {
   final dark = Theme.of(context).brightness == Brightness.dark;
@@ -315,6 +316,8 @@ class SongListSubtitleWithQualityRow extends StatelessWidget {
     required this.fallbackSubtitle,
     required this.textStyle,
     this.compactBadge = false,
+    /// 为 true 且二级文案超出宽度时跑马灯（当前播放行）。
+    this.isCurrentTrack = false,
   });
 
   final Song song;
@@ -322,6 +325,7 @@ class SongListSubtitleWithQualityRow extends StatelessWidget {
   final String fallbackSubtitle;
   final TextStyle textStyle;
   final bool compactBadge;
+  final bool isCurrentTrack;
 
   @override
   Widget build(BuildContext context) {
@@ -336,11 +340,10 @@ class SongListSubtitleWithQualityRow extends StatelessWidget {
           const SizedBox(width: 6),
         ],
         Expanded(
-          child: Text(
-            line,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: SongListMarqueeWhenCurrentLine(
+            text: line,
             style: textStyle,
+            isCurrentTrack: isCurrentTrack,
           ),
         ),
       ],
@@ -356,12 +359,14 @@ class SongListSubtitleWithQualityMarqueePlayCount extends StatelessWidget {
     required this.textStyle,
     required this.playCount,
     required this.l10n,
+    this.isCurrentTrack = false,
   });
 
   final Song song;
   final TextStyle textStyle;
   final int playCount;
   final AppLocalizations l10n;
+  final bool isCurrentTrack;
 
   @override
   Widget build(BuildContext context) {
@@ -381,6 +386,7 @@ class SongListSubtitleWithQualityMarqueePlayCount extends StatelessWidget {
           child: AutoMarqueeSingleLineText(
             text: text,
             style: textStyle,
+            enableMarquee: isCurrentTrack,
             gapBetweenLoops: 40,
           ),
         ),

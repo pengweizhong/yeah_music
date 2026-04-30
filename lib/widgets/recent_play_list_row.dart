@@ -8,6 +8,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
+import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
 
 /// 最近播放列表行（首页等）。顺序由调用方传入决定，不在此重排。
 ///
@@ -118,10 +119,8 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        titleStr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      SongListMarqueeWhenCurrentLine(
+                        text: titleStr,
                         style: TextStyle(
                           color: widget.isCurrent
                               ? Colors.white
@@ -131,6 +130,7 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                               ? FontWeight.w700
                               : FontWeight.w600,
                         ),
+                        isCurrentTrack: widget.isCurrent,
                       ),
                       const SizedBox(height: 2),
                       widget.trailingPlayCount != null
@@ -144,6 +144,7 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                               ),
                               playCount: widget.trailingPlayCount!,
                               l10n: l10n,
+                              isCurrentTrack: widget.isCurrent,
                             )
                           : SongListSubtitleWithQualityRow(
                               song: widget.song,
@@ -155,6 +156,7 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                                     : Colors.white.withValues(alpha: 0.5),
                                 fontSize: 13,
                               ),
+                              isCurrentTrack: widget.isCurrent,
                             ),
                     ],
                   ),

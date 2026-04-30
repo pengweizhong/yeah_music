@@ -6,6 +6,7 @@ import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
+import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 
 /// 与 [ListTile] 同信息密度、更省布局/语义开销，并配合 [ListView] 的 [itemExtent] 固定行高，利于长列表跟滑。
@@ -158,10 +159,8 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          titleStr,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        SongListMarqueeWhenCurrentLine(
+                          text: titleStr,
                           style: TextStyle(
                             color: widget.isCurrent ? primary : Colors.white,
                             fontSize: 16,
@@ -169,6 +168,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                           ),
+                          isCurrentTrack: widget.isCurrent,
                         ),
                         const SizedBox(height: 2),
                         widget.trailingPlayCount != null
@@ -182,6 +182,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                 ),
                                 playCount: widget.trailingPlayCount!,
                                 l10n: l10n,
+                                isCurrentTrack: widget.isCurrent,
                               )
                             : SongListSubtitleWithQualityRow(
                                 song: widget.song,
@@ -193,6 +194,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                       : Colors.white.withValues(alpha: 0.6),
                                   fontSize: 13,
                                 ),
+                                isCurrentTrack: widget.isCurrent,
                               ),
                       ],
                     ),

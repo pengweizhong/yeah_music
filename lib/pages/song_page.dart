@@ -42,6 +42,7 @@ import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
+import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
 import 'package:yeah_music/widgets/song_metadata_dialog.dart' show showAudioMetadataDialog;
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
@@ -2836,10 +2837,9 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        s.title ?? l10n.pageUnknownTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      SongListMarqueeWhenCurrentLine(
+                                        text:
+                                            s.title ?? l10n.pageUnknownTitle,
                                         style: TextStyle(
                                           fontWeight: isCurrent
                                               ? FontWeight.w600
@@ -2848,11 +2848,10 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                               ? primary
                                               : Colors.white,
                                         ),
+                                        isCurrentTrack: isCurrent,
                                       ),
-                                      Text(
-                                        s.artist ?? '',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      SongListMarqueeWhenCurrentLine(
+                                        text: s.artist ?? '',
                                         style: TextStyle(
                                           color: isCurrent
                                               ? primary.withValues(
@@ -2861,6 +2860,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                                   alpha: 0.5),
                                           fontSize: 13,
                                         ),
+                                        isCurrentTrack: isCurrent,
                                       ),
                                     ],
                                   ),
