@@ -89,7 +89,7 @@ class PlayListProvider extends ChangeNotifier {
   /// 元素为 [_libraryPathKey]。
   final List<String> _playNextAfterCurrentQueue = [];
 
-  /// 本轮插播开始前「本应播放」的下一首索引；插播队列清空后 [playAt] 回到此处。
+  /// 首轮插播生效前正在播放的曲目索引；插播全部播完后 [playAt] 回到该曲继续。
   int? _resumePlaylistIndexAfterDeferred;
 
   /// 缓存的播放列表（文件夹合并 + OneDrive 本地缓存叠加，不含临时队列）
@@ -567,9 +567,7 @@ class PlayListProvider extends ChangeNotifier {
     required int fallbackPlayerIndex,
   }) async {
     try {
-      final hint =
-          _playbackMode == PlaybackMode.shuffle ? null : fallbackPlayerIndex;
-      if (await _tryConsumeDeferredPlayNext(concatResumeHintIndex: hint)) {
+      if (await _tryConsumeDeferredPlayNext()) {
         return;
       }
       final resume = _takeResumeAfterDeferredIfApplicable();
@@ -592,30 +590,6 @@ class PlayListProvider extends ChangeNotifier {
     }
   }
 
-  /// 插播开始前记下「下一首」；随机模式走 [_getNextShuffledIndex]（与手动下一曲一致）。
-  /// [concatResumeHintIndex]：Android concat 物理顺序下一首（随机模式下不可用）。
-  int _peekNextPlaylistIndexAfterCurrent({int? concatResumeHintIndex}) {
-    final list = playList;
-    final len = list.length;
-    if (len <= 0) return 0;
-    if (concatResumeHintIndex != null &&
-        concatResumeHintIndex >= 0 &&
-        concatResumeHintIndex < len) {
-      return concatResumeHintIndex;
-    }
-    final cur = _currentIndex.clamp(0, len - 1);
-    switch (_playbackMode) {
-      case PlaybackMode.playOnce:
-      case PlaybackMode.sequential:
-      case PlaybackMode.timerShutdown:
-        return (cur + 1) % len;
-      case PlaybackMode.singleLoop:
-        return cur;
-      case PlaybackMode.shuffle:
-        return _getNextShuffledIndex(len);
-    }
-  }
-
   int? _takeResumeAfterDeferredIfApplicable() {
     if (_playNextAfterCurrentQueue.isNotEmpty) return null;
     final r = _resumePlaylistIndexAfterDeferred;
@@ -628,12 +602,14 @@ class PlayListProvider extends ChangeNotifier {
   /// **禁止**在此处调用 [playAt]：它会再通过 [_enqueuePlaybackNav] 挂到 [_playbackNavChain]，
   /// 而 [playNext] 正是在 chain 的 `.then` 里 `await` 本方法 —— 会形成「等待自身」的死锁，
   /// 表现为列表点歌、上一曲/下一曲均无响应。
-  Future<bool> _tryConsumeDeferredPlayNext({int? concatResumeHintIndex}) async {
+  Future<bool> _tryConsumeDeferredPlayNext() async {
     while (_playNextAfterCurrentQueue.isNotEmpty) {
       if (_resumePlaylistIndexAfterDeferred == null) {
-        _resumePlaylistIndexAfterDeferred = _peekNextPlaylistIndexAfterCurrent(
-          concatResumeHintIndex: concatResumeHintIndex,
-        );
+        final list = playList;
+        if (list.isNotEmpty) {
+          _resumePlaylistIndexAfterDeferred =
+              _currentIndex.clamp(0, list.length - 1);
+        }
       }
       final key = _playNextAfterCurrentQueue.removeAt(0);
       final idx = _indexInPlayListByPathKey(key);
