@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/constants.dart';
+import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
@@ -36,6 +37,8 @@ class MiniPlayer extends StatelessWidget {
           initialData: MusicService.isPlaying,
           builder: (context, snapshot) {
             final isPlaying = snapshot.data ?? false;
+            final skipDisabled =
+                playListProvider.playbackMode == PlaybackMode.playOnce;
 
             return FrostedGlassPanel.bottomBar(
               height: barHeight,
@@ -107,9 +110,11 @@ class MiniPlayer extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.skip_previous, size: 24),
                           color: Colors.white,
-                          onPressed: () async {
-                            await playListProvider.playPrev();
-                          },
+                          onPressed: skipDisabled
+                              ? null
+                              : () async {
+                                  await playListProvider.playPrev();
+                                },
                         ),
                         // 播放/暂停按钮（与继续播放卡一致：冷启动/播完后 idle 时 resume 无声，应 [playAt] 换源）
                         IconButton(
@@ -135,9 +140,11 @@ class MiniPlayer extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.skip_next, size: 24),
                           color: Colors.white,
-                          onPressed: () async {
-                            await playListProvider.playNext();
-                          },
+                          onPressed: skipDisabled
+                              ? null
+                              : () async {
+                                  await playListProvider.playNext();
+                                },
                         ),
                       ],
                     ),

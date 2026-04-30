@@ -1934,6 +1934,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
         final song =
             playListProvider.currentSong ?? playListProvider.playList.first;
+        final skipDisabled =
+            playListProvider.playbackMode == PlaybackMode.playOnce;
         // 使用StreamBuilder来监听播放状态，确保按钮状态正确
         final effectivePos = _effectivePosition();
 
@@ -2211,11 +2213,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         icon: const Icon(Icons.skip_previous),
                         color: Colors.white,
                         iconSize: 32,
-                        onPressed: () async {
-                          await playListProvider.playPrev();
-                          _initLyrics();
-                          _updateDuration();
-                        },
+                        onPressed: skipDisabled
+                            ? null
+                            : () async {
+                                await playListProvider.playPrev();
+                                _initLyrics();
+                                _updateDuration();
+                              },
                       ),
                       const SizedBox(width: 24),
                       // 播放/暂停 - 使用StreamBuilder确保状态正确
@@ -2276,11 +2280,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         icon: const Icon(Icons.skip_next),
                         color: Colors.white,
                         iconSize: 32,
-                        onPressed: () async {
-                          await playListProvider.playNext();
-                          _initLyrics();
-                          _updateDuration();
-                        },
+                        onPressed: skipDisabled
+                            ? null
+                            : () async {
+                                await playListProvider.playNext();
+                                _initLyrics();
+                                _updateDuration();
+                              },
                       ),
                     ],
                   ),
