@@ -93,10 +93,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statisticsQualityUnknown => '不明';
 
   @override
-  String get statisticsPlaybackTotalLabel => '累計再生回数';
+  String get statisticsHistoricalListeningLabel => '再生時間の累計';
 
   @override
-  String get statisticsPlaybackTotalSubtitle => '保存されている再生回数の合計';
+  String get statisticsHistoricalListeningHint =>
+      '再生中のみ経過時間を累計します（一時停止・停止は含みません）。再生速度には連動しません。このバージョンから保存します。強制終了すると未書き込みの数秒が失われることがあります（約8秒ごとに記録）。';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '再生開始の累計';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '再生開始ごとに 1 と数えた保存済みの回数です。';
 
   @override
   String get statisticsPlaybackDistinctLabel => '再生履歴のある曲';

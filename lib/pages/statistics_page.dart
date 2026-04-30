@@ -9,6 +9,7 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/song_audio_quality.dart';
@@ -21,12 +22,14 @@ class _PlaybackHiveSlice {
     required this.tracksWithCounts,
     required this.totalPlayEvents,
     required this.odCachedCount,
+    required this.totalListenedWallMs,
   });
 
   final int recentEntries;
   final int tracksWithCounts;
   final int totalPlayEvents;
   final int odCachedCount;
+  final int totalListenedWallMs;
 }
 
 /// 抽屉入口：本地曲库规模、收听累计、歌单与 OneDrive 概要。
@@ -55,12 +58,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
     super.didChangeDependencies();
     if (!_primedHiveSlice) {
       _primedHiveSlice = true;
+      MusicService.flushListeningWallClockIntoHive();
       _sliceFuture = _loadSlice(context.read<OneDriveController>());
     }
   }
 
   Future<void> _reload(BuildContext context, OneDriveController od) async {
     final l10n = AppLocalizations.of(context);
+    MusicService.flushListeningWallClockIntoHive();
     showAppSnackBar(context, l10n.statisticsReloadStarted);
     final fut = _loadSlice(od);
     setState(() {
@@ -87,13 +92,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Future<_PlaybackHiveSlice> _loadSlice(OneDriveController od) async {
     final recent = await RecentPlayService.getRecentListStoredCount();
     final totals = await RecentPlayService.getPlayCountTotals();
+    final listenedMs = await RecentPlayService.getTotalListenedMilliseconds();
     final cached = await od.loadLocallyCachedOneDriveSongs();
     return _PlaybackHiveSlice(
       recentEntries: recent,
       tracksWithCounts: totals.tracksWithCounts,
       totalPlayEvents: totals.totalPlayEvents,
       odCachedCount: cached.length,
+      totalListenedWallMs: listenedMs,
     );
+  }
+
+  String _formatListeningTotal(AppLocalizations l10n, int ms) {
+    if (ms <= 0) return l10n.statisticsDurationMOnly(0);
+    return _formatDuration(l10n, Duration(milliseconds: ms));
   }
 
   String _formatDuration(AppLocalizations l10n, Duration d) {
@@ -360,6 +372,16 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             ),
                           )
                         else ...[
+                          _tile(
+                            context,
+                            icon: Icons.timer_outlined,
+                            title: l10n.statisticsHistoricalListeningLabel,
+                            value: _formatListeningTotal(
+                              l10n,
+                              slice.totalListenedWallMs,
+                            ),
+                            subtitle: l10n.statisticsHistoricalListeningHint,
+                          ),
                           _tile(
                             context,
                             icon: Icons.play_circle_outline,

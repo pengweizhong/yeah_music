@@ -92,10 +92,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statisticsQualityUnknown => '未知';
 
   @override
-  String get statisticsPlaybackTotalLabel => '累计播放次数';
+  String get statisticsHistoricalListeningLabel => '历史听歌时长';
 
   @override
-  String get statisticsPlaybackTotalSubtitle => '本地记录的播放次数之和';
+  String get statisticsHistoricalListeningHint =>
+      '仅在播放器处于播放状态时累计墙上时钟（暂停、停止不计）；倍速不改变累计规则。自本版本起写入本地；强制退出可能丢失尚未落盘的数秒（按批写入）。';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '听的总歌数';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '本地累计播放次数（每次开始播放计一次）';
 
   @override
   String get statisticsPlaybackDistinctLabel => '有播放记录的曲目数';
@@ -2341,10 +2348,17 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get statisticsQualityUnknown => '未知';
 
   @override
-  String get statisticsPlaybackTotalLabel => '累计播放次数';
+  String get statisticsHistoricalListeningLabel => '历史听歌时长';
 
   @override
-  String get statisticsPlaybackTotalSubtitle => '本地记录的播放次数之和';
+  String get statisticsHistoricalListeningHint =>
+      '仅在播放器处于播放状态时累计墙上时钟（暂停、停止不计）；倍速不改变累计规则。自本版本起写入本地；强制退出可能丢失尚未落盘的数秒（按批写入）。';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '听的总歌数';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '本地累计播放次数（每次开始播放计一次）';
 
   @override
   String get statisticsPlaybackDistinctLabel => '有播放记录的曲目数';
@@ -4590,10 +4604,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get statisticsQualityUnknown => '未知';
 
   @override
-  String get statisticsPlaybackTotalLabel => '累計播放次數';
+  String get statisticsHistoricalListeningLabel => '歷史聽歌時長';
 
   @override
-  String get statisticsPlaybackTotalSubtitle => '本機記錄的播放次數之和';
+  String get statisticsHistoricalListeningHint =>
+      '僅在播放器處於播放狀態時累計墙上時鐘（暫停、停止不計）；倍速不改變累計規則。自本版本起寫入本機；強制結束可能遺失尚未寫入的數秒（分批寫入）。';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '聽的總歌數';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '本機累計播放次數（每次開始播放計一次）';
 
   @override
   String get statisticsPlaybackDistinctLabel => '有播放記錄的曲目數';

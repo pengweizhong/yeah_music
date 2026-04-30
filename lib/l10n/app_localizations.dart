@@ -264,16 +264,28 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get statisticsQualityUnknown;
 
+  /// No description provided for @statisticsHistoricalListeningLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening time'**
+  String get statisticsHistoricalListeningLabel;
+
+  /// No description provided for @statisticsHistoricalListeningHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall-clock time while playback is active (paused time excluded). Total does not scale with playback speed. Stored from this version onward; force-quitting may lose a few seconds not yet flushed (~8s batches).'**
+  String get statisticsHistoricalListeningHint;
+
   /// No description provided for @statisticsPlaybackTotalLabel.
   ///
   /// In en, this message translates to:
-  /// **'Total play events'**
+  /// **'Total listens'**
   String get statisticsPlaybackTotalLabel;
 
   /// No description provided for @statisticsPlaybackTotalSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sum of stored play counts'**
+  /// **'Stored play starts—each time playback begins counts once.'**
   String get statisticsPlaybackTotalSubtitle;
 
   /// No description provided for @statisticsPlaybackDistinctLabel.

@@ -95,10 +95,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsQualityUnknown => 'Unknown';
 
   @override
-  String get statisticsPlaybackTotalLabel => 'Total play events';
+  String get statisticsHistoricalListeningLabel => 'Listening time';
 
   @override
-  String get statisticsPlaybackTotalSubtitle => 'Sum of stored play counts';
+  String get statisticsHistoricalListeningHint =>
+      'Wall-clock time while playback is active (paused time excluded). Total does not scale with playback speed. Stored from this version onward; force-quitting may lose a few seconds not yet flushed (~8s batches).';
+
+  @override
+  String get statisticsPlaybackTotalLabel => 'Total listens';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle =>
+      'Stored play starts—each time playback begins counts once.';
 
   @override
   String get statisticsPlaybackDistinctLabel => 'Tracks with play history';

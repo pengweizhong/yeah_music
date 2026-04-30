@@ -9,6 +9,7 @@ import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
 import 'package:yeah_music/utils/application_utils.dart';
@@ -54,6 +55,55 @@ class MusicService {
 
   /// 串行化换源；链上任务的返回值由各 API（如 [playSong]）自行向外透出。
   static Future _playChain = Future.value();
+
+  static StreamSubscription<bool>? _listeningPlayingSub;
+  static Timer? _listeningPeriodicFlushTimer;
+  static DateTime? _listeningWallAnchor;
+
+  /// 订阅播放器 [playing] 状态，按墙上时钟累计真实收听时长并写入 Hive（暂停、停止不计）。
+  /// 应在 Hive 初始化成功后调用一次。
+  static void attachListeningTimeTracker() {
+    if (_listeningPlayingSub != null) return;
+    _listeningPlayingSub =
+        _player.playingStream.listen(_onPlayingChangedForListeningTracker);
+  }
+
+  static void _onPlayingChangedForListeningTracker(bool playing) {
+    if (playing) {
+      _listeningWallAnchor = DateTime.now();
+      _listeningPeriodicFlushTimer?.cancel();
+      _listeningPeriodicFlushTimer =
+          Timer.periodic(const Duration(seconds: 8), (_) {
+        if (!_player.playing) return;
+        _flushListeningWallClock(periodic: true);
+      });
+    } else {
+      _listeningPeriodicFlushTimer?.cancel();
+      _listeningPeriodicFlushTimer = null;
+      _flushListeningWallClock(periodic: false);
+    }
+  }
+
+  static void _flushListeningWallClock({required bool periodic}) {
+    final anchor = _listeningWallAnchor;
+    if (anchor == null) return;
+    final now = DateTime.now();
+    var ms = now.difference(anchor).inMilliseconds;
+    if (periodic) {
+      _listeningWallAnchor = now;
+    } else {
+      _listeningWallAnchor = null;
+    }
+    if (ms <= 0) return;
+    if (ms > 600000) ms = 600000;
+    unawaited(RecentPlayService.addListenedMilliseconds(ms));
+  }
+
+  /// 将当前播放段的已历时写入 Hive（锚点顺延）。统计刷新或进入统计页时可调用以使累计更接近实时。
+  static void flushListeningWallClockIntoHive() {
+    if (!_player.playing || _listeningWallAnchor == null) return;
+    _flushListeningWallClock(periodic: true);
+  }
 
   static void _invalidateAndroidQueueReuse() {
     _lastAndroidQueueRef = null;
@@ -465,6 +515,13 @@ class MusicService {
   Future<void> setLoopMode(LoopMode mode) async => _player.setLoopMode(mode);
 
   Future<void> dispose() async {
+    _listeningPeriodicFlushTimer?.cancel();
+    _listeningPeriodicFlushTimer = null;
+    if (_listeningWallAnchor != null) {
+      _flushListeningWallClock(periodic: false);
+    }
+    await _listeningPlayingSub?.cancel();
+    _listeningPlayingSub = null;
     return _player.dispose();
   }
 

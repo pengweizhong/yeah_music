@@ -32,6 +32,7 @@ import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 import 'package:yeah_music/services/android_media_session_bridge.dart';
+import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 
 Future<void> main(List<String> args) async {
@@ -135,6 +136,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
       return;
     }
     if (!mounted) return;
+    MusicService.attachListeningTimeTracker();
     _disposePreHiveResources();
     appLog.i('应用启动成功');
   }

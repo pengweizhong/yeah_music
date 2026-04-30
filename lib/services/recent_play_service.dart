@@ -8,6 +8,7 @@ class RecentPlayService {
 
   static const String _hiveKey = 'recent_song_paths';
   static const String _playCountKey = 'song_play_count_map';
+  static const String _totalListenedWallMsKey = 'total_listened_wall_clock_ms';
 
   /// Hive 中保留的最近播放路径上限（最新在前，超出则从末尾丢弃）。
   static const int maxStoredRecentPaths = 100;
@@ -209,6 +210,27 @@ class RecentPlayService {
     }
   }
 
+  /// 累计「播放器处于播放状态」的墙上时钟毫秒（由播放层分段写入 Hive）。
+  static Future<int> getTotalListenedMilliseconds() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_totalListenedWallMsKey);
+      return _asIntCount(v);
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// 累加收听毫秒（忽略非正增量）。
+  static Future<void> addListenedMilliseconds(int deltaMs) async {
+    if (deltaMs <= 0) return;
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final cur = _asIntCount(box.get(_totalListenedWallMsKey));
+      await box.put(_totalListenedWallMsKey, cur + deltaMs);
+    } catch (_) {}
+  }
+
   /// 当前保存在 Hive 中的「最近播放」路径条数（最多 [maxStoredRecentPaths]）。
   static Future<int> getRecentListStoredCount() async {
     try {
@@ -228,26 +250,34 @@ class RecentPlayService {
   /// 播放次数映射：有记录的曲目数（次数 > 0）、累计播放事件总和。
   static Future<({int tracksWithCounts, int totalPlayEvents})>
       getPlayCountTotals() async {
+    final map = await getPlayCountMap();
+    var tracks = 0;
+    var total = 0;
+    for (final c in map.values) {
+      tracks++;
+      total += c;
+    }
+    return (tracksWithCounts: tracks, totalPlayEvents: total);
+  }
+
+  /// 路径 → 累计播放次数（路径为 Hive 中存的原样 trimmed，与 [recordPath] 写入一致）。
+  static Future<Map<String, int>> getPlayCountMap() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       final raw = box.get(_playCountKey);
-      if (raw is! Map) {
-        return (tracksWithCounts: 0, totalPlayEvents: 0);
-      }
-      var tracks = 0;
-      var total = 0;
+      if (raw is! Map) return {};
+      final out = <String, int>{};
       for (final e in raw.entries) {
         if (e.key is! String) continue;
         final k = (e.key as String).trim();
         if (k.isEmpty) continue;
         final c = _asIntCount(e.value);
         if (c <= 0) continue;
-        tracks++;
-        total += c;
+        out[k] = c;
       }
-      return (tracksWithCounts: tracks, totalPlayEvents: total);
+      return out;
     } catch (_) {
-      return (tracksWithCounts: 0, totalPlayEvents: 0);
+      return {};
     }
   }
 }
