@@ -214,6 +214,34 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsAboutDialogVersionTapHint => 'Tap to check for updates';
+
+  @override
+  String get settingsAboutUpdateChecking => 'Checking for updates…';
+
+  @override
+  String get settingsAboutUpdateAlreadyLatest =>
+      'You\'re on the latest version';
+
+  @override
+  String get settingsAboutUpdateAvailableTitle => 'Update available';
+
+  @override
+  String settingsAboutUpdateAvailableBody(String latest, String current) {
+    return 'Latest release is v$latest. You\'re on v$current.';
+  }
+
+  @override
+  String get settingsAboutUpdateOpenReleases => 'Open releases';
+
+  @override
+  String get settingsAboutUpdateCheckFailed => 'Couldn\'t check for updates';
+
+  @override
+  String get settingsAboutUpdateNoRelease =>
+      'No GitHub release found for this repo yet.';
+
+  @override
   String get settingsSponsorTitle => 'Support';
 
   @override

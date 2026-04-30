@@ -93,6 +93,20 @@
       "buildNumber": { "type": "String" }
     }
   },
+  "settingsAboutDialogVersionTapHint": "タップして更新を確認",
+  "settingsAboutUpdateChecking": "更新を確認しています…",
+  "settingsAboutUpdateAlreadyLatest": "最新バージョンです",
+  "settingsAboutUpdateAvailableTitle": "アップデートがあります",
+  "settingsAboutUpdateAvailableBody": "最新は v{latest} です。お使いのバージョンは v{current} です。",
+  "@settingsAboutUpdateAvailableBody": {
+    "placeholders": {
+      "latest": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "settingsAboutUpdateOpenReleases": "リリースページを開く",
+  "settingsAboutUpdateCheckFailed": "更新を確認できませんでした",
+  "settingsAboutUpdateNoRelease": "このリポジトリには GitHub のリリースがありません",
   "settingsSponsorTitle": "支援・スポンサー",
   "settingsSponsorSubtitle": "無料アプリ · Star と任意のチップ",
   "settingsSponsorSectionFreeTitle": "Yeah Music は完全無料",

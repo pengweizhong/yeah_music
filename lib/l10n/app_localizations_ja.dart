@@ -208,6 +208,32 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get settingsAboutDialogVersionTapHint => 'タップして更新を確認';
+
+  @override
+  String get settingsAboutUpdateChecking => '更新を確認しています…';
+
+  @override
+  String get settingsAboutUpdateAlreadyLatest => '最新バージョンです';
+
+  @override
+  String get settingsAboutUpdateAvailableTitle => 'アップデートがあります';
+
+  @override
+  String settingsAboutUpdateAvailableBody(String latest, String current) {
+    return '最新は v$latest です。お使いのバージョンは v$current です。';
+  }
+
+  @override
+  String get settingsAboutUpdateOpenReleases => 'リリースページを開く';
+
+  @override
+  String get settingsAboutUpdateCheckFailed => '更新を確認できませんでした';
+
+  @override
+  String get settingsAboutUpdateNoRelease => 'このリポジトリには GitHub のリリースがありません';
+
+  @override
   String get settingsSponsorTitle => '支援・スポンサー';
 
   @override

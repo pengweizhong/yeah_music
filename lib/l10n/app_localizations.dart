@@ -468,6 +468,54 @@ abstract class AppLocalizations {
   /// **'Build {buildNumber}'**
   String settingsAboutDialogBuildLabel(String buildNumber);
 
+  /// No description provided for @settingsAboutDialogVersionTapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to check for updates'**
+  String get settingsAboutDialogVersionTapHint;
+
+  /// No description provided for @settingsAboutUpdateChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get settingsAboutUpdateChecking;
+
+  /// No description provided for @settingsAboutUpdateAlreadyLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the latest version'**
+  String get settingsAboutUpdateAlreadyLatest;
+
+  /// No description provided for @settingsAboutUpdateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get settingsAboutUpdateAvailableTitle;
+
+  /// No description provided for @settingsAboutUpdateAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest release is v{latest}. You\'re on v{current}.'**
+  String settingsAboutUpdateAvailableBody(String latest, String current);
+
+  /// No description provided for @settingsAboutUpdateOpenReleases.
+  ///
+  /// In en, this message translates to:
+  /// **'Open releases'**
+  String get settingsAboutUpdateOpenReleases;
+
+  /// No description provided for @settingsAboutUpdateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates'**
+  String get settingsAboutUpdateCheckFailed;
+
+  /// No description provided for @settingsAboutUpdateNoRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'No GitHub release found for this repo yet.'**
+  String get settingsAboutUpdateNoRelease;
+
   /// No description provided for @settingsSponsorTitle.
   ///
   /// In en, this message translates to:

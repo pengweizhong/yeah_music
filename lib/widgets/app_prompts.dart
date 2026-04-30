@@ -5,11 +5,15 @@
 /// [showAppScrollMessageDialog]、[showAppAboutDialog]，以保持视觉一致。
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/services/github_release_update_checker.dart';
 
 /// 全局 Snackbar 气质：浮动、圆角、与磨砂弹层同系的深色壳层。
 enum AppSnackKind {
@@ -567,6 +571,161 @@ Future<void> showAppScrollMessageDialog({
   );
 }
 
+/// 关于页「检查更新」专用结果提示（磨砂卡片 + 单按钮），不使用全局 Snackbar。
+Future<void> _showAboutUpdateCheckFinishedDialog({
+  required BuildContext context,
+  required bool success,
+  required String title,
+  String? subtitle,
+}) {
+  return showFrostedDialog<void>(
+    context: context,
+    maxWidth: 400,
+    child: Builder(
+      builder: (ctx) {
+        final scheme = Theme.of(ctx).colorScheme;
+        final accent = success ? scheme.primary : scheme.error;
+        final icon =
+            success ? Icons.check_circle_outline : Icons.error_outline;
+        final sub = subtitle;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Icon(icon, size: 36, color: accent),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                if (sub != null && sub.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    sub,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.48,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(AppLocalizations.of(ctx).actionOK),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Future<void> _handleAboutDialogVersionTap(BuildContext dialogContext) async {
+  final l10n = AppLocalizations.of(dialogContext);
+  final navigator = Navigator.of(dialogContext);
+
+  showAppBlockingProgressDialog(
+    context: dialogContext,
+    title: l10n.settingsAboutUpdateChecking,
+    linearProgressBar: true,
+  );
+
+  try {
+    final outcome =
+        await GithubReleaseUpdateChecker.checkAgainstLatestRelease();
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+    if (!dialogContext.mounted) return;
+
+    switch (outcome) {
+      case GithubUpdateCheckUpToDate():
+        if (!dialogContext.mounted) return;
+        await _showAboutUpdateCheckFinishedDialog(
+          context: dialogContext,
+          success: true,
+          title: l10n.settingsAboutUpdateAlreadyLatest,
+        );
+      case GithubUpdateCheckNewVersion(
+          :final latestVersion,
+          :final releasePageUrl,
+        ):
+        if (!dialogContext.mounted) return;
+        final go = await showAppConfirmDialog(
+          context: dialogContext,
+          title: l10n.settingsAboutUpdateAvailableTitle,
+          message: l10n.settingsAboutUpdateAvailableBody(
+            latestVersion,
+            AppProductInfo.version,
+          ),
+          icon: Icons.system_update_outlined,
+          cancelLabel: l10n.settingsAboutDialogClose,
+          confirmLabel: l10n.settingsAboutUpdateOpenReleases,
+        );
+        if (go == true && dialogContext.mounted) {
+          final uri = Uri.tryParse(releasePageUrl);
+          if (uri != null) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        }
+      case GithubUpdateCheckFailure(:final reasonCode):
+        if (!dialogContext.mounted) return;
+        await _showAboutUpdateCheckFinishedDialog(
+          context: dialogContext,
+          success: false,
+          title: l10n.settingsAboutUpdateCheckFailed,
+          subtitle: reasonCode == 'no_release'
+              ? l10n.settingsAboutUpdateNoRelease
+              : null,
+        );
+    }
+  } on TimeoutException catch (_) {
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+    if (!dialogContext.mounted) return;
+    await _showAboutUpdateCheckFinishedDialog(
+      context: dialogContext,
+      success: false,
+      title: l10n.settingsAboutUpdateCheckFailed,
+    );
+  } catch (_) {
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+    if (!dialogContext.mounted) return;
+    await _showAboutUpdateCheckFinishedDialog(
+      context: dialogContext,
+      success: false,
+      title: l10n.settingsAboutUpdateCheckFailed,
+    );
+  }
+}
+
 /// 「关于」对话框（磨砂与其它提示一致）。
 void showAppAboutDialog(BuildContext context) {
   final l10n = AppLocalizations.of(context);
@@ -621,23 +780,44 @@ void showAppAboutDialog(BuildContext context) {
                 ),
                 const SizedBox(height: 8),
                 Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      l10n.settingsAboutDialogVersionLabel(
-                        AppProductInfo.version,
-                      ),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w500,
+                  child: Tooltip(
+                    message: l10n.settingsAboutDialogVersionTapHint,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => unawaited(_handleAboutDialogVersionTap(ctx)),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.system_update_outlined,
+                                size: 17,
+                                color: scheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.settingsAboutDialogVersionLabel(
+                                  AppProductInfo.version,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),

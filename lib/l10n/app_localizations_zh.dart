@@ -205,6 +205,32 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get settingsAboutDialogVersionTapHint => '点击检查更新';
+
+  @override
+  String get settingsAboutUpdateChecking => '正在检查更新…';
+
+  @override
+  String get settingsAboutUpdateAlreadyLatest => '已是最新版本';
+
+  @override
+  String get settingsAboutUpdateAvailableTitle => '发现新版本';
+
+  @override
+  String settingsAboutUpdateAvailableBody(String latest, String current) {
+    return '远程版本为 v$latest，当前为 v$current。';
+  }
+
+  @override
+  String get settingsAboutUpdateOpenReleases => '打开发行页面';
+
+  @override
+  String get settingsAboutUpdateCheckFailed => '检查更新失败';
+
+  @override
+  String get settingsAboutUpdateNoRelease => '仓库尚无 GitHub Release';
+
+  @override
   String get settingsSponsorTitle => '赞助与支持';
 
   @override
@@ -2520,6 +2546,32 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get settingsAboutDialogVersionTapHint => '点击检查更新';
+
+  @override
+  String get settingsAboutUpdateChecking => '正在检查更新…';
+
+  @override
+  String get settingsAboutUpdateAlreadyLatest => '已是最新版本';
+
+  @override
+  String get settingsAboutUpdateAvailableTitle => '发现新版本';
+
+  @override
+  String settingsAboutUpdateAvailableBody(String latest, String current) {
+    return '远程版本为 v$latest，当前为 v$current。';
+  }
+
+  @override
+  String get settingsAboutUpdateOpenReleases => '打开发行页面';
+
+  @override
+  String get settingsAboutUpdateCheckFailed => '检查更新失败';
+
+  @override
+  String get settingsAboutUpdateNoRelease => '仓库尚无 GitHub Release';
+
+  @override
   String get settingsSponsorTitle => '赞助与支持';
 
   @override
@@ -4833,6 +4885,32 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String settingsAboutDialogBuildLabel(String buildNumber) {
     return '建置編號 $buildNumber';
   }
+
+  @override
+  String get settingsAboutDialogVersionTapHint => '點一下檢查更新';
+
+  @override
+  String get settingsAboutUpdateChecking => '正在檢查更新…';
+
+  @override
+  String get settingsAboutUpdateAlreadyLatest => '已是最新版本';
+
+  @override
+  String get settingsAboutUpdateAvailableTitle => '發現新版本';
+
+  @override
+  String settingsAboutUpdateAvailableBody(String latest, String current) {
+    return '遠端版本為 v$latest，目前為 v$current。';
+  }
+
+  @override
+  String get settingsAboutUpdateOpenReleases => '打開發行頁面';
+
+  @override
+  String get settingsAboutUpdateCheckFailed => '檢查更新失敗';
+
+  @override
+  String get settingsAboutUpdateNoRelease => '存放庫尚無 GitHub Release';
 
   @override
   String get settingsSponsorTitle => '贊助與支援';

@@ -93,6 +93,20 @@
       "buildNumber": { "type": "String" }
     }
   },
+  "settingsAboutDialogVersionTapHint": "點一下檢查更新",
+  "settingsAboutUpdateChecking": "正在檢查更新…",
+  "settingsAboutUpdateAlreadyLatest": "已是最新版本",
+  "settingsAboutUpdateAvailableTitle": "發現新版本",
+  "settingsAboutUpdateAvailableBody": "遠端版本為 v{latest}，目前為 v{current}。",
+  "@settingsAboutUpdateAvailableBody": {
+    "placeholders": {
+      "latest": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "settingsAboutUpdateOpenReleases": "打開發行頁面",
+  "settingsAboutUpdateCheckFailed": "檢查更新失敗",
+  "settingsAboutUpdateNoRelease": "存放庫尚無 GitHub Release",
   "settingsSponsorTitle": "贊助與支援",
   "settingsSponsorSubtitle": "應用程式免費 · Star 或自願打賞",
   "settingsSponsorSectionFreeTitle": "Yeah Music 完全免費",

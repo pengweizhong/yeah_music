@@ -93,6 +93,20 @@
       "buildNumber": { "type": "String" }
     }
   },
+  "settingsAboutDialogVersionTapHint": "点击检查更新",
+  "settingsAboutUpdateChecking": "正在检查更新…",
+  "settingsAboutUpdateAlreadyLatest": "已是最新版本",
+  "settingsAboutUpdateAvailableTitle": "发现新版本",
+  "settingsAboutUpdateAvailableBody": "远程版本为 v{latest}，当前为 v{current}。",
+  "@settingsAboutUpdateAvailableBody": {
+    "placeholders": {
+      "latest": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "settingsAboutUpdateOpenReleases": "打开发行页面",
+  "settingsAboutUpdateCheckFailed": "检查更新失败",
+  "settingsAboutUpdateNoRelease": "仓库尚无 GitHub Release",
   "settingsSponsorTitle": "赞助与支持",
   "settingsSponsorSubtitle": "应用免费 · Star 或自愿打赏",
   "settingsSponsorSectionFreeTitle": "Yeah Music 完全免费",

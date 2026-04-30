@@ -92,6 +92,20 @@
       "buildNumber": { "type": "String" }
     }
   },
+  "settingsAboutDialogVersionTapHint": "Tap to check for updates",
+  "settingsAboutUpdateChecking": "Checking for updates…",
+  "settingsAboutUpdateAlreadyLatest": "You're on the latest version",
+  "settingsAboutUpdateAvailableTitle": "Update available",
+  "settingsAboutUpdateAvailableBody": "Latest release is v{latest}. You're on v{current}.",
+  "@settingsAboutUpdateAvailableBody": {
+    "placeholders": {
+      "latest": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "settingsAboutUpdateOpenReleases": "Open releases",
+  "settingsAboutUpdateCheckFailed": "Couldn't check for updates",
+  "settingsAboutUpdateNoRelease": "No GitHub release found for this repo yet.",
   "settingsSponsorTitle": "Support",
   "settingsSponsorSubtitle": "Free app · Stars & optional tips",
   "settingsSponsorSectionFreeTitle": "Yeah Music is completely free",
