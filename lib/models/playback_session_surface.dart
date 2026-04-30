@@ -6,9 +6,12 @@ enum PlaybackSessionSurface {
   /// 最近播放页、主页「最近」条等（顺序即最近序）
   recentList,
 
+  /// 最多播放全屏列表等（顺序为播放次数排行）
+  mostPlayedList,
+
   /// 某用户歌单
   userPlaylist,
 
-  /// 主页「最多播放」等无独立全屏列表的临时队列
+  /// 其他临时队列
   adHoc,
 }

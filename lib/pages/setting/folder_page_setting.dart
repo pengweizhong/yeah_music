@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 import '../../widgets/song_playlist_page_shell.dart';
 import '../../compments/bookmark_service.dart';
@@ -222,44 +223,10 @@ class FolderPageSettings extends StatelessWidget {
                           ),
                           tooltip: l10n.tooltipReloadSongs,
                           onPressed: () async {
-                            showFrostedDialog<void>(
+                            showAppBlockingProgressDialog(
                               context: context,
-                              barrierDismissible: false,
-                              child: PopScope(
-                                canPop: false,
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    24,
-                                    20,
-                                    24,
-                                    20,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        l10n.folderReloading,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      const CircularProgressIndicator(),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        l10n.folderScanningWait,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                              title: l10n.folderReloading,
+                              message: l10n.folderScanningWait,
                             );
 
                             try {
@@ -275,26 +242,24 @@ class FolderPageSettings extends StatelessWidget {
                               Navigator.of(context).pop();
 
                               // 显示成功提示
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    l10n.folderLoadOk(
-                                      folder.songList?.length ?? 0,
-                                    ),
-                                  ),
-                                  duration: const Duration(seconds: 2),
+                              showAppSnackBar(
+                                context,
+                                l10n.folderLoadOk(
+                                  folder.songList?.length ?? 0,
                                 ),
+                                kind: AppSnackKind.success,
+                                duration: const Duration(seconds: 2),
                               );
                             } catch (e) {
                               // 关闭进度对话框
                               Navigator.of(context).pop();
 
                               // 显示错误提示
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.folderLoadFailed('$e')),
-                                  duration: const Duration(seconds: 3),
-                                ),
+                              showAppSnackBar(
+                                context,
+                                l10n.folderLoadFailed('$e'),
+                                kind: AppSnackKind.error,
+                                duration: const Duration(seconds: 3),
                               );
                             }
                           },
@@ -374,56 +339,29 @@ class FolderPageSettings extends StatelessWidget {
     } on PlatformException catch (e) {
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${l10n.folderAddErrorTitle}: ${e.message ?? e.code}'),
-          duration: const Duration(seconds: 4),
-        ),
+      showAppSnackBar(
+        context,
+        '${l10n.folderAddErrorTitle}: ${e.message ?? e.code}',
+        kind: AppSnackKind.error,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
 
     if (!context.mounted) return;
     if (selectedDirectory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.folderAddNoSelection),
-          duration: const Duration(seconds: 3),
-        ),
+      showAppSnackBar(
+        context,
+        l10n.folderAddNoSelection,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
 
-    showFrostedDialog<void>(
+    showAppBlockingProgressDialog(
       context: context,
-      barrierDismissible: false,
-      child: PopScope(
-        canPop: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.folderAddLoadingTitle,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(
-                l10n.folderScanningWait,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, height: 1.3),
-              ),
-            ],
-          ),
-        ),
-      ),
+      title: l10n.folderAddLoadingTitle,
+      message: l10n.folderScanningWait,
     );
 
     try {
@@ -452,11 +390,11 @@ class FolderPageSettings extends StatelessWidget {
         playListProvider.flushAddPlaylist(addFolder);
 
         // 显示成功提示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.folderAddOk(addFolder.songList?.length ?? 0)),
-            duration: const Duration(seconds: 2),
-          ),
+        showAppSnackBar(
+          context,
+          l10n.folderAddOk(addFolder.songList?.length ?? 0),
+          kind: AppSnackKind.success,
+          duration: const Duration(seconds: 2),
         );
       }
     } catch (e) {
@@ -478,78 +416,22 @@ class FolderPageSettings extends StatelessWidget {
     }
   }
 
-  void _showRenameDialog(
+  Future<void> _showRenameDialog(
     BuildContext context,
     Folder folder,
     FolderProvider provider,
-  ) {
-    final controller = TextEditingController(text: folder.name);
-    showFrostedDialog<void>(
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final name = await showAppTextPromptDialog(
       context: context,
-      child: Builder(
-        builder: (ctx) {
-          final t = AppLocalizations.of(ctx);
-          final scheme = Theme.of(ctx).colorScheme;
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  t.folderRenameDialogTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  style: const TextStyle(color: Colors.white),
-                  cursorColor: Colors.white,
-                  decoration: InputDecoration(
-                    hintText: t.fieldNewNameHint,
-                    hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.25),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: scheme.primary),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(t.actionCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        if (controller.text.isNotEmpty) {
-                          provider.renameFolder(folder, controller.text.trim());
-                        }
-                        Navigator.pop(ctx);
-                      },
-                      child: Text(t.actionOK),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      title: l10n.folderRenameDialogTitle,
+      initialValue: folder.name ?? '',
+      hintText: l10n.fieldNewNameHint,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionOK,
     );
+    if (name != null && name.isNotEmpty && context.mounted) {
+      provider.renameFolder(folder, name);
+    }
   }
 }

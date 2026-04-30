@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
-import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -14,6 +13,7 @@ import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 const _kSelectAccent = Color(0xFF8AB4F8);
@@ -58,74 +58,14 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     BuildContext context,
     UserPlaylistProvider user,
   ) async {
-    final controller = TextEditingController();
-    final name = await showFrostedDialog<String>(
+    final l10n = AppLocalizations.of(context);
+    final name = await showAppTextPromptDialog(
       context: context,
-      maxWidth: 400,
-      child: Builder(
-        builder: (ctx) {
-          final l10n = AppLocalizations.of(ctx);
-          final scheme = Theme.of(ctx).colorScheme;
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.homeCreatePlaylist,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: const TextStyle(color: Colors.white),
-                  cursorColor: Colors.white,
-                  decoration: InputDecoration(
-                    labelText: l10n.fieldName,
-                    labelStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.25),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: scheme.primary),
-                    ),
-                  ),
-                  onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(l10n.actionCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () =>
-                          Navigator.pop(ctx, controller.text.trim()),
-                      child: Text(l10n.actionCreate),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      title: l10n.homeCreatePlaylist,
+      fieldLabel: l10n.fieldName,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionCreate,
     );
-    scheduleDisposeTextEditingController(controller);
     if (name != null && name.isNotEmpty && context.mounted) {
       await user.createPlaylist(name);
     }
@@ -144,18 +84,14 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     } else {
       if (selectedIds.isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.exportSelectFirst)));
+          showAppSnackBar(context, l10n.exportSelectFirst);
         }
         return;
       }
       map = user.buildExportMapForPlaylists(selectedIds);
       if ((map['playlists'] as List<dynamic>).isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.exportNoneToExport)));
+          showAppSnackBar(context, l10n.exportNoneToExport);
         }
         return;
       }
@@ -180,9 +116,12 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
 
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportSaved(path))));
+          l10n.exportSaved(path),
+          kind: AppSnackKind.success,
+          duration: const Duration(seconds: 2),
+        );
         if (_selectMode) {
           setState(() {
             _selectMode = false;
@@ -191,15 +130,11 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
           });
         }
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportCancelled)));
+        showAppSnackBar(context, l10n.exportCancelled);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportFailed('$e'))));
+        showAppSnackBar(context, l10n.exportFailed('$e'), kind: AppSnackKind.error);
       }
     }
   }
@@ -294,71 +229,28 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
   ) async {
     if (_selectedPlaylistIds.isEmpty) return;
     final n = _selectedPlaylistIds.length;
-    final ok = await showFrostedDialog<bool>(
+    final l10n = AppLocalizations.of(context);
+    final ok = await showAppConfirmDialog(
       context: context,
-      maxWidth: 400,
-      child: Builder(
-        builder: (ctx) {
-          final l10n = AppLocalizations.of(ctx);
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  n == 1
-                      ? l10n.playlistDeleteTitle
-                      : l10n.playlistDeleteBatchTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  n == 1
-                      ? l10n.playlistDeleteMessage
-                      : l10n.playlistDeleteBatchMessage(n),
-                  style: const TextStyle(color: Colors.white, height: 1.35),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(l10n.actionCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      style: FilledButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.red.shade700,
-                      ),
-                      child: Text(l10n.actionDelete),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      title: n == 1
+          ? l10n.playlistDeleteTitle
+          : l10n.playlistDeleteBatchTitle,
+      message: n == 1
+          ? l10n.playlistDeleteMessage
+          : l10n.playlistDeleteBatchMessage(n),
+      icon: Icons.delete_outline_rounded,
+      confirmIsDestructive: true,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionDelete,
     );
     if (ok != true || !context.mounted) return;
     final l10nAfter = AppLocalizations.of(context);
     await user.deletePlaylists(_selectedPlaylistIds);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          n == 1
-              ? l10nAfter.playlistDeletedOne
-              : l10nAfter.playlistsDeletedN(n),
-        ),
-      ),
+    showAppSnackBar(
+      context,
+      n == 1 ? l10nAfter.playlistDeletedOne : l10nAfter.playlistsDeletedN(n),
+      kind: AppSnackKind.success,
     );
     _exitSelectMode();
   }
@@ -392,9 +284,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       final bytes = picked.bytes;
       if (bytes == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.importCannotRead)));
+          showAppSnackBar(context, l10n.importCannotRead, kind: AppSnackKind.error);
         }
         return;
       }
@@ -405,66 +295,48 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         doc = parseUserPlaylistExportJson(jsonStr);
       } on FormatException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.importParseError(e.message))),
+          showAppSnackBar(
+            context,
+            l10n.importParseError(e.message),
+            kind: AppSnackKind.error,
           );
         }
         return;
       }
 
       if (!context.mounted) return;
-      final replaceAll = await showFrostedDialog<bool>(
+      final sl = AppLocalizations.of(context);
+      final replaceAll = await showAppCustomDialog<bool>(
         context: context,
+        title: sl.menuImportPlaylists,
         maxWidth: 420,
-        child: Builder(
-          builder: (ctx) {
-            final sl = AppLocalizations.of(ctx);
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    sl.menuImportPlaylists,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    child: Text(
-                      sl.importDialogBody,
-                      style: const TextStyle(color: Colors.white, height: 1.35),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(sl.actionCancel),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: Text(sl.importMerge),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: Text(sl.importReplaceAll),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+        bodyChildren: [
+          SingleChildScrollView(
+            child: Text(sl.importDialogBody),
+          ),
+        ],
+        actions: [
+          Builder(
+            builder: (ctx) => Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(sl.actionCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(sl.importMerge),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(sl.importReplaceAll),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
 
       if (replaceAll == null || !context.mounted) return;
@@ -472,18 +344,20 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       await user.applyImportedDocument(doc, replaceAll: replaceAll);
       if (context.mounted) {
         final m = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(replaceAll ? m.importReplaced : m.importMerged),
-          ),
+        showAppSnackBar(
+          context,
+          replaceAll ? m.importReplaced : m.importMerged,
+          kind: AppSnackKind.success,
         );
       }
     } catch (e) {
       if (context.mounted) {
         final m = AppLocalizations.of(context);
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(m.importFailed('$e'))));
+          m.importFailed('$e'),
+          kind: AppSnackKind.error,
+        );
       }
     }
   }

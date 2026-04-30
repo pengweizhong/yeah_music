@@ -9,6 +9,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
 import 'package:yeah_music/widgets/onedrive_bulk_download_sheet.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 /// 从 [OneDriveBrowserPage] 退回时传给「添加到云端索引」的选中文件夹。
@@ -86,20 +87,20 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
       (item: item, title: item.name, subtitle: folderLabel),
     ]);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.oneDriveEnqueueAddedSingle(item.name)),
-        action: SnackBarAction(
-          label: l10n.oneDriveDownloadViewQueue,
-          onPressed: () {
-            Navigator.push<void>(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(),
-              ),
-            );
-          },
-        ),
+    showAppSnackBar(
+      context,
+      l10n.oneDriveEnqueueAddedSingle(item.name),
+      kind: AppSnackKind.success,
+      action: SnackBarAction(
+        label: l10n.oneDriveDownloadViewQueue,
+        onPressed: () {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const OneDriveDownloadQueuePage(),
+            ),
+          );
+        },
       ),
     );
   }
@@ -110,9 +111,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
         .where((e) => !e.isFolder && OneDriveConfig.isAudioFileName(e.name))
         .toList();
     if (audioItems.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveEmptyFolder)));
+      showAppSnackBar(context, l10n.oneDriveEmptyFolder);
       return;
     }
     final folderLabel = _stack.isEmpty

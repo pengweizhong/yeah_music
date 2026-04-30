@@ -20,6 +20,7 @@ import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
@@ -111,27 +112,17 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
       return;
     }
-    final ok = await showDialog<bool>(
+    final ok = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.libraryBatchDeleteConfirmTitle),
-        content: Text(l10n.libraryBatchDeleteConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.actionDelete),
-          ),
-        ],
-      ),
+      title: l10n.libraryBatchDeleteConfirmTitle,
+      message: l10n.libraryBatchDeleteConfirmMessage,
+      icon: Icons.delete_outline_rounded,
+      confirmIsDestructive: true,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionDelete,
     );
     if (ok != true || !context.mounted) return;
     final folder = context.read<FolderProvider>();
@@ -147,17 +138,17 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
       );
       if (context.mounted) {
         _exitBatchSelect();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.playlistDeletedOne)),
+        showAppSnackBar(
+          context,
+          l10n.librarySongsDeletedN(selected.length),
+          kind: AppSnackKind.success,
         );
         unawaited(_reload());
       }
     } catch (e) {
       appLog.e('cached playlist batch delete failed', error: e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
     }
   }
@@ -166,9 +157,7 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
       return;
     }
     final ok = await showAddManyToUserPlaylistsSheet(context, selected);
@@ -182,30 +171,28 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     final od = context.read<OneDriveDownloadQueueController>();
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
       return;
     }
     try {
       await od.enqueueLibraryUploads(selected);
       if (!context.mounted) return;
       _exitBatchSelect();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.libraryBatchUploadQueued),
-          action: SnackBarAction(
-            label: l10n.libraryBatchOpenQueue,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const OneDriveDownloadQueuePage(
-                    initialTab: OneDriveTransferQueueTab.upload,
-                  ),
+      showAppSnackBar(
+        context,
+        l10n.libraryBatchUploadQueued,
+        kind: AppSnackKind.success,
+        action: SnackBarAction(
+          label: l10n.libraryBatchOpenQueue,
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const OneDriveDownloadQueuePage(
+                  initialTab: OneDriveTransferQueueTab.upload,
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       );
     } on StateError catch (e) {
@@ -216,12 +203,10 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
           : msg.contains('upload folder unset')
               ? l10n.libraryBatchUploadNeedCloudFolder
               : '$e';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+      showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
     }
   }

@@ -258,6 +258,15 @@ ThemeData frostedDialogContentTheme(BuildContext context) {
   );
 }
 
+/// 与 [Material Dialog] 默认水平 inset（约每侧 40）对齐，用于卡片可用宽度。
+double _frostedDialogCardWidth(BuildContext context, double maxWidth) {
+  final inset = DialogTheme.of(context).insetPadding ??
+      const EdgeInsets.symmetric(horizontal: 40, vertical: 24);
+  final screenW = MediaQuery.sizeOf(context).width;
+  final avail = screenW - inset.horizontal;
+  return avail.clamp(280.0, maxWidth);
+}
+
 /// 与 [FrostedGlassDialog] 同材质的全局居中弹窗
 Future<T?> showFrostedDialog<T>({
   required BuildContext context,
@@ -268,16 +277,23 @@ Future<T?> showFrostedDialog<T>({
   return showDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    builder: (ctx) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: Theme(
-        data: frostedDialogContentTheme(ctx),
-        child: FrostedGlassDialog(
-          maxWidth: maxWidth,
-          child: child,
+    builder: (ctx) {
+      // Dialog 内 Material 会按子组件固有宽度收缩；不设固定宽度时正文仅在窄列内居中，看起来像偏左。
+      final cardW = _frostedDialogCardWidth(ctx, maxWidth);
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: SizedBox(
+          width: cardW,
+          child: Theme(
+            data: frostedDialogContentTheme(ctx),
+            child: FrostedGlassDialog(
+              maxWidth: cardW,
+              child: child,
+            ),
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
 

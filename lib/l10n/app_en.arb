@@ -351,6 +351,7 @@
   "homeEntryLibrary": "Library",
   "homeEntryMyPlaylists": "My playlists",
   "homeEntryRecent": "Recent",
+  "homeEntryMostPlayed": "Top plays",
   "homeEntryDiscover": "Discover",
   "homeEntryCloudLibrary": "Cloud library",
   "homeEntryOneDriveCachePlaylist": "Cached playlist",
@@ -365,6 +366,8 @@
   "homeActionAll": "All",
   "homeMostPlayedPathMismatch": "Play counts no longer match the library. Rescan your music folder if files moved, then play a few more times.",
   "homeMostPlayedEmpty": "No play stats yet. Play more songs in the library or a playlist to build a top list.",
+  "mostPlayedSwitchSortAscending": "Switch to ascending play count (least plays first)",
+  "mostPlayedSwitchSortDescending": "Switch to descending play count (most plays first)",
   "homePlayCount": "Played {c} times",
   "@homePlayCount": {
     "placeholders": {
@@ -585,6 +588,8 @@
   "@importFailed": { "placeholders": { "error": { "type": "String" } } },
   "playlistsDeletedN": "Deleted {n} playlist(s)",
   "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "librarySongsDeletedN": "Deleted {n} song(s)",
+  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
   "fabNewPlaylist": "New playlist",
   "emptyPlaylistsHint": "No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import/export and multi-select.",
   "sortByName": "By name",

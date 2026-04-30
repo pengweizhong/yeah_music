@@ -26,22 +26,24 @@ import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
-/// 最近播放（按 [RecentPlayService] 记录的路径解析；交互与曲库列表对齐）。
-class RecentPlaysPage extends StatefulWidget {
-  const RecentPlaysPage({super.key});
+/// 最多播放（按 [RecentPlayService] 累计次数排序；列表展示完整次数，交互与最近播放页对齐）。
+class MostPlayedPage extends StatefulWidget {
+  const MostPlayedPage({super.key});
 
   @override
-  State<RecentPlaysPage> createState() => _RecentPlaysPageState();
+  State<MostPlayedPage> createState() => _MostPlayedPageState();
 }
 
-class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
+class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
   final ScrollController _listScrollController = ScrollController();
   bool _routeObserverSubscribed = false;
   bool _didInitialScrollToCurrent = false;
   bool _initialScrollInFlight = false;
 
-  List<String> _paths = [];
+  List<({String path, int count})> _topRaw = [];
   bool _loading = true;
+  /// `true`：播放次数多到少（默认）；`false`：少到多。
+  bool _sortPlayCountDescending = true;
 
   bool _batchSelect = false;
   final Set<String> _selectedNormPaths = {};
@@ -67,15 +69,16 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
   void didPopNext() {
     if (!mounted) return;
     final playList = context.read<PlayListProvider>();
-    if (!playList.playbackSessionIsRecentList) return;
-    final items = playList.resolveRecentSongsFromPaths(_paths);
-    if (items.isEmpty) return;
+    if (!playList.playbackSessionIsMostPlayedList) return;
+    final ranked = playList.resolveTopPlayedFromPathCounts(_sortedTopRaw());
+    final songs = ranked.map((e) => e.song).toList();
+    if (songs.isEmpty) return;
     if (_initialScrollInFlight) return;
     _initialScrollInFlight = true;
     scheduleScrollListToCurrentSong(
       context: context,
       controller: _listScrollController,
-      songs: items,
+      songs: songs,
       itemExtent: kSongPlaylistRowExtent,
       playList: playList,
       scrollToTopWhenCurrentMissingFromList: true,
@@ -104,15 +107,27 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
   }
 
   Future<void> _load() async {
-    final paths = await RecentPlayService.getPaths(
-      limit: RecentPlayService.maxStoredRecentPaths,
-    );
+    final raw =
+        await RecentPlayService.getTopByPlayCount(limit: 0);
     if (mounted) {
       setState(() {
-        _paths = paths;
+        _topRaw = raw;
         _loading = false;
       });
     }
+  }
+
+  /// 与 [RecentPlayService.getTopByPlayCount] 相同次要键（路径字符串），保证稳定顺序。
+  List<({String path, int count})> _sortedTopRaw() {
+    final copy = List<({String path, int count})>.from(_topRaw);
+    copy.sort((a, b) {
+      final byCount = _sortPlayCountDescending
+          ? b.count.compareTo(a.count)
+          : a.count.compareTo(b.count);
+      if (byCount != 0) return byCount;
+      return a.path.compareTo(b.path);
+    });
+    return copy;
   }
 
   void _exitBatchSelect() {
@@ -133,9 +148,9 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
     });
   }
 
-  void _selectAllRecent(List<Song> visible) {
+  void _selectAllVisible(List<Song> ordered) {
     setState(() {
-      for (final s in visible) {
+      for (final s in ordered) {
         _selectedNormPaths.add(normSongPath(s.path));
       }
     });
@@ -151,7 +166,10 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
     return out;
   }
 
-  Future<void> _confirmBatchDelete(BuildContext context, List<Song> ordered) async {
+  Future<void> _confirmBatchDelete(
+    BuildContext context,
+    List<Song> ordered,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
@@ -189,7 +207,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
         kind: AppSnackKind.success,
       );
     } catch (e) {
-      appLog.e('recent plays batch delete failed', error: e);
+      appLog.e('most played batch delete failed', error: e);
       if (context.mounted) {
         showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
@@ -276,7 +294,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
           child: Row(
             children: [
               TextButton(
-                onPressed: () => _selectAllRecent(ordered),
+                onPressed: () => _selectAllVisible(ordered),
                 child: Text(l10n.libraryBatchSelectAll),
               ),
               const SizedBox(width: 4),
@@ -314,17 +332,19 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
 
   void _openSearch(
     BuildContext context,
-    List<Song> items,
+    List<Song> queue,
     PlayListProvider playList,
     AppLocalizations l10n,
   ) {
     showSearch(
       context: context,
       delegate: SongSearchDelegate(
-        items,
+        queue,
         playList,
-        playbackContextQueue: items,
-        playbackQueueSession: PlaybackSessionSurface.recentList,
+        playbackContextQueue: queue,
+        playbackQueueSession: PlaybackSessionSurface.mostPlayedList,
+        playbackQueueRecordRecent: true,
+        playbackQueueBumpPlayCount: false,
         searchFieldLabelText: l10n.playlistSearchHint,
         onSongMore: (ctx, song) {
           showLibrarySongMoreActionsSheet(
@@ -361,7 +381,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
           title: Text(
             _batchSelect
                 ? '${_selectedNormPaths.length}'
-                : l10n.homeSectionRecentPlays,
+                : l10n.homeSectionMostPlayed,
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.transparent,
@@ -377,17 +397,35 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                   style: const TextStyle(color: Colors.white),
                 ),
               )
-            else
+            else ...[
+              IconButton(
+                icon: Icon(
+                  _sortPlayCountDescending
+                      ? Icons.arrow_downward_rounded
+                      : Icons.arrow_upward_rounded,
+                ),
+                tooltip: _sortPlayCountDescending
+                    ? l10n.mostPlayedSwitchSortAscending
+                    : l10n.mostPlayedSwitchSortDescending,
+                onPressed: () {
+                  setState(() {
+                    _sortPlayCountDescending = !_sortPlayCountDescending;
+                  });
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.search),
                 tooltip: l10n.homeSearchTooltip,
                 onPressed: () {
                   final playList = context.read<PlayListProvider>();
-                  final items =
-                      playList.resolveRecentSongsFromPaths(_paths);
-                  _openSearch(context, items, playList, l10n);
+                  final ranked =
+                      playList.resolveTopPlayedFromPathCounts(_sortedTopRaw());
+                  final queue =
+                      ranked.map((e) => e.song).toList(growable: false);
+                  _openSearch(context, queue, playList, l10n);
                 },
               ),
+            ],
           ],
         ),
         body: _loading
@@ -408,21 +446,20 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                       ),
                     );
                   }
-                  final items =
-                      playList.resolveRecentSongsFromPaths(_paths);
-                  final pathToIdx = <String, int>{
-                    for (var i = 0; i < playList.playList.length; i++)
-                      playList.playList[i].path: i,
-                  };
-                  if (items.isNotEmpty &&
+                  final ranked =
+                      playList.resolveTopPlayedFromPathCounts(_sortedTopRaw());
+                  final songs =
+                      ranked.map((e) => e.song).toList(growable: false);
+
+                  if (songs.isNotEmpty &&
                       !_didInitialScrollToCurrent &&
                       !_initialScrollInFlight &&
-                      playList.playbackSessionIsRecentList) {
+                      playList.playbackSessionIsMostPlayedList) {
                     _initialScrollInFlight = true;
                     scheduleScrollListToCurrentSong(
                       context: context,
                       controller: _listScrollController,
-                      songs: items,
+                      songs: songs,
                       itemExtent: kSongPlaylistRowExtent,
                       playList: playList,
                       scrollToTopWhenCurrentMissingFromList: true,
@@ -440,32 +477,67 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                       },
                     );
                   }
-                  if (items.isEmpty) {
+
+                  if (_topRaw.isNotEmpty && ranked.isEmpty) {
+                    return SongPlaylistBodyUnderlapColumn(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 28),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.equalizer_rounded,
+                                size: 64,
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.homeMostPlayedPathMismatch,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.55),
+                                  fontSize: 15,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (ranked.isEmpty) {
                     return SongPlaylistBodyUnderlapColumn(
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.history_rounded,
+                              Icons.equalizer_rounded,
                               size: 64,
                               color: Colors.white.withValues(alpha: 0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              l10n.recentPlaysEmptyTitle,
+                              l10n.homeSectionMostPlayed,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.6),
                                 fontSize: 16,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              l10n.homeRecentEmpty,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.45),
-                                fontSize: 14,
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 28),
+                              child: Text(
+                                l10n.homeMostPlayedEmpty,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.45),
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ],
@@ -473,6 +545,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                       ),
                     );
                   }
+
                   return SongPlaylistBodyUnderlapColumn(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -480,19 +553,19 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                         Expanded(
                           child: SongPlaylistSongListView(
                             scrollController: _listScrollController,
-                            songs: items,
+                            songs: songs,
                             listBottomInsetExtra: _batchSelect ? 64 : 0,
                             itemExtent: kSongPlaylistRowExtent,
-                            itemBuilder:
-                                (context, song, index, isCurrent) {
-                              final idx = pathToIdx[song.path] ?? -1;
+                            itemBuilder: (context, song, index, isCurrent) {
+                              final count = ranked[index].playCount;
                               return CompactSongListRow(
                                 key: ValueKey<String>(
-                                  'recent_${index}_${normSongPath(song.path)}',
+                                  'most_${index}_${normSongPath(song.path)}',
                                 ),
                                 song: song,
                                 title: song.title ?? l10n.pageUnknownTitle,
                                 subtitle: songListSecondaryLine(song),
+                                trailingPlayCount: count,
                                 isCurrent: isCurrent,
                                 showAddToPlaylist: false,
                                 onMoreMenuTap: () {
@@ -524,26 +597,24 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                                     _toggleBatchPath(song.path);
                                     return;
                                   }
-                                  if (idx < 0) return;
                                   if (isCurrent) {
-                                    await toggleCurrentRowPlayback(
-                                      playList,
-                                    );
+                                    await toggleCurrentRowPlayback(playList);
                                     return;
                                   }
-                                  playList.clearPlaybackQueueOverride();
-                                  if (!context.mounted) return;
-                                  await playList.playAt(
-                                    idx,
-                                    listSession:
-                                        PlaybackSessionSurface.recentList,
+                                  await playList.setPlaybackQueueAndPlay(
+                                    songs,
+                                    index,
+                                    recordRecent: true,
+                                    bumpPlayCount: false,
+                                    session:
+                                        PlaybackSessionSurface.mostPlayedList,
                                   );
                                 },
                               );
                             },
                           ),
                         ),
-                        if (_batchSelect) _batchActionBar(context, l10n, items),
+                        if (_batchSelect) _batchActionBar(context, l10n, songs),
                       ],
                     ),
                   );

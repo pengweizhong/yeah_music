@@ -15,6 +15,7 @@ import 'package:yeah_music/widgets/onedrive_bulk_download_sheet.dart';
 import 'package:yeah_music/utils/cloud_track_list_utils.dart';
 import 'package:yeah_music/widgets/cloud_track_search_delegate.dart';
 import 'package:yeah_music/widgets/cloud_track_sort_sheet.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 /// OneDrive：索引目录下的云端曲目；纯列表，支持搜索 / 排序；点播按需下载并读本地缓存。
@@ -100,10 +101,10 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       await od.rebuildCloudIndex();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).oneDriveError('$e')),
-          ),
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).oneDriveError('$e'),
+          kind: AppSnackKind.error,
         );
       }
     }
@@ -113,9 +114,7 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     final l10n = AppLocalizations.of(context);
     final queue = sortCloudTracksCopy(od.cloudTracks, _sortType, _ascending);
     if (queue.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveEmptyFolder)));
+      showAppSnackBar(context, l10n.oneDriveEmptyFolder);
       return;
     }
     await showModalBottomSheet<void>(
@@ -137,20 +136,20 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       t,
     ]);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.oneDriveEnqueueAddedSingle(t.fileName)),
-        action: SnackBarAction(
-          label: l10n.oneDriveDownloadViewQueue,
-          onPressed: () {
-            Navigator.push<void>(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(),
-              ),
-            );
-          },
-        ),
+    showAppSnackBar(
+      context,
+      l10n.oneDriveEnqueueAddedSingle(t.fileName),
+      kind: AppSnackKind.success,
+      action: SnackBarAction(
+        label: l10n.oneDriveDownloadViewQueue,
+        onPressed: () {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const OneDriveDownloadQueuePage(),
+            ),
+          );
+        },
       ),
     );
   }

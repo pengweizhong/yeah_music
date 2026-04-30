@@ -13,6 +13,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/services/android_car_lyrics_sync.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -23,7 +24,6 @@ import 'package:yeah_music/models/constants.dart';
 import '../models/folder.dart';
 import 'folder_provider.dart';
 import 'onedrive_controller.dart';
-
 
 /// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
 String _libraryPathKey(String path) {
@@ -85,7 +85,8 @@ class PlayListProvider extends ChangeNotifier {
   bool get hasPlaybackQueueOverride => _playbackQueueOverride != null;
 
   /// 当前一次播放会话在 UI 上「属于」哪个列表，用于从 [SongPage] 返回时是否在该表滚到当前曲
-  PlaybackSessionSurface _playbackSessionSurface = PlaybackSessionSurface.library;
+  PlaybackSessionSurface _playbackSessionSurface =
+      PlaybackSessionSurface.library;
   String? _playbackSessionUserPlaylistId;
 
   /// 是否为「从全库/全部歌曲」发起的会話（在 [PlayListPage] 滚屏）
@@ -95,6 +96,10 @@ class PlayListProvider extends ChangeNotifier {
   /// 是否为「从最近播放相关列表」发起（在 [RecentPlaysPage] 滚屏）
   bool get playbackSessionIsRecentList =>
       _playbackSessionSurface == PlaybackSessionSurface.recentList;
+
+  /// 是否为「从最多播放列表」发起（在 [MostPlayedPage] 滚屏）
+  bool get playbackSessionIsMostPlayedList =>
+      _playbackSessionSurface == PlaybackSessionSurface.mostPlayedList;
 
   /// 是否为「从指定用户歌单」发起（在对应 [UserPlaylistDetailPage] 滚屏）
   bool playbackSessionIsUserPlaylist(String playlistId) =>
@@ -130,9 +135,7 @@ class PlayListProvider extends ChangeNotifier {
     final base = folderPlaylistMap.values.expand((l) => l).toList();
     final extra = _onedriveCachedSongs;
     if (extra == null || extra.isEmpty) return base;
-    final seen = <String>{
-      for (final s in base) _libraryPathKey(s.path),
-    };
+    final seen = <String>{for (final s in base) _libraryPathKey(s.path)};
     final out = List<Song>.from(base);
     for (final s in extra) {
       final k = _libraryPathKey(s.path);
@@ -161,10 +164,7 @@ class PlayListProvider extends ChangeNotifier {
 
   /// 将 [paths] 顺序解析为曲库 [Song]；严格保持 [paths] 的先后（即最近播放在服务中的顺序），不在此重排
   /// [maxSongs] 为 null 时不截断
-  List<Song> resolveRecentSongsFromPaths(
-    List<String> paths, {
-    int? maxSongs,
-  }) {
+  List<Song> resolveRecentSongsFromPaths(List<String> paths, {int? maxSongs}) {
     if (!_initialized) return [];
     if (maxSongs != null && maxSongs <= 0) return [];
     final byKey = <String, Song>{};
@@ -241,10 +241,7 @@ class PlayListProvider extends ChangeNotifier {
         'userPlaylist 会话需提供 userPlaylistId',
       );
     }
-    _applyPlaybackSession(
-      session,
-      userPlaylistId: userPlaylistId,
-    );
+    _applyPlaybackSession(session, userPlaylistId: userPlaylistId);
     _statsRecordRecent = recordRecent;
     _statsBumpPlayCount = bumpPlayCount;
     _playbackQueueOverride = List<Song>.from(songs);
@@ -337,10 +334,10 @@ class PlayListProvider extends ChangeNotifier {
       await _loadOneDriveOverlayFrom(oneDrive);
     }
     _initialized = true;
-    
+
     // 加载上次播放的歌曲索引
     await _loadLastPlayedIndex();
-    
+
     // 保障 currentIndex 合法
     final list = playList;
     if (list.isEmpty) {
@@ -374,8 +371,7 @@ class PlayListProvider extends ChangeNotifier {
   void _attachPlayerIndexListener() {
     if (!Platform.isAndroid) return;
     _playerIndexSubscription?.cancel();
-    _playerIndexSubscription =
-        MusicService.currentMediaIndexStream.listen((i) {
+    _playerIndexSubscription = MusicService.currentMediaIndexStream.listen((i) {
       if (i == null || i < 0) return;
       if (!MusicService.androidCarQueueActive) return;
       if (i == _currentIndex) return;
@@ -388,7 +384,9 @@ class PlayListProvider extends ChangeNotifier {
   /// 播放结束切下一首 / 单曲循环；挂在 Provider 上，避免仅 SongPage 订阅时在退出页面后失效
   void _attachPlaybackCompletionListener() {
     _playerCompletionSubscription?.cancel();
-    _playerCompletionSubscription = MusicService.playerStateStream.listen((state) {
+    _playerCompletionSubscription = MusicService.playerStateStream.listen((
+      state,
+    ) {
       if (state.processingState != ProcessingState.completed) return;
       // 同一次 completion 的同步回调里立刻换源会触发 just_audio Loading interrupted，延后到本事件后执行
       Future.microtask(() {
@@ -442,7 +440,7 @@ class PlayListProvider extends ChangeNotifier {
   Future<void> _addPlayListAsync(FolderProvider folderProvider) async {
     //所有的文件夹
     List<Folder> folders = folderProvider.folders;
-    
+
     var i = 0;
     for (var value in folders) {
       putFolder(value);
@@ -552,9 +550,7 @@ class PlayListProvider extends ChangeNotifier {
         listSession != PlaybackSessionSurface.userPlaylist,
         '歌单会话请使用 setPlaybackQueueAndPlay',
       );
-      _applyPlaybackSession(
-        listSession,
-      );
+      _applyPlaybackSession(listSession);
     }
     _currentIndex = index.clamp(0, list.length - 1);
     notifyListeners();
@@ -580,7 +576,7 @@ class PlayListProvider extends ChangeNotifier {
     _playbackMode = mode;
     _shuffledIndices = null; // 重置随机列表
     _shuffledPlayedIndices = [];
-    
+
     // 设置播放器的循环模式
     if (mode == PlaybackMode.singleLoop) {
       MusicService().setLoopMode(LoopMode.one);
@@ -608,13 +604,9 @@ class PlayListProvider extends ChangeNotifier {
       MusicService().pause();
       final sm = appScaffoldMessengerKey.currentState;
       final ctx = sm?.context;
-      if (ctx != null) {
+      if (ctx != null && ctx.mounted) {
         final l10n = AppLocalizations.of(ctx);
-        sm?.showSnackBar(
-          SnackBar(
-            content: Text(l10n.sleepTimerPlayedMinutes(minutes)),
-          ),
-        );
+        showAppSnackBar(ctx, l10n.sleepTimerPlayedMinutes(minutes));
       }
       notifyListeners();
     });

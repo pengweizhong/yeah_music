@@ -8,7 +8,9 @@ class RecentPlayService {
 
   static const String _hiveKey = 'recent_song_paths';
   static const String _playCountKey = 'song_play_count_map';
-  static const int _maxItems = 40;
+
+  /// Hive 中保留的最近播放路径上限（最新在前，超出则从末尾丢弃）。
+  static const int maxStoredRecentPaths = 100;
 
   static int _asIntCount(Object? v) {
     if (v is int) return v;
@@ -35,8 +37,8 @@ class RecentPlayService {
         ];
         list.remove(t);
         list.insert(0, t);
-        if (list.length > _maxItems) {
-          list.removeRange(_maxItems, list.length);
+        if (list.length > maxStoredRecentPaths) {
+          list.removeRange(maxStoredRecentPaths, list.length);
         }
         await box.put(_hiveKey, list);
       }

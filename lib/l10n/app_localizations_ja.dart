@@ -987,6 +987,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeEntryRecent => '最近再生';
 
   @override
+  String get homeEntryMostPlayed => 'よく聴く';
+
+  @override
   String get homeEntryDiscover => '見つける';
 
   @override
@@ -1028,6 +1031,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeMostPlayedEmpty => 'まだ再生回数の統計はありません。曲を再生するとよく聴く一覧が作られます。';
+
+  @override
+  String get mostPlayedSwitchSortAscending => '再生回数の昇順に切り替え（少ない順）';
+
+  @override
+  String get mostPlayedSwitchSortDescending => '再生回数の降順に切り替え（多い順）';
 
   @override
   String homePlayCount(int c) {
@@ -1603,6 +1612,11 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String playlistsDeletedN(int n) {
     return '$n 件のプレイリストを削除しました';
+  }
+
+  @override
+  String librarySongsDeletedN(int n) {
+    return '$n 曲を削除しました';
   }
 
   @override

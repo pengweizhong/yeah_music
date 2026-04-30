@@ -78,9 +78,10 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
   void _pickRgb(BuildContext outerContext, AppLocalizations l10n) {
     final initial =
         _draft?.isSolid == true ? _draft!.solidColor : Colors.blueGrey.shade400;
-    showDialog<void>(
+    showFrostedDialog<void>(
       context: outerContext,
-      builder: (dialogCtx) => _RgbPickDialogContent(
+      maxWidth: 420,
+      child: _RgbPickDialogContent(
         initial: initial,
         l10n: l10n,
         onPick: (color) {
@@ -424,87 +425,106 @@ class _RgbPickDialogContentState extends State<_RgbPickDialogContent> {
       trackHeight: 4,
     );
 
-    return AlertDialog(
-      backgroundColor: const Color(0xFF2C3138),
-      title: Text(
-        l10n.playlistCoverRgbTitle,
-        style: const TextStyle(color: Colors.white),
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                height: 52,
-                width: double.infinity,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: _c,
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Text(
-                        l10n.playlistCoverRgbPreview,
-                        style: TextStyle(
-                          color: _contrastingLabel(_c),
-                          fontWeight: FontWeight.w700,
-                          shadows: const [
-                            Shadow(blurRadius: 4, color: Color(0x66000000)),
-                          ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.playlistCoverRgbTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    height: 52,
+                    width: double.infinity,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: _c,
+                        border: Border.all(
+                          color: scheme.outline.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Text(
+                            l10n.playlistCoverRgbPreview,
+                            style: TextStyle(
+                              color: _contrastingLabel(_c),
+                              fontWeight: FontWeight.w700,
+                              shadows: const [
+                                Shadow(blurRadius: 4, color: Color(0x66000000)),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 14),
+                SliderTheme(
+                  data: sliderTheme,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _RgbSlider(
+                        label: l10n.playlistCoverRgbRed,
+                        value: _c.r,
+                        onChanged: (v) =>
+                            setState(() => _c = _c.withValues(red: v)),
+                      ),
+                      _RgbSlider(
+                        label: l10n.playlistCoverRgbGreen,
+                        value: _c.g,
+                        onChanged: (v) =>
+                            setState(() => _c = _c.withValues(green: v)),
+                      ),
+                      _RgbSlider(
+                        label: l10n.playlistCoverRgbBlue,
+                        value: _c.b,
+                        onChanged: (v) =>
+                            setState(() => _c = _c.withValues(blue: v)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-            SliderTheme(
-              data: sliderTheme,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _RgbSlider(
-                    label: l10n.playlistCoverRgbRed,
-                    value: _c.r,
-                    onChanged: (v) => setState(() => _c = _c.withValues(red: v)),
-                  ),
-                  _RgbSlider(
-                    label: l10n.playlistCoverRgbGreen,
-                    value: _c.g,
-                    onChanged: (v) =>
-                        setState(() => _c = _c.withValues(green: v)),
-                  ),
-                  _RgbSlider(
-                    label: l10n.playlistCoverRgbBlue,
-                    value: _c.b,
-                    onChanged: (v) =>
-                        setState(() => _c = _c.withValues(blue: v)),
-                  ),
-                ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.actionCancel),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 10),
+              FilledButton(
+                onPressed: () {
+                  widget.onPick(_c);
+                  Navigator.pop(context);
+                },
+                child: Text(l10n.actionOK),
+              ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.actionCancel),
-        ),
-        FilledButton(
-          onPressed: () {
-            widget.onPick(_c);
-            Navigator.pop(context);
-          },
-          child: Text(l10n.actionOK),
-        ),
-      ],
     );
   }
 
@@ -527,12 +547,13 @@ class _RgbSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fg = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$label (${(value * 255).round()})',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.75)),
+          style: TextStyle(color: fg, fontSize: 13),
         ),
         Slider(
           value: value.clamp(0.0, 1.0),

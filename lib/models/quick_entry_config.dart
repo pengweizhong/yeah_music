@@ -7,6 +7,7 @@ class QuickEntryConfig {
   static const idLibrary = 'library';
   static const idPlaylists = 'playlists';
   static const idRecent = 'recent';
+  static const idMostPlayed = 'most_played';
   static const idDiscover = 'discover';
   static const idCloudLibrary = 'cloud_library';
   static const idOneDrive = 'onedrive';
@@ -16,6 +17,7 @@ class QuickEntryConfig {
     idLibrary,
     idPlaylists,
     idRecent,
+    idMostPlayed,
     idDiscover,
     idCloudLibrary,
     idOneDrive,

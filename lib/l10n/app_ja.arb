@@ -352,6 +352,7 @@
   "homeEntryLibrary": "ライブラリ",
   "homeEntryMyPlaylists": "マイプレイリスト",
   "homeEntryRecent": "最近再生",
+  "homeEntryMostPlayed": "よく聴く",
   "homeEntryDiscover": "見つける",
   "homeEntryCloudLibrary": "クラウド曲庫",
   "homeEntryOneDriveCachePlaylist": "キャッシュのプレイリスト",
@@ -366,6 +367,8 @@
   "homeActionAll": "すべて",
   "homeMostPlayedPathMismatch": "再生回数の記録はありますが、曲庫のパスと一致しません。移動した場合はフォルダを再スキャンし、数回再生してください。",
   "homeMostPlayedEmpty": "まだ再生回数の統計はありません。曲を再生するとよく聴く一覧が作られます。",
+  "mostPlayedSwitchSortAscending": "再生回数の昇順に切り替え（少ない順）",
+  "mostPlayedSwitchSortDescending": "再生回数の降順に切り替え（多い順）",
   "homePlayCount": "{c} 回再生",
   "@homePlayCount": {
     "placeholders": {
@@ -585,6 +588,8 @@
   "@importFailed": { "placeholders": { "error": { "type": "String" } } },
   "playlistsDeletedN": "{n} 件のプレイリストを削除しました",
   "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "librarySongsDeletedN": "{n} 曲を削除しました",
+  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
   "fabNewPlaylist": "新規プレイリスト",
   "emptyPlaylistsHint": "プレイリストはまだありません。\n再生画面や曲一覧から曲を追加できます。\n\n右上の「⋮」から取り込み／エクスポートや複数選択ができます。",
   "sortByName": "名前順",

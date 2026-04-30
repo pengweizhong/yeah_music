@@ -971,6 +971,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeEntryRecent => '最近播放';
 
   @override
+  String get homeEntryMostPlayed => '最多播放';
+
+  @override
   String get homeEntryDiscover => '发现';
 
   @override
@@ -1012,6 +1015,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeMostPlayedEmpty => '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行';
+
+  @override
+  String get mostPlayedSwitchSortAscending => '切换为按播放次数正序（少→多）';
+
+  @override
+  String get mostPlayedSwitchSortDescending => '切换为按播放次数倒序（多→少）';
 
   @override
   String homePlayCount(int c) {
@@ -1584,6 +1593,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String playlistsDeletedN(int n) {
     return '已删除 $n 个歌单';
+  }
+
+  @override
+  String librarySongsDeletedN(int n) {
+    return '已删除 $n 首歌曲';
   }
 
   @override
@@ -2890,6 +2904,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get homeEntryRecent => '最近播放';
 
   @override
+  String get homeEntryMostPlayed => '最多播放';
+
+  @override
   String get homeEntryDiscover => '发现';
 
   @override
@@ -2931,6 +2948,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get homeMostPlayedEmpty => '暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行';
+
+  @override
+  String get mostPlayedSwitchSortAscending => '切换为按播放次数正序（少→多）';
+
+  @override
+  String get mostPlayedSwitchSortDescending => '切换为按播放次数倒序（多→少）';
 
   @override
   String homePlayCount(int c) {
@@ -3503,6 +3526,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String playlistsDeletedN(int n) {
     return '已删除 $n 个歌单';
+  }
+
+  @override
+  String librarySongsDeletedN(int n) {
+    return '已删除 $n 首歌曲';
   }
 
   @override
@@ -4809,6 +4837,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeEntryRecent => '最近播放';
 
   @override
+  String get homeEntryMostPlayed => '最多播放';
+
+  @override
   String get homeEntryDiscover => '探索';
 
   @override
@@ -4850,6 +4881,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeMostPlayedEmpty => '暫無播放次數統計，在曲庫或歌單中多播幾首歌後會依次數排行';
+
+  @override
+  String get mostPlayedSwitchSortAscending => '切換為按播放次數正序（少→多）';
+
+  @override
+  String get mostPlayedSwitchSortDescending => '切換為按播放次數倒序（多→少）';
 
   @override
   String homePlayCount(int c) {
@@ -5422,6 +5459,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String playlistsDeletedN(int n) {
     return '已刪除 $n 個歌單';
+  }
+
+  @override
+  String librarySongsDeletedN(int n) {
+    return '已刪除 $n 首歌曲';
   }
 
   @override

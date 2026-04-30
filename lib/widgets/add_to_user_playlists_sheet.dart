@@ -4,6 +4,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 /// 将单首曲目加入用户歌单（底部表单）。
 Future<bool> showAddToUserPlaylistsSheet(BuildContext context, Song song) {
@@ -248,12 +249,10 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                         Set<String>.from(_selected),
                       );
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.addToPlaylistUpdatedN(_selected.length),
-                          ),
-                        ),
+                      showAppSnackBar(
+                        context,
+                        l10n.addToPlaylistUpdatedN(_selected.length),
+                        kind: AppSnackKind.success,
                       );
                     } else {
                       await user.setSongsMembershipInPlaylists(
@@ -261,10 +260,10 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                         Set<String>.from(_selected),
                       );
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.libraryBatchAddToPlaylistDone),
-                        ),
+                      showAppSnackBar(
+                        context,
+                        l10n.libraryBatchAddToPlaylistDone,
+                        kind: AppSnackKind.success,
                       );
                     }
                     if (!context.mounted) return;

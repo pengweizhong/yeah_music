@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/disk_space.dart';
-import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
@@ -18,47 +17,16 @@ import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
-import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 void _showSettingHelp(
   BuildContext context, {
   required String title,
   required String body,
 }) {
-  showFrostedDialog<void>(
-    context: context,
-    barrierDismissible: true,
-    child: Builder(
-      builder: (dialogCtx) {
-        final theme = Theme.of(dialogCtx);
-        final maxH = MediaQuery.sizeOf(dialogCtx).height * 0.55;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 14),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxH),
-                child: SingleChildScrollView(
-                  child: Text(body, style: theme.textTheme.bodyMedium),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
+  showAppScrollMessageDialog(context: context, title: title, body: body);
 }
 
 Widget _settingHelpButton(
@@ -364,12 +332,12 @@ class SettingPage extends StatelessWidget {
                         style: TextStyle(color: context.gradFg()),
                       ),
                       subtitle: Text(
-                            l10n.settingsAboutSubtitle,
-                            style: TextStyle(
-                              color: context.gradFg(0.6),
-                              fontSize: 13,
-                            ),
-                          ),
+                        l10n.settingsAboutSubtitle,
+                        style: TextStyle(
+                          color: context.gradFg(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
                       leading: Icon(Icons.favorite, color: context.gradFg()),
                       onTap: () {
                         ApplicationUtils.showAboutDialog(context);

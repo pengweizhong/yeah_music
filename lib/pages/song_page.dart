@@ -35,6 +35,7 @@ import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
@@ -171,6 +172,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       // 从迷你条等仅 push [SongPage] 而无 [navToSongPage] 时补标「全库」；不覆盖最近/歌单/adHoc 会话
       if (!playListProvider.hasPlaybackQueueOverride) {
         final keepNonLibrary = playListProvider.playbackSessionIsRecentList ||
+            playListProvider.playbackSessionIsMostPlayedList ||
             playListProvider.playbackSessionIsUserPlaylistKind ||
             playListProvider.playbackSessionIsAdHoc;
         if (!keepNonLibrary) {
@@ -1073,15 +1075,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     final v = int.tryParse(c.text.trim());
     if (v == null || v < _customTimerMinMinutes || v > _customTimerMaxMinutes) {
       final l10n = AppLocalizations.of(ctx);
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.sleepTimerInvalidRange(
-              _customTimerMinMinutes,
-              _customTimerMaxMinutes,
-            ),
-          ),
+      showAppSnackBar(
+        ctx,
+        l10n.sleepTimerInvalidRange(
+          _customTimerMinMinutes,
+          _customTimerMaxMinutes,
         ),
+        kind: AppSnackKind.error,
       );
       return;
     }
@@ -1095,8 +1095,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     final file = File(path);
     if (!await file.exists()) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMetadataReadFailed,
+        kind: AppSnackKind.error,
       );
       return;
     }
@@ -1106,8 +1108,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     } catch (e, st) {
       appLog.e('read song metadata failed', error: e, stackTrace: st);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMetadataReadFailed,
+        kind: AppSnackKind.error,
       );
       return;
     }
@@ -1133,8 +1137,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     final file = File(path);
     if (!await file.exists()) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).songPageShareFileNotFound)),
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context).songPageShareFileNotFound,
+        kind: AppSnackKind.error,
       );
       return;
     }
@@ -1145,7 +1151,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     } catch (e, st) {
       appLog.e('share audio file failed', error: e, stackTrace: st);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
     }
   }
@@ -1155,21 +1161,21 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     try {
       await context.read<OneDriveDownloadQueueController>().enqueueLibraryUploads([song]);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.libraryBatchUploadQueued),
-          action: SnackBarAction(
-            label: l10n.libraryBatchOpenQueue,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const OneDriveDownloadQueuePage(
-                    initialTab: OneDriveTransferQueueTab.upload,
-                  ),
+      showAppSnackBar(
+        context,
+        l10n.libraryBatchUploadQueued,
+        kind: AppSnackKind.success,
+        action: SnackBarAction(
+          label: l10n.libraryBatchOpenQueue,
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const OneDriveDownloadQueuePage(
+                  initialTab: OneDriveTransferQueueTab.upload,
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       );
     } on StateError catch (e) {
@@ -1180,10 +1186,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           : msg.contains('upload folder unset')
               ? l10n.libraryBatchUploadNeedCloudFolder
               : '$e';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+      showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
     }
   }
@@ -1203,15 +1209,19 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     final file = File(path);
     if (!await file.exists()) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMusicTagEditorFileNotFound)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMusicTagEditorFileNotFound,
+        kind: AppSnackKind.error,
       );
       return;
     }
     if (!Platform.isAndroid) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMusicTagEditorUnsupportedPlatform)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMusicTagEditorUnsupportedPlatform,
+        kind: AppSnackKind.neutral,
       );
       return;
     }
@@ -1228,14 +1238,16 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         _ => l10n.songPageSyncedLyricEditorLaunchFailed,
       };
       if (msg != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        showAppSnackBar(context, msg, kind: AppSnackKind.error);
       } else {
         _pendingExternalAudioReloadPath = path;
       }
     } on MissingPluginException {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageSyncedLyricEditorLaunchFailed)),
+      showAppSnackBar(
+        context,
+        l10n.songPageSyncedLyricEditorLaunchFailed,
+        kind: AppSnackKind.error,
       );
     }
   }
@@ -1245,41 +1257,24 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     final displayName =
         (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
 
-    final step1 = await showDialog<bool>(
+    final step1 = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.songPageDeleteDiskWarningTitle),
-        content: Text(l10n.songPageDeleteDiskWarningBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.songPageDeleteContinue),
-          ),
-        ],
-      ),
+      title: l10n.songPageDeleteDiskWarningTitle,
+      message: l10n.songPageDeleteDiskWarningBody,
+      icon: Icons.warning_amber_rounded,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.songPageDeleteContinue,
     );
     if (step1 != true || !context.mounted) return;
 
-    final step2 = await showDialog<bool>(
+    final step2 = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.songPageDeleteFinalConfirmTitle),
-        content: Text(l10n.songPageDeleteFinalConfirmBody(displayName)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.actionDelete),
-          ),
-        ],
-      ),
+      title: l10n.songPageDeleteFinalConfirmTitle,
+      message: l10n.songPageDeleteFinalConfirmBody(displayName),
+      icon: Icons.delete_outline_rounded,
+      confirmIsDestructive: true,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionDelete,
     );
     if (step2 != true || !context.mounted) return;
     final navigator = Navigator.of(context);
@@ -1376,13 +1371,15 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                               Navigator.pop(sheetContext);
                               WidgetsBinding.instance.addPostFrameCallback((_) async {
                                 if (!mounted) return;
-                                final messenger = ScaffoldMessenger.of(context);
+                                final ctx = context;
                                 final doneText =
-                                    AppLocalizations.of(context).libraryReloadMetadataDone;
+                                    AppLocalizations.of(ctx).libraryReloadMetadataDone;
                                 await _reloadSongMetaAfterExternalMusicTagEdit(path);
-                                if (!mounted) return;
-                                messenger.showSnackBar(
-                                  SnackBar(content: Text(doneText)),
+                                if (!mounted || !ctx.mounted) return;
+                                showAppSnackBar(
+                                  ctx,
+                                  doneText,
+                                  kind: AppSnackKind.success,
                                 );
                               });
                             },

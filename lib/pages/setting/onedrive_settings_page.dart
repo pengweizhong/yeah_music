@@ -16,6 +16,7 @@ import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 class OneDriveSettingsPage extends StatefulWidget {
   const OneDriveSettingsPage({super.key});
@@ -159,22 +160,28 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
   ) async {
     if (od.isLinuxUnsupported) return;
     if (od.effectiveClientId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveAppMissingClientConfig)),
+      showAppSnackBar(
+        context,
+        l10n.oneDriveAppMissingClientConfig,
+        kind: AppSnackKind.error,
       );
       return;
     }
     final ok = await od.signIn();
     if (!context.mounted) return;
     if (!ok) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSignInFailed)));
+        l10n.oneDriveSignInFailed,
+        kind: AppSnackKind.error,
+      );
       return;
     }
-    ScaffoldMessenger.of(
+    showAppSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSignedIn)));
+      l10n.oneDriveSignedIn,
+      kind: AppSnackKind.success,
+    );
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => const OneDriveCloudPlaylistPage(),
@@ -189,9 +196,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
   ) async {
     await od.signOut();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSignOutDone)));
+    showAppSnackBar(context, l10n.oneDriveSignOutDone);
   }
 
   Future<void> _pickCloudAppFolder(
@@ -200,9 +205,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     OneDriveController od,
   ) async {
     if (!od.signedIn) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveNeedSignInForPicker)));
+      showAppSnackBar(context, l10n.oneDriveNeedSignInForPicker);
       return;
     }
     final res = await Navigator.of(context).push<OneDriveFolderPickResult>(
@@ -223,9 +226,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     OneDriveController od,
   ) async {
     if (!od.signedIn) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveNeedSignInForPicker)));
+      showAppSnackBar(context, l10n.oneDriveNeedSignInForPicker);
       return;
     }
     final res = await Navigator.of(context).push<OneDriveFolderPickResult>(
@@ -259,34 +260,16 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     AppLocalizations l10n,
     OneDriveController od,
   ) async {
-    final ctrl = TextEditingController(text: od.musicRootItemId ?? '');
-    final ok = await showDialog<bool>(
+    final v = await showAppTextPromptDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.oneDriveMusicRootIdLabel),
-        content: TextField(
-          controller: ctrl,
-          decoration: InputDecoration(hintText: l10n.oneDriveMusicRootHint),
-          maxLines: 2,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.actionSave),
-          ),
-        ],
-      ),
+      title: l10n.oneDriveMusicRootIdLabel,
+      hintText: l10n.oneDriveMusicRootHint,
+      initialValue: od.musicRootItemId ?? '',
+      maxLines: 2,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionSave,
     );
-    if (!context.mounted || ok != true) {
-      ctrl.dispose();
-      return;
-    }
-    final v = ctrl.text.trim();
-    ctrl.dispose();
+    if (!context.mounted || v == null) return;
     await od.setMusicRootItemId(v.isEmpty ? null : v);
   }
 
@@ -296,15 +279,19 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     OneDriveController od,
   ) async {
     if (!od.signedIn) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowNeedLogin)));
+        l10n.oneDriveSyncNowNeedLogin,
+        kind: AppSnackKind.neutral,
+      );
       return;
     }
     final folder = od.cloudAppDataFolderId;
     if (folder == null || folder.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveSyncNowNeedCloudFolder)),
+      showAppSnackBar(
+        context,
+        l10n.oneDriveSyncNowNeedCloudFolder,
+        kind: AppSnackKind.neutral,
       );
       return;
     }
@@ -328,19 +315,23 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
           : msg.contains('cloud app folder')
           ? l10n.oneDriveSyncNowNeedCloudFolder
           : msg;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+      showAppSnackBar(context, text, kind: AppSnackKind.error);
       return;
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowFailed('$e'))));
+        l10n.oneDriveSyncNowFailed('$e'),
+        kind: AppSnackKind.error,
+      );
       return;
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
+    showAppSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowFinished)));
+      l10n.oneDriveSyncNowFinished,
+      kind: AppSnackKind.success,
+    );
   }
 
   Future<void> _reloadAfterCloudRestore(BuildContext context) async {
@@ -359,15 +350,19 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     OneDriveController od,
   ) async {
     if (!od.signedIn) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveSyncNowNeedLogin)));
+        l10n.oneDriveSyncNowNeedLogin,
+        kind: AppSnackKind.neutral,
+      );
       return;
     }
     final folder = od.cloudAppDataFolderId;
     if (folder == null || folder.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.oneDriveSyncNowNeedCloudFolder)),
+      showAppSnackBar(
+        context,
+        l10n.oneDriveSyncNowNeedCloudFolder,
+        kind: AppSnackKind.neutral,
       );
       return;
     }
@@ -384,8 +379,10 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         snapshots = await od.listCloudBackupSnapshots();
       } catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+        showAppSnackBar(
+          context,
+          l10n.oneDriveRestoreFailed('$e'),
+          kind: AppSnackKind.error,
         );
         return;
       }
@@ -435,28 +432,36 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
             : m.contains('settings backup missing')
             ? l10n.oneDriveRestoreMissingSettingsFile
             : m;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveRestoreFailed(text))),
+        showAppSnackBar(
+          context,
+          l10n.oneDriveRestoreFailed(text),
+          kind: AppSnackKind.error,
         );
         return;
       } on FormatException catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+        showAppSnackBar(
+          context,
+          l10n.oneDriveRestoreFailed('$e'),
+          kind: AppSnackKind.error,
         );
         return;
       } catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.oneDriveRestoreFailed('$e'))),
+        showAppSnackBar(
+          context,
+          l10n.oneDriveRestoreFailed('$e'),
+          kind: AppSnackKind.error,
         );
         return;
       }
 
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.oneDriveRestoreFinished)));
+        l10n.oneDriveRestoreFinished,
+        kind: AppSnackKind.success,
+      );
     } finally {
       if (mounted) {
         setState(() => _restoreFlowBusy = false);
@@ -711,26 +716,26 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
               child: FilledButton(
                 onPressed: () {
                   if (!_wantPlaylists && !_wantSettings) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.oneDriveRestoreNeedPickContent),
-                      ),
+                    showAppSnackBar(
+                      context,
+                      l10n.oneDriveRestoreNeedPickContent,
+                      kind: AppSnackKind.neutral,
                     );
                     return;
                   }
                   if (_wantPlaylists && !snap.hasPlaylistsJson) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.oneDriveRestoreMissingPlaylistsFile),
-                      ),
+                    showAppSnackBar(
+                      context,
+                      l10n.oneDriveRestoreMissingPlaylistsFile,
+                      kind: AppSnackKind.error,
                     );
                     return;
                   }
                   if (_wantSettings && !snap.hasSettingsJson) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.oneDriveRestoreMissingSettingsFile),
-                      ),
+                    showAppSnackBar(
+                      context,
+                      l10n.oneDriveRestoreMissingSettingsFile,
+                      kind: AppSnackKind.error,
                     );
                     return;
                   }
@@ -1201,8 +1206,10 @@ class _TroubleshootExpansion extends StatelessWidget {
                       ClipboardData(text: OneDriveConfig.redirectUrl),
                     );
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.oneDriveRedirectCopied)),
+                    showAppSnackBar(
+                      context,
+                      l10n.oneDriveRedirectCopied,
+                      kind: AppSnackKind.success,
                     );
                   },
                   icon: Icon(

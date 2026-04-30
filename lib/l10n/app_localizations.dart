@@ -1926,6 +1926,12 @@ abstract class AppLocalizations {
   /// **'Recent'**
   String get homeEntryRecent;
 
+  /// No description provided for @homeEntryMostPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top plays'**
+  String get homeEntryMostPlayed;
+
   /// No description provided for @homeEntryDiscover.
   ///
   /// In en, this message translates to:
@@ -2009,6 +2015,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No play stats yet. Play more songs in the library or a playlist to build a top list.'**
   String get homeMostPlayedEmpty;
+
+  /// No description provided for @mostPlayedSwitchSortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to ascending play count (least plays first)'**
+  String get mostPlayedSwitchSortAscending;
+
+  /// No description provided for @mostPlayedSwitchSortDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to descending play count (most plays first)'**
+  String get mostPlayedSwitchSortDescending;
 
   /// No description provided for @homePlayCount.
   ///
@@ -3059,6 +3077,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted {n} playlist(s)'**
   String playlistsDeletedN(int n);
+
+  /// No description provided for @librarySongsDeletedN.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {n} song(s)'**
+  String librarySongsDeletedN(int n);
 
   /// No description provided for @fabNewPlaylist.
   ///

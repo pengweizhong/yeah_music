@@ -1,210 +1,28 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:yeah_music/compments/frosted_glass_panel.dart';
-import 'package:yeah_music/config/app_product_info.dart';
-import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 import '../models/song.dart';
 
 class ApplicationUtils {
   /// 弹出软件的「关于」对话框（文案随界面语言）。
   static void showAboutDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    showFrostedDialog<void>(
-      context: context,
-      maxWidth: 400,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/icons/yeah_music.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppProductInfo.displayName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0x332196F3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                l10n.settingsAboutDialogVersionLabel(AppProductInfo.version),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF64B5F6),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Build ${AppProductInfo.buildNumber}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.55),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Divider(color: Colors.white.withValues(alpha: 0.2)),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.person_outline,
-              l10n.settingsAboutDialogAuthor,
-              'PengWeiZhong',
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.code,
-              l10n.settingsAboutDialogRepo,
-              'https://github.com/pengweizhong/yeah_music',
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.gavel,
-              l10n.settingsAboutDialogLicense,
-              'GPL-3.0',
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.copyright,
-              l10n.settingsAboutDialogCopyright,
-              '©2026 PengWeiZhong',
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.settingsAboutDialogClose),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    showAppAboutDialog(context);
   }
 
-  // 构建信息行
-  static Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.6)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 2),
-              SelectableText(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  ///自定义提示框
-  static void alertDialog(
+  /// 自定义提示框（与全局 [showAppCustomDialog] 同一套磨砂 UI）。
+  static Future<void> alertDialog(
     BuildContext context,
     String title,
     List<Widget> children,
-    List<TextButton> textButtons,
+    List<Widget> textButtons,
   ) {
-    showFrostedDialog<void>(
+    return showAppCustomDialog<void>(
       context: context,
-      maxWidth: 400,
-      child: Builder(
-        builder: (ctx) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DefaultTextStyle(
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    height: 1.35,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: children,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Theme(
-                  data: Theme.of(ctx).copyWith(
-                    textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: textButtons,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      title: title,
+      bodyChildren: children,
+      actions: textButtons,
     );
   }
 

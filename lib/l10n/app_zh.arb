@@ -352,6 +352,7 @@
   "homeEntryLibrary": "本地曲库",
   "homeEntryMyPlaylists": "我的歌单",
   "homeEntryRecent": "最近播放",
+  "homeEntryMostPlayed": "最多播放",
   "homeEntryDiscover": "发现",
   "homeEntryCloudLibrary": "云端曲库",
   "homeEntryOneDriveCachePlaylist": "缓存歌单",
@@ -366,6 +367,8 @@
   "homeActionAll": "全部",
   "homeMostPlayedPathMismatch": "已有播放次数记录，但路径与当前曲库不一致（重命名/移动后请重扫音乐目录，再播几次会恢复）",
   "homeMostPlayedEmpty": "暂无播放次数统计，在曲库或歌单中多播几次歌后会按次数排行",
+  "mostPlayedSwitchSortAscending": "切换为按播放次数正序（少→多）",
+  "mostPlayedSwitchSortDescending": "切换为按播放次数倒序（多→少）",
   "homePlayCount": "已播放 {c} 次",
   "@homePlayCount": {
     "placeholders": {
@@ -585,6 +588,8 @@
   "@importFailed": { "placeholders": { "error": { "type": "String" } } },
   "playlistsDeletedN": "已删除 {n} 个歌单",
   "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "librarySongsDeletedN": "已删除 {n} 首歌曲",
+  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
   "fabNewPlaylist": "新建歌单",
   "emptyPlaylistsHint": "还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入/导出、单选/多选",
   "sortByName": "按名称",

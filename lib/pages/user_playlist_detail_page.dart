@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
@@ -181,53 +181,15 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     BuildContext context,
     UserPlaylistProvider user,
   ) async {
-    final ok = await showFrostedDialog<bool>(
+    final l10n = AppLocalizations.of(context);
+    final ok = await showAppConfirmDialog(
       context: context,
-      child: Builder(
-        builder: (ctx) {
-          final l10n = AppLocalizations.of(ctx);
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.playlistDeleteTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.playlistDeleteMessage,
-                  style: const TextStyle(color: Colors.white, height: 1.35),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(l10n.actionCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text(l10n.actionDelete),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      title: l10n.playlistDeleteTitle,
+      message: l10n.playlistDeleteMessage,
+      icon: Icons.delete_outline_rounded,
+      confirmIsDestructive: true,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionDelete,
     );
     if (ok == true && context.mounted) {
       await user.deletePlaylist(widget.playlistId);
@@ -240,73 +202,15 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     UserPlaylist playlist,
     UserPlaylistProvider user,
   ) async {
-    final controller = TextEditingController(text: playlist.name);
-    final name = await showFrostedDialog<String>(
+    final l10n = AppLocalizations.of(context);
+    final name = await showAppTextPromptDialog(
       context: context,
-      child: Builder(
-        builder: (ctx) {
-          final l10n = AppLocalizations.of(ctx);
-          final scheme = Theme.of(ctx).colorScheme;
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.playlistRenameTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: const TextStyle(color: Colors.white),
-                  cursorColor: Colors.white,
-                  decoration: InputDecoration(
-                    labelText: l10n.fieldName,
-                    labelStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.25),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: scheme.primary),
-                    ),
-                  ),
-                  onSubmitted: (v) => Navigator.pop(ctx, v),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(l10n.actionCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () =>
-                          Navigator.pop(ctx, controller.text.trim()),
-                      child: Text(l10n.actionSave),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      title: l10n.playlistRenameTitle,
+      initialValue: playlist.name,
+      fieldLabel: l10n.fieldName,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionSave,
     );
-    scheduleDisposeTextEditingController(controller);
     if (name != null && name.isNotEmpty && context.mounted) {
       await user.renamePlaylist(widget.playlistId, name);
     }
@@ -321,9 +225,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     if ((map['playlists'] as List<dynamic>).isEmpty) {
       if (context.mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportCannot)));
+        showAppSnackBar(context, l10n.exportCannot, kind: AppSnackKind.error);
       }
       return;
     }
@@ -338,19 +240,22 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       );
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportSaved(path))));
+          l10n.exportSaved(path),
+          kind: AppSnackKind.success,
+          duration: const Duration(seconds: 2),
+        );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportCancelled)));
+        showAppSnackBar(context, l10n.exportCancelled);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportFailed('$e'))));
+          l10n.exportFailed('$e'),
+          kind: AppSnackKind.error,
+        );
       }
     }
   }

@@ -14,6 +14,7 @@ import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/utils/song_metadata_reload_utils.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
 import 'package:yeah_music/widgets/song_metadata_dialog.dart';
 
@@ -179,9 +180,8 @@ Future<void> _reloadSongMetadataFromDisk(BuildContext context, Song song) async 
     maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
   );
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(l10n.libraryReloadMetadataDone)),
-  );
+  showAppSnackBar(context, l10n.libraryReloadMetadataDone,
+      kind: AppSnackKind.success);
 }
 
 /// 删除成功返回 true（用户取消或失败为 false）。
@@ -190,41 +190,24 @@ Future<bool> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
   final displayName =
       (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
 
-  final step1 = await showDialog<bool>(
+  final step1 = await showAppConfirmDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.songPageDeleteDiskWarningTitle),
-      content: Text(l10n.songPageDeleteDiskWarningBody),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(l10n.actionCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(l10n.songPageDeleteContinue),
-        ),
-      ],
-    ),
+    title: l10n.songPageDeleteDiskWarningTitle,
+    message: l10n.songPageDeleteDiskWarningBody,
+    icon: Icons.warning_amber_rounded,
+    cancelLabel: l10n.actionCancel,
+    confirmLabel: l10n.songPageDeleteContinue,
   );
   if (step1 != true || !context.mounted) return false;
 
-  final step2 = await showDialog<bool>(
+  final step2 = await showAppConfirmDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.songPageDeleteFinalConfirmTitle),
-      content: Text(l10n.songPageDeleteFinalConfirmBody(displayName)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(l10n.actionCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(l10n.actionDelete),
-        ),
-      ],
-    ),
+    title: l10n.songPageDeleteFinalConfirmTitle,
+    message: l10n.songPageDeleteFinalConfirmBody(displayName),
+    icon: Icons.delete_outline_rounded,
+    confirmIsDestructive: true,
+    cancelLabel: l10n.actionCancel,
+    confirmLabel: l10n.actionDelete,
   );
   if (step2 != true || !context.mounted) return false;
 
@@ -240,17 +223,14 @@ Future<bool> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
       songs: [song],
     );
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.playlistDeletedOne)),
-      );
+      showAppSnackBar(context, l10n.librarySongsDeletedN(1),
+          kind: AppSnackKind.success);
     }
     return true;
   } catch (e) {
     appLog.e('library song delete failed', error: e);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
+      showAppSnackBar(context, '$e', kind: AppSnackKind.error);
     }
     return false;
   }
@@ -259,12 +239,20 @@ Future<bool> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
 Future<bool> _renameSongStem(BuildContext context, Song song) async {
   final l10n = AppLocalizations.of(context);
   final base = p.basenameWithoutExtension(song.path);
-  final newStem = await showDialog<String?>(
+  final scheme = Theme.of(context).colorScheme;
+  final newStem = await showAppTextPromptDialog(
     context: context,
-    builder: (ctx) => SingleSongStemRenameDialog(
-      l10n: l10n,
-      initialStem: base,
+    title: l10n.libraryRenameSingleTitle,
+    subtitle: Text(
+      l10n.libraryRenameSingleHint,
+      style: TextStyle(
+        color: scheme.onSurfaceVariant,
+        fontSize: 13,
+        height: 1.4,
+      ),
     ),
+    initialValue: base,
+    fieldLabel: l10n.libraryRenameSingleFieldLabel,
   );
   if (newStem == null || !context.mounted) return false;
   final folder = context.read<FolderProvider>();
@@ -280,90 +268,15 @@ Future<bool> _renameSongStem(BuildContext context, Song song) async {
       newStem: newStem,
     );
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.libraryRenameSingleDone)),
-      );
+      showAppSnackBar(context, l10n.libraryRenameSingleDone,
+          kind: AppSnackKind.success);
     }
     return true;
   } catch (e) {
     appLog.e('single rename failed', error: e);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
+      showAppSnackBar(context, '$e', kind: AppSnackKind.error);
     }
     return false;
-  }
-}
-
-/// 单首重命名：在 [State] 内创建并 [dispose] [TextEditingController]。
-class SingleSongStemRenameDialog extends StatefulWidget {
-  const SingleSongStemRenameDialog({
-    super.key,
-    required this.l10n,
-    required this.initialStem,
-  });
-
-  final AppLocalizations l10n;
-  final String initialStem;
-
-  @override
-  State<SingleSongStemRenameDialog> createState() =>
-      _SingleSongStemRenameDialogState();
-}
-
-class _SingleSongStemRenameDialogState extends State<SingleSongStemRenameDialog> {
-  late final TextEditingController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(text: widget.initialStem);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.l10n.libraryRenameSingleTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              widget.l10n.libraryRenameSingleHint,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _ctrl,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: widget.l10n.libraryRenameSingleFieldLabel,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop<String?>(context, null),
-          child: Text(widget.l10n.actionCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop<String?>(context, _ctrl.text.trim()),
-          child: Text(widget.l10n.actionOK),
-        ),
-      ],
-    );
   }
 }

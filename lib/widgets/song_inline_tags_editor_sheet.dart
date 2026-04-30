@@ -8,6 +8,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/song_embedded_metadata_writer.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 /// 底部表单：编辑内嵌标签（写入磁盘后再由调用方刷新内存/Hive）。
 Future<void> showSongInlineTagsEditorSheet({
@@ -185,8 +186,11 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
             await writeOnce();
           } else {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.songPageStorageManageAllFilesHint)),
+            showAppSnackBar(
+              context,
+              l10n.songPageStorageManageAllFilesHint,
+              kind: AppSnackKind.neutral,
+              duration: const Duration(seconds: 4),
             );
             return;
           }
@@ -205,14 +209,18 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
       await widget.onSavedReload(path);
 
       if (!widget.navigatorContext.mounted) return;
-      ScaffoldMessenger.of(widget.navigatorContext).showSnackBar(
-        SnackBar(content: Text(l10n.songPageInlineTagsSaved)),
+      showAppSnackBar(
+        widget.navigatorContext,
+        l10n.songPageInlineTagsSaved,
+        kind: AppSnackKind.success,
       );
     } catch (e) {
       if (!mounted) return;
       final msg = _shortError(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageInlineTagsSaveFailed(msg))),
+      showAppSnackBar(
+        context,
+        l10n.songPageInlineTagsSaveFailed(msg),
+        kind: AppSnackKind.error,
       );
     } finally {
       if (mounted) setState(() => _saving = false);

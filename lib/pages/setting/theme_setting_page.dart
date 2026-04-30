@@ -7,6 +7,7 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 /// 主题设置页面
 class ThemeSettingPage extends StatelessWidget {
@@ -502,10 +503,10 @@ class ThemeSettingPage extends StatelessWidget {
       await themeConfig.setBackgroundImage(pickedFile.path);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.cannotSaveBackground(e.toString())),
-        ),
+      showAppSnackBar(
+        context,
+        l10n.cannotSaveBackground(e.toString()),
+        kind: AppSnackKind.error,
       );
     }
   }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 /// Android：通过同一 MethodChannel 调起外部音频编辑器（Music Tag Editor / SyncedLyric Editor）。
 class MusicTagEditorLauncher {
@@ -44,15 +45,19 @@ class MusicTagEditorLauncher {
     if (path.isEmpty) return;
     if (!await File(path).exists()) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMusicTagEditorFileNotFound)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMusicTagEditorFileNotFound,
+        kind: AppSnackKind.error,
       );
       return;
     }
     if (!Platform.isAndroid) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMusicTagEditorUnsupportedPlatform)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMusicTagEditorUnsupportedPlatform,
+        kind: AppSnackKind.neutral,
       );
       return;
     }
@@ -61,14 +66,16 @@ class MusicTagEditorLauncher {
       if (!context.mounted) return;
       final msg = _musicTagStatusSnackMessage(l10n, status);
       if (msg != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        showAppSnackBar(context, msg, kind: AppSnackKind.error);
       } else {
         onLaunchedOk?.call(path);
       }
     } on MissingPluginException {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.songPageMusicTagEditorLaunchFailed)),
+      showAppSnackBar(
+        context,
+        l10n.songPageMusicTagEditorLaunchFailed,
+        kind: AppSnackKind.error,
       );
     }
   }

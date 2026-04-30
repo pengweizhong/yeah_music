@@ -26,6 +26,7 @@ import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/quick_entry_settings_page.dart';
+import 'package:yeah_music/pages/most_played_page.dart';
 import 'package:yeah_music/pages/recent_plays_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
@@ -153,7 +154,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadRecentPaths() async {
     // 多取一些路径，避免前几条在「临时歌单队列」中无法解析时整区空白
-    final p = await RecentPlayService.getPaths(limit: 50);
+    final p =
+        await RecentPlayService.getPaths(limit: RecentPlayService.maxStoredRecentPaths);
     final top = await RecentPlayService.getTopByPlayCount(limit: 40);
     if (!mounted) return;
     setState(() {
@@ -195,6 +197,15 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(
         builder: (context) => const RecentPlaysPage(),
+      ),
+    );
+  }
+
+  void _goMostPlayed() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const MostPlayedPage(),
       ),
     );
   }
@@ -330,6 +341,7 @@ class _HomePageState extends State<HomePage> {
                     onOpenSearch: () => _goLibrary(openSearch: true),
                     onOpenStorage: _goStoragePlaylists,
                     onOpenRecent: _goRecentPlays,
+                    onOpenMostPlayed: _goMostPlayed,
                     onOpenCloudLibrary: _goCloudLibrary,
                     onOpenOneDrive: _goOneDrive,
                     onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
@@ -377,6 +389,7 @@ class _HomeScrollBody extends StatefulWidget {
     required this.onOpenSearch,
     required this.onOpenStorage,
     required this.onOpenRecent,
+    required this.onOpenMostPlayed,
     required this.onOpenCloudLibrary,
     required this.onOpenOneDrive,
     required this.onOpenOneDriveCachedPlaylist,
@@ -398,6 +411,7 @@ class _HomeScrollBody extends StatefulWidget {
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenStorage;
   final VoidCallback onOpenRecent;
+  final VoidCallback onOpenMostPlayed;
   final VoidCallback onOpenCloudLibrary;
   final VoidCallback onOpenOneDrive;
   final VoidCallback onOpenOneDriveCachedPlaylist;
@@ -522,6 +536,16 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               Icons.history_rounded,
               const Color(0xFFFFB74D),
               widget.onOpenRecent,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idMostPlayed:
+          entries.add(
+            _QuickItem(
+              l10n.homeEntryMostPlayed,
+              Icons.equalizer_rounded,
+              const Color(0xFFFF8A65),
+              widget.onOpenMostPlayed,
             ),
           );
           break;
@@ -689,6 +713,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           pinned: true,
           delegate: _RecentAndMostPinnedHeaderDelegate(
             onOpenRecent: widget.onOpenRecent,
+            onOpenMostPlayed: widget.onOpenMostPlayed,
             horizontalPadding: _hPad,
             showMost: showMostInBar,
             useFrosted: useFrostedMerged,
@@ -839,7 +864,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                             i,
                             recordRecent: true,
                             bumpPlayCount: false,
-                            session: PlaybackSessionSurface.adHoc,
+                            session: PlaybackSessionSurface.mostPlayedList,
                           );
                         },
                       ),
@@ -871,12 +896,14 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
 class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
   const _RecentAndMostPinnedHeaderDelegate({
     required this.onOpenRecent,
+    required this.onOpenMostPlayed,
     required this.horizontalPadding,
     required this.showMost,
     required this.useFrosted,
   });
 
   final VoidCallback onOpenRecent;
+  final VoidCallback onOpenMostPlayed;
   final double horizontalPadding;
   final bool showMost;
   final bool useFrosted;
@@ -901,7 +928,11 @@ class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate 
       child: Padding(
         padding: EdgeInsets.fromLTRB(horizontalPadding, 0, 8, 0),
         child: showMost
-            ? _SectionTitle(title: l10n.homeSectionMostPlayed)
+            ? _SectionTitle(
+                title: l10n.homeSectionMostPlayed,
+                actionLabel: l10n.homeActionAll,
+                onAction: onOpenMostPlayed,
+              )
             : _SectionTitle(
                 title: l10n.homeSectionRecentPlays,
                 actionLabel: l10n.homeActionAll,
@@ -923,6 +954,7 @@ class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate 
     covariant _RecentAndMostPinnedHeaderDelegate oldDelegate,
   ) {
     return oldDelegate.onOpenRecent != onOpenRecent ||
+        oldDelegate.onOpenMostPlayed != onOpenMostPlayed ||
         oldDelegate.horizontalPadding != horizontalPadding ||
         oldDelegate.showMost != showMost ||
         oldDelegate.useFrosted != useFrosted;

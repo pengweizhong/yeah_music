@@ -20,6 +20,8 @@ class CompactSongListRow extends StatefulWidget {
     this.isCurrent = false,
     this.showAddToPlaylist = true,
     this.onMoreMenuTap,
+    /// 非空时副标题为「艺人·专辑」与累计播放次数（与首页「最多播放」一致）。
+    this.trailingPlayCount,
     this.selectionMode = false,
     this.isSelected = false,
     this.onSelectionTap,
@@ -38,6 +40,7 @@ class CompactSongListRow extends StatefulWidget {
   final bool showAddToPlaylist;
   /// 若提供则在尾部显示「更多」菜单，且**不再**显示加入歌单按钮（与 [showAddToPlaylist] 二选一优先）。
   final VoidCallback? onMoreMenuTap;
+  final int? trailingPlayCount;
   /// 批量选曲：显示勾选并改 [onTap] 为勾选切换（通过 [onSelectionTap]）。
   final bool selectionMode;
   final bool isSelected;
@@ -168,17 +171,29 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        SongListSubtitleWithQualityRow(
-                          song: widget.song,
-                          fallbackSubtitle: widget.subtitle,
-                          compactBadge: false,
-                          textStyle: TextStyle(
-                            color: widget.isCurrent
-                                ? primary.withValues(alpha: 0.82)
-                                : Colors.white.withValues(alpha: 0.6),
-                            fontSize: 13,
-                          ),
-                        ),
+                        widget.trailingPlayCount != null
+                            ? SongListSubtitleWithQualityMarqueePlayCount(
+                                song: widget.song,
+                                textStyle: TextStyle(
+                                  color: widget.isCurrent
+                                      ? primary.withValues(alpha: 0.82)
+                                      : Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 13,
+                                ),
+                                playCount: widget.trailingPlayCount!,
+                                l10n: l10n,
+                              )
+                            : SongListSubtitleWithQualityRow(
+                                song: widget.song,
+                                fallbackSubtitle: widget.subtitle,
+                                compactBadge: false,
+                                textStyle: TextStyle(
+                                  color: widget.isCurrent
+                                      ? primary.withValues(alpha: 0.82)
+                                      : Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 13,
+                                ),
+                              ),
                       ],
                     ),
                   ),

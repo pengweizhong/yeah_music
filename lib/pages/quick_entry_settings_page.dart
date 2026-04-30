@@ -40,6 +40,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return l10n.homeEntryMyPlaylists;
       case QuickEntryConfig.idRecent:
         return l10n.homeEntryRecent;
+      case QuickEntryConfig.idMostPlayed:
+        return l10n.homeEntryMostPlayed;
       case QuickEntryConfig.idDiscover:
         return l10n.homeEntryDiscover;
       case QuickEntryConfig.idCloudLibrary:
@@ -61,6 +63,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return Icons.playlist_play_rounded;
       case QuickEntryConfig.idRecent:
         return Icons.history_rounded;
+      case QuickEntryConfig.idMostPlayed:
+        return Icons.equalizer_rounded;
       case QuickEntryConfig.idDiscover:
         return Icons.explore_rounded;
       case QuickEntryConfig.idCloudLibrary:

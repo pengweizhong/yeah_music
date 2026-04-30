@@ -20,6 +20,7 @@ import '../utils/song_display_lines.dart';
 import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
+import '../widgets/app_prompts.dart';
 import '../widgets/compact_song_list_row.dart';
 import '../widgets/library_song_more_actions_sheet.dart';
 import '../widgets/scroll_aware_list_frame.dart';
@@ -255,27 +256,17 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(_filteredSongs);
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
       return;
     }
-    final ok = await showDialog<bool>(
+    final ok = await showAppConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.libraryBatchDeleteConfirmTitle),
-        content: Text(l10n.libraryBatchDeleteConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.actionDelete),
-          ),
-        ],
-      ),
+      title: l10n.libraryBatchDeleteConfirmTitle,
+      message: l10n.libraryBatchDeleteConfirmMessage,
+      icon: Icons.delete_outline_rounded,
+      confirmIsDestructive: true,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionDelete,
     );
     if (ok != true || !context.mounted) return;
     final folder = context.read<FolderProvider>();
@@ -291,16 +282,16 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       );
       if (context.mounted) {
         _exitBatchSelect();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.playlistDeletedOne)),
+        showAppSnackBar(
+          context,
+          l10n.librarySongsDeletedN(selected.length),
+          kind: AppSnackKind.success,
         );
       }
     } catch (e) {
       appLog.e('batch delete failed', error: e);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
     }
   }
@@ -309,9 +300,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(_filteredSongs);
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
       return;
     }
     final ok = await showAddManyToUserPlaylistsSheet(context, selected);
@@ -326,30 +315,28 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     final od = context.read<OneDriveDownloadQueueController>();
     final selected = _selectedSongsInListOrder(_filteredSongs);
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.libraryBatchNoneSelected)));
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
       return;
     }
     try {
       await od.enqueueLibraryUploads(selected);
       if (!context.mounted) return;
       _exitBatchSelect();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.libraryBatchUploadQueued),
-          action: SnackBarAction(
-            label: l10n.libraryBatchOpenQueue,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const OneDriveDownloadQueuePage(
-                    initialTab: OneDriveTransferQueueTab.upload,
-                  ),
+      showAppSnackBar(
+        context,
+        l10n.libraryBatchUploadQueued,
+        kind: AppSnackKind.success,
+        action: SnackBarAction(
+          label: l10n.libraryBatchOpenQueue,
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const OneDriveDownloadQueuePage(
+                  initialTab: OneDriveTransferQueueTab.upload,
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       );
     } on StateError catch (e) {
@@ -360,12 +347,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           : msg.contains('upload folder unset')
               ? l10n.libraryBatchUploadNeedCloudFolder
               : '$e';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+      showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
       }
     }
   }
@@ -606,76 +591,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   }
 }
 
-/// 单首重命名对话框：在 [State] 内创建并 [dispose] [TextEditingController]，避免关闭动画期间误用已释放的 controller。
-class _SingleSongRenameDialog extends StatefulWidget {
-  const _SingleSongRenameDialog({
-    required this.l10n,
-    required this.initialStem,
-  });
-
-  final AppLocalizations l10n;
-  final String initialStem;
-
-  @override
-  State<_SingleSongRenameDialog> createState() => _SingleSongRenameDialogState();
-}
-
-class _SingleSongRenameDialogState extends State<_SingleSongRenameDialog> {
-  late final TextEditingController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(text: widget.initialStem);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.l10n.libraryRenameSingleTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              widget.l10n.libraryRenameSingleHint,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _ctrl,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: widget.l10n.libraryRenameSingleFieldLabel,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop<String?>(context, null),
-          child: Text(widget.l10n.actionCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop<String?>(context, _ctrl.text.trim()),
-          child: Text(widget.l10n.actionOK),
-        ),
-      ],
-    );
-  }
-}
-
 /// 搜索代理；[playbackContextQueue] 非空时，选中歌曲将按该队列播放（如用户歌单页）
 class SongSearchDelegate extends SearchDelegate<Song?> {
   final List<Song> allSongs;
@@ -685,6 +600,16 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   /// 当 [playbackContextQueue] 为用户歌单时传入，用于 [PlaybackSessionSurface.userPlaylist]
   final String? userPlaylistIdForContext;
 
+  /// 与 [playbackContextQueue] 同时使用时指定会话（如 [PlaybackSessionSurface.recentList]）。
+  /// 为 null 时仍按「用户歌单 / 临时队列」推断。
+  final PlaybackSessionSurface? playbackQueueSession;
+
+  /// [playbackContextQueue] 播放时传给 [PlayListProvider.setPlaybackQueueAndPlay]。
+  final bool playbackQueueRecordRecent;
+
+  /// [playbackContextQueue] 播放时是否累计播放次数。
+  final bool playbackQueueBumpPlayCount;
+
   /// 曲库页：行尾「更多」菜单（重命名、加入歌单、查询/重载元数据）。
   final void Function(BuildContext context, Song song)? onSongMore;
 
@@ -693,6 +618,9 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     this.playListProvider, {
     this.playbackContextQueue,
     this.userPlaylistIdForContext,
+    this.playbackQueueSession,
+    this.playbackQueueRecordRecent = true,
+    this.playbackQueueBumpPlayCount = true,
     required this.searchFieldLabelText,
     this.onSongMore,
   }) : super(
@@ -858,12 +786,16 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                     final q = playbackContextQueue!;
                     final idx = q.indexWhere((s) => s.path == song.path);
                     if (idx < 0) return;
+                    final surface = playbackQueueSession ??
+                        (userPlaylistIdForContext != null
+                            ? PlaybackSessionSurface.userPlaylist
+                            : PlaybackSessionSurface.adHoc);
                     await p.setPlaybackQueueAndPlay(
                       q,
                       idx,
-                      session: userPlaylistIdForContext != null
-                          ? PlaybackSessionSurface.userPlaylist
-                          : PlaybackSessionSurface.adHoc,
+                      recordRecent: playbackQueueRecordRecent,
+                      bumpPlayCount: playbackQueueBumpPlayCount,
+                      session: surface,
                       userPlaylistId: userPlaylistIdForContext,
                     );
                     return;

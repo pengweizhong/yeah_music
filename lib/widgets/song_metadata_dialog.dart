@@ -10,6 +10,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 String _formatMetaBytes(int n) {
   if (n < 1024) return '$n B';
@@ -386,8 +387,10 @@ Future<void> tryShowAudioMetadataDialogForSong(
   final file = File(path);
   if (!await file.exists()) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+    showAppSnackBar(
+      context,
+      l10n.songPageMetadataReadFailed,
+      kind: AppSnackKind.error,
     );
     return;
   }
@@ -397,8 +400,10 @@ Future<void> tryShowAudioMetadataDialogForSong(
   } catch (e, st) {
     appLog.e('read metadata for sheet failed', error: e, stackTrace: st);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.songPageMetadataReadFailed)),
+    showAppSnackBar(
+      context,
+      l10n.songPageMetadataReadFailed,
+      kind: AppSnackKind.error,
     );
     return;
   }

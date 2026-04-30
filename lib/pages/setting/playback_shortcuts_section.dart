@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/playback_shortcut_controller.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
@@ -19,42 +20,68 @@ bool _isModifierOnlyKey(LogicalKeyboardKey k) {
 
 Future<SingleActivator?> _recordShortcut(BuildContext context) {
   final l10n = AppLocalizations.of(context);
-  return showDialog<SingleActivator>(
+  return showFrostedDialog<SingleActivator>(
     context: context,
-    builder: (ctx) {
-      return AlertDialog(
-        title: Text(l10n.settingsPlaybackShortcutsPressKey),
-        content: Focus(
-          autofocus: true,
-          onKeyEvent: (node, event) {
-            if (event is! KeyDownEvent) return KeyEventResult.ignored;
-            if (event.logicalKey == LogicalKeyboardKey.escape) {
-              Navigator.of(ctx).pop();
-              return KeyEventResult.handled;
-            }
-            if (_isModifierOnlyKey(event.logicalKey)) {
-              return KeyEventResult.ignored;
-            }
-            final a = SingleActivator(
-              event.logicalKey,
-              control: HardwareKeyboard.instance.isControlPressed,
-              meta: HardwareKeyboard.instance.isMetaPressed,
-              alt: HardwareKeyboard.instance.isAltPressed,
-              shift: HardwareKeyboard.instance.isShiftPressed,
-            );
-            Navigator.of(ctx).pop(a);
-            return KeyEventResult.handled;
-          },
-          child: Text(l10n.settingsPlaybackShortcutsPressKeyHint),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.actionCancel),
+    child: Builder(
+      builder: (ctx) {
+        final scheme = Theme.of(ctx).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.settingsPlaybackShortcutsPressKey,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Focus(
+                autofocus: true,
+                onKeyEvent: (node, event) {
+                  if (event is! KeyDownEvent) return KeyEventResult.ignored;
+                  if (event.logicalKey == LogicalKeyboardKey.escape) {
+                    Navigator.of(ctx).pop();
+                    return KeyEventResult.handled;
+                  }
+                  if (_isModifierOnlyKey(event.logicalKey)) {
+                    return KeyEventResult.ignored;
+                  }
+                  final a = SingleActivator(
+                    event.logicalKey,
+                    control: HardwareKeyboard.instance.isControlPressed,
+                    meta: HardwareKeyboard.instance.isMetaPressed,
+                    alt: HardwareKeyboard.instance.isAltPressed,
+                    shift: HardwareKeyboard.instance.isShiftPressed,
+                  );
+                  Navigator.of(ctx).pop(a);
+                  return KeyEventResult.handled;
+                },
+                child: Text(
+                  l10n.settingsPlaybackShortcutsPressKeyHint,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.actionCancel),
+                ),
+              ),
+            ],
           ),
-        ],
-      );
-    },
+        );
+      },
+    ),
   );
 }
 

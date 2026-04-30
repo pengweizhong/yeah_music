@@ -1029,6 +1029,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeEntryRecent => 'Recent';
 
   @override
+  String get homeEntryMostPlayed => 'Top plays';
+
+  @override
   String get homeEntryDiscover => 'Discover';
 
   @override
@@ -1072,6 +1075,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeMostPlayedEmpty =>
       'No play stats yet. Play more songs in the library or a playlist to build a top list.';
+
+  @override
+  String get mostPlayedSwitchSortAscending =>
+      'Switch to ascending play count (least plays first)';
+
+  @override
+  String get mostPlayedSwitchSortDescending =>
+      'Switch to descending play count (most plays first)';
 
   @override
   String homePlayCount(int c) {
@@ -1652,6 +1663,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String playlistsDeletedN(int n) {
     return 'Deleted $n playlist(s)';
+  }
+
+  @override
+  String librarySongsDeletedN(int n) {
+    return 'Deleted $n song(s)';
   }
 
   @override
