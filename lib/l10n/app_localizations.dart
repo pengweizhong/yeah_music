@@ -132,11 +132,209 @@ abstract class AppLocalizations {
   /// **'Media folders'**
   String get menuMusicSource;
 
+  /// No description provided for @menuStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get menuStatistics;
+
   /// No description provided for @menuSettings.
   ///
   /// In en, this message translates to:
   /// **'Settings'**
   String get menuSettings;
+
+  /// No description provided for @statisticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statisticsTitle;
+
+  /// No description provided for @statisticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview of your library, listening activity, and playlists'**
+  String get statisticsSubtitle;
+
+  /// No description provided for @statisticsReloadTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get statisticsReloadTooltip;
+
+  /// No description provided for @statisticsSectionLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get statisticsSectionLibrary;
+
+  /// No description provided for @statisticsSectionPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get statisticsSectionPlayback;
+
+  /// No description provided for @statisticsSectionPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get statisticsSectionPlaylists;
+
+  /// No description provided for @statisticsSectionOneDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive'**
+  String get statisticsSectionOneDrive;
+
+  /// No description provided for @statisticsTracksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks'**
+  String get statisticsTracksLabel;
+
+  /// No description provided for @statisticsFoldersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Media folders'**
+  String get statisticsFoldersLabel;
+
+  /// No description provided for @statisticsDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated duration'**
+  String get statisticsDurationLabel;
+
+  /// No description provided for @statisticsDurationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sum of durations where metadata is available'**
+  String get statisticsDurationHint;
+
+  /// No description provided for @statisticsFormatsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Formats'**
+  String get statisticsFormatsLabel;
+
+  /// No description provided for @statisticsFormatsOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get statisticsFormatsOther;
+
+  /// No description provided for @statisticsFormatsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more types'**
+  String statisticsFormatsMore(int count);
+
+  /// No description provided for @statisticsQualityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality'**
+  String get statisticsQualityLabel;
+
+  /// No description provided for @statisticsQualityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Same tiers as library badges: format, bitrate, and sample rate when tags allow classification.'**
+  String get statisticsQualityHint;
+
+  /// No description provided for @statisticsQualityUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get statisticsQualityUnknown;
+
+  /// No description provided for @statisticsPlaybackTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total play events'**
+  String get statisticsPlaybackTotalLabel;
+
+  /// No description provided for @statisticsPlaybackTotalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sum of stored play counts'**
+  String get statisticsPlaybackTotalSubtitle;
+
+  /// No description provided for @statisticsPlaybackDistinctLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks with play history'**
+  String get statisticsPlaybackDistinctLabel;
+
+  /// No description provided for @statisticsRecentEntriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent plays entries'**
+  String get statisticsRecentEntriesLabel;
+
+  /// No description provided for @statisticsRecentEntriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} paths kept locally'**
+  String statisticsRecentEntriesSubtitle(int max);
+
+  /// No description provided for @statisticsPlaylistsCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your playlists'**
+  String get statisticsPlaylistsCountLabel;
+
+  /// No description provided for @statisticsPlaylistRefsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist entries'**
+  String get statisticsPlaylistRefsLabel;
+
+  /// No description provided for @statisticsPlaylistRefsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paths across playlists; duplicates count separately'**
+  String get statisticsPlaylistRefsSubtitle;
+
+  /// No description provided for @statisticsOneDriveIndexedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud library tracks'**
+  String get statisticsOneDriveIndexedLabel;
+
+  /// No description provided for @statisticsOneDriveCachedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached / downloaded locally'**
+  String get statisticsOneDriveCachedLabel;
+
+  /// No description provided for @statisticsOneDriveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in for cloud statistics'**
+  String get statisticsOneDriveUnavailable;
+
+  /// No description provided for @statisticsNotInitialized.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing library…'**
+  String get statisticsNotInitialized;
+
+  /// No description provided for @statisticsDurationHM.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String statisticsDurationHM(int hours, int minutes);
+
+  /// No description provided for @statisticsDurationMOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String statisticsDurationMOnly(int minutes);
+
+  /// No description provided for @statisticsDurationUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not estimate'**
+  String get statisticsDurationUnknown;
 
   /// No description provided for @settingsTitle.
   ///

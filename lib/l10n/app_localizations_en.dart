@@ -24,7 +24,118 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuMusicSource => 'Media folders';
 
   @override
+  String get menuStatistics => 'Statistics';
+
+  @override
   String get menuSettings => 'Settings';
+
+  @override
+  String get statisticsTitle => 'Statistics';
+
+  @override
+  String get statisticsSubtitle =>
+      'Overview of your library, listening activity, and playlists';
+
+  @override
+  String get statisticsReloadTooltip => 'Refresh';
+
+  @override
+  String get statisticsSectionLibrary => 'Library';
+
+  @override
+  String get statisticsSectionPlayback => 'Playback';
+
+  @override
+  String get statisticsSectionPlaylists => 'Playlists';
+
+  @override
+  String get statisticsSectionOneDrive => 'OneDrive';
+
+  @override
+  String get statisticsTracksLabel => 'Tracks';
+
+  @override
+  String get statisticsFoldersLabel => 'Media folders';
+
+  @override
+  String get statisticsDurationLabel => 'Estimated duration';
+
+  @override
+  String get statisticsDurationHint =>
+      'Sum of durations where metadata is available';
+
+  @override
+  String get statisticsFormatsLabel => 'Formats';
+
+  @override
+  String get statisticsFormatsOther => 'Other';
+
+  @override
+  String statisticsFormatsMore(int count) {
+    return '$count more types';
+  }
+
+  @override
+  String get statisticsQualityLabel => 'Audio quality';
+
+  @override
+  String get statisticsQualityHint =>
+      'Same tiers as library badges: format, bitrate, and sample rate when tags allow classification.';
+
+  @override
+  String get statisticsQualityUnknown => 'Unknown';
+
+  @override
+  String get statisticsPlaybackTotalLabel => 'Total play events';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => 'Sum of stored play counts';
+
+  @override
+  String get statisticsPlaybackDistinctLabel => 'Tracks with play history';
+
+  @override
+  String get statisticsRecentEntriesLabel => 'Recent plays entries';
+
+  @override
+  String statisticsRecentEntriesSubtitle(int max) {
+    return 'Up to $max paths kept locally';
+  }
+
+  @override
+  String get statisticsPlaylistsCountLabel => 'Your playlists';
+
+  @override
+  String get statisticsPlaylistRefsLabel => 'Playlist entries';
+
+  @override
+  String get statisticsPlaylistRefsSubtitle =>
+      'Paths across playlists; duplicates count separately';
+
+  @override
+  String get statisticsOneDriveIndexedLabel => 'Cloud library tracks';
+
+  @override
+  String get statisticsOneDriveCachedLabel => 'Cached / downloaded locally';
+
+  @override
+  String get statisticsOneDriveUnavailable => 'Sign in for cloud statistics';
+
+  @override
+  String get statisticsNotInitialized => 'Initializing library…';
+
+  @override
+  String statisticsDurationHM(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String statisticsDurationMOnly(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get statisticsDurationUnknown => 'Could not estimate';
 
   @override
   String get settingsTitle => 'Settings';

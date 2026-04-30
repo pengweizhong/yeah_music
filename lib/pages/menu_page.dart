@@ -3,6 +3,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/setting_page.dart';
+import 'package:yeah_music/pages/statistics_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
 
 import '../pages/setting/folder_page_setting.dart';
@@ -102,6 +103,25 @@ class _MenuPageState extends State<MenuPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => FolderPageSettings(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              //统计
+              Padding(
+                padding: const EdgeInsets.only(left: 80, right: 80, top: 5),
+                child: ListTile(
+                  title: Text(
+                    l10n.menuStatistics,
+                    style: TextStyle(color: context.gradFg()),
+                  ),
+                  leading: Icon(Icons.insights_outlined, color: context.gradFg()),
+                  onTap: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const StatisticsPage(),
                       ),
                     );
                   },

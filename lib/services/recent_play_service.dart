@@ -208,4 +208,46 @@ class RecentPlayService {
       return [];
     }
   }
+
+  /// 当前保存在 Hive 中的「最近播放」路径条数（最多 [maxStoredRecentPaths]）。
+  static Future<int> getRecentListStoredCount() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_hiveKey);
+      if (raw is! List<dynamic>) return 0;
+      return raw
+          .whereType<String>()
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// 播放次数映射：有记录的曲目数（次数 > 0）、累计播放事件总和。
+  static Future<({int tracksWithCounts, int totalPlayEvents})>
+      getPlayCountTotals() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_playCountKey);
+      if (raw is! Map) {
+        return (tracksWithCounts: 0, totalPlayEvents: 0);
+      }
+      var tracks = 0;
+      var total = 0;
+      for (final e in raw.entries) {
+        if (e.key is! String) continue;
+        final k = (e.key as String).trim();
+        if (k.isEmpty) continue;
+        final c = _asIntCount(e.value);
+        if (c <= 0) continue;
+        tracks++;
+        total += c;
+      }
+      return (tracksWithCounts: tracks, totalPlayEvents: total);
+    } catch (_) {
+      return (tracksWithCounts: 0, totalPlayEvents: 0);
+    }
+  }
 }

@@ -24,7 +24,115 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuMusicSource => '音楽フォルダ';
 
   @override
+  String get menuStatistics => '統計';
+
+  @override
   String get menuSettings => '設定';
+
+  @override
+  String get statisticsTitle => '統計';
+
+  @override
+  String get statisticsSubtitle => 'ライブラリ・再生・プレイリストの概要';
+
+  @override
+  String get statisticsReloadTooltip => '更新';
+
+  @override
+  String get statisticsSectionLibrary => 'ライブラリ';
+
+  @override
+  String get statisticsSectionPlayback => '再生';
+
+  @override
+  String get statisticsSectionPlaylists => 'プレイリスト';
+
+  @override
+  String get statisticsSectionOneDrive => 'OneDrive';
+
+  @override
+  String get statisticsTracksLabel => '曲数';
+
+  @override
+  String get statisticsFoldersLabel => 'メディアフォルダ';
+
+  @override
+  String get statisticsDurationLabel => '推定総再生時間';
+
+  @override
+  String get statisticsDurationHint => 'メタデータに長さがある曲のみ合計';
+
+  @override
+  String get statisticsFormatsLabel => 'フォーマット';
+
+  @override
+  String get statisticsFormatsOther => 'その他';
+
+  @override
+  String statisticsFormatsMore(int count) {
+    return 'ほか $count 種類';
+  }
+
+  @override
+  String get statisticsQualityLabel => '音質の分布';
+
+  @override
+  String get statisticsQualityHint =>
+      'ライブラリの音質バッジと同じ推定（形式・ビットレート・サンプルレートが取得できる場合）';
+
+  @override
+  String get statisticsQualityUnknown => '不明';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '累計再生回数';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '保存されている再生回数の合計';
+
+  @override
+  String get statisticsPlaybackDistinctLabel => '再生履歴のある曲';
+
+  @override
+  String get statisticsRecentEntriesLabel => '最近再生リスト件数';
+
+  @override
+  String statisticsRecentEntriesSubtitle(int max) {
+    return 'ローカルに最大 $max 件まで保存';
+  }
+
+  @override
+  String get statisticsPlaylistsCountLabel => 'マイプレイリスト数';
+
+  @override
+  String get statisticsPlaylistRefsLabel => 'プレイリスト内エントリ';
+
+  @override
+  String get statisticsPlaylistRefsSubtitle => '各リストのパス数の合計（重複カウントあり）';
+
+  @override
+  String get statisticsOneDriveIndexedLabel => 'クラウド索引トラック';
+
+  @override
+  String get statisticsOneDriveCachedLabel => 'キャッシュ／ダウンロード済み';
+
+  @override
+  String get statisticsOneDriveUnavailable => 'クラウド統計はサインイン後に表示';
+
+  @override
+  String get statisticsNotInitialized => 'ライブラリを初期化しています…';
+
+  @override
+  String statisticsDurationHM(int hours, int minutes) {
+    return '$hours 時間 $minutes 分';
+  }
+
+  @override
+  String statisticsDurationMOnly(int minutes) {
+    return '$minutes 分';
+  }
+
+  @override
+  String get statisticsDurationUnknown => '算出できません';
 
   @override
   String get settingsTitle => '設定';

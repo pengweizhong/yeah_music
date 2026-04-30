@@ -5,7 +5,61 @@
   "menuSongList": "曲库",
   "menuPlaylists": "プレイリスト",
   "menuMusicSource": "音楽フォルダ",
+  "menuStatistics": "統計",
   "menuSettings": "設定",
+  "statisticsTitle": "統計",
+  "statisticsSubtitle": "ライブラリ・再生・プレイリストの概要",
+  "statisticsReloadTooltip": "更新",
+  "statisticsSectionLibrary": "ライブラリ",
+  "statisticsSectionPlayback": "再生",
+  "statisticsSectionPlaylists": "プレイリスト",
+  "statisticsSectionOneDrive": "OneDrive",
+  "statisticsTracksLabel": "曲数",
+  "statisticsFoldersLabel": "メディアフォルダ",
+  "statisticsDurationLabel": "推定総再生時間",
+  "statisticsDurationHint": "メタデータに長さがある曲のみ合計",
+  "statisticsFormatsLabel": "フォーマット",
+  "statisticsFormatsOther": "その他",
+  "statisticsFormatsMore": "ほか {count} 種類",
+  "@statisticsFormatsMore": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statisticsQualityLabel": "音質の分布",
+  "statisticsQualityHint": "ライブラリの音質バッジと同じ推定（形式・ビットレート・サンプルレートが取得できる場合）",
+  "statisticsQualityUnknown": "不明",
+  "statisticsPlaybackTotalLabel": "累計再生回数",
+  "statisticsPlaybackTotalSubtitle": "保存されている再生回数の合計",
+  "statisticsPlaybackDistinctLabel": "再生履歴のある曲",
+  "statisticsRecentEntriesLabel": "最近再生リスト件数",
+  "statisticsRecentEntriesSubtitle": "ローカルに最大 {max} 件まで保存",
+  "@statisticsRecentEntriesSubtitle": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "statisticsPlaylistsCountLabel": "マイプレイリスト数",
+  "statisticsPlaylistRefsLabel": "プレイリスト内エントリ",
+  "statisticsPlaylistRefsSubtitle": "各リストのパス数の合計（重複カウントあり）",
+  "statisticsOneDriveIndexedLabel": "クラウド索引トラック",
+  "statisticsOneDriveCachedLabel": "キャッシュ／ダウンロード済み",
+  "statisticsOneDriveUnavailable": "クラウド統計はサインイン後に表示",
+  "statisticsNotInitialized": "ライブラリを初期化しています…",
+  "statisticsDurationHM": "{hours} 時間 {minutes} 分",
+  "@statisticsDurationHM": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "statisticsDurationMOnly": "{minutes} 分",
+  "@statisticsDurationMOnly": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "statisticsDurationUnknown": "算出できません",
   "settingsTitle": "設定",
   "settingsRowHelpTooltip": "詳細",
   "settingsBackgroundTheme": "背景とテーマ",

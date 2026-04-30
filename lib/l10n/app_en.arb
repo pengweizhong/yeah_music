@@ -5,7 +5,61 @@
   "menuSongList": "Songs",
   "menuPlaylists": "Playlists",
   "menuMusicSource": "Media folders",
+  "menuStatistics": "Statistics",
   "menuSettings": "Settings",
+  "statisticsTitle": "Statistics",
+  "statisticsSubtitle": "Overview of your library, listening activity, and playlists",
+  "statisticsReloadTooltip": "Refresh",
+  "statisticsSectionLibrary": "Library",
+  "statisticsSectionPlayback": "Playback",
+  "statisticsSectionPlaylists": "Playlists",
+  "statisticsSectionOneDrive": "OneDrive",
+  "statisticsTracksLabel": "Tracks",
+  "statisticsFoldersLabel": "Media folders",
+  "statisticsDurationLabel": "Estimated duration",
+  "statisticsDurationHint": "Sum of durations where metadata is available",
+  "statisticsFormatsLabel": "Formats",
+  "statisticsFormatsOther": "Other",
+  "statisticsFormatsMore": "{count} more types",
+  "@statisticsFormatsMore": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statisticsQualityLabel": "Audio quality",
+  "statisticsQualityHint": "Same tiers as library badges: format, bitrate, and sample rate when tags allow classification.",
+  "statisticsQualityUnknown": "Unknown",
+  "statisticsPlaybackTotalLabel": "Total play events",
+  "statisticsPlaybackTotalSubtitle": "Sum of stored play counts",
+  "statisticsPlaybackDistinctLabel": "Tracks with play history",
+  "statisticsRecentEntriesLabel": "Recent plays entries",
+  "statisticsRecentEntriesSubtitle": "Up to {max} paths kept locally",
+  "@statisticsRecentEntriesSubtitle": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "statisticsPlaylistsCountLabel": "Your playlists",
+  "statisticsPlaylistRefsLabel": "Playlist entries",
+  "statisticsPlaylistRefsSubtitle": "Paths across playlists; duplicates count separately",
+  "statisticsOneDriveIndexedLabel": "Cloud library tracks",
+  "statisticsOneDriveCachedLabel": "Cached / downloaded locally",
+  "statisticsOneDriveUnavailable": "Sign in for cloud statistics",
+  "statisticsNotInitialized": "Initializing library…",
+  "statisticsDurationHM": "{hours} h {minutes} min",
+  "@statisticsDurationHM": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "statisticsDurationMOnly": "{minutes} min",
+  "@statisticsDurationMOnly": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "statisticsDurationUnknown": "Could not estimate",
   "settingsTitle": "Settings",
   "settingsBackgroundTheme": "Background & theme",
   "settingsBackgroundThemeSubtitle": "Solid color, custom color, or wallpaper",

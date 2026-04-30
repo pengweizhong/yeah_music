@@ -5,7 +5,61 @@
   "menuSongList": "歌曲列表",
   "menuPlaylists": "歌單",
   "menuMusicSource": "音樂來源",
+  "menuStatistics": "統計",
   "menuSettings": "設定",
+  "statisticsTitle": "統計",
+  "statisticsSubtitle": "曲庫、收聽習慣與歌單概覽",
+  "statisticsReloadTooltip": "重新整理",
+  "statisticsSectionLibrary": "曲庫",
+  "statisticsSectionPlayback": "播放",
+  "statisticsSectionPlaylists": "歌單",
+  "statisticsSectionOneDrive": "OneDrive",
+  "statisticsTracksLabel": "曲目總數",
+  "statisticsFoldersLabel": "音樂資料夾",
+  "statisticsDurationLabel": "估算總長度",
+  "statisticsDurationHint": "僅統計詮釋資料中含有效長度的曲目",
+  "statisticsFormatsLabel": "格式分布",
+  "statisticsFormatsOther": "其他",
+  "statisticsFormatsMore": "另有 {count} 種副檔名",
+  "@statisticsFormatsMore": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statisticsQualityLabel": "音質分布",
+  "statisticsQualityHint": "與曲庫音質標識相同規則：在詮釋資料可讀時依格式、位元率與取樣率推斷分級",
+  "statisticsQualityUnknown": "未知",
+  "statisticsPlaybackTotalLabel": "累計播放次數",
+  "statisticsPlaybackTotalSubtitle": "本機記錄的播放次數之和",
+  "statisticsPlaybackDistinctLabel": "有播放記錄的曲目數",
+  "statisticsRecentEntriesLabel": "最近播放列表筆數",
+  "statisticsRecentEntriesSubtitle": "本機最多保留 {max} 筆路徑",
+  "@statisticsRecentEntriesSubtitle": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "statisticsPlaylistsCountLabel": "自建歌單數量",
+  "statisticsPlaylistRefsLabel": "歌單內曲目條目",
+  "statisticsPlaylistRefsSubtitle": "各歌單路徑數相加；同一首歌在多歌單中會重複計數",
+  "statisticsOneDriveIndexedLabel": "雲端索引曲目",
+  "statisticsOneDriveCachedLabel": "已快取 / 下載到本機",
+  "statisticsOneDriveUnavailable": "登入 OneDrive 後查看雲端統計",
+  "statisticsNotInitialized": "正在初始化曲庫…",
+  "statisticsDurationHM": "{hours} 小時 {minutes} 分鐘",
+  "@statisticsDurationHM": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "statisticsDurationMOnly": "{minutes} 分鐘",
+  "@statisticsDurationMOnly": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "statisticsDurationUnknown": "無法估算",
   "settingsTitle": "設定",
   "settingsRowHelpTooltip": "說明",
   "settingsBackgroundTheme": "背景主題",

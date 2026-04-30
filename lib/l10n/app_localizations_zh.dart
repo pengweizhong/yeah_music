@@ -24,7 +24,114 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuMusicSource => '音乐源';
 
   @override
+  String get menuStatistics => '统计';
+
+  @override
   String get menuSettings => '设置';
+
+  @override
+  String get statisticsTitle => '统计';
+
+  @override
+  String get statisticsSubtitle => '曲库、收听习惯与歌单概览';
+
+  @override
+  String get statisticsReloadTooltip => '刷新';
+
+  @override
+  String get statisticsSectionLibrary => '曲库';
+
+  @override
+  String get statisticsSectionPlayback => '播放';
+
+  @override
+  String get statisticsSectionPlaylists => '歌单';
+
+  @override
+  String get statisticsSectionOneDrive => 'OneDrive';
+
+  @override
+  String get statisticsTracksLabel => '曲目总数';
+
+  @override
+  String get statisticsFoldersLabel => '音乐文件夹';
+
+  @override
+  String get statisticsDurationLabel => '估算总时长';
+
+  @override
+  String get statisticsDurationHint => '仅统计元数据中带有有效时长的曲目';
+
+  @override
+  String get statisticsFormatsLabel => '格式分布';
+
+  @override
+  String get statisticsFormatsOther => '其他';
+
+  @override
+  String statisticsFormatsMore(int count) {
+    return '另有 $count 种扩展名';
+  }
+
+  @override
+  String get statisticsQualityLabel => '音质分布';
+
+  @override
+  String get statisticsQualityHint => '与曲库音质标识相同规则：在元数据可读时根据格式、码率与采样率推断分级';
+
+  @override
+  String get statisticsQualityUnknown => '未知';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '累计播放次数';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '本地记录的播放次数之和';
+
+  @override
+  String get statisticsPlaybackDistinctLabel => '有播放记录的曲目数';
+
+  @override
+  String get statisticsRecentEntriesLabel => '最近播放列表条数';
+
+  @override
+  String statisticsRecentEntriesSubtitle(int max) {
+    return '本地最多保留 $max 条路径';
+  }
+
+  @override
+  String get statisticsPlaylistsCountLabel => '自建歌单数量';
+
+  @override
+  String get statisticsPlaylistRefsLabel => '歌单内曲目条目';
+
+  @override
+  String get statisticsPlaylistRefsSubtitle => '各歌单路径数相加；同一首歌在多歌单中会重复计数';
+
+  @override
+  String get statisticsOneDriveIndexedLabel => '云端索引曲目';
+
+  @override
+  String get statisticsOneDriveCachedLabel => '已缓存 / 下载到本地';
+
+  @override
+  String get statisticsOneDriveUnavailable => '登录 OneDrive 后查看云端统计';
+
+  @override
+  String get statisticsNotInitialized => '正在初始化曲库…';
+
+  @override
+  String statisticsDurationHM(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String statisticsDurationMOnly(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String get statisticsDurationUnknown => '无法估算';
 
   @override
   String get settingsTitle => '设置';
@@ -2157,7 +2264,114 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get menuMusicSource => '音乐源';
 
   @override
+  String get menuStatistics => '统计';
+
+  @override
   String get menuSettings => '设置';
+
+  @override
+  String get statisticsTitle => '统计';
+
+  @override
+  String get statisticsSubtitle => '曲库、收听习惯与歌单概览';
+
+  @override
+  String get statisticsReloadTooltip => '刷新';
+
+  @override
+  String get statisticsSectionLibrary => '曲库';
+
+  @override
+  String get statisticsSectionPlayback => '播放';
+
+  @override
+  String get statisticsSectionPlaylists => '歌单';
+
+  @override
+  String get statisticsSectionOneDrive => 'OneDrive';
+
+  @override
+  String get statisticsTracksLabel => '曲目总数';
+
+  @override
+  String get statisticsFoldersLabel => '音乐文件夹';
+
+  @override
+  String get statisticsDurationLabel => '估算总时长';
+
+  @override
+  String get statisticsDurationHint => '仅统计元数据中带有有效时长的曲目';
+
+  @override
+  String get statisticsFormatsLabel => '格式分布';
+
+  @override
+  String get statisticsFormatsOther => '其他';
+
+  @override
+  String statisticsFormatsMore(int count) {
+    return '另有 $count 种扩展名';
+  }
+
+  @override
+  String get statisticsQualityLabel => '音质分布';
+
+  @override
+  String get statisticsQualityHint => '与曲库音质标识相同规则：在元数据可读时根据格式、码率与采样率推断分级';
+
+  @override
+  String get statisticsQualityUnknown => '未知';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '累计播放次数';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '本地记录的播放次数之和';
+
+  @override
+  String get statisticsPlaybackDistinctLabel => '有播放记录的曲目数';
+
+  @override
+  String get statisticsRecentEntriesLabel => '最近播放列表条数';
+
+  @override
+  String statisticsRecentEntriesSubtitle(int max) {
+    return '本地最多保留 $max 条路径';
+  }
+
+  @override
+  String get statisticsPlaylistsCountLabel => '自建歌单数量';
+
+  @override
+  String get statisticsPlaylistRefsLabel => '歌单内曲目条目';
+
+  @override
+  String get statisticsPlaylistRefsSubtitle => '各歌单路径数相加；同一首歌在多歌单中会重复计数';
+
+  @override
+  String get statisticsOneDriveIndexedLabel => '云端索引曲目';
+
+  @override
+  String get statisticsOneDriveCachedLabel => '已缓存 / 下载到本地';
+
+  @override
+  String get statisticsOneDriveUnavailable => '登录 OneDrive 后查看云端统计';
+
+  @override
+  String get statisticsNotInitialized => '正在初始化曲库…';
+
+  @override
+  String statisticsDurationHM(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String statisticsDurationMOnly(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String get statisticsDurationUnknown => '无法估算';
 
   @override
   String get settingsTitle => '设置';
@@ -4290,7 +4504,114 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get menuMusicSource => '音樂來源';
 
   @override
+  String get menuStatistics => '統計';
+
+  @override
   String get menuSettings => '設定';
+
+  @override
+  String get statisticsTitle => '統計';
+
+  @override
+  String get statisticsSubtitle => '曲庫、收聽習慣與歌單概覽';
+
+  @override
+  String get statisticsReloadTooltip => '重新整理';
+
+  @override
+  String get statisticsSectionLibrary => '曲庫';
+
+  @override
+  String get statisticsSectionPlayback => '播放';
+
+  @override
+  String get statisticsSectionPlaylists => '歌單';
+
+  @override
+  String get statisticsSectionOneDrive => 'OneDrive';
+
+  @override
+  String get statisticsTracksLabel => '曲目總數';
+
+  @override
+  String get statisticsFoldersLabel => '音樂資料夾';
+
+  @override
+  String get statisticsDurationLabel => '估算總長度';
+
+  @override
+  String get statisticsDurationHint => '僅統計詮釋資料中含有效長度的曲目';
+
+  @override
+  String get statisticsFormatsLabel => '格式分布';
+
+  @override
+  String get statisticsFormatsOther => '其他';
+
+  @override
+  String statisticsFormatsMore(int count) {
+    return '另有 $count 種副檔名';
+  }
+
+  @override
+  String get statisticsQualityLabel => '音質分布';
+
+  @override
+  String get statisticsQualityHint => '與曲庫音質標識相同規則：在詮釋資料可讀時依格式、位元率與取樣率推斷分級';
+
+  @override
+  String get statisticsQualityUnknown => '未知';
+
+  @override
+  String get statisticsPlaybackTotalLabel => '累計播放次數';
+
+  @override
+  String get statisticsPlaybackTotalSubtitle => '本機記錄的播放次數之和';
+
+  @override
+  String get statisticsPlaybackDistinctLabel => '有播放記錄的曲目數';
+
+  @override
+  String get statisticsRecentEntriesLabel => '最近播放列表筆數';
+
+  @override
+  String statisticsRecentEntriesSubtitle(int max) {
+    return '本機最多保留 $max 筆路徑';
+  }
+
+  @override
+  String get statisticsPlaylistsCountLabel => '自建歌單數量';
+
+  @override
+  String get statisticsPlaylistRefsLabel => '歌單內曲目條目';
+
+  @override
+  String get statisticsPlaylistRefsSubtitle => '各歌單路徑數相加；同一首歌在多歌單中會重複計數';
+
+  @override
+  String get statisticsOneDriveIndexedLabel => '雲端索引曲目';
+
+  @override
+  String get statisticsOneDriveCachedLabel => '已快取 / 下載到本機';
+
+  @override
+  String get statisticsOneDriveUnavailable => '登入 OneDrive 後查看雲端統計';
+
+  @override
+  String get statisticsNotInitialized => '正在初始化曲庫…';
+
+  @override
+  String statisticsDurationHM(int hours, int minutes) {
+    return '$hours 小時 $minutes 分鐘';
+  }
+
+  @override
+  String statisticsDurationMOnly(int minutes) {
+    return '$minutes 分鐘';
+  }
+
+  @override
+  String get statisticsDurationUnknown => '無法估算';
 
   @override
   String get settingsTitle => '設定';
