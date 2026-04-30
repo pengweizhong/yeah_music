@@ -6,9 +6,14 @@ import 'package:yeah_music/utils/song_path_utils.dart';
 class RecentPlayService {
   RecentPlayService._();
 
-  static const String _hiveKey = 'recent_song_paths';
-  static const String _playCountKey = 'song_play_count_map';
-  static const String _totalListenedWallMsKey = 'total_listened_wall_clock_ms';
+  /// Hive：最近播放路径列表（最新在前）。
+  static const String hiveKeyRecentSongPaths = 'recent_song_paths';
+
+  /// Hive：各路径累计播放次数。
+  static const String hiveKeySongPlayCountMap = 'song_play_count_map';
+
+  /// Hive：累计收听墙钟毫秒（与 [MusicService] 周期落盘一致）。
+  static const String hiveKeyTotalListenedWallMs = 'total_listened_wall_clock_ms';
 
   /// Hive 中保留的最近播放路径上限（最新在前，超出则从末尾丢弃）。
   static const int maxStoredRecentPaths = 100;
@@ -31,7 +36,7 @@ class RecentPlayService {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       if (updateRecentList) {
-        final rawRecent = box.get(_hiveKey);
+        final rawRecent = box.get(hiveKeyRecentSongPaths);
         final list = <String>[
           if (rawRecent is List<dynamic>)
             ...rawRecent.whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty),
@@ -41,10 +46,10 @@ class RecentPlayService {
         if (list.length > maxStoredRecentPaths) {
           list.removeRange(maxStoredRecentPaths, list.length);
         }
-        await box.put(_hiveKey, list);
+        await box.put(hiveKeyRecentSongPaths, list);
       }
       if (bumpPlayCount) {
-        final rawCount = box.get(_playCountKey);
+        final rawCount = box.get(hiveKeySongPlayCountMap);
         final countMap = <String, int>{};
         if (rawCount is Map) {
           for (final e in rawCount.entries) {
@@ -55,7 +60,7 @@ class RecentPlayService {
           }
         }
         countMap[t] = (countMap[t] ?? 0) + 1;
-        await box.put(_playCountKey, countMap);
+        await box.put(hiveKeySongPlayCountMap, countMap);
       }
     } catch (_) {}
   }
@@ -70,7 +75,7 @@ class RecentPlayService {
 
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final rawRecent = box.get(_hiveKey);
+      final rawRecent = box.get(hiveKeyRecentSongPaths);
       if (rawRecent is List<dynamic>) {
         final list = rawRecent
             .whereType<String>()
@@ -78,9 +83,9 @@ class RecentPlayService {
             .where((e) => e.isNotEmpty)
             .where((e) => !normSet.contains(normSongPath(e)))
             .toList();
-        await box.put(_hiveKey, list);
+        await box.put(hiveKeyRecentSongPaths, list);
       }
-      final rawCount = box.get(_playCountKey);
+      final rawCount = box.get(hiveKeySongPlayCountMap);
       if (rawCount is Map) {
         final countMap = <String, int>{};
         for (final e in rawCount.entries) {
@@ -90,7 +95,7 @@ class RecentPlayService {
           if (normSet.contains(normSongPath(k))) continue;
           countMap[k] = _asIntCount(e.value);
         }
-        await box.put(_playCountKey, countMap);
+        await box.put(hiveKeySongPlayCountMap, countMap);
       }
     } catch (_) {}
   }
@@ -113,7 +118,7 @@ class RecentPlayService {
 
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final rawRecent = box.get(_hiveKey);
+      final rawRecent = box.get(hiveKeyRecentSongPaths);
       if (rawRecent is List<dynamic>) {
         final list = <String>[];
         for (final e in rawRecent.whereType<String>()) {
@@ -122,9 +127,9 @@ class RecentPlayService {
           final n = findNewFor(t);
           list.add(n ?? t);
         }
-        await box.put(_hiveKey, list);
+        await box.put(hiveKeyRecentSongPaths, list);
       }
-      final rawCount = box.get(_playCountKey);
+      final rawCount = box.get(hiveKeySongPlayCountMap);
       if (rawCount is Map) {
         final countMap = <String, int>{};
         for (final e in rawCount.entries) {
@@ -160,7 +165,7 @@ class RecentPlayService {
             countMap[newRaw] = (countMap[newRaw] ?? 0) + carry;
           }
         }
-        await box.put(_playCountKey, countMap);
+        await box.put(hiveKeySongPlayCountMap, countMap);
       }
     } catch (_) {}
   }
@@ -169,7 +174,7 @@ class RecentPlayService {
   static Future<List<String>> getPaths({int limit = 20}) async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final raw = box.get(_hiveKey);
+      final raw = box.get(hiveKeyRecentSongPaths);
       if (raw is! List<dynamic>) return [];
       final list = raw.whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       if (limit <= 0) return list;
@@ -186,7 +191,7 @@ class RecentPlayService {
   }) async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final raw = box.get(_playCountKey);
+      final raw = box.get(hiveKeySongPlayCountMap);
       if (raw is! Map) return [];
       final pairs = <({String path, int count})>[];
       for (final e in raw.entries) {
@@ -214,7 +219,7 @@ class RecentPlayService {
   static Future<int> getTotalListenedMilliseconds() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final v = box.get(_totalListenedWallMsKey);
+      final v = box.get(hiveKeyTotalListenedWallMs);
       return _asIntCount(v);
     } catch (_) {
       return 0;
@@ -226,8 +231,8 @@ class RecentPlayService {
     if (deltaMs <= 0) return;
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final cur = _asIntCount(box.get(_totalListenedWallMsKey));
-      await box.put(_totalListenedWallMsKey, cur + deltaMs);
+      final cur = _asIntCount(box.get(hiveKeyTotalListenedWallMs));
+      await box.put(hiveKeyTotalListenedWallMs, cur + deltaMs);
     } catch (_) {}
   }
 
@@ -235,7 +240,7 @@ class RecentPlayService {
   static Future<int> getRecentListStoredCount() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final raw = box.get(_hiveKey);
+      final raw = box.get(hiveKeyRecentSongPaths);
       if (raw is! List<dynamic>) return 0;
       return raw
           .whereType<String>()
@@ -264,7 +269,7 @@ class RecentPlayService {
   static Future<Map<String, int>> getPlayCountMap() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final raw = box.get(_playCountKey);
+      final raw = box.get(hiveKeySongPlayCountMap);
       if (raw is! Map) return {};
       final out = <String, int>{};
       for (final e in raw.entries) {

@@ -98,6 +98,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       }
     }
 
+    await user.attachPlaylistCoverImagesToExportMap(map);
+    if (!context.mounted) return;
+
     final encoder = const JsonEncoder.withIndent('  ');
     final jsonStr = encoder.convert(map);
     final suggestedName = selectedIds == null

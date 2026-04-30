@@ -119,6 +119,32 @@ List<UserPlaylist> _coalesceImportedPlaylists(List<UserPlaylist> items) {
 const String userPlaylistExportFormatId = 'yeah_music_user_playlists';
 const int userPlaylistExportVersion = 1;
 
+/// 可选：`歌单 id` → 自定义封面原始字节的标准 Base64（单文件导出便携用）。
+///
+/// 与 [UserPlaylist.toMap] 里 `coverStyle` 类型 `img` 的路径字段配套：云端备份路径指向本机无效，
+/// 实际像素数据以此字段为准。
+const String userPlaylistExportCoverImagesKey = 'playlistCoverImages';
+
+/// OneDrive 等同目录侧车文件：`歌单 id` → 文件名（与 `yeah_music_playlists.json` 同一文件夹）。
+const String userPlaylistExportCoverAssetNamesKey = 'playlistCoverAssetNames';
+
+/// 首页「我的歌单」横滑顺序：含 [UserPlaylistProvider.homeCarouselLibrarySentinel] 与歌单 id。
+const String userPlaylistExportCarouselOrderKey = 'homePlaylistCarouselOrder';
+
+/// 自备份文档读取封面侧车文件名表。
+Map<String, String> playlistCoverAssetNamesFromDoc(Map<String, dynamic> doc) {
+  final raw = doc[userPlaylistExportCoverAssetNamesKey];
+  if (raw is! Map) return {};
+  final out = <String, String>{};
+  for (final e in raw.entries) {
+    final k = '${e.key}'.trim();
+    final v = e.value;
+    if (k.isEmpty || v is! String || v.trim().isEmpty) continue;
+    out[k] = v.trim();
+  }
+  return out;
+}
+
 /// 解析导出的 JSON 字符串，失败抛出 [FormatException]
 Map<String, dynamic> parseUserPlaylistExportJson(String jsonStr) {
   final decoded = jsonDecode(jsonStr);
@@ -253,6 +279,59 @@ class UserPlaylistProvider extends ChangeNotifier {
     await _persistCarouselOrderKeys();
     await _save();
     notifyListeners();
+  }
+
+  /// 覆盖导入：以备份中的横滑顺序为准；缺字段或项无效时回退为「全部歌曲」在前 + 当前 [_playlists] 顺序。
+  void _restoreHomeCarouselOrderFromBackup(List<String>? backupKeys) {
+    final idOrder = _playlists.map((p) => p.id).toList();
+    final idSet = idOrder.toSet();
+    final seen = <String>{};
+    final out = <String>[];
+
+    if (backupKeys != null) {
+      for (final key in backupKeys) {
+        final t = key.trim();
+        if (t.isEmpty) continue;
+        if (t == homeCarouselLibrarySentinel) {
+          if (seen.add(t)) out.add(t);
+        } else if (idSet.contains(t) && seen.add(t)) {
+          out.add(t);
+        }
+      }
+    }
+    if (!seen.contains(homeCarouselLibrarySentinel)) {
+      out.insert(0, homeCarouselLibrarySentinel);
+      seen.add(homeCarouselLibrarySentinel);
+    }
+    for (final id in idOrder) {
+      if (!seen.contains(id)) {
+        out.add(id);
+        seen.add(id);
+      }
+    }
+    _homeCarouselOrderKeys = out;
+  }
+
+  /// 写入导出 JSON：与当前首页横滑一致；[playlistIdsLimit] 非空时只保留其中的歌单 id（子集导出）。
+  List<String> _homeCarouselOrderForExport({Set<String>? playlistIdsLimit}) {
+    final full = resolvedHomeCarouselOrder();
+    if (playlistIdsLimit == null) {
+      return List<String>.from(full);
+    }
+    final out = <String>[];
+    final seen = <String>{};
+    for (final k in full) {
+      if (k == homeCarouselLibrarySentinel) {
+        if (seen.add(k)) out.add(k);
+      } else if (playlistIdsLimit.contains(k) && seen.add(k)) {
+        out.add(k);
+      }
+    }
+    if (!seen.contains(homeCarouselLibrarySentinel)) {
+      out.insert(0, homeCarouselLibrarySentinel);
+      seen.add(homeCarouselLibrarySentinel);
+    }
+    return out;
   }
 
   void _syncPlaylistsOrderFromCarouselKeys(List<String> orderKeys) {
@@ -605,6 +684,211 @@ class UserPlaylistProvider extends ChangeNotifier {
       'exportedAt': DateTime.now().toIso8601String(),
       'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': _playlists.map((e) => e.toMap()).toList(),
+      userPlaylistExportCarouselOrderKey: _homeCarouselOrderForExport(),
+    };
+  }
+
+  /// 将本次导出中包含「自定义封面图」的歌单文件读入并写入 [map]\[[userPlaylistExportCoverImagesKey]\]。
+  ///
+  /// 适用于「单个 JSON 文件」导出（便携）；OneDrive 同步请使用 [preparePlaylistCoverSidecarsForOneDrive]。
+  Future<void> attachPlaylistCoverImagesToExportMap(Map<String, dynamic> map) async {
+    map.remove(userPlaylistExportCoverAssetNamesKey);
+    final rawList = map['playlists'];
+    if (rawList is! List<dynamic>) return;
+    final ids = <String>{};
+    for (final e in rawList) {
+      if (e is Map && e['id'] is String) {
+        final id = (e['id'] as String).trim();
+        if (id.isNotEmpty) ids.add(id);
+      }
+    }
+    if (ids.isEmpty) return;
+
+    final assets = <String, String>{};
+    const maxBytes = 8 * 1024 * 1024;
+    for (final p in _playlists) {
+      if (!ids.contains(p.id)) continue;
+      final cs = p.coverStyle;
+      if (cs == null || !cs.isCustomImage) continue;
+      try {
+        final file = File(cs.imagePath);
+        if (!await file.exists()) continue;
+        final len = await file.length();
+        if (len <= 0 || len > maxBytes) continue;
+        final bytes = await file.readAsBytes();
+        if (bytes.length > maxBytes) continue;
+        assets[p.id] = base64Encode(bytes);
+      } catch (_) {}
+    }
+    if (assets.isNotEmpty) {
+      map[userPlaylistExportCoverImagesKey] = assets;
+    }
+  }
+
+  /// OneDrive：去掉 Base64，写入 [userPlaylistExportCoverAssetNamesKey]，并返回待上传的本地文件。
+  ///
+  /// 调用前请先 [buildExportMap] / [buildExportMapForPlaylists]。上传顺序：先 JSON，再各侧车文件（同文件夹）。
+  Future<Map<String, File>> preparePlaylistCoverSidecarsForOneDrive(
+    Map<String, dynamic> map,
+  ) async {
+    map.remove(userPlaylistExportCoverImagesKey);
+    final rawList = map['playlists'];
+    if (rawList is! List<dynamic>) return {};
+    final idsInExport = <String>{};
+    for (final e in rawList) {
+      if (e is Map && e['id'] is String) {
+        final id = (e['id'] as String).trim();
+        if (id.isNotEmpty) idsInExport.add(id);
+      }
+    }
+    if (idsInExport.isEmpty) return {};
+
+    map.remove(userPlaylistExportCoverAssetNamesKey);
+    final manifest = <String, String>{};
+    final files = <String, File>{};
+    const maxBytes = 8 * 1024 * 1024;
+
+    for (final p in _playlists) {
+      if (!idsInExport.contains(p.id)) continue;
+      final cs = p.coverStyle;
+      if (cs == null || !cs.isCustomImage) continue;
+      try {
+        final file = File(cs.imagePath);
+        if (!await file.exists()) continue;
+        final len = await file.length();
+        if (len <= 0 || len > maxBytes) continue;
+        final ext = _playlistCoverSidecarExtension(cs.imagePath);
+        final remoteName =
+            'yeah_music_pl_cover_${_safePlaylistCoverFileId(p.id)}$ext';
+        manifest[p.id] = remoteName;
+        files[p.id] = file;
+      } catch (_) {}
+    }
+    if (manifest.isNotEmpty) {
+      map[userPlaylistExportCoverAssetNamesKey] = manifest;
+    }
+    return files;
+  }
+
+  static const Set<String> _coverSidecarAllowedExt = <String>{
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp',
+    '.gif',
+  };
+
+  String _playlistCoverSidecarExtension(String imagePath) {
+    final ext = p.extension(imagePath).toLowerCase();
+    if (_coverSidecarAllowedExt.contains(ext)) return ext;
+    return '.png';
+  }
+
+  Map<String, String> _playlistCoverImagesFromBackupDoc(Map<String, dynamic> doc) {
+    final raw = doc[userPlaylistExportCoverImagesKey];
+    if (raw is! Map) return {};
+    final out = <String, String>{};
+    for (final e in raw.entries) {
+      final k = '${e.key}'.trim();
+      final v = e.value;
+      if (k.isEmpty || v is! String || v.trim().isEmpty) continue;
+      out[k] = v.trim();
+    }
+    return out;
+  }
+
+  Future<UserPlaylist> _playlistWithoutBrokenCoverImage(UserPlaylist p) async {
+    final cs = p.coverStyle;
+    if (cs == null || !cs.isCustomImage) return p;
+    try {
+      if (await File(cs.imagePath).exists()) return p;
+    } catch (_) {}
+    return UserPlaylist(
+      id: p.id,
+      name: p.name,
+      createdAt: p.createdAt,
+      songPaths: p.songPaths,
+      coverStyle: null,
+    );
+  }
+
+  Future<List<UserPlaylist>> _hydrateImportedPlaylistCovers(
+    List<UserPlaylist> playlists,
+    Map<String, String> coverFileAbsoluteByPlaylistId,
+    Map<String, String> assetsBase64,
+  ) async {
+    final out = <UserPlaylist>[];
+    for (final p in playlists) {
+      final abs = coverFileAbsoluteByPlaylistId[p.id]?.trim();
+      if (abs != null && abs.isNotEmpty) {
+        try {
+          final src = File(abs);
+          if (!await src.exists()) throw StateError('cover sidecar missing');
+          final destPath = await _playlistCoverSupportPath(p.id);
+          await src.copy(destPath);
+          _evictCoverImageCache(destPath);
+          out.add(
+            UserPlaylist(
+              id: p.id,
+              name: p.name,
+              createdAt: p.createdAt,
+              songPaths: p.songPaths,
+              coverStyle: UserPlaylistCoverStyle.customImage(destPath),
+            ),
+          );
+        } catch (_) {
+          out.add(await _playlistWithoutBrokenCoverImage(p));
+        }
+        continue;
+      }
+
+      final b64 = assetsBase64[p.id];
+      if (b64 != null && b64.isNotEmpty) {
+        try {
+          final bytes = base64Decode(b64);
+          if (bytes.isEmpty) throw StateError('empty cover bytes');
+          final destPath = await _playlistCoverSupportPath(p.id);
+          await File(destPath).writeAsBytes(bytes, flush: true);
+          _evictCoverImageCache(destPath);
+          out.add(
+            UserPlaylist(
+              id: p.id,
+              name: p.name,
+              createdAt: p.createdAt,
+              songPaths: p.songPaths,
+              coverStyle: UserPlaylistCoverStyle.customImage(destPath),
+            ),
+          );
+        } catch (_) {
+          out.add(await _playlistWithoutBrokenCoverImage(p));
+        }
+        continue;
+      }
+      out.add(await _playlistWithoutBrokenCoverImage(p));
+    }
+    return out;
+  }
+
+  /// 将全部曲库曲目导出为「单歌单」JSON（格式与普通导出一致，导入后可变为自建歌单）。
+  Map<String, dynamic> buildExportMapForLibraryAllSongs({
+    required String playlistName,
+    required List<String> songPaths,
+  }) {
+    final pl = UserPlaylist(
+      id: '__ym_export_library_all__',
+      name: playlistName,
+      createdAt: DateTime.now(),
+      songPaths: songPaths,
+      coverStyle: null,
+    );
+    return {
+      'format': userPlaylistExportFormatId,
+      'version': userPlaylistExportVersion,
+      'app': AppProductInfo.exportMetadataBlock,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'songIdentity':
+          'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
+      'playlists': [pl.toMap()],
     };
   }
 
@@ -624,12 +908,19 @@ class UserPlaylistProvider extends ChangeNotifier {
       'exportedAt': DateTime.now().toIso8601String(),
       'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': out,
+      userPlaylistExportCarouselOrderKey:
+          _homeCarouselOrderForExport(playlistIdsLimit: want),
     };
   }
 
-  /// [replaceAll] 为 true：清空本地歌单后导入；为 false：按歌单 id 合并路径（无则新建）
-  Future<void> applyImportedDocument(Map<String, dynamic> doc, {required bool replaceAll}) async {
+  /// [playlistCoverFilesAbsolute]：从 OneDrive 等拉取到临时目录的封面文件 `歌单 id → 绝对路径`（优先于 Base64）。
+  Future<void> applyImportedDocument(
+    Map<String, dynamic> doc, {
+    required bool replaceAll,
+    Map<String, String>? playlistCoverFilesAbsolute,
+  }) async {
     final rawList = doc['playlists'] as List<dynamic>;
+    final coverAssets = _playlistCoverImagesFromBackupDoc(doc);
     final parsed = <UserPlaylist>[];
     for (final e in rawList) {
       if (e is! Map) continue;
@@ -637,7 +928,12 @@ class UserPlaylistProvider extends ChangeNotifier {
         parsed.add(UserPlaylist.fromMap(Map<dynamic, dynamic>.from(e)));
       } catch (_) {}
     }
-    final imported = _coalesceImportedPlaylists(parsed);
+    final hydrated = await _hydrateImportedPlaylistCovers(
+      parsed,
+      playlistCoverFilesAbsolute ?? const {},
+      coverAssets,
+    );
+    final imported = _coalesceImportedPlaylists(hydrated);
 
     if (replaceAll) {
       _playlists
@@ -653,10 +949,16 @@ class UserPlaylistProvider extends ChangeNotifier {
             ),
           ),
         );
-      _homeCarouselOrderKeys = [
-        homeCarouselLibrarySentinel,
-        ..._playlists.map((p) => p.id),
-      ];
+      final carouselRaw = doc[userPlaylistExportCarouselOrderKey];
+      List<String>? carouselParsed;
+      if (carouselRaw is List<dynamic>) {
+        carouselParsed = carouselRaw
+            .map((e) => '$e')
+            .where((s) => s.trim().isNotEmpty)
+            .toList();
+      }
+      _restoreHomeCarouselOrderFromBackup(carouselParsed);
+      _syncPlaylistsOrderFromCarouselKeys(_homeCarouselOrderKeys);
       await _persistCarouselOrderKeys();
     } else {
       for (final imp in imported) {

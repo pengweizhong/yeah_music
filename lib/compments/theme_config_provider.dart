@@ -51,7 +51,8 @@ class ThemeConfigProvider extends ChangeNotifier {
     return '.jpg';
   }
 
-  static const _cacheBaseName = 'theme_user_background';
+  /// 应用支持目录下主题壁纸文件名前缀（不含扩展名）；云端恢复写入路径须与此一致。
+  static const String themeBackgroundSupportBaseName = 'theme_user_background';
 
   /// [Image.file] 缓存键随重载递增，路径不变但文件被覆盖时仍能换图。
   int _themeBackgroundImageFrame = 0;
@@ -101,7 +102,7 @@ class ThemeConfigProvider extends ChangeNotifier {
     try {
       final support = await getApplicationSupportDirectory();
       final ext = _themeImageExtension(raw);
-      final dest = File(p.join(support.path, '$_cacheBaseName$ext'));
+      final dest = File(p.join(support.path, '$themeBackgroundSupportBaseName$ext'));
       await f.copy(dest.path);
       _backgroundImagePath = dest.path;
       final prefs = await SharedPreferences.getInstance();
@@ -113,7 +114,7 @@ class ThemeConfigProvider extends ChangeNotifier {
   }
 
   bool _isInAppSupportCache(String basename) {
-    return basename.startsWith('$_cacheBaseName.');
+    return basename.startsWith('$themeBackgroundSupportBaseName.');
   }
 
   Future<void> _prefsRemoveBackgroundPath() async {
@@ -124,10 +125,10 @@ class ThemeConfigProvider extends ChangeNotifier {
   Future<void> _removeOldThemeCacheFiles() async {
     final support = await getApplicationSupportDirectory();
     for (final name in <String>[
-      '$_cacheBaseName.jpg',
-      '$_cacheBaseName.jpeg',
-      '$_cacheBaseName.png',
-      '$_cacheBaseName.webp',
+      '$themeBackgroundSupportBaseName.jpg',
+      '$themeBackgroundSupportBaseName.jpeg',
+      '$themeBackgroundSupportBaseName.png',
+      '$themeBackgroundSupportBaseName.webp',
     ]) {
       final f = File(p.join(support.path, name));
       if (f.existsSync()) {
@@ -241,7 +242,7 @@ class ThemeConfigProvider extends ChangeNotifier {
       await _removeOldThemeCacheFiles();
       final support = await getApplicationSupportDirectory();
       final ext = _themeImageExtension(path);
-      final destPath = p.join(support.path, '$_cacheBaseName$ext');
+      final destPath = p.join(support.path, '$themeBackgroundSupportBaseName$ext');
       // 不用 File.copy：覆盖固定缓存路径时部分环境下解码缓存不易失效；读出再写入并 bump frame。
       final rawBytes = await source.readAsBytes();
       await File(destPath).writeAsBytes(rawBytes, flush: true);
@@ -261,7 +262,7 @@ class ThemeConfigProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await _removeOldThemeCacheFiles();
     final support = await getApplicationSupportDirectory();
-    final destPath = p.join(support.path, '$_cacheBaseName.png');
+    final destPath = p.join(support.path, '$themeBackgroundSupportBaseName.png');
     await File(destPath).writeAsBytes(bytes, flush: true);
     _backgroundImagePath = destPath;
     await prefs.setString('background_image_path', destPath);

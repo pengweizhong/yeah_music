@@ -6,3 +6,50 @@ String formatOneDriveBackupFileStamp(DateTime local) {
   return '${local.year}-${z2(local.month)}-${z2(local.day)}_${z2(local.hour)}-'
       '${z2(local.minute)}-${z2(local.second)}';
 }
+
+/// 同步会话文件夹名：`YYYYMMDDTHHmmss`（本地时区，不含分隔符）。
+String formatOneDriveSyncSessionFolderStamp(DateTime local) {
+  String z2(int n) => n.toString().padLeft(2, '0');
+  return '${local.year}${z2(local.month)}${z2(local.day)}'
+      'T${z2(local.hour)}${z2(local.minute)}${z2(local.second)}';
+}
+
+DateTime? parseLegacyOneDriveBackupFileStamp(String stamp) {
+  final re = RegExp(r'^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})$');
+  final m = re.firstMatch(stamp.trim());
+  if (m == null) return null;
+  final y = int.tryParse(m.group(1)!);
+  final mo = int.tryParse(m.group(2)!);
+  final d = int.tryParse(m.group(3)!);
+  final h = int.tryParse(m.group(4)!);
+  final mi = int.tryParse(m.group(5)!);
+  final s = int.tryParse(m.group(6)!);
+  if (y == null || mo == null || d == null || h == null || mi == null || s == null) {
+    return null;
+  }
+  try {
+    return DateTime(y, mo, d, h, mi, s);
+  } catch (_) {
+    return null;
+  }
+}
+
+DateTime? parseOneDriveSyncSessionFolderStamp(String stamp) {
+  final m = RegExp(r'^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$')
+      .firstMatch(stamp.trim());
+  if (m == null) return null;
+  final y = int.tryParse(m.group(1)!);
+  final mo = int.tryParse(m.group(2)!);
+  final d = int.tryParse(m.group(3)!);
+  final h = int.tryParse(m.group(4)!);
+  final mi = int.tryParse(m.group(5)!);
+  final s = int.tryParse(m.group(6)!);
+  if (y == null || mo == null || d == null || h == null || mi == null || s == null) {
+    return null;
+  }
+  try {
+    return DateTime(y, mo, d, h, mi, s);
+  } catch (_) {
+    return null;
+  }
+}

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +21,7 @@ import '../utils/scroll_list_to_current_song.dart';
 import '../utils/song_display_lines.dart';
 import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
+import '../utils/user_playlist_backup_io.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
 import '../widgets/app_prompts.dart';
 import '../widgets/compact_song_list_row.dart';
@@ -428,10 +431,64 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     );
   }
 
+  Future<void> _exportLibraryAllSongs(
+    BuildContext context,
+    UserPlaylistProvider user,
+    List<Song> orderedLibrarySongs,
+  ) async {
+    final paths = orderedLibrarySongs.map((s) => s.path).toList();
+    final l10n = AppLocalizations.of(context);
+    if (paths.isEmpty) {
+      if (context.mounted) {
+        showAppSnackBar(context, l10n.exportCannot, kind: AppSnackKind.error);
+      }
+      return;
+    }
+    final map = user.buildExportMapForLibraryAllSongs(
+      playlistName: l10n.homeAllSongs,
+      songPaths: paths,
+    );
+    if ((map['playlists'] as List<dynamic>).isEmpty) {
+      if (context.mounted) {
+        showAppSnackBar(context, l10n.exportCannot, kind: AppSnackKind.error);
+      }
+      return;
+    }
+    await user.attachPlaylistCoverImagesToExportMap(map);
+    if (!context.mounted) return;
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(map);
+    try {
+      final path = await pickSaveUserPlaylistJson(
+        jsonStr: jsonStr,
+        dialogTitle: l10n.exportDialogTitle,
+        fileName: suggestedLibraryAllSongsExportFileName(l10n.homeAllSongs),
+      );
+      if (!context.mounted) return;
+      if (path != null && path.isNotEmpty) {
+        showAppSnackBar(
+          context,
+          l10n.exportSaved(path),
+          kind: AppSnackKind.success,
+          duration: const Duration(seconds: 2),
+        );
+      } else {
+        showAppSnackBar(context, l10n.exportCancelled);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showAppSnackBar(
+          context,
+          l10n.exportFailed('$e'),
+          kind: AppSnackKind.error,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<PlayListProvider>(
-      builder: (context, playListProvider, _) {
+    return Consumer2<PlayListProvider, UserPlaylistProvider>(
+      builder: (context, playListProvider, userPlaylistProvider, _) {
         final playList = playListProvider.playList;
         _filteredSongs = _libraryRows(playList);
         final current = playListProvider.currentSong;
@@ -485,7 +542,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
             title: Text(
               _batchSelect
                   ? '${_selectedNormPaths.length}'
-                  : l10n.menuSongList,
+                  : l10n.homeAllSongs,
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.transparent,
@@ -520,6 +577,44 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                   icon: const Icon(Icons.sort),
                   onPressed: _showSortOptions,
                   tooltip: l10n.tooltipSort,
+                ),
+                PopupMenuButton<String>(
+                  icon:
+                      const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) async {
+                    if (value == 'export') {
+                      await _exportLibraryAllSongs(
+                        context,
+                        userPlaylistProvider,
+                        _filteredSongs,
+                      );
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final canExport = _filteredSongs.isNotEmpty;
+                    return [
+                      PopupMenuItem(
+                        value: 'cover',
+                        enabled: false,
+                        child: Text(l10n.playlistCoverMenuItem),
+                      ),
+                      PopupMenuItem(
+                        value: 'rename',
+                        enabled: false,
+                        child: Text(l10n.menuRename),
+                      ),
+                      PopupMenuItem(
+                        value: 'export',
+                        enabled: canExport,
+                        child: Text(l10n.menuExportThis),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        enabled: false,
+                        child: Text(l10n.menuDeletePlaylist),
+                      ),
+                    ];
+                  },
                 ),
               ],
             ],

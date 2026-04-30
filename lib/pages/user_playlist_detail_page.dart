@@ -447,9 +447,11 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       }
       return;
     }
+    final l10n = AppLocalizations.of(context);
+    await user.attachPlaylistCoverImagesToExportMap(map);
+    if (!context.mounted) return;
     final jsonStr = const JsonEncoder.withIndent('  ').convert(map);
     final fileName = suggestedSubsetPlaylistsFileName(user, {playlist.id});
-    final l10n = AppLocalizations.of(context);
     try {
       final path = await pickSaveUserPlaylistJson(
         jsonStr: jsonStr,

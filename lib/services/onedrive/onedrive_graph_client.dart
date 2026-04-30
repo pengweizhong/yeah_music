@@ -126,6 +126,25 @@ class OneDriveGraphClient {
     return utf8.decode(r.bodyBytes);
   }
 
+  /// 获取 drive item 的父文件夹 Graph id（用于与同目录下的封面文件配对）。
+  Future<String?> driveItemParentFolderId({
+    required String accessToken,
+    required String itemId,
+  }) async {
+    final u = Uri(
+      scheme: 'https',
+      host: 'graph.microsoft.com',
+      path: '/v1.0/me/drive/items/${itemId.trim()}',
+      queryParameters: const {'\$select': 'parentReference'},
+    );
+    final decoded = await _getJson(u.toString(), accessToken);
+    final pref = decoded['parentReference'];
+    if (pref is! Map<String, dynamic>) return null;
+    final pid = pref['id'];
+    if (pid is String && pid.trim().isNotEmpty) return pid.trim();
+    return null;
+  }
+
   Future<Map<String, dynamic>> _getJson(String url, String accessToken) async {
     final u = Uri.parse(url);
     final r = await _client.get(

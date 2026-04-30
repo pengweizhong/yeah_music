@@ -627,19 +627,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      '按计划将歌单与应用设置备份到 OneDrive。每次上传为带时间戳的 JSON 文件，保存在云端应用数据文件夹。定时自动同步将在后续版本接入。';
+      '按需勾选同步类别。每次上传会在云端应用文件夹下创建「设备型号 / yyyyMMddTHHmmss」目录。';
 
   @override
-  String get oneDriveSyncItemPlaylists => '歌单';
+  String get oneDriveSyncItemUserPlaylists => '我的歌单';
 
   @override
-  String get oneDriveSyncItemPlaylistsSubtitle => '同步时包含歌单数据。';
+  String get oneDriveSyncItemUserPlaylistsSubtitle =>
+      '封面、配色、歌单列表与曲目顺序（按设备目录保存）。';
 
   @override
-  String get oneDriveSyncItemSettings => '应用配置';
+  String get oneDriveSyncItemHomeGreeting => '首页问候（首张卡片）';
 
   @override
-  String get oneDriveSyncItemSettingsSubtitle => '主题、快捷键、歌词选项等偏好设置。';
+  String get oneDriveSyncItemHomeGreetingSubtitle => '与设置 → 首页问候为同一数据源。';
+
+  @override
+  String get oneDriveSyncItemQuickEntry => '首页快捷入口';
+
+  @override
+  String get oneDriveSyncItemQuickEntrySubtitle => '排序与各入口显示开关。';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStats => '最新 / 最多播放与播放统计';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
+      '最近播放列表、播放次数与累计收听时长（首页与统计页相关 Hive）。';
+
+  @override
+  String get oneDriveSyncItemLyricsUi => '歌词与播放页';
+
+  @override
+  String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。';
+
+  @override
+  String get oneDriveSyncItemTheme => '背景主题';
+
+  @override
+  String get oneDriveSyncItemThemeSubtitle => '渐变、预设 / 自定义颜色与背景图片等（不含界面语言）。';
 
   @override
   String get oneDriveSyncFrequencyLabel => '同步频率';
@@ -664,7 +690,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowDescription =>
-      '立即上传最新歌单与设置。文件名含本地年月日时分秒（同一次快照的歌单与设置文件共用同一时间戳）。';
+      '立即上传已勾选类别：写入云端应用文件夹下的「设备型号 / yyyyMMddTHHmmss」。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '请先登录微软账号。';
@@ -673,7 +699,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveSyncNowNeedCloudFolder => '请先在上方选好「云端应用数据文件夹」，才知道备份往哪儿放。';
 
   @override
-  String get oneDriveSyncNowFinished => '已上传至云端应用文件夹（时间戳 JSON）。';
+  String get oneDriveSyncNowFinished => '已上传到云端应用文件夹下的同步目录。';
 
   @override
   String oneDriveSyncNowFailed(String message) {
@@ -684,10 +710,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveRestoreFromCloud => '从云端恢复';
 
   @override
-  String get oneDriveRestoreSubtitle => '从云端应用文件夹下载带时间戳的备份 JSON。';
+  String get oneDriveRestoreSubtitle => '选择备份条目（旧版平铺文件或按设备会话目录），再勾选要恢复的内容。';
 
   @override
   String get oneDriveRestoreSheetTitle => '选择备份时间点';
+
+  @override
+  String get oneDriveRestoreGroupThisDevice => '本设备';
+
+  @override
+  String get oneDriveRestoreGroupOtherDevices => '其他设备';
+
+  @override
+  String get oneDriveRestoreGroupLegacyFlat => '旧版平铺';
+
+  @override
+  String get oneDriveRestoreContentSectionTitle => '要恢复的内容';
+
+  @override
+  String get oneDriveRestoreLoadMore => '加载更多';
+
+  @override
+  String oneDriveRestoreListShowing(int shown, int total) {
+    return '$shown / $total';
+  }
+
+  @override
+  String get oneDriveRestoreTabUnknownDevice => '未知设备';
 
   @override
   String get oneDriveRestoreEmpty => '尚未发现备份文件。请先使用下方「立即同步」上传歌单或设置。';
@@ -696,7 +745,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveRestorePlaylistCheckbox => '歌单';
 
   @override
-  String get oneDriveRestoreSettingsCheckbox => '应用配置';
+  String get oneDriveRestoreLegacySettingsCheckbox => '旧版整块设置 JSON';
+
+  @override
+  String get oneDriveRestoreSliceHomeGreeting => '首页问候';
+
+  @override
+  String get oneDriveRestoreSliceQuickEntry => '首页快捷入口';
+
+  @override
+  String get oneDriveRestoreSlicePlaybackLists => '最近播放与统计 Hive';
+
+  @override
+  String get oneDriveRestoreSliceLyricsUi => '歌词与屏幕常亮';
+
+  @override
+  String get oneDriveRestoreSliceTheme => '背景主题';
 
   @override
   String get oneDriveRestorePlaylistModeMerge => '合并到本地（同 id 歌单合并曲目）';
@@ -708,13 +772,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveRestoreAction => '恢复';
 
   @override
-  String get oneDriveRestoreNeedPickContent => '请至少勾选歌单或应用配置中的一项。';
+  String get oneDriveRestoreNeedPickContent => '请至少勾选一项要恢复的内容。';
 
   @override
   String get oneDriveRestoreMissingPlaylistsFile => '该备份中没有歌单文件。';
 
   @override
-  String get oneDriveRestoreMissingSettingsFile => '该备份中没有设置文件。';
+  String get oneDriveRestoreMissingSettingsFile => '该备份中没有旧版整块设置文件。';
+
+  @override
+  String oneDriveBackupSnapshotDeviceSession(
+    String deviceName,
+    String sessionStamp,
+  ) {
+    return '$deviceName · $sessionStamp';
+  }
+
+  @override
+  String get oneDriveSyncNowNeedMasterOn => '请先开启上方的「同步到 OneDrive」。';
+
+  @override
+  String get oneDriveSyncNowNothingSelected => '请先在上方勾选至少一项同步类别。';
 
   @override
   String get oneDriveRestoreFinished => '恢复完成。';
@@ -3006,19 +3084,45 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      '按计划将歌单与应用设置备份到 OneDrive。每次上传为带时间戳的 JSON 文件，保存在云端应用数据文件夹。定时自动同步将在后续版本接入。';
+      '按需勾选同步类别。每次上传会在云端应用文件夹下创建「设备型号 / yyyyMMddTHHmmss」目录。';
 
   @override
-  String get oneDriveSyncItemPlaylists => '歌单';
+  String get oneDriveSyncItemUserPlaylists => '我的歌单';
 
   @override
-  String get oneDriveSyncItemPlaylistsSubtitle => '同步时包含歌单数据。';
+  String get oneDriveSyncItemUserPlaylistsSubtitle =>
+      '封面、配色、歌单列表与曲目顺序（按设备目录保存）。';
 
   @override
-  String get oneDriveSyncItemSettings => '应用配置';
+  String get oneDriveSyncItemHomeGreeting => '首页问候（首张卡片）';
 
   @override
-  String get oneDriveSyncItemSettingsSubtitle => '主题、快捷键、歌词选项等偏好设置。';
+  String get oneDriveSyncItemHomeGreetingSubtitle => '与设置 → 首页问候为同一数据源。';
+
+  @override
+  String get oneDriveSyncItemQuickEntry => '首页快捷入口';
+
+  @override
+  String get oneDriveSyncItemQuickEntrySubtitle => '排序与各入口显示开关。';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStats => '最新 / 最多播放与播放统计';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
+      '最近播放列表、播放次数与累计收听时长（首页与统计页相关 Hive）。';
+
+  @override
+  String get oneDriveSyncItemLyricsUi => '歌词与播放页';
+
+  @override
+  String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。';
+
+  @override
+  String get oneDriveSyncItemTheme => '背景主题';
+
+  @override
+  String get oneDriveSyncItemThemeSubtitle => '渐变、预设 / 自定义颜色与背景图片等（不含界面语言）。';
 
   @override
   String get oneDriveSyncFrequencyLabel => '同步频率';
@@ -3043,7 +3147,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncNowDescription =>
-      '立即上传最新歌单与设置。文件名含本地年月日时分秒（同一次快照的歌单与设置文件共用同一时间戳）。';
+      '立即上传已勾选类别：写入云端应用文件夹下的「设备型号 / yyyyMMddTHHmmss」。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '请先登录微软账号。';
@@ -3052,7 +3156,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveSyncNowNeedCloudFolder => '请先在上方选好「云端应用数据文件夹」，才知道备份往哪儿放。';
 
   @override
-  String get oneDriveSyncNowFinished => '已上传至云端应用文件夹（时间戳 JSON）。';
+  String get oneDriveSyncNowFinished => '已上传到云端应用文件夹下的同步目录。';
 
   @override
   String oneDriveSyncNowFailed(String message) {
@@ -3063,10 +3167,33 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveRestoreFromCloud => '从云端恢复';
 
   @override
-  String get oneDriveRestoreSubtitle => '从云端应用文件夹下载带时间戳的备份 JSON。';
+  String get oneDriveRestoreSubtitle => '选择备份条目（旧版平铺文件或按设备会话目录），再勾选要恢复的内容。';
 
   @override
   String get oneDriveRestoreSheetTitle => '选择备份时间点';
+
+  @override
+  String get oneDriveRestoreGroupThisDevice => '本设备';
+
+  @override
+  String get oneDriveRestoreGroupOtherDevices => '其他设备';
+
+  @override
+  String get oneDriveRestoreGroupLegacyFlat => '旧版平铺';
+
+  @override
+  String get oneDriveRestoreContentSectionTitle => '要恢复的内容';
+
+  @override
+  String get oneDriveRestoreLoadMore => '加载更多';
+
+  @override
+  String oneDriveRestoreListShowing(int shown, int total) {
+    return '$shown / $total';
+  }
+
+  @override
+  String get oneDriveRestoreTabUnknownDevice => '未知设备';
 
   @override
   String get oneDriveRestoreEmpty => '尚未发现备份文件。请先使用下方「立即同步」上传歌单或设置。';
@@ -3075,7 +3202,22 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveRestorePlaylistCheckbox => '歌单';
 
   @override
-  String get oneDriveRestoreSettingsCheckbox => '应用配置';
+  String get oneDriveRestoreLegacySettingsCheckbox => '旧版整块设置 JSON';
+
+  @override
+  String get oneDriveRestoreSliceHomeGreeting => '首页问候';
+
+  @override
+  String get oneDriveRestoreSliceQuickEntry => '首页快捷入口';
+
+  @override
+  String get oneDriveRestoreSlicePlaybackLists => '最近播放与统计 Hive';
+
+  @override
+  String get oneDriveRestoreSliceLyricsUi => '歌词与屏幕常亮';
+
+  @override
+  String get oneDriveRestoreSliceTheme => '背景主题';
 
   @override
   String get oneDriveRestorePlaylistModeMerge => '合并到本地（同 id 歌单合并曲目）';
@@ -3087,13 +3229,27 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveRestoreAction => '恢复';
 
   @override
-  String get oneDriveRestoreNeedPickContent => '请至少勾选歌单或应用配置中的一项。';
+  String get oneDriveRestoreNeedPickContent => '请至少勾选一项要恢复的内容。';
 
   @override
   String get oneDriveRestoreMissingPlaylistsFile => '该备份中没有歌单文件。';
 
   @override
-  String get oneDriveRestoreMissingSettingsFile => '该备份中没有设置文件。';
+  String get oneDriveRestoreMissingSettingsFile => '该备份中没有旧版整块设置文件。';
+
+  @override
+  String oneDriveBackupSnapshotDeviceSession(
+    String deviceName,
+    String sessionStamp,
+  ) {
+    return '$deviceName · $sessionStamp';
+  }
+
+  @override
+  String get oneDriveSyncNowNeedMasterOn => '请先开启上方的「同步到 OneDrive」。';
+
+  @override
+  String get oneDriveSyncNowNothingSelected => '请先在上方勾选至少一项同步类别。';
 
   @override
   String get oneDriveRestoreFinished => '恢复完成。';
@@ -5386,19 +5542,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      '依排程將歌單與應用程式設定備份到 OneDrive；每次上傳為附時間戳記的 JSON 檔案，並儲存於雲端應用程式資料夾。預約同步將於後續版本提供。';
+      '按需勾選同步類別。每次上傳會在雲端應用程式資料夾下建立「裝置型號 / yyyyMMddTHHmmss」目錄。';
 
   @override
-  String get oneDriveSyncItemPlaylists => '歌單';
+  String get oneDriveSyncItemUserPlaylists => '我的歌單';
 
   @override
-  String get oneDriveSyncItemPlaylistsSubtitle => '同步時包含歌單資料。';
+  String get oneDriveSyncItemUserPlaylistsSubtitle =>
+      '封面、配色、歌單列表與曲目順序（按裝置目錄儲存）。';
 
   @override
-  String get oneDriveSyncItemSettings => '應用程式設定';
+  String get oneDriveSyncItemHomeGreeting => '首頁問候（首張卡片）';
 
   @override
-  String get oneDriveSyncItemSettingsSubtitle => '主題、快速鍵、歌詞選項等偏好。';
+  String get oneDriveSyncItemHomeGreetingSubtitle => '與設定 → 首頁問候為同一資料來源。';
+
+  @override
+  String get oneDriveSyncItemQuickEntry => '首頁快捷入口';
+
+  @override
+  String get oneDriveSyncItemQuickEntrySubtitle => '排序與各入口顯示開關。';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStats => '最新 / 最多播放與播放統計';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
+      '最近播放列表、播放次數與累計收聽時長（首頁與統計頁相關 Hive）。';
+
+  @override
+  String get oneDriveSyncItemLyricsUi => '歌詞與播放頁';
+
+  @override
+  String get oneDriveSyncItemLyricsUiSubtitle => '歌詞樣式、桌面 / 車載歌詞與播放頁螢幕恆亮等。';
+
+  @override
+  String get oneDriveSyncItemTheme => '背景主題';
+
+  @override
+  String get oneDriveSyncItemThemeSubtitle => '漸層、預設 / 自訂顏色與背景圖片等（不含介面語言）。';
 
   @override
   String get oneDriveSyncFrequencyLabel => '同步頻率';
@@ -5423,7 +5605,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncNowDescription =>
-      '立即上傳最新歌單與設定。檔名含本機年月日時分秒（同一次快照的歌單與設定檔共用同一時間戳記）。';
+      '立即上傳已勾選類別：寫入雲端應用程式資料夾下的「裝置型號 / yyyyMMddTHHmmss」。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '請先登入 Microsoft 帳戶。';
@@ -5432,7 +5614,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveSyncNowNeedCloudFolder => '請先在上方選好「雲端應用程式資料夾」，我們才知道備份位置。';
 
   @override
-  String get oneDriveSyncNowFinished => '已上傳至雲端應用程式資料夾（時間戳記 JSON）。';
+  String get oneDriveSyncNowFinished => '已上傳至雲端應用程式資料夾下的同步目錄。';
 
   @override
   String oneDriveSyncNowFailed(String message) {
@@ -5443,10 +5625,33 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveRestoreFromCloud => '從雲端還原';
 
   @override
-  String get oneDriveRestoreSubtitle => '從雲端應用程式資料夾下載帶時間戳記的備份 JSON。';
+  String get oneDriveRestoreSubtitle => '選擇備份項目（舊版平鋪檔案或按裝置工作階段目錄），再勾選要還原的內容。';
 
   @override
   String get oneDriveRestoreSheetTitle => '選擇備份時間點';
+
+  @override
+  String get oneDriveRestoreGroupThisDevice => '本裝置';
+
+  @override
+  String get oneDriveRestoreGroupOtherDevices => '其他裝置';
+
+  @override
+  String get oneDriveRestoreGroupLegacyFlat => '舊版平面備份';
+
+  @override
+  String get oneDriveRestoreContentSectionTitle => '要還原的內容';
+
+  @override
+  String get oneDriveRestoreLoadMore => '載入更多';
+
+  @override
+  String oneDriveRestoreListShowing(int shown, int total) {
+    return '$shown / $total';
+  }
+
+  @override
+  String get oneDriveRestoreTabUnknownDevice => '未知裝置';
 
   @override
   String get oneDriveRestoreEmpty => '尚未發現備份檔案。請先使用下方「立即同步」上傳歌單或設定。';
@@ -5455,7 +5660,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveRestorePlaylistCheckbox => '歌單';
 
   @override
-  String get oneDriveRestoreSettingsCheckbox => '應用程式設定';
+  String get oneDriveRestoreLegacySettingsCheckbox => '舊版整塊設定 JSON';
+
+  @override
+  String get oneDriveRestoreSliceHomeGreeting => '首頁問候';
+
+  @override
+  String get oneDriveRestoreSliceQuickEntry => '首頁快捷入口';
+
+  @override
+  String get oneDriveRestoreSlicePlaybackLists => '最近播放與統計 Hive';
+
+  @override
+  String get oneDriveRestoreSliceLyricsUi => '歌詞與螢幕恆亮';
+
+  @override
+  String get oneDriveRestoreSliceTheme => '背景主題';
 
   @override
   String get oneDriveRestorePlaylistModeMerge => '合併到本機（相同 id 歌單合併曲目）';
@@ -5467,13 +5687,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveRestoreAction => '還原';
 
   @override
-  String get oneDriveRestoreNeedPickContent => '請至少勾選歌單或應用程式設定其中一項。';
+  String get oneDriveRestoreNeedPickContent => '請至少勾選一項要還原的內容。';
 
   @override
   String get oneDriveRestoreMissingPlaylistsFile => '此備份中沒有歌單檔案。';
 
   @override
-  String get oneDriveRestoreMissingSettingsFile => '此備份中沒有設定檔案。';
+  String get oneDriveRestoreMissingSettingsFile => '此備份中沒有舊版整塊設定檔案。';
+
+  @override
+  String oneDriveBackupSnapshotDeviceSession(
+    String deviceName,
+    String sessionStamp,
+  ) {
+    return '$deviceName · $sessionStamp';
+  }
+
+  @override
+  String get oneDriveSyncNowNeedMasterOn => '請先開啟上方的「同步到 OneDrive」。';
+
+  @override
+  String get oneDriveSyncNowNothingSelected => '請先在上方勾選至少一項同步類別。';
 
   @override
   String get oneDriveRestoreFinished => '還原完成。';

@@ -29,6 +29,10 @@ String suggestedSubsetPlaylistsFileName(UserPlaylistProvider user, Set<String> s
   return 'yeah_music_playlists_${selectedIds.length}个_$stamp.json';
 }
 
+String suggestedLibraryAllSongsExportFileName(String localizedTitle) {
+  return 'yeah_music_${safePlaylistBackupFileName(localizedTitle)}_${stampForBackupFileName()}.json';
+}
+
 /// 将 JSON 写入用户选择的文件；返回路径，取消或失败时可能为 `null`。
 Future<String?> pickSaveUserPlaylistJson({
   required String jsonStr,

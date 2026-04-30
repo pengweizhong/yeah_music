@@ -635,19 +635,47 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      'プレイリストとアプリ設定をスケジュールに合わせて OneDrive にバックアップします。各バックアップは日時が付いた JSON ファイルとしてクラウドのアプリ用フォルダに保存されます。定期自動同期は今後の更新で有効化予定です。';
+      '同期する項目を選びます。アップロードのたびにクラウドのアプリ用フォルダー配下へ「機種名 / yyyyMMddTHHmmss」を作成します。';
 
   @override
-  String get oneDriveSyncItemPlaylists => 'プレイリスト';
+  String get oneDriveSyncItemUserPlaylists => 'マイプレイリスト';
 
   @override
-  String get oneDriveSyncItemPlaylistsSubtitle => '同期にプレイリストを含めます。';
+  String get oneDriveSyncItemUserPlaylistsSubtitle =>
+      'カバー画像・配色・リストと曲順（機種ごとのフォルダーに保存）。';
 
   @override
-  String get oneDriveSyncItemSettings => 'アプリ設定';
+  String get oneDriveSyncItemHomeGreeting => 'ホームの挨拶（先頭カード）';
 
   @override
-  String get oneDriveSyncItemSettingsSubtitle => 'テーマ・ショートカット・歌詞設定などの環境設定。';
+  String get oneDriveSyncItemHomeGreetingSubtitle => '設定 → ホームの挨拶と同じデータです。';
+
+  @override
+  String get oneDriveSyncItemQuickEntry => 'ホームのショートカット';
+
+  @override
+  String get oneDriveSyncItemQuickEntrySubtitle => '並び順と表示のオン／オフ。';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStats => '最近／再生回数と再生統計';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
+      '最近再生リスト・再生回数・累計試聴時間（ホームと統計ページの Hive）。';
+
+  @override
+  String get oneDriveSyncItemLyricsUi => '歌詞と再生画面';
+
+  @override
+  String get oneDriveSyncItemLyricsUiSubtitle =>
+      '歌詞スタイル、デスクトップ／車載歌詞、画面スリープ抑制など。';
+
+  @override
+  String get oneDriveSyncItemTheme => '背景テーマ';
+
+  @override
+  String get oneDriveSyncItemThemeSubtitle =>
+      'グラデーション、プリセット／カスタム色と背景画像（UI 言語は含みません）。';
 
   @override
   String get oneDriveSyncFrequencyLabel => '同期の間隔';
@@ -672,7 +700,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowDescription =>
-      'プレイリストと設定を今すぐアップロードします。ファイル名には端末の年月日時分秒が含まれ、同じ時刻のプレイリストと設定は同じタイムスタンプになります。';
+      'チェックした項目をすぐアップロードします。クラウドのアプリ用フォルダー下に「機種名 / yyyyMMddTHHmmss」を作成します。';
 
   @override
   String get oneDriveSyncNowNeedLogin => '先に Microsoft にサインインしてください。';
@@ -682,8 +710,7 @@ class AppLocalizationsJa extends AppLocalizations {
       '上の「クラウドのアプリ用フォルダ」を選ぶと、バックアップ先が分かります。';
 
   @override
-  String get oneDriveSyncNowFinished =>
-      'クラウドのアプリ用フォルダにタイムスタンプ付き JSON をアップロードしました。';
+  String get oneDriveSyncNowFinished => 'クラウドのアプリ用フォルダー内の同期ディレクトリへアップロードしました。';
 
   @override
   String oneDriveSyncNowFailed(String message) {
@@ -695,10 +722,33 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveRestoreSubtitle =>
-      'クラウドのアプリ用フォルダからタイムスタンプ付きのバックアップ JSON を取得します。';
+      'バックアップの種類（旧レイアウトまたは機種別フォルダー）を選び、復元する内容にチェックします。';
 
   @override
   String get oneDriveRestoreSheetTitle => 'バックアップを選ぶ';
+
+  @override
+  String get oneDriveRestoreGroupThisDevice => 'このデバイス';
+
+  @override
+  String get oneDriveRestoreGroupOtherDevices => 'ほかのデバイス';
+
+  @override
+  String get oneDriveRestoreGroupLegacyFlat => '旧レイアウト';
+
+  @override
+  String get oneDriveRestoreContentSectionTitle => '復元する内容';
+
+  @override
+  String get oneDriveRestoreLoadMore => 'さらに表示';
+
+  @override
+  String oneDriveRestoreListShowing(int shown, int total) {
+    return '$shown / $total';
+  }
+
+  @override
+  String get oneDriveRestoreTabUnknownDevice => '不明なデバイス';
 
   @override
   String get oneDriveRestoreEmpty => 'バックアップがまだありません。先に「今すぐ同期」でアップロードしてください。';
@@ -707,7 +757,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveRestorePlaylistCheckbox => 'プレイリスト';
 
   @override
-  String get oneDriveRestoreSettingsCheckbox => 'アプリ設定';
+  String get oneDriveRestoreLegacySettingsCheckbox => '旧形式の設定ファイル一式';
+
+  @override
+  String get oneDriveRestoreSliceHomeGreeting => 'ホームの挨拶';
+
+  @override
+  String get oneDriveRestoreSliceQuickEntry => 'ホームのショートカット';
+
+  @override
+  String get oneDriveRestoreSlicePlaybackLists => '最近再生と統計（Hive）';
+
+  @override
+  String get oneDriveRestoreSliceLyricsUi => '歌詞と画面スリープ抑制';
+
+  @override
+  String get oneDriveRestoreSliceTheme => '背景テーマ';
 
   @override
   String get oneDriveRestorePlaylistModeMerge => 'ローカルとマージ（同じ id は曲を結合）';
@@ -719,14 +784,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveRestoreAction => '復元';
 
   @override
-  String get oneDriveRestoreNeedPickContent => 'プレイリストまたはアプリ設定のどちらかを選んでください。';
+  String get oneDriveRestoreNeedPickContent => '復元する項目を少なくとも 1 つ選んでください。';
 
   @override
   String get oneDriveRestoreMissingPlaylistsFile =>
       'このバックアップにプレイリストファイルがありません。';
 
   @override
-  String get oneDriveRestoreMissingSettingsFile => 'このバックアップに設定ファイルがありません。';
+  String get oneDriveRestoreMissingSettingsFile => 'このバックアップに旧形式の設定ファイルがありません。';
+
+  @override
+  String oneDriveBackupSnapshotDeviceSession(
+    String deviceName,
+    String sessionStamp,
+  ) {
+    return '$deviceName · $sessionStamp';
+  }
+
+  @override
+  String get oneDriveSyncNowNeedMasterOn => '先に上の「OneDrive に同期」をオンにしてください。';
+
+  @override
+  String get oneDriveSyncNowNothingSelected => '同期する項目を少なくとも 1 つオンにしてください。';
 
   @override
   String get oneDriveRestoreFinished => '復元が完了しました。';

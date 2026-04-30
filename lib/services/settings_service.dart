@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
@@ -10,6 +14,7 @@ import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/models/wire_remote_control_config.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/config/app_product_info.dart';
+import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class SettingsService {
@@ -952,6 +957,26 @@ class SettingsService {
 
   static const String yeahMusicAppSettingsBackupFormatId = 'yeah_music_app_settings_v1';
 
+  /// OneDrive 主题切片 JSON 顶层：与同目录背景图二进制文件名对应（不含设备本地路径）。
+  static const String yeahMusicThemeExportBackgroundAssetNameKey =
+      'themeBackgroundAssetName';
+
+  static const Set<String> _themeBackgroundSidecarAllowedExt = <String>{
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp',
+    '.gif',
+  };
+
+  /// 读取主题备份文档中的云端背景图文件名（若有）。
+  static String? themeBackgroundAssetNameFromDoc(Map<String, dynamic> doc) {
+    final raw = doc[yeahMusicThemeExportBackgroundAssetNameKey];
+    if (raw is! String) return null;
+    final s = raw.trim();
+    return s.isEmpty ? null : s;
+  }
+
   static dynamic _hiveValueToJsonForCloudBackup(dynamic value) {
     if (value == null || value is num || value is String || value is bool) {
       return value;
@@ -1010,6 +1035,168 @@ class SettingsService {
     return const JsonEncoder.withIndent('  ').convert(map);
   }
 
+  static List<String> hiveKeysCloudSliceHomeGreeting() => <String>[
+        _homeGreetingCustomSubsKey,
+        _homeGreetingSubCycleCursorKey,
+        _homeGreetingRotationRandomKey,
+      ];
+
+  static List<String> hiveKeysCloudSliceQuickEntry() => <String>[
+        _quickEntryOrderKey,
+        _quickEntryHiddenKey,
+      ];
+
+  static List<String> hiveKeysCloudSliceLyricsUi() => <String>[
+        _lyricSettingsKey,
+        _songPageKeepScreenAwakeKey,
+        _macosMenuBarLyricsKey,
+        _desktopFloatingLyricsKey,
+        _desktopFloatingLyricsBgOpacityKey,
+        _desktopFloatingLyricsLinesBeforeKey,
+        _desktopFloatingLyricsLinesAfterKey,
+        _desktopFloatingLyricsLockedKey,
+        _androidCarLyricsEnabledKey,
+        _androidCarLyricsShowCoverKey,
+        _androidCarLyricsSyncLyricsKey,
+      ];
+
+  static List<String> hiveKeysCloudSlicePlaybackLists() => <String>[
+        RecentPlayService.hiveKeyRecentSongPaths,
+        RecentPlayService.hiveKeySongPlayCountMap,
+        RecentPlayService.hiveKeyTotalListenedWallMs,
+      ];
+
+  /// OneDrive 切片上传：仅包含给定 Hive 键（不含 SharedPreferences）。
+  static Future<Map<String, dynamic>> buildCloudBackupHiveSubsetMap(
+    Iterable<String> keys,
+  ) async {
+    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+    final hiveFlat = <String, dynamic>{};
+    for (final key in keys) {
+      if (!box.containsKey(key)) continue;
+      hiveFlat[key] = _hiveValueToJsonForCloudBackup(box.get(key));
+    }
+    return <String, dynamic>{
+      'format': yeahMusicAppSettingsBackupFormatId,
+      'version': 1,
+      'app': AppProductInfo.exportMetadataBlock,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'hive': hiveFlat,
+    };
+  }
+
+  /// 仅背景主题相关 SharedPreferences（appearance）。
+  static Future<Map<String, dynamic>> buildCloudBackupThemeSliceMap() async {
+    final prefs = await SharedPreferences.getInstance();
+    final appearance = <String, dynamic>{
+      if (prefs.containsKey('theme_type')) 'theme_type': prefs.getInt('theme_type'),
+      if (prefs.containsKey('primary_color')) 'primary_color': prefs.getInt('primary_color'),
+      if (prefs.containsKey('secondary_color')) 'secondary_color': prefs.getInt('secondary_color'),
+      if (prefs.containsKey('theme_gradient_direction'))
+        'theme_gradient_direction': prefs.getInt('theme_gradient_direction'),
+      if (prefs.containsKey('background_image_path'))
+        'background_image_path': prefs.getString('background_image_path'),
+      if (prefs.containsKey('background_image_effect'))
+        'background_image_effect': prefs.getDouble('background_image_effect'),
+      if (prefs.containsKey('global_theme_mode')) 'global_theme_mode': prefs.getInt('global_theme_mode'),
+    };
+
+    return <String, dynamic>{
+      'format': yeahMusicAppSettingsBackupFormatId,
+      'version': 1,
+      'app': AppProductInfo.exportMetadataBlock,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'sharedPreferences': <String, dynamic>{'appearance': appearance},
+    };
+  }
+
+  /// OneDrive：从切片 map 去掉设备本地的 [background_image_path]，写入 [yeahMusicThemeExportBackgroundAssetNameKey]，返回待上传文件。
+  static Future<File?> prepareThemeBackgroundSidecarForOneDrive(
+    Map<String, dynamic> map,
+  ) async {
+    map.remove(yeahMusicThemeExportBackgroundAssetNameKey);
+    final spWrapperRaw = map['sharedPreferences'];
+    if (spWrapperRaw is! Map) return null;
+    final spWrapper = Map<String, dynamic>.from(
+      spWrapperRaw.map((k, v) => MapEntry('$k', v)),
+    );
+    final appearanceRaw = spWrapper['appearance'];
+    if (appearanceRaw is! Map) return null;
+    final appearance = Map<String, dynamic>.from(
+      appearanceRaw.map((k, v) => MapEntry('$k', v)),
+    );
+
+    final themeTypeRaw = appearance['theme_type'];
+    final themeIndex = themeTypeRaw is int
+        ? themeTypeRaw
+        : (themeTypeRaw is num ? themeTypeRaw.round() : -1);
+
+    final pathRaw = appearance['background_image_path'];
+    appearance.remove('background_image_path');
+    spWrapper['appearance'] = appearance;
+    map['sharedPreferences'] = spWrapper;
+
+    if (themeIndex != ThemeType.backgroundImage.index) return null;
+    if (pathRaw is! String || pathRaw.trim().isEmpty) return null;
+
+    try {
+      final file = File(pathRaw.trim());
+      if (!await file.exists()) return null;
+      final len = await file.length();
+      const maxBytes = 8 * 1024 * 1024;
+      if (len <= 0 || len > maxBytes) return null;
+
+      var ext = p.extension(file.path).toLowerCase();
+      if (!_themeBackgroundSidecarAllowedExt.contains(ext)) {
+        ext = '.jpg';
+      }
+      final remoteName =
+          'yeah_music_theme_background${ext == '.jpeg' ? '.jpg' : ext}';
+      map[yeahMusicThemeExportBackgroundAssetNameKey] = remoteName;
+      return file;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> _installThemeBackgroundFromRestoredSidecar(File src) async {
+    if (!await src.exists()) return;
+    final len = await src.length();
+    const maxBytes = 8 * 1024 * 1024;
+    if (len <= 0 || len > maxBytes) return;
+
+    var ext = p.extension(src.path).toLowerCase();
+    if (!_themeBackgroundSidecarAllowedExt.contains(ext)) {
+      ext = '.jpg';
+    }
+    if (ext == '.jpeg') ext = '.jpg';
+
+    final support = await getApplicationSupportDirectory();
+    final base = ThemeConfigProvider.themeBackgroundSupportBaseName;
+    for (final name in <String>[
+      '$base.jpg',
+      '$base.jpeg',
+      '$base.png',
+      '$base.webp',
+      '$base.gif',
+    ]) {
+      final old = File(p.join(support.path, name));
+      if (await old.exists()) {
+        try {
+          await old.delete();
+        } catch (_) {}
+      }
+    }
+
+    final destPath = p.join(support.path, '$base$ext');
+    final bytes = await src.readAsBytes();
+    if (bytes.isEmpty) return;
+    await File(destPath).writeAsBytes(bytes, flush: true);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('background_image_path', destPath);
+  }
+
   static int _asIntForCloudRestore(dynamic json, [int fallback = 0]) {
     if (json is int) return json;
     if (json is num) return json.round();
@@ -1027,24 +1214,37 @@ class SettingsService {
     return fallback;
   }
 
+  static bool _hiveCloudRestoreAllowedKey(String key) {
+    if (_hiveKeysForCloudBackup.contains(key)) return true;
+    return key == RecentPlayService.hiveKeyRecentSongPaths ||
+        key == RecentPlayService.hiveKeySongPlayCountMap ||
+        key == RecentPlayService.hiveKeyTotalListenedWallMs;
+  }
+
   /// 将 [buildAppSettingsBackupMapForCloud] 产出的快照写回 Hive 与 SharedPreferences（appearance）。
-  static Future<void> applyCloudBackupMap(Map<String, dynamic> root) async {
+  ///
+  /// [themeBackgroundSidecarAbsolute]：与同目录主题切片配套的本地背景图文件（已由 Graph 下载）。
+  static Future<void> applyCloudBackupMap(
+    Map<String, dynamic> root, {
+    String? themeBackgroundSidecarAbsolute,
+  }) async {
+    root.remove(yeahMusicThemeExportBackgroundAssetNameKey);
     final fmt = root['format'] as String?;
     if (fmt != yeahMusicAppSettingsBackupFormatId) {
       throw FormatException('unsupported settings backup format: $fmt');
     }
     final hiveRaw = root['hive'];
-    if (hiveRaw is! Map) {
-      throw const FormatException('settings backup missing hive');
-    }
-    final hiveDecoded = Map<String, dynamic>.from(hiveRaw);
-    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-    for (final key in _hiveKeysForCloudBackup) {
-      if (!hiveDecoded.containsKey(key)) continue;
-      await box.put(
-        key,
-        _decodeHiveValueForCloudRestore(key, hiveDecoded[key]),
-      );
+    if (hiveRaw is Map) {
+      final hiveDecoded = Map<String, dynamic>.from(hiveRaw);
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      for (final entry in hiveDecoded.entries) {
+        final key = entry.key;
+        if (!_hiveCloudRestoreAllowedKey(key)) continue;
+        await box.put(
+          key,
+          _decodeHiveValueForCloudRestore(key, entry.value),
+        );
+      }
     }
 
     final spWrapper = root['sharedPreferences'];
@@ -1095,6 +1295,21 @@ class SettingsService {
       if (v is String) {
         await prefs.setString('app_language_option', v);
       }
+    }
+
+    final sidecar = themeBackgroundSidecarAbsolute?.trim();
+    if (app.containsKey('theme_type')) {
+      final ttRaw = app['theme_type'];
+      final ti = ttRaw is int ? ttRaw : (ttRaw is num ? ttRaw.round() : null);
+      if (ti == ThemeType.backgroundImage.index &&
+          (sidecar == null || sidecar.isEmpty) &&
+          !app.containsKey('background_image_path')) {
+        await prefs.remove('background_image_path');
+      }
+    }
+
+    if (sidecar != null && sidecar.isNotEmpty) {
+      await _installThemeBackgroundFromRestoredSidecar(File(sidecar));
     }
   }
 
@@ -1184,6 +1399,20 @@ class SettingsService {
         return _asIntForCloudRestore(json, 0).clamp(0, 999999);
       case _homeGreetingRotationRandomKey:
         return _asBoolForCloudRestore(json, false);
+      case RecentPlayService.hiveKeyRecentSongPaths:
+        if (json is! List) return <dynamic>[];
+        return json.map((e) => '$e').where((s) => s.trim().isNotEmpty).toList();
+      case RecentPlayService.hiveKeySongPlayCountMap:
+        if (json is! Map) return <dynamic, dynamic>{};
+        final countMap = <dynamic, dynamic>{};
+        for (final e in json.entries) {
+          final k = '${e.key}'.trim();
+          if (k.isEmpty) continue;
+          countMap[k] = _asIntForCloudRestore(e.value, 0);
+        }
+        return countMap;
+      case RecentPlayService.hiveKeyTotalListenedWallMs:
+        return _asIntForCloudRestore(json, 0).clamp(0, 1 << 62);
       default:
         return json;
     }

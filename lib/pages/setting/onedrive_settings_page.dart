@@ -1,15 +1,20 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/playback_shortcut_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/onedrive_cloud_backup_snapshot.dart';
+import 'package:yeah_music/models/onedrive_restore_selection.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
@@ -17,6 +22,254 @@ import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/utils/onedrive_sync_device.dart';
+
+enum _RestoreTabKind { thisDevice, otherDevice, legacyFlat }
+
+/// 单个 Tab：同一云端设备文件夹（或旧版平铺）下的备份全局下标，已按时间倒序。
+class _RestoreTabSpec {
+  const _RestoreTabSpec({
+    required this.kind,
+    required this.title,
+    required this.indices,
+  });
+
+  final _RestoreTabKind kind;
+  final String title;
+  final List<int> indices;
+}
+
+/// 按设备分 Tab；各 Tab 内条目按 [OneDriveCloudBackupSnapshot.comparableInstant] 最新在前。
+List<_RestoreTabSpec> _buildRestoreDeviceTabs(
+  AppLocalizations l10n,
+  List<OneDriveCloudBackupSnapshot> snapshots,
+  String currentDeviceSanitized,
+) {
+  final snaps = snapshots;
+  final order = List.generate(snaps.length, (i) => i);
+  order.sort((a, b) =>
+      snaps[b].comparableInstant.compareTo(snaps[a].comparableInstant));
+
+  final thisDevice = <int>[];
+  final otherBuckets = <String, List<int>>{};
+  final otherTitle = <String, String>{};
+  final legacy = <int>[];
+
+  for (final i in order) {
+    final s = snaps[i];
+    switch (s.kind) {
+      case OneDriveCloudBackupSnapshotKind.legacyFlat:
+        legacy.add(i);
+        break;
+      case OneDriveCloudBackupSnapshotKind.deviceSession:
+        final raw = (s.deviceFolderLabel ?? '').trim();
+        final dl = sanitizeOneDriveSyncFolderSegment(raw);
+        final isThis = dl.isNotEmpty &&
+            currentDeviceSanitized.isNotEmpty &&
+            dl == currentDeviceSanitized;
+        if (isThis) {
+          thisDevice.add(i);
+        } else {
+          final key = dl.isEmpty ? '__unnamed_device__' : dl;
+          otherBuckets.putIfAbsent(key, () => <int>[]).add(i);
+          otherTitle[key] =
+              raw.isNotEmpty ? raw : l10n.oneDriveRestoreTabUnknownDevice;
+        }
+        break;
+    }
+  }
+
+  DateTime newestInBucket(List<int> idx) {
+    var best = snaps[idx.first].comparableInstant;
+    for (final i in idx.skip(1)) {
+      final t = snaps[i].comparableInstant;
+      if (t.isAfter(best)) best = t;
+    }
+    return best;
+  }
+
+  final tabs = <_RestoreTabSpec>[];
+  if (thisDevice.isNotEmpty) {
+    tabs.add(
+      _RestoreTabSpec(
+        kind: _RestoreTabKind.thisDevice,
+        title: l10n.oneDriveRestoreGroupThisDevice,
+        indices: thisDevice,
+      ),
+    );
+  }
+
+  final otherKeys = otherBuckets.keys.toList();
+  otherKeys.sort(
+    (ka, kb) => newestInBucket(otherBuckets[kb]!)
+        .compareTo(newestInBucket(otherBuckets[ka]!)),
+  );
+
+  for (final k in otherKeys) {
+    tabs.add(
+      _RestoreTabSpec(
+        kind: _RestoreTabKind.otherDevice,
+        title: otherTitle[k] ?? k,
+        indices: otherBuckets[k]!,
+      ),
+    );
+  }
+
+  if (legacy.isNotEmpty) {
+    tabs.add(
+      _RestoreTabSpec(
+        kind: _RestoreTabKind.legacyFlat,
+        title: l10n.oneDriveRestoreGroupLegacyFlat,
+        indices: legacy,
+      ),
+    );
+  }
+
+  return tabs;
+}
+
+int _initialRestoreSelectionGlobalIndex(List<_RestoreTabSpec> tabs) {
+  if (tabs.isEmpty) return 0;
+  for (final t in tabs) {
+    if (t.kind == _RestoreTabKind.thisDevice && t.indices.isNotEmpty) {
+      return t.indices.first;
+    }
+  }
+  return tabs.first.indices.first;
+}
+
+/// 手机用手势面板；平板 / 桌面（较短边 ≥560 或宽度 ≥680）用居中对话框。
+Future<OneDriveRestoreSelection?> presentOneDriveRestorePicker({
+  required BuildContext context,
+  required AppLocalizations l10n,
+  required List<OneDriveCloudBackupSnapshot> snapshots,
+  required String currentDeviceFolderSanitized,
+}) async {
+  final media = MediaQuery.of(context);
+  final useDialog =
+      media.size.shortestSide >= 560 || media.size.width >= 680;
+
+  final sheetChild = _OneDriveRestoreSheet(
+    l10n: l10n,
+    snapshots: snapshots,
+    currentDeviceFolderSanitized: currentDeviceFolderSanitized,
+    presentationDialog: useDialog,
+  );
+
+  if (!useDialog) {
+    return showModalBottomSheet<OneDriveRestoreSelection>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return FrostedGlassBottomSheet(
+          topRadius: 16,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+            ),
+            child: Theme(
+              data: ThemeData.dark(useMaterial3: true),
+              child: sheetChild,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  return showDialog<OneDriveRestoreSelection>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.48),
+    builder: (dialogContext) {
+      final mq = MediaQuery.of(dialogContext);
+      final r = BorderRadius.circular(16);
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: mq.size.width >= 900 ? 72 : 36,
+          vertical: mq.size.height < 520 ? 12 : 32,
+        ),
+        child: ClipRRect(
+          borderRadius: r,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: mq.size.width >= 1200 ? 1024 : 880,
+                maxHeight: mq.size.height * 0.92,
+              ),
+              decoration: BoxDecoration(
+                color: FrostedPalette.fill(
+                  dialogContext,
+                  FrostedSurfaceKind.dialog,
+                ),
+                borderRadius: r,
+                border: Border.all(
+                  color: FrostedPalette.edgeLine(dialogContext),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Theme(
+                data: ThemeData.dark(useMaterial3: true),
+                child: sheetChild,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+String _backupSnapshotTitle(AppLocalizations l10n, OneDriveCloudBackupSnapshot s) {
+  switch (s.kind) {
+    case OneDriveCloudBackupSnapshotKind.legacyFlat:
+      return s.sortStamp;
+    case OneDriveCloudBackupSnapshotKind.deviceSession:
+      return l10n.oneDriveBackupSnapshotDeviceSession(
+        s.deviceFolderLabel ?? '',
+        s.sortStamp,
+      );
+  }
+}
+
+String _backupSnapshotSubtitle(AppLocalizations l10n, OneDriveCloudBackupSnapshot s) {
+  final parts = <String>[];
+  if (s.hasPlaylistsJson) parts.add(l10n.oneDriveRestorePlaylistCheckbox);
+  if (s.hasLegacyCombinedSettingsJson) {
+    parts.add(l10n.oneDriveRestoreLegacySettingsCheckbox);
+  }
+  if (s.hasHomeGreetingJson) parts.add(l10n.oneDriveRestoreSliceHomeGreeting);
+  if (s.hasQuickEntryJson) parts.add(l10n.oneDriveRestoreSliceQuickEntry);
+  if (s.hasPlaybackListsJson) parts.add(l10n.oneDriveRestoreSlicePlaybackLists);
+  if (s.hasLyricsUiJson) parts.add(l10n.oneDriveRestoreSliceLyricsUi);
+  if (s.hasThemeJson) parts.add(l10n.oneDriveRestoreSliceTheme);
+  return parts.isEmpty ? '—' : parts.join(' · ');
+}
+
+String _backupSnapshotRowTitle(
+  AppLocalizations l10n,
+  OneDriveCloudBackupSnapshot s,
+  _RestoreTabKind tabKind,
+) {
+  switch (tabKind) {
+    case _RestoreTabKind.thisDevice:
+    case _RestoreTabKind.otherDevice:
+      if (s.kind == OneDriveCloudBackupSnapshotKind.deviceSession) {
+        return s.sortStamp;
+      }
+      return _backupSnapshotTitle(l10n, s);
+    case _RestoreTabKind.legacyFlat:
+      return _backupSnapshotTitle(l10n, s);
+  }
+}
 
 class OneDriveSettingsPage extends StatefulWidget {
   const OneDriveSettingsPage({super.key});
@@ -259,6 +512,23 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     AppLocalizations l10n,
     OneDriveController od,
   ) async {
+    final sync = od.syncSettings;
+    if (!sync.cloudSyncEnabled) {
+      showAppSnackBar(
+        context,
+        l10n.oneDriveSyncNowNeedMasterOn,
+        kind: AppSnackKind.neutral,
+      );
+      return;
+    }
+    if (!sync.hasConfigurableSlices) {
+      showAppSnackBar(
+        context,
+        l10n.oneDriveSyncNowNothingSelected,
+        kind: AppSnackKind.neutral,
+      );
+      return;
+    }
     if (!od.signedIn) {
       showAppSnackBar(
         context,
@@ -368,24 +638,16 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         return;
       }
       if (!context.mounted) return;
-      final choice = await showModalBottomSheet<_OneDriveRestoreChoice>(
+
+      final deviceFolderSanitized =
+          sanitizeOneDriveSyncFolderSegment(await resolveOneDriveSyncDeviceFolderLabel());
+
+      if (!context.mounted) return;
+      final choice = await presentOneDriveRestorePicker(
         context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (sheetContext) {
-          return DecoratedBox(
-            decoration: const BoxDecoration(
-              color: Color(0xFF1A1D22),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-              ),
-              child: _OneDriveRestoreSheet(l10n: l10n, snapshots: snapshots),
-            ),
-          );
-        },
+        l10n: l10n,
+        snapshots: snapshots,
+        currentDeviceFolderSanitized: deviceFolderSanitized,
       );
       if (!context.mounted || choice == null) return;
 
@@ -397,10 +659,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       try {
         await od.restoreCloudBackup(
           userPlaylistProvider: userPl,
-          snapshot: choice.snapshot,
-          restorePlaylists: choice.restorePlaylists,
-          restoreSettings: choice.restoreSettings,
-          replaceAllPlaylists: choice.replaceAllPlaylists,
+          sel: choice,
         );
         if (!context.mounted) return;
         await _reloadAfterCloudRestore(context);
@@ -451,48 +710,414 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
   }
 }
 
-class _OneDriveRestoreChoice {
-  _OneDriveRestoreChoice({
-    required this.snapshot,
-    required this.restorePlaylists,
-    required this.restoreSettings,
-    required this.replaceAllPlaylists,
-  });
-
-  final OneDriveCloudBackupSnapshot snapshot;
-  final bool restorePlaylists;
-  final bool restoreSettings;
-  final bool replaceAllPlaylists;
-}
-
 class _OneDriveRestoreSheet extends StatefulWidget {
-  const _OneDriveRestoreSheet({required this.l10n, required this.snapshots});
+  const _OneDriveRestoreSheet({
+    required this.l10n,
+    required this.snapshots,
+    required this.currentDeviceFolderSanitized,
+    required this.presentationDialog,
+  });
 
   final AppLocalizations l10n;
   final List<OneDriveCloudBackupSnapshot> snapshots;
+  final String currentDeviceFolderSanitized;
+  /// 平板 / 桌面为 `true`（居中对话框）；手机为 `false`（底部面板）。
+  final bool presentationDialog;
 
   @override
   State<_OneDriveRestoreSheet> createState() => _OneDriveRestoreSheetState();
 }
 
-class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
+class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
+    with TickerProviderStateMixin {
+  static const Color _accent = Color(0xFF0078D4);
+  static const int _restorePageSize = 15;
+
+  TabController? _tabController;
+  late List<_RestoreTabSpec> _tabs;
+  final Map<int, int> _visibleCountPerTab = <int, int>{};
+
   late int _selectedIndex;
   late bool _wantPlaylists;
-  late bool _wantSettings;
+  late bool _wantLegacySettings;
+  late bool _wantHome;
+  late bool _wantQuick;
+  late bool _wantPlayback;
+  late bool _wantLyrics;
+  late bool _wantTheme;
   bool _replacePlaylists = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = 0;
-    if (widget.snapshots.isEmpty) return;
-    _syncTogglesForIndex(0);
+    _tabs = widget.snapshots.isEmpty
+        ? const <_RestoreTabSpec>[]
+        : _buildRestoreDeviceTabs(
+            widget.l10n,
+            widget.snapshots,
+            widget.currentDeviceFolderSanitized,
+          );
+
+    if (widget.snapshots.isEmpty) {
+      _selectedIndex = 0;
+      return;
+    }
+
+    _selectedIndex = _initialRestoreSelectionGlobalIndex(_tabs);
+    if (_tabs.length > 1) {
+      _tabController = TabController(length: _tabs.length, vsync: this);
+    }
+    _syncTogglesForIndex(_selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
   }
 
   void _syncTogglesForIndex(int i) {
     final s = widget.snapshots[i];
     _wantPlaylists = s.hasPlaylistsJson;
-    _wantSettings = s.hasSettingsJson;
+    _wantLegacySettings = s.hasLegacyCombinedSettingsJson;
+    _wantHome = s.hasHomeGreetingJson;
+    _wantQuick = s.hasQuickEntryJson;
+    _wantPlayback = s.hasPlaybackListsJson;
+    _wantLyrics = s.hasLyricsUiJson;
+    _wantTheme = s.hasThemeJson;
+    if (s.kind == OneDriveCloudBackupSnapshotKind.legacyFlat) {
+      _wantHome = false;
+      _wantQuick = false;
+      _wantPlayback = false;
+      _wantLyrics = false;
+      _wantTheme = false;
+    }
+  }
+
+  List<Widget> _buildSliceTiles(
+    AppLocalizations l10n,
+    OneDriveCloudBackupSnapshot snap,
+  ) {
+    return [
+      if (snap.kind == OneDriveCloudBackupSnapshotKind.deviceSession) ...[
+        CheckboxListTile(
+          value: _wantHome,
+          onChanged: snap.hasHomeGreetingJson
+              ? (v) => setState(() => _wantHome = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreSliceHomeGreeting,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        CheckboxListTile(
+          value: _wantQuick,
+          onChanged: snap.hasQuickEntryJson
+              ? (v) => setState(() => _wantQuick = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreSliceQuickEntry,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        CheckboxListTile(
+          value: _wantPlayback,
+          onChanged: snap.hasPlaybackListsJson
+              ? (v) => setState(() => _wantPlayback = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreSlicePlaybackLists,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        CheckboxListTile(
+          value: _wantLyrics,
+          onChanged: snap.hasLyricsUiJson
+              ? (v) => setState(() => _wantLyrics = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreSliceLyricsUi,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        CheckboxListTile(
+          value: _wantTheme,
+          onChanged: snap.hasThemeJson
+              ? (v) => setState(() => _wantTheme = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreSliceTheme,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+      if (snap.kind == OneDriveCloudBackupSnapshotKind.legacyFlat)
+        CheckboxListTile(
+          value: _wantLegacySettings,
+          onChanged: snap.hasLegacyCombinedSettingsJson
+              ? (v) => setState(() => _wantLegacySettings = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreLegacySettingsCheckbox,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+    ];
+  }
+
+  Widget _buildBackupRadioTile(
+    AppLocalizations l10n,
+    int globalIndex,
+    _RestoreTabKind tabKind,
+  ) {
+    final s = widget.snapshots[globalIndex];
+    final dense = widget.presentationDialog;
+    return RadioListTile<int>(
+      visualDensity:
+          dense ? VisualDensity.compact : VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      value: globalIndex,
+      groupValue: _selectedIndex,
+      activeColor: _accent,
+      onChanged: (v) {
+        if (v == null) return;
+        setState(() {
+          _selectedIndex = v;
+          _syncTogglesForIndex(v);
+        });
+      },
+      title: Text(
+        _backupSnapshotRowTitle(l10n, s, tabKind),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Text(
+        _backupSnapshotSubtitle(l10n, s),
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.45),
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPagedBackupListBody(AppLocalizations l10n, int tabIndex) {
+    final tab = _tabs[tabIndex];
+    final tabKind = tab.kind;
+    final total = tab.indices.length;
+    final requested = _visibleCountPerTab[tabIndex] ?? _restorePageSize;
+    final visible = requested.clamp(1, total);
+
+    final tiles = <Widget>[
+      for (var k = 0; k < visible; k++)
+        _buildBackupRadioTile(l10n, tab.indices[k], tabKind),
+    ];
+
+    if (visible < total) {
+      tiles.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.oneDriveRestoreListShowing(visible, total),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.38),
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _visibleCountPerTab[tabIndex] =
+                        (visible + _restorePageSize).clamp(1, total);
+                  });
+                },
+                child: Text(l10n.oneDriveRestoreLoadMore),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (total > _restorePageSize) {
+      tiles.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          child: Text(
+            l10n.oneDriveRestoreListShowing(visible, total),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.38),
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      children: tiles,
+    );
+  }
+
+  Widget _backupPickerPanel(AppLocalizations l10n) {
+    if (_tabs.length <= 1) {
+      return _buildPagedBackupListBody(l10n, 0);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TabBar(
+          controller: _tabController!,
+          isScrollable: true,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white54,
+          indicatorColor: _accent,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+          tabs: [
+            for (final t in _tabs)
+              Tab(
+                child: Text(
+                  t.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController!,
+            children: [
+              for (var ti = 0; ti < _tabs.length; ti++)
+                _buildPagedBackupListBody(l10n, ti),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildRestoreOptionTiles(
+    AppLocalizations l10n,
+    OneDriveCloudBackupSnapshot snap,
+  ) {
+    final sliceTiles = _buildSliceTiles(l10n, snap);
+    return [
+      CheckboxListTile(
+        value: _wantPlaylists,
+        onChanged: snap.hasPlaylistsJson
+            ? (v) {
+                setState(() {
+                  _wantPlaylists = v ?? false;
+                });
+              }
+            : null,
+        activeColor: _accent,
+        title: Text(
+          l10n.oneDriveRestorePlaylistCheckbox,
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      ...sliceTiles,
+      if (_wantPlaylists && snap.hasPlaylistsJson) ...[
+        RadioListTile<bool>(
+          value: false,
+          groupValue: _replacePlaylists,
+          activeColor: _accent,
+          onChanged: (_) {
+            setState(() => _replacePlaylists = false);
+          },
+          title: Text(
+            l10n.oneDriveRestorePlaylistModeMerge,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+          ),
+        ),
+        RadioListTile<bool>(
+          value: true,
+          groupValue: _replacePlaylists,
+          activeColor: _accent,
+          onChanged: (_) {
+            setState(() => _replacePlaylists = true);
+          },
+          title: Text(
+            l10n.oneDriveRestorePlaylistModeReplace,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+          ),
+        ),
+      ],
+    ];
+  }
+
+  void _submitRestore(AppLocalizations l10n, OneDriveCloudBackupSnapshot snap) {
+    final sel = OneDriveRestoreSelection(
+      snapshot: snap,
+      restorePlaylists: _wantPlaylists,
+      restoreLegacyCombinedSettings: _wantLegacySettings,
+      restoreHomeGreeting: _wantHome,
+      restoreQuickEntry: _wantQuick,
+      restorePlaybackLists: _wantPlayback,
+      restoreLyricsUi: _wantLyrics,
+      restoreTheme: _wantTheme,
+      replaceAllPlaylists: _replacePlaylists,
+    );
+    if (!sel.wantsAnyPayload) {
+      showAppSnackBar(
+        context,
+        l10n.oneDriveRestoreNeedPickContent,
+        kind: AppSnackKind.neutral,
+      );
+      return;
+    }
+    if (sel.restorePlaylists && !snap.hasPlaylistsJson) {
+      showAppSnackBar(
+        context,
+        l10n.oneDriveRestoreMissingPlaylistsFile,
+        kind: AppSnackKind.error,
+      );
+      return;
+    }
+    if (sel.restoreLegacyCombinedSettings &&
+        !snap.hasLegacyCombinedSettingsJson) {
+      showAppSnackBar(
+        context,
+        l10n.oneDriveRestoreMissingSettingsFile,
+        kind: AppSnackKind.error,
+      );
+      return;
+    }
+    Navigator.of(context).pop(sel);
+  }
+
+  Widget _restoreBar(AppLocalizations l10n, OneDriveCloudBackupSnapshot snap) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8,
+        16,
+        widget.presentationDialog ? 16 : 18,
+      ),
+      child: FilledButton(
+        onPressed: () => _submitRestore(l10n, snap),
+        style: FilledButton.styleFrom(
+          backgroundColor: _accent,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+        ),
+        child: Text(l10n.oneDriveRestoreAction),
+      ),
+    );
   }
 
   @override
@@ -500,246 +1125,207 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet> {
     final l10n = widget.l10n;
     if (widget.snapshots.isEmpty) {
       return SafeArea(
+        top: !widget.presentationDialog,
+        bottom: true,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.oneDriveRestoreSheetTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.oneDriveRestoreSheetTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.white54),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.oneDriveRestoreEmpty,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  height: 1.35,
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: Colors.white54),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  l10n.oneDriveRestoreEmpty,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       );
     }
 
     final snap = widget.snapshots[_selectedIndex];
+    final mq = MediaQuery.of(context);
+    final panelMaxHeight =
+        mq.size.height * (widget.presentationDialog ? 0.92 : 0.78);
 
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.78,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
+    Widget headerRow() {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.oneDriveRestoreSheetTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.white54),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            Expanded(
               child: Text(
-                l10n.oneDriveRestoreSubtitle,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55),
-                  fontSize: 12,
-                  height: 1.35,
+                l10n.oneDriveRestoreSheetTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: Material(
-                color: Colors.transparent,
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  children: [
-                    for (var i = 0; i < widget.snapshots.length; i++)
-                      RadioListTile<int>(
-                        value: i,
-                        groupValue: _selectedIndex,
-                        activeColor: const Color(0xFF0078D4),
-                        onChanged: (v) {
-                          if (v == null) return;
-                          setState(() {
-                            _selectedIndex = v;
-                            _syncTogglesForIndex(v);
-                          });
-                        },
-                        title: Text(
-                          widget.snapshots[i].stamp,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: Builder(
-                          builder: (_) {
-                            final p = widget.snapshots[i];
-                            final parts = <String>[
-                              if (p.hasPlaylistsJson)
-                                l10n.oneDriveRestorePlaylistCheckbox,
-                              if (p.hasSettingsJson)
-                                l10n.oneDriveRestoreSettingsCheckbox,
-                            ];
-                            return Text(
-                              parts.isEmpty ? '—' : parts.join(' · '),
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.45),
-                                fontSize: 12,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    const Divider(height: 1, color: Color(0x22FFFFFF)),
-                    CheckboxListTile(
-                      value: _wantPlaylists,
-                      onChanged: snap.hasPlaylistsJson
-                          ? (v) {
-                              setState(() {
-                                _wantPlaylists = v ?? false;
-                              });
-                            }
-                          : null,
-                      activeColor: const Color(0xFF0078D4),
-                      title: Text(
-                        l10n.oneDriveRestorePlaylistCheckbox,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    CheckboxListTile(
-                      value: _wantSettings,
-                      onChanged: snap.hasSettingsJson
-                          ? (v) {
-                              setState(() {
-                                _wantSettings = v ?? false;
-                              });
-                            }
-                          : null,
-                      activeColor: const Color(0xFF0078D4),
-                      title: Text(
-                        l10n.oneDriveRestoreSettingsCheckbox,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    if (_wantPlaylists && snap.hasPlaylistsJson) ...[
-                      RadioListTile<bool>(
-                        value: false,
-                        groupValue: _replacePlaylists,
-                        activeColor: const Color(0xFF0078D4),
-                        onChanged: (_) {
-                          setState(() => _replacePlaylists = false);
-                        },
-                        title: Text(
-                          l10n.oneDriveRestorePlaylistModeMerge,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ),
-                      RadioListTile<bool>(
-                        value: true,
-                        groupValue: _replacePlaylists,
-                        activeColor: const Color(0xFF0078D4),
-                        onChanged: (_) {
-                          setState(() => _replacePlaylists = true);
-                        },
-                        title: Text(
-                          l10n.oneDriveRestorePlaylistModeReplace,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-              child: FilledButton(
-                onPressed: () {
-                  if (!_wantPlaylists && !_wantSettings) {
-                    showAppSnackBar(
-                      context,
-                      l10n.oneDriveRestoreNeedPickContent,
-                      kind: AppSnackKind.neutral,
-                    );
-                    return;
-                  }
-                  if (_wantPlaylists && !snap.hasPlaylistsJson) {
-                    showAppSnackBar(
-                      context,
-                      l10n.oneDriveRestoreMissingPlaylistsFile,
-                      kind: AppSnackKind.error,
-                    );
-                    return;
-                  }
-                  if (_wantSettings && !snap.hasSettingsJson) {
-                    showAppSnackBar(
-                      context,
-                      l10n.oneDriveRestoreMissingSettingsFile,
-                      kind: AppSnackKind.error,
-                    );
-                    return;
-                  }
-                  Navigator.of(context).pop(
-                    _OneDriveRestoreChoice(
-                      snapshot: snap,
-                      restorePlaylists: _wantPlaylists,
-                      restoreSettings: _wantSettings,
-                      replaceAllPlaylists: _replacePlaylists,
-                    ),
-                  );
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF0078D4),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                ),
-                child: Text(l10n.oneDriveRestoreAction),
-              ),
+            IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close, color: Colors.white54),
             ),
           ],
         ),
+      );
+    }
+
+    final subtitle = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        l10n.oneDriveRestoreSubtitle,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.55),
+          fontSize: 12,
+          height: 1.35,
+        ),
       ),
+    );
+
+    return SafeArea(
+      top: !widget.presentationDialog,
+      bottom: true,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+            final splitPane =
+                widget.presentationDialog && constraints.maxWidth >= 840;
+
+            if (!splitPane) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: panelMaxHeight),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    headerRow(),
+                    subtitle,
+                    const SizedBox(height: 8),
+                    Flexible(
+                      flex: 52,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: _backupPickerPanel(l10n),
+                      ),
+                    ),
+                    const Divider(height: 1, color: Color(0x22FFFFFF)),
+                    Flexible(
+                      flex: 48,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          children: _buildRestoreOptionTiles(l10n, snap),
+                        ),
+                      ),
+                    ),
+                    _restoreBar(l10n, snap),
+                  ],
+                ),
+              );
+            }
+
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: panelMaxHeight),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  headerRow(),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 42,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: _backupPickerPanel(l10n),
+                          ),
+                        ),
+                        const VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: Color(0x22FFFFFF),
+                        ),
+                        Expanded(
+                          flex: 58,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.oneDriveRestoreContentSectionTitle,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      l10n.oneDriveRestoreSubtitle,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.52,
+                                        ),
+                                        fontSize: 12,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: ListView(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    children:
+                                        _buildRestoreOptionTiles(l10n, snap),
+                                  ),
+                                ),
+                              ),
+                              _restoreBar(l10n, snap),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
     );
   }
 }
@@ -859,17 +1445,17 @@ class _SyncCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.08),
                   ),
                   SwitchListTile(
-                    value: s.syncPlaylists,
+                    value: s.syncUserPlaylists,
                     onChanged: (v) {
-                      od.setSyncSettings(s.copyWith(syncPlaylists: v));
+                      od.setSyncSettings(s.copyWith(syncUserPlaylists: v));
                     },
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
-                      l10n.oneDriveSyncItemPlaylists,
+                      l10n.oneDriveSyncItemUserPlaylists,
                       style: const TextStyle(color: Colors.white),
                     ),
                     subtitle: Text(
-                      l10n.oneDriveSyncItemPlaylistsSubtitle,
+                      l10n.oneDriveSyncItemUserPlaylistsSubtitle,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,
@@ -877,17 +1463,91 @@ class _SyncCard extends StatelessWidget {
                     ),
                   ),
                   SwitchListTile(
-                    value: s.syncAppSettings,
+                    value: s.syncHomeGreeting,
                     onChanged: (v) {
-                      od.setSyncSettings(s.copyWith(syncAppSettings: v));
+                      od.setSyncSettings(s.copyWith(syncHomeGreeting: v));
                     },
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
-                      l10n.oneDriveSyncItemSettings,
+                      l10n.oneDriveSyncItemHomeGreeting,
                       style: const TextStyle(color: Colors.white),
                     ),
                     subtitle: Text(
-                      l10n.oneDriveSyncItemSettingsSubtitle,
+                      l10n.oneDriveSyncItemHomeGreetingSubtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    value: s.syncQuickEntry,
+                    onChanged: (v) {
+                      od.setSyncSettings(s.copyWith(syncQuickEntry: v));
+                    },
+                    activeThumbColor: const Color(0xFF0078D4),
+                    title: Text(
+                      l10n.oneDriveSyncItemQuickEntry,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      l10n.oneDriveSyncItemQuickEntrySubtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    value: s.syncPlaybackListsAndStats,
+                    onChanged: (v) {
+                      od.setSyncSettings(
+                        s.copyWith(syncPlaybackListsAndStats: v),
+                      );
+                    },
+                    activeThumbColor: const Color(0xFF0078D4),
+                    title: Text(
+                      l10n.oneDriveSyncItemPlaybackListsStats,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      l10n.oneDriveSyncItemPlaybackListsStatsSubtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    value: s.syncLyricsUi,
+                    onChanged: (v) {
+                      od.setSyncSettings(s.copyWith(syncLyricsUi: v));
+                    },
+                    activeThumbColor: const Color(0xFF0078D4),
+                    title: Text(
+                      l10n.oneDriveSyncItemLyricsUi,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      l10n.oneDriveSyncItemLyricsUiSubtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    value: s.syncThemeAppearance,
+                    onChanged: (v) {
+                      od.setSyncSettings(s.copyWith(syncThemeAppearance: v));
+                    },
+                    activeThumbColor: const Color(0xFF0078D4),
+                    title: Text(
+                      l10n.oneDriveSyncItemTheme,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      l10n.oneDriveSyncItemThemeSubtitle,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,

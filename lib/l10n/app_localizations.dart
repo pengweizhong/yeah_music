@@ -1275,32 +1275,80 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncMasterSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Back up playlists and app settings on a schedule. Each upload is saved as timestamped JSON files in your cloud app folder. Scheduled timers will run in a later update.'**
+  /// **'Choose categories to sync. Each upload creates folder Device model / timestamp under your cloud app folder.'**
   String get oneDriveSyncMasterSubtitle;
 
-  /// No description provided for @oneDriveSyncItemPlaylists.
+  /// No description provided for @oneDriveSyncItemUserPlaylists.
   ///
   /// In en, this message translates to:
-  /// **'Playlists'**
-  String get oneDriveSyncItemPlaylists;
+  /// **'My playlists'**
+  String get oneDriveSyncItemUserPlaylists;
 
-  /// No description provided for @oneDriveSyncItemPlaylistsSubtitle.
+  /// No description provided for @oneDriveSyncItemUserPlaylistsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Include playlist data when syncing.'**
-  String get oneDriveSyncItemPlaylistsSubtitle;
+  /// **'Covers, colors, playlists and song order (saved per device folder).'**
+  String get oneDriveSyncItemUserPlaylistsSubtitle;
 
-  /// No description provided for @oneDriveSyncItemSettings.
+  /// No description provided for @oneDriveSyncItemHomeGreeting.
   ///
   /// In en, this message translates to:
-  /// **'App settings'**
-  String get oneDriveSyncItemSettings;
+  /// **'Home greeting (first card)'**
+  String get oneDriveSyncItemHomeGreeting;
 
-  /// No description provided for @oneDriveSyncItemSettingsSubtitle.
+  /// No description provided for @oneDriveSyncItemHomeGreetingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Theme, shortcuts, lyrics options, and other preferences.'**
-  String get oneDriveSyncItemSettingsSubtitle;
+  /// **'Same source as Settings → Home greeting.'**
+  String get oneDriveSyncItemHomeGreetingSubtitle;
+
+  /// No description provided for @oneDriveSyncItemQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Home shortcuts'**
+  String get oneDriveSyncItemQuickEntry;
+
+  /// No description provided for @oneDriveSyncItemQuickEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcut order and visibility.'**
+  String get oneDriveSyncItemQuickEntrySubtitle;
+
+  /// No description provided for @oneDriveSyncItemPlaybackListsStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent / top played & playback stats'**
+  String get oneDriveSyncItemPlaybackListsStats;
+
+  /// No description provided for @oneDriveSyncItemPlaybackListsStatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent plays list, play counts and listened duration used by Home and Statistics.'**
+  String get oneDriveSyncItemPlaybackListsStatsSubtitle;
+
+  /// No description provided for @oneDriveSyncItemLyricsUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics & playback screen'**
+  String get oneDriveSyncItemLyricsUi;
+
+  /// No description provided for @oneDriveSyncItemLyricsUiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyric styling plus floating/car lyrics and keep screen awake.'**
+  String get oneDriveSyncItemLyricsUiSubtitle;
+
+  /// No description provided for @oneDriveSyncItemTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Background theme'**
+  String get oneDriveSyncItemTheme;
+
+  /// No description provided for @oneDriveSyncItemThemeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient, preset/custom colors and background image paths.'**
+  String get oneDriveSyncItemThemeSubtitle;
 
   /// No description provided for @oneDriveSyncFrequencyLabel.
   ///
@@ -1347,7 +1395,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncNowDescription.
   ///
   /// In en, this message translates to:
-  /// **'Upload playlists and settings now. Files are named with the local date and time, for example playlists and settings snapshots from the same moment share the same timestamp.'**
+  /// **'Upload selected categories now into Device folder / yyyyMMddTHHmmss under your cloud app folder.'**
   String get oneDriveSyncNowDescription;
 
   /// No description provided for @oneDriveSyncNowNeedLogin.
@@ -1365,7 +1413,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncNowFinished.
   ///
   /// In en, this message translates to:
-  /// **'Backup uploaded as timestamped JSON in your cloud app folder.'**
+  /// **'Backup uploaded under your cloud app folder.'**
   String get oneDriveSyncNowFinished;
 
   /// No description provided for @oneDriveSyncNowFailed.
@@ -1383,7 +1431,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveRestoreSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Download a timestamped backup from your cloud app folder.'**
+  /// **'Pick a backup entry (legacy flat files or device sessions). Choose what to restore.'**
   String get oneDriveRestoreSubtitle;
 
   /// No description provided for @oneDriveRestoreSheetTitle.
@@ -1391,6 +1439,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a backup'**
   String get oneDriveRestoreSheetTitle;
+
+  /// No description provided for @oneDriveRestoreGroupThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get oneDriveRestoreGroupThisDevice;
+
+  /// No description provided for @oneDriveRestoreGroupOtherDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices'**
+  String get oneDriveRestoreGroupOtherDevices;
+
+  /// No description provided for @oneDriveRestoreGroupLegacyFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy flat backups'**
+  String get oneDriveRestoreGroupLegacyFlat;
+
+  /// No description provided for @oneDriveRestoreContentSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What to restore'**
+  String get oneDriveRestoreContentSectionTitle;
+
+  /// No description provided for @oneDriveRestoreLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get oneDriveRestoreLoadMore;
+
+  /// No description provided for @oneDriveRestoreListShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total}'**
+  String oneDriveRestoreListShowing(int shown, int total);
+
+  /// No description provided for @oneDriveRestoreTabUnknownDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown device'**
+  String get oneDriveRestoreTabUnknownDevice;
 
   /// No description provided for @oneDriveRestoreEmpty.
   ///
@@ -1404,11 +1494,41 @@ abstract class AppLocalizations {
   /// **'Playlists'**
   String get oneDriveRestorePlaylistCheckbox;
 
-  /// No description provided for @oneDriveRestoreSettingsCheckbox.
+  /// No description provided for @oneDriveRestoreLegacySettingsCheckbox.
   ///
   /// In en, this message translates to:
-  /// **'App settings'**
-  String get oneDriveRestoreSettingsCheckbox;
+  /// **'Legacy combined settings file'**
+  String get oneDriveRestoreLegacySettingsCheckbox;
+
+  /// No description provided for @oneDriveRestoreSliceHomeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Home greeting'**
+  String get oneDriveRestoreSliceHomeGreeting;
+
+  /// No description provided for @oneDriveRestoreSliceQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Home shortcuts'**
+  String get oneDriveRestoreSliceQuickEntry;
+
+  /// No description provided for @oneDriveRestoreSlicePlaybackLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent plays & stats Hive'**
+  String get oneDriveRestoreSlicePlaybackLists;
+
+  /// No description provided for @oneDriveRestoreSliceLyricsUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics & screen awake'**
+  String get oneDriveRestoreSliceLyricsUi;
+
+  /// No description provided for @oneDriveRestoreSliceTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Background theme'**
+  String get oneDriveRestoreSliceTheme;
 
   /// No description provided for @oneDriveRestorePlaylistModeMerge.
   ///
@@ -1431,7 +1551,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveRestoreNeedPickContent.
   ///
   /// In en, this message translates to:
-  /// **'Select at least playlists or settings.'**
+  /// **'Select at least one item to restore.'**
   String get oneDriveRestoreNeedPickContent;
 
   /// No description provided for @oneDriveRestoreMissingPlaylistsFile.
@@ -1443,8 +1563,29 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveRestoreMissingSettingsFile.
   ///
   /// In en, this message translates to:
-  /// **'No settings file in this backup.'**
+  /// **'No legacy combined settings file in this backup.'**
   String get oneDriveRestoreMissingSettingsFile;
+
+  /// No description provided for @oneDriveBackupSnapshotDeviceSession.
+  ///
+  /// In en, this message translates to:
+  /// **'{deviceName} · {sessionStamp}'**
+  String oneDriveBackupSnapshotDeviceSession(
+    String deviceName,
+    String sessionStamp,
+  );
+
+  /// No description provided for @oneDriveSyncNowNeedMasterOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on “Sync to OneDrive” above before syncing.'**
+  String get oneDriveSyncNowNeedMasterOn;
+
+  /// No description provided for @oneDriveSyncNowNothingSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable at least one sync category above before syncing.'**
+  String get oneDriveSyncNowNothingSelected;
 
   /// No description provided for @oneDriveRestoreFinished.
   ///

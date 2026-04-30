@@ -664,21 +664,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncMasterSubtitle =>
-      'Back up playlists and app settings on a schedule. Each upload is saved as timestamped JSON files in your cloud app folder. Scheduled timers will run in a later update.';
+      'Choose categories to sync. Each upload creates folder Device model / timestamp under your cloud app folder.';
 
   @override
-  String get oneDriveSyncItemPlaylists => 'Playlists';
+  String get oneDriveSyncItemUserPlaylists => 'My playlists';
 
   @override
-  String get oneDriveSyncItemPlaylistsSubtitle =>
-      'Include playlist data when syncing.';
+  String get oneDriveSyncItemUserPlaylistsSubtitle =>
+      'Covers, colors, playlists and song order (saved per device folder).';
 
   @override
-  String get oneDriveSyncItemSettings => 'App settings';
+  String get oneDriveSyncItemHomeGreeting => 'Home greeting (first card)';
 
   @override
-  String get oneDriveSyncItemSettingsSubtitle =>
-      'Theme, shortcuts, lyrics options, and other preferences.';
+  String get oneDriveSyncItemHomeGreetingSubtitle =>
+      'Same source as Settings → Home greeting.';
+
+  @override
+  String get oneDriveSyncItemQuickEntry => 'Home shortcuts';
+
+  @override
+  String get oneDriveSyncItemQuickEntrySubtitle =>
+      'Shortcut order and visibility.';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStats =>
+      'Recent / top played & playback stats';
+
+  @override
+  String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
+      'Recent plays list, play counts and listened duration used by Home and Statistics.';
+
+  @override
+  String get oneDriveSyncItemLyricsUi => 'Lyrics & playback screen';
+
+  @override
+  String get oneDriveSyncItemLyricsUiSubtitle =>
+      'Lyric styling plus floating/car lyrics and keep screen awake.';
+
+  @override
+  String get oneDriveSyncItemTheme => 'Background theme';
+
+  @override
+  String get oneDriveSyncItemThemeSubtitle =>
+      'Gradient, preset/custom colors and background image paths.';
 
   @override
   String get oneDriveSyncFrequencyLabel => 'Sync frequency';
@@ -703,7 +732,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowDescription =>
-      'Upload playlists and settings now. Files are named with the local date and time, for example playlists and settings snapshots from the same moment share the same timestamp.';
+      'Upload selected categories now into Device folder / yyyyMMddTHHmmss under your cloud app folder.';
 
   @override
   String get oneDriveSyncNowNeedLogin => 'Sign in with Microsoft first.';
@@ -714,7 +743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncNowFinished =>
-      'Backup uploaded as timestamped JSON in your cloud app folder.';
+      'Backup uploaded under your cloud app folder.';
 
   @override
   String oneDriveSyncNowFailed(String message) {
@@ -726,10 +755,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveRestoreSubtitle =>
-      'Download a timestamped backup from your cloud app folder.';
+      'Pick a backup entry (legacy flat files or device sessions). Choose what to restore.';
 
   @override
   String get oneDriveRestoreSheetTitle => 'Choose a backup';
+
+  @override
+  String get oneDriveRestoreGroupThisDevice => 'This device';
+
+  @override
+  String get oneDriveRestoreGroupOtherDevices => 'Other devices';
+
+  @override
+  String get oneDriveRestoreGroupLegacyFlat => 'Legacy flat backups';
+
+  @override
+  String get oneDriveRestoreContentSectionTitle => 'What to restore';
+
+  @override
+  String get oneDriveRestoreLoadMore => 'Load more';
+
+  @override
+  String oneDriveRestoreListShowing(int shown, int total) {
+    return '$shown / $total';
+  }
+
+  @override
+  String get oneDriveRestoreTabUnknownDevice => 'Unknown device';
 
   @override
   String get oneDriveRestoreEmpty =>
@@ -739,7 +791,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveRestorePlaylistCheckbox => 'Playlists';
 
   @override
-  String get oneDriveRestoreSettingsCheckbox => 'App settings';
+  String get oneDriveRestoreLegacySettingsCheckbox =>
+      'Legacy combined settings file';
+
+  @override
+  String get oneDriveRestoreSliceHomeGreeting => 'Home greeting';
+
+  @override
+  String get oneDriveRestoreSliceQuickEntry => 'Home shortcuts';
+
+  @override
+  String get oneDriveRestoreSlicePlaybackLists => 'Recent plays & stats Hive';
+
+  @override
+  String get oneDriveRestoreSliceLyricsUi => 'Lyrics & screen awake';
+
+  @override
+  String get oneDriveRestoreSliceTheme => 'Background theme';
 
   @override
   String get oneDriveRestorePlaylistModeMerge => 'Merge with local playlists';
@@ -753,7 +821,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveRestoreNeedPickContent =>
-      'Select at least playlists or settings.';
+      'Select at least one item to restore.';
 
   @override
   String get oneDriveRestoreMissingPlaylistsFile =>
@@ -761,7 +829,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveRestoreMissingSettingsFile =>
-      'No settings file in this backup.';
+      'No legacy combined settings file in this backup.';
+
+  @override
+  String oneDriveBackupSnapshotDeviceSession(
+    String deviceName,
+    String sessionStamp,
+  ) {
+    return '$deviceName · $sessionStamp';
+  }
+
+  @override
+  String get oneDriveSyncNowNeedMasterOn =>
+      'Turn on “Sync to OneDrive” above before syncing.';
+
+  @override
+  String get oneDriveSyncNowNothingSelected =>
+      'Enable at least one sync category above before syncing.';
 
   @override
   String get oneDriveRestoreFinished => 'Restore completed.';
