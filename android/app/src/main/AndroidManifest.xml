@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Android 13+：通知运行时权限；缺省时系统「通知」设置可能对应用置灰 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Android 12 及以下使用 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"

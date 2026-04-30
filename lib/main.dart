@@ -29,6 +29,7 @@ import 'compments/theme_config_provider.dart';
 import 'compments/user_playlist_provider.dart';
 import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
+import 'package:yeah_music/utils/android_notification_permission.dart';
 import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 import 'package:yeah_music/services/android_media_session_bridge.dart';
@@ -309,6 +310,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
             unawaited(
               WireRemoteGestureHandler.syncNativeFromController(shortcuts),
             );
+            unawaited(ensureAndroidPostNotificationsPermissionIfNeeded());
           });
         }
         return MaterialApp(
