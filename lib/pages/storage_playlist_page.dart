@@ -15,6 +15,7 @@ import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 const _kSelectAccent = Color(0xFF8AB4F8);
@@ -385,11 +386,91 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     );
   }
 
+  UserPlaylistCoverStyle _libraryCardCoverStyle(UserPlaylistProvider user) {
+    return user.homeLibraryCoverStyle ??
+        UserPlaylistCoverStyle.gradient(
+          const Color(0xFF1565C0),
+          const Color(0xFF0D47A1),
+        );
+  }
+
+  Future<void> _renameHomeLibrary(
+    BuildContext context,
+    UserPlaylistProvider user,
+    AppLocalizations l10n,
+  ) async {
+    final name = await showAppTextPromptDialog(
+      context: context,
+      title: l10n.playlistRenameTitle,
+      initialValue: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+      fieldLabel: l10n.fieldName,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionSave,
+    );
+    if (name != null && name.isNotEmpty && context.mounted) {
+      await user.setHomeLibraryDisplayName(name);
+    }
+  }
+
+  Future<void> _exportHomeLibraryAllSongs(
+    BuildContext context,
+    UserPlaylistProvider user,
+    PlayListProvider playList,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    if (!playList.initialized) {
+      showAppSnackBar(
+        context,
+        l10n.homeAllSongsLoading,
+        kind: AppSnackKind.neutral,
+      );
+      return;
+    }
+    final map = user.buildExportMapForLibraryAllSongs(
+      playlistName: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+      songPaths: playList.libraryMergedSongs.map((s) => s.path).toList(),
+    );
+    await user.attachPlaylistCoverImagesToExportMap(map);
+    if (!context.mounted) return;
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(map);
+    try {
+      final path = await pickSaveUserPlaylistJson(
+        jsonStr: jsonStr,
+        dialogTitle: l10n.exportDialogTitle,
+        fileName: suggestedLibraryAllSongsExportFileName(
+          user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+        ),
+      );
+      if (!context.mounted) return;
+      if (path != null && path.isNotEmpty) {
+        showAppSnackBar(
+          context,
+          l10n.exportSaved(path),
+          kind: AppSnackKind.success,
+          duration: const Duration(seconds: 2),
+        );
+      } else {
+        showAppSnackBar(context, l10n.exportCancelled);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showAppSnackBar(
+          context,
+          l10n.exportFailed('$e'),
+          kind: AppSnackKind.error,
+        );
+      }
+    }
+  }
+
   Widget _librarySelectBanner(
     BuildContext context,
     AppLocalizations l10n,
     PlayListProvider playList,
+    UserPlaylistProvider userPl,
   ) {
+    final coverStyle = _libraryCardCoverStyle(userPl);
+    final title = userPl.resolvedHomeLibraryTitle(l10n.homeAllSongs);
     final allN = playList.initialized ? playList.libraryMergedSongs.length : 0;
     final subtitle = !playList.initialized
         ? l10n.homeAllSongsLoading
@@ -416,10 +497,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   width: 44,
                   height: 44,
                   decoration: playlistCoverPreviewDecoration(
-                    coverStyle: UserPlaylistCoverStyle.gradient(
-                      const Color(0xFF1565C0),
-                      const Color(0xFF0D47A1),
-                    ),
+                    coverStyle: coverStyle,
                     fallbackGradientIndex: 0,
                   ),
                   alignment: Alignment.center,
@@ -439,7 +517,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              l10n.homeAllSongs,
+                              title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -482,9 +560,12 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
   Widget _libraryReorderTile({
     required BuildContext context,
     required AppLocalizations l10n,
+    required UserPlaylistProvider userPl,
     required PlayListProvider playList,
     required int listIndex,
   }) {
+    final coverStyle = _libraryCardCoverStyle(userPl);
+    final title = userPl.resolvedHomeLibraryTitle(l10n.homeAllSongs);
     final allN = playList.initialized ? playList.libraryMergedSongs.length : 0;
     final subtitle = !playList.initialized
         ? l10n.homeAllSongsLoading
@@ -521,10 +602,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               width: 44,
                               height: 44,
                               decoration: playlistCoverPreviewDecoration(
-                                coverStyle: UserPlaylistCoverStyle.gradient(
-                                  const Color(0xFF1565C0),
-                                  const Color(0xFF0D47A1),
-                                ),
+                                coverStyle: coverStyle,
                                 fallbackGradientIndex: 0,
                               ),
                               alignment: Alignment.center,
@@ -541,7 +619,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    l10n.homeAllSongs,
+                                    title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
@@ -571,10 +649,61 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     ),
                   ),
                 ),
+                PopupMenuButton<String>(
+                  tooltip: l10n.tooltipMoreActions,
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    color: Colors.white.withValues(alpha: 0.45),
+                    size: 22,
+                  ),
+                  color: const Color(0xFF2D2D2D),
+                  surfaceTintColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  offset: const Offset(0, 36),
+                  onSelected: (value) async {
+                    if (value == 'cover') {
+                      await showPlaylistCoverStyleSheet(
+                        context,
+                        userPl.homeLibraryPlaylistStubForCoverUi(
+                          userPl.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+                        ),
+                      );
+                    } else if (value == 'rename') {
+                      await _renameHomeLibrary(context, userPl, l10n);
+                    } else if (value == 'export') {
+                      await _exportHomeLibraryAllSongs(context, userPl, playList);
+                    }
+                  },
+                  itemBuilder: (ctx) {
+                    final m = AppLocalizations.of(ctx);
+                    return [
+                      PopupMenuItem(
+                        value: 'cover',
+                        child: Text(m.playlistCoverMenuItem),
+                      ),
+                      PopupMenuItem(
+                        value: 'rename',
+                        child: Text(m.menuRename),
+                      ),
+                      PopupMenuItem(
+                        value: 'export',
+                        child: Text(m.menuExportThis),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        enabled: false,
+                        child: Text(m.menuDeletePlaylist),
+                      ),
+                    ];
+                  },
+                ),
                 ReorderableDragStartListener(
                   index: listIndex,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 8, 10, 8),
+                    padding: const EdgeInsets.fromLTRB(2, 8, 10, 8),
                     child: Icon(
                       Icons.drag_indicator_rounded,
                       size: 22,
@@ -911,6 +1040,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                             context,
                             l10n,
                             playList,
+                            userPl,
                           ),
                         ),
                         Expanded(
@@ -1070,6 +1200,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               return _libraryReorderTile(
                                 context: context,
                                 l10n: l10n,
+                                userPl: userPl,
                                 playList: playList,
                                 listIndex: index,
                               );

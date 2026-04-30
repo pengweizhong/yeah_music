@@ -46,6 +46,19 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- 文件管理器 / 下载项「打开方式」播放音频（含 content:// 与 file://） -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/ogg" />
+            </intent-filter>
             <!-- OAuth 重定向必须由 net.openid.appauth.RedirectUriReceiverActivity 处理（依赖库合并清单已按
                  build.gradle 的 appAuthRedirectScheme 注册）。勿在 MainActivity 上再挂相同 scheme，否则
                  系统可能把回调交给 MainActivity，AppAuth 无法完成授权。 -->

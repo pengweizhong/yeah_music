@@ -64,4 +64,12 @@ abstract final class OneDriveConfig {
         lower.endsWith('.opus') ||
         lower.endsWith('.wma');
   }
+
+  /// 本地 OneDrive 缓存文件名为 `{driveItemId}_{remoteFileName}`；扩展名在 `_` 之后。
+  static bool isAudioOrOneDriveCachedFileName(String fileBasename) {
+    if (isAudioFileName(fileBasename)) return true;
+    final u = fileBasename.indexOf('_');
+    if (u <= 0 || u >= fileBasename.length - 1) return false;
+    return isAudioFileName(fileBasename.substring(u + 1));
+  }
 }

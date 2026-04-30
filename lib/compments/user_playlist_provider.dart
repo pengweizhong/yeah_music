@@ -131,6 +131,12 @@ const String userPlaylistExportCoverAssetNamesKey = 'playlistCoverAssetNames';
 /// 首页「我的歌单」横滑顺序：含 [UserPlaylistProvider.homeCarouselLibrarySentinel] 与歌单 id。
 const String userPlaylistExportCarouselOrderKey = 'homePlaylistCarouselOrder';
 
+/// 备份中「全部歌曲」横滑卡片的封面样式（与 [UserPlaylist.toMap] 内 `coverStyle` 结构相同）。
+const String userPlaylistExportHomeLibraryCoverStyleKey = 'homeLibraryCoverStyle';
+
+/// 自定义「全部歌曲」标题；缺省或由导入方回退为本地化默认文案。
+const String userPlaylistExportHomeLibraryDisplayNameKey = 'homeLibraryDisplayName';
+
 /// 自备份文档读取封面侧车文件名表。
 Map<String, String> playlistCoverAssetNamesFromDoc(Map<String, dynamic> doc) {
   final raw = doc[userPlaylistExportCoverAssetNamesKey];
@@ -167,17 +173,56 @@ Map<String, dynamic> parseUserPlaylistExportJson(String jsonStr) {
 class UserPlaylistProvider extends ChangeNotifier {
   static const String _storageKey = 'user_playlists';
   static const String _carouselOrderKey = 'home_playlist_carousel_order';
+  static const String _homeLibraryCoverStyleKey = 'home_library_carousel_cover_style';
+  static const String _homeLibraryDisplayNameKey = 'home_library_carousel_display_name';
 
   /// 首页与管理页横滑顺序中表示「本地全部歌曲」的占位键（非用户歌单 id）。
   static const String homeCarouselLibrarySentinel = '__ym_home_library__';
 
   final List<UserPlaylist> _playlists = [];
   List<String> _homeCarouselOrderKeys = [];
+  UserPlaylistCoverStyle? _homeLibraryCoverStyle;
+  String? _homeLibraryDisplayName;
   bool _initialized = false;
 
   List<UserPlaylist> get playlists => List.unmodifiable(_playlists);
 
   bool get initialized => _initialized;
+
+  /// 「全部歌曲」卡片的自定义封面 / 配色；`null` 时界面使用内置默认色。
+  UserPlaylistCoverStyle? get homeLibraryCoverStyle => _homeLibraryCoverStyle;
+
+  /// 非空时使用自定义标题；否则传入 [defaultTitle]（一般为 `l10n.homeAllSongs`）。
+  String resolvedHomeLibraryTitle(String defaultTitle) {
+    final c = _homeLibraryDisplayName?.trim();
+    if (c == null || c.isEmpty) return defaultTitle;
+    return c;
+  }
+
+  void _loadHomeLibrarySlotFromBox(dynamic box) {
+    final covRaw = box.get(_homeLibraryCoverStyleKey);
+    _homeLibraryCoverStyle = UserPlaylistCoverStyle.tryParse(covRaw);
+    final nameRaw = box.get(_homeLibraryDisplayNameKey);
+    if (nameRaw is String) {
+      final t = nameRaw.trim();
+      _homeLibraryDisplayName = t.isEmpty ? null : t;
+    } else {
+      _homeLibraryDisplayName = null;
+    }
+  }
+
+  Future<void> _persistHomeLibrarySlot(dynamic box) async {
+    if (_homeLibraryCoverStyle != null) {
+      await box.put(_homeLibraryCoverStyleKey, _homeLibraryCoverStyle!.toMap());
+    } else {
+      await box.delete(_homeLibraryCoverStyleKey);
+    }
+    if (_homeLibraryDisplayName != null && _homeLibraryDisplayName!.trim().isNotEmpty) {
+      await box.put(_homeLibraryDisplayNameKey, _homeLibraryDisplayName!.trim());
+    } else {
+      await box.delete(_homeLibraryDisplayNameKey);
+    }
+  }
 
   Future<void> init() async {
     if (_initialized) return;
@@ -192,6 +237,7 @@ class UserPlaylistProvider extends ChangeNotifier {
             .where((playlist) => playlist.id.isNotEmpty),
       );
     _homeCarouselOrderKeys = _parseCarouselOrderRaw(box.get(_carouselOrderKey));
+    _loadHomeLibrarySlotFromBox(box);
     _initialized = true;
     notifyListeners();
   }
@@ -210,6 +256,7 @@ class UserPlaylistProvider extends ChangeNotifier {
             .where((playlist) => playlist.id.isNotEmpty),
       );
     _homeCarouselOrderKeys = _parseCarouselOrderRaw(box.get(_carouselOrderKey));
+    _loadHomeLibrarySlotFromBox(box);
     _initialized = true;
     notifyListeners();
   }
@@ -460,6 +507,46 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setHomeLibraryCoverStyle(UserPlaylistCoverStyle? style) async {
+    final prev = _homeLibraryCoverStyle;
+    UserPlaylistCoverStyle? next = style;
+    if (next?.isCustomImage == true) {
+      next = await _canonicalizeCoverImageStyle(homeCarouselLibrarySentinel, next!);
+      if (next == null) {
+        notifyListeners();
+        return;
+      }
+    }
+    final prevImg = prev?.isCustomImage == true ? prev!.imagePath : null;
+    final nextImg = next?.isCustomImage == true ? next!.imagePath : null;
+    if (prevImg != null &&
+        (nextImg == null || p.normalize(prevImg) != p.normalize(nextImg))) {
+      _deleteCoverImageFileIfAny(prev);
+    }
+    _homeLibraryCoverStyle = next;
+    await _save();
+    notifyListeners();
+  }
+
+  /// 置空或仅空白则恢复为本地化默认「全部歌曲」标题。
+  Future<void> setHomeLibraryDisplayName(String? name) async {
+    final t = name?.trim();
+    _homeLibraryDisplayName = (t == null || t.isEmpty) ? null : t;
+    await _save();
+    notifyListeners();
+  }
+
+  /// 供封面样式底sheet使用；[titleForPreview] 为 [resolvedHomeLibraryTitle] 传入的展示名。
+  UserPlaylist homeLibraryPlaylistStubForCoverUi(String titleForPreview) {
+    return UserPlaylist(
+      id: homeCarouselLibrarySentinel,
+      name: titleForPreview,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      songPaths: const [],
+      coverStyle: _homeLibraryCoverStyle,
+    );
+  }
+
   Future<void> deletePlaylist(String playlistId) async {
     final playlist = _playlistById(playlistId);
     if (playlist != null) {
@@ -673,6 +760,7 @@ class UserPlaylistProvider extends ChangeNotifier {
   Future<void> _save() async {
     final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
     await box.put(_storageKey, _playlists.map((playlist) => playlist.toMap()).toList());
+    await _persistHomeLibrarySlot(box);
   }
 
   /// 导出用 JSON 对象（歌曲仅以完整文件路径标识，同名/不同音质为不同路径）
@@ -685,6 +773,10 @@ class UserPlaylistProvider extends ChangeNotifier {
       'songIdentity': 'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': _playlists.map((e) => e.toMap()).toList(),
       userPlaylistExportCarouselOrderKey: _homeCarouselOrderForExport(),
+      if (_homeLibraryCoverStyle != null)
+        userPlaylistExportHomeLibraryCoverStyleKey: _homeLibraryCoverStyle!.toMap(),
+      if (_homeLibraryDisplayName != null && _homeLibraryDisplayName!.trim().isNotEmpty)
+        userPlaylistExportHomeLibraryDisplayNameKey: _homeLibraryDisplayName!.trim(),
     };
   }
 
@@ -694,32 +786,47 @@ class UserPlaylistProvider extends ChangeNotifier {
   Future<void> attachPlaylistCoverImagesToExportMap(Map<String, dynamic> map) async {
     map.remove(userPlaylistExportCoverAssetNamesKey);
     final rawList = map['playlists'];
-    if (rawList is! List<dynamic>) return;
     final ids = <String>{};
-    for (final e in rawList) {
-      if (e is Map && e['id'] is String) {
-        final id = (e['id'] as String).trim();
-        if (id.isNotEmpty) ids.add(id);
+    if (rawList is List<dynamic>) {
+      for (final e in rawList) {
+        if (e is Map && e['id'] is String) {
+          final id = (e['id'] as String).trim();
+          if (id.isNotEmpty) ids.add(id);
+        }
       }
     }
-    if (ids.isEmpty) return;
 
     final assets = <String, String>{};
     const maxBytes = 8 * 1024 * 1024;
-    for (final p in _playlists) {
-      if (!ids.contains(p.id)) continue;
-      final cs = p.coverStyle;
-      if (cs == null || !cs.isCustomImage) continue;
+
+    Future<void> tryEncodeCustomCover(String id, UserPlaylistCoverStyle? cs) async {
+      if (cs == null || !cs.isCustomImage) return;
       try {
         final file = File(cs.imagePath);
-        if (!await file.exists()) continue;
+        if (!await file.exists()) return;
         final len = await file.length();
-        if (len <= 0 || len > maxBytes) continue;
+        if (len <= 0 || len > maxBytes) return;
         final bytes = await file.readAsBytes();
-        if (bytes.length > maxBytes) continue;
-        assets[p.id] = base64Encode(bytes);
+        if (bytes.length > maxBytes) return;
+        assets[id] = base64Encode(bytes);
       } catch (_) {}
     }
+
+    for (final id in ids) {
+      final pl = _playlistById(id);
+      if (pl != null) {
+        await tryEncodeCustomCover(id, pl.coverStyle);
+      } else if (id == '__ym_export_library_all__') {
+        await tryEncodeCustomCover(id, _homeLibraryCoverStyle);
+      }
+    }
+
+    if (map.containsKey(userPlaylistExportHomeLibraryCoverStyleKey) &&
+        _homeLibraryCoverStyle != null &&
+        _homeLibraryCoverStyle!.isCustomImage) {
+      await tryEncodeCustomCover(homeCarouselLibrarySentinel, _homeLibraryCoverStyle);
+    }
+
     if (assets.isNotEmpty) {
       map[userPlaylistExportCoverImagesKey] = assets;
     }
@@ -733,37 +840,58 @@ class UserPlaylistProvider extends ChangeNotifier {
   ) async {
     map.remove(userPlaylistExportCoverImagesKey);
     final rawList = map['playlists'];
-    if (rawList is! List<dynamic>) return {};
     final idsInExport = <String>{};
-    for (final e in rawList) {
-      if (e is Map && e['id'] is String) {
-        final id = (e['id'] as String).trim();
-        if (id.isNotEmpty) idsInExport.add(id);
+    if (rawList is List<dynamic>) {
+      for (final e in rawList) {
+        if (e is Map && e['id'] is String) {
+          final id = (e['id'] as String).trim();
+          if (id.isNotEmpty) idsInExport.add(id);
+        }
       }
     }
-    if (idsInExport.isEmpty) return {};
+
+    final hasHomeLibraryCoverDoc =
+        map.containsKey(userPlaylistExportHomeLibraryCoverStyleKey) &&
+            _homeLibraryCoverStyle != null &&
+            _homeLibraryCoverStyle!.isCustomImage;
+
+    if (idsInExport.isEmpty && !hasHomeLibraryCoverDoc) {
+      return {};
+    }
 
     map.remove(userPlaylistExportCoverAssetNamesKey);
     final manifest = <String, String>{};
     final files = <String, File>{};
     const maxBytes = 8 * 1024 * 1024;
 
-    for (final p in _playlists) {
-      if (!idsInExport.contains(p.id)) continue;
-      final cs = p.coverStyle;
-      if (cs == null || !cs.isCustomImage) continue;
+    Future<void> tryAddSidecar(String id, UserPlaylistCoverStyle? cs) async {
+      if (cs == null || !cs.isCustomImage) return;
       try {
         final file = File(cs.imagePath);
-        if (!await file.exists()) continue;
+        if (!await file.exists()) return;
         final len = await file.length();
-        if (len <= 0 || len > maxBytes) continue;
+        if (len <= 0 || len > maxBytes) return;
         final ext = _playlistCoverSidecarExtension(cs.imagePath);
         final remoteName =
-            'yeah_music_pl_cover_${_safePlaylistCoverFileId(p.id)}$ext';
-        manifest[p.id] = remoteName;
-        files[p.id] = file;
+            'yeah_music_pl_cover_${_safePlaylistCoverFileId(id)}$ext';
+        manifest[id] = remoteName;
+        files[id] = file;
       } catch (_) {}
     }
+
+    for (final id in idsInExport) {
+      final pl = _playlistById(id);
+      if (pl != null) {
+        await tryAddSidecar(id, pl.coverStyle);
+      } else if (id == '__ym_export_library_all__') {
+        await tryAddSidecar(id, _homeLibraryCoverStyle);
+      }
+    }
+
+    if (hasHomeLibraryCoverDoc) {
+      await tryAddSidecar(homeCarouselLibrarySentinel, _homeLibraryCoverStyle);
+    }
+
     if (manifest.isNotEmpty) {
       map[userPlaylistExportCoverAssetNamesKey] = manifest;
     }
@@ -879,7 +1007,7 @@ class UserPlaylistProvider extends ChangeNotifier {
       name: playlistName,
       createdAt: DateTime.now(),
       songPaths: songPaths,
-      coverStyle: null,
+      coverStyle: _homeLibraryCoverStyle,
     );
     return {
       'format': userPlaylistExportFormatId,
@@ -889,6 +1017,11 @@ class UserPlaylistProvider extends ChangeNotifier {
       'songIdentity':
           'Each entry in songPaths is a full file path; duplicates by title/artist are distinct files.',
       'playlists': [pl.toMap()],
+      userPlaylistExportCarouselOrderKey: <String>[homeCarouselLibrarySentinel],
+      if (_homeLibraryCoverStyle != null)
+        userPlaylistExportHomeLibraryCoverStyleKey: _homeLibraryCoverStyle!.toMap(),
+      if (_homeLibraryDisplayName != null && _homeLibraryDisplayName!.trim().isNotEmpty)
+        userPlaylistExportHomeLibraryDisplayNameKey: _homeLibraryDisplayName!.trim(),
     };
   }
 
@@ -910,7 +1043,75 @@ class UserPlaylistProvider extends ChangeNotifier {
       'playlists': out,
       userPlaylistExportCarouselOrderKey:
           _homeCarouselOrderForExport(playlistIdsLimit: want),
+      if (_homeLibraryCoverStyle != null)
+        userPlaylistExportHomeLibraryCoverStyleKey: _homeLibraryCoverStyle!.toMap(),
+      if (_homeLibraryDisplayName != null && _homeLibraryDisplayName!.trim().isNotEmpty)
+        userPlaylistExportHomeLibraryDisplayNameKey: _homeLibraryDisplayName!.trim(),
     };
+  }
+
+  Future<void> _applyHomeLibrarySlotFromImportDoc(
+    Map<String, dynamic> doc, {
+    required bool replaceAll,
+    required Map<String, String> coverFilesAbsolute,
+    required Map<String, String> coverAssetsBase64,
+  }) async {
+    final libKey = homeCarouselLibrarySentinel;
+
+    Future<void> hydrateFromRaw(dynamic raw) async {
+      UserPlaylistCoverStyle? st;
+      if (raw is Map) {
+        st = UserPlaylistCoverStyle.tryParse(Map<dynamic, dynamic>.from(raw));
+      }
+      if (st == null) {
+        _deleteCoverImageFileIfAny(_homeLibraryCoverStyle);
+        _homeLibraryCoverStyle = null;
+        return;
+      }
+      final stub = UserPlaylist(
+        id: libKey,
+        name: '',
+        createdAt: DateTime.now(),
+        songPaths: const [],
+        coverStyle: st,
+      );
+      final hyd = await _hydrateImportedPlaylistCovers(
+        [stub],
+        coverFilesAbsolute,
+        coverAssetsBase64,
+      );
+      _homeLibraryCoverStyle = hyd.isEmpty ? null : hyd.first.coverStyle;
+    }
+
+    if (replaceAll) {
+      if (doc.containsKey(userPlaylistExportHomeLibraryCoverStyleKey)) {
+        await hydrateFromRaw(doc[userPlaylistExportHomeLibraryCoverStyleKey]);
+      } else {
+        _deleteCoverImageFileIfAny(_homeLibraryCoverStyle);
+        _homeLibraryCoverStyle = null;
+      }
+      if (doc.containsKey(userPlaylistExportHomeLibraryDisplayNameKey)) {
+        final n = doc[userPlaylistExportHomeLibraryDisplayNameKey];
+        if (n is String) {
+          final t = n.trim();
+          _homeLibraryDisplayName = t.isEmpty ? null : t;
+        } else {
+          _homeLibraryDisplayName = null;
+        }
+      } else {
+        _homeLibraryDisplayName = null;
+      }
+    } else {
+      if (doc.containsKey(userPlaylistExportHomeLibraryCoverStyleKey)) {
+        await hydrateFromRaw(doc[userPlaylistExportHomeLibraryCoverStyleKey]);
+      }
+      if (doc.containsKey(userPlaylistExportHomeLibraryDisplayNameKey)) {
+        final n = doc[userPlaylistExportHomeLibraryDisplayNameKey];
+        if (n is String && n.trim().isNotEmpty) {
+          _homeLibraryDisplayName = n.trim();
+        }
+      }
+    }
   }
 
   /// [playlistCoverFilesAbsolute]：从 OneDrive 等拉取到临时目录的封面文件 `歌单 id → 绝对路径`（优先于 Base64）。
@@ -984,6 +1185,12 @@ class UserPlaylistProvider extends ChangeNotifier {
         }
       }
     }
+    await _applyHomeLibrarySlotFromImportDoc(
+      doc,
+      replaceAll: replaceAll,
+      coverFilesAbsolute: playlistCoverFilesAbsolute ?? const {},
+      coverAssetsBase64: coverAssets,
+    );
     await _save();
     notifyListeners();
   }

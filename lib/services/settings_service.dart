@@ -37,6 +37,9 @@ class SettingsService {
   static const String _oneDriveMusicUploadFolderIdKey = 'onedrive_music_upload_folder_id';
   static const String _oneDriveMusicUploadFolderLabelKey = 'onedrive_music_upload_folder_label';
   static const String _oneDriveLocalDownloadDirKey = 'onedrive_local_download_dir';
+  /// 曾用于点播落地的目录（用户清空「当前下载目录」后仍扫描这些路径，避免历史缓存「消失」）。
+  static const String _oneDriveDownloadScanRootsKey =
+      'onedrive_download_scan_roots_v1';
   static const String _oneDriveSyncSettingsKey = 'onedrive_sync_settings_v1';
   static const String _oneDriveLastConfigSyncAtKey = 'onedrive_last_config_sync_at_iso';
   static const String _oneDriveIndexFoldersKey = 'onedrive_index_folders';
@@ -362,23 +365,119 @@ class SettingsService {
     }
   }
 
-  static Future<void> saveOneDriveLocalDownloadDir(String? path) async {
+  /// 合并用于「缓存歌单」扫描的目录（不清除当前下载目录时仍保留历史路径）。
+  static Future<List<String>> loadOneDriveDownloadScanRoots() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      return await _readOneDriveDownloadScanRoots(box);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// 将当前「本地下载目录」并入扫描历史（应用启动时调用，保证曾选过目录即参与缓存歌单扫描）。
+  static Future<void> ensureOneDriveDownloadScanRootsIncludesActiveDir() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final active = box.get(_oneDriveLocalDownloadDirKey) as String?;
+      final t = active?.trim();
+      if (t == null || t.isEmpty) return;
+      await _mergeOneDriveDownloadScanRoot(box, p.normalize(t));
+    } catch (_) {}
+  }
+
+  static Future<List<String>> _readOneDriveDownloadScanRoots(
+    dynamic box,
+  ) async {
+    final raw = box.get(_oneDriveDownloadScanRootsKey) as String?;
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List<dynamic>;
+        return decoded
+            .map((e) => p.normalize(e.toString().trim()))
+            .where((s) => s.isNotEmpty)
+            .toList();
+      } catch (_) {
+        return [];
+      }
+    }
+    final active = box.get(_oneDriveLocalDownloadDirKey) as String?;
+    final t = active?.trim();
+    if (t != null && t.isNotEmpty) {
+      final seeded = <String>[p.normalize(t)];
+      await box.put(_oneDriveDownloadScanRootsKey, jsonEncode(seeded));
+      return seeded;
+    }
+    return [];
+  }
+
+  static Future<void> _mergeOneDriveDownloadScanRoot(
+    dynamic box,
+    String normalizedPath,
+  ) async {
+    if (normalizedPath.isEmpty) return;
+    List<String> list;
+    final raw = box.get(_oneDriveDownloadScanRootsKey) as String?;
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List<dynamic>;
+        list = decoded
+            .map((e) => p.normalize(e.toString().trim()))
+            .where((s) => s.isNotEmpty)
+            .toList();
+      } catch (_) {
+        list = [];
+      }
+    } else {
+      list = [];
+    }
+    list.remove(normalizedPath);
+    list.insert(0, normalizedPath);
+    const cap = 16;
+    if (list.length > cap) {
+      list = list.sublist(0, cap);
+    }
+    await box.put(_oneDriveDownloadScanRootsKey, jsonEncode(list));
+  }
+
+  /// 记录曾用于 OneDrive 点播落地的目录（与 [saveOneDriveLocalDownloadDir] 独立），供「缓存歌单」扫描。
+  static Future<void> appendOneDriveDownloadScanRootIfNew(
+    String directoryPath,
+  ) async {
+    final t = directoryPath.trim();
+    if (t.isEmpty) return;
+    final norm = p.normalize(t);
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await _mergeOneDriveDownloadScanRoot(box, norm);
+    } catch (_) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await _mergeOneDriveDownloadScanRoot(box, norm);
+      } catch (_) {}
+    }
+  }
+
+  static Future<void> saveOneDriveLocalDownloadDir(String? path) async {
+    Future<void> write(dynamic box) async {
       if (path == null || path.trim().isEmpty) {
         await box.delete(_oneDriveLocalDownloadDirKey);
       } else {
-        await box.put(_oneDriveLocalDownloadDirKey, path.trim());
+        final trimmed = path.trim();
+        await box.put(_oneDriveLocalDownloadDirKey, trimmed);
+        await _mergeOneDriveDownloadScanRoot(box, p.normalize(trimmed));
       }
+    }
+
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await write(box);
     } catch (e) {
       try {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-        if (path == null || path.trim().isEmpty) {
-          await box.delete(_oneDriveLocalDownloadDirKey);
-        } else {
-          await box.put(_oneDriveLocalDownloadDirKey, path.trim());
-        }
+        await write(box);
       } catch (_) {}
     }
   }

@@ -15,6 +15,7 @@ class MainActivity : AudioServiceFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         DiskSpaceChannel.register(flutterEngine.dartExecutor.binaryMessenger)
         MusicTagEditorBridge.register(this, flutterEngine)
+        OpenWithChannel.register(this, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     override fun onResume() {
@@ -26,6 +27,7 @@ class MainActivity : AudioServiceFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        OpenWithChannel.captureViewIntent(intent)
         try {
             val engine = AudioServicePlugin.getFlutterEngine(this)
             WireRemoteHolder.attach(engine.dartExecutor.binaryMessenger)
@@ -72,5 +74,6 @@ class MainActivity : AudioServiceFragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        OpenWithChannel.captureViewIntent(intent)
     }
 }

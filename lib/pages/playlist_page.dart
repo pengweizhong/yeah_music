@@ -26,6 +26,7 @@ import '../widgets/add_to_user_playlists_sheet.dart';
 import '../widgets/app_prompts.dart';
 import '../widgets/compact_song_list_row.dart';
 import '../widgets/library_song_more_actions_sheet.dart';
+import '../widgets/playlist_cover_style_sheet.dart';
 import '../widgets/scroll_aware_list_frame.dart';
 import '../widgets/song_playlist_page_shell.dart';
 import '../widgets/song_sort_bottom_sheet.dart';
@@ -445,7 +446,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       return;
     }
     final map = user.buildExportMapForLibraryAllSongs(
-      playlistName: l10n.homeAllSongs,
+      playlistName: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
       songPaths: paths,
     );
     if ((map['playlists'] as List<dynamic>).isEmpty) {
@@ -461,7 +462,9 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       final path = await pickSaveUserPlaylistJson(
         jsonStr: jsonStr,
         dialogTitle: l10n.exportDialogTitle,
-        fileName: suggestedLibraryAllSongsExportFileName(l10n.homeAllSongs),
+        fileName: suggestedLibraryAllSongsExportFileName(
+          user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+        ),
       );
       if (!context.mounted) return;
       if (path != null && path.isNotEmpty) {
@@ -482,6 +485,24 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           kind: AppSnackKind.error,
         );
       }
+    }
+  }
+
+  Future<void> _renameHomeLibrary(
+    BuildContext context,
+    UserPlaylistProvider user,
+    AppLocalizations l10n,
+  ) async {
+    final name = await showAppTextPromptDialog(
+      context: context,
+      title: l10n.playlistRenameTitle,
+      initialValue: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+      fieldLabel: l10n.fieldName,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionSave,
+    );
+    if (name != null && name.isNotEmpty && context.mounted) {
+      await user.setHomeLibraryDisplayName(name);
     }
   }
 
@@ -582,7 +603,31 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                   icon:
                       const Icon(Icons.more_vert, color: Colors.white),
                   onSelected: (value) async {
-                    if (value == 'export') {
+                    if (value == 'cover') {
+                      if (!userPlaylistProvider.initialized) {
+                        await userPlaylistProvider.init();
+                      }
+                      if (!context.mounted) return;
+                      final m = AppLocalizations.of(context);
+                      await showPlaylistCoverStyleSheet(
+                        context,
+                        userPlaylistProvider.homeLibraryPlaylistStubForCoverUi(
+                          userPlaylistProvider.resolvedHomeLibraryTitle(
+                            m.homeAllSongs,
+                          ),
+                        ),
+                      );
+                    } else if (value == 'rename') {
+                      if (!userPlaylistProvider.initialized) {
+                        await userPlaylistProvider.init();
+                      }
+                      if (!context.mounted) return;
+                      await _renameHomeLibrary(
+                        context,
+                        userPlaylistProvider,
+                        AppLocalizations.of(context),
+                      );
+                    } else if (value == 'export') {
                       await _exportLibraryAllSongs(
                         context,
                         userPlaylistProvider,
@@ -595,12 +640,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                     return [
                       PopupMenuItem(
                         value: 'cover',
-                        enabled: false,
                         child: Text(l10n.playlistCoverMenuItem),
                       ),
                       PopupMenuItem(
                         value: 'rename',
-                        enabled: false,
                         child: Text(l10n.menuRename),
                       ),
                       PopupMenuItem(

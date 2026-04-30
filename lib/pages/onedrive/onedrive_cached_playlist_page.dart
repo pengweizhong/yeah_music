@@ -26,7 +26,7 @@ import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/widgets/song_sort_bottom_sheet.dart';
 
-/// OneDrive 点播落到本地的音频汇总（默认缓存目录与用户下载目录的非递归扫描）。
+/// OneDrive 点播落到本地的音频汇总（默认缓存目录与用户下载目录递归扫描）。
 class OneDriveCachedPlaylistPage extends StatefulWidget {
   const OneDriveCachedPlaylistPage({super.key});
 
@@ -410,7 +410,9 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
               ),
               IconButton(
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                onPressed: _reload,
+                onPressed: () {
+                  unawaited(_reload());
+                },
               ),
             ],
           ],
@@ -423,51 +425,96 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
   Widget _buildBody(BuildContext context, AppLocalizations l10n) {
     if (_error != null) {
       return SongPlaylistBodyUnderlapColumn(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              l10n.oneDriveError('$_error'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
+        child: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: Colors.black54,
+          onRefresh: _reload,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      l10n.oneDriveError('$_error'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
     if (_songs == null) {
       return SongPlaylistBodyUnderlapColumn(
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.white54),
+        child: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: Colors.black54,
+          onRefresh: _reload,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: const [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CircularProgressIndicator(color: Colors.white54),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
     final raw = _songs!;
     if (raw.isEmpty) {
       return SongPlaylistBodyUnderlapColumn(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.download_done_rounded,
-                  size: 64,
-                  color: Colors.white.withValues(alpha: 0.35),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.oneDriveCachedPlaylistEmpty,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
-                    fontSize: 15,
-                    height: 1.45,
+        child: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: Colors.black54,
+          onRefresh: _reload,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.download_done_rounded,
+                          size: 64,
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.oneDriveCachedPlaylistEmpty,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.55),
+                            fontSize: 15,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );

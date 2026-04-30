@@ -56,6 +56,9 @@ class OneDriveController extends ChangeNotifier {
   bool _signedIn = false;
   String? _accountHint;
 
+  /// 每进程内去重，配合 [SettingsService.appendOneDriveDownloadScanRootIfNew] 持久化点播目录。
+  final Set<String> _playbackScanRootsTouched = {};
+
   List<OneDriveIndexFolder> _indexFolders = [];
   List<OneDriveCloudTrack> _cloudTracks = [];
   DateTime? _cloudIndexAt;
@@ -120,6 +123,7 @@ class OneDriveController extends ChangeNotifier {
     _musicUploadFolderId = musicUp.$1;
     _musicUploadFolderLabel = musicUp.$2;
     _localDownloadDir = await SettingsService.loadOneDriveLocalDownloadDir();
+    await SettingsService.ensureOneDriveDownloadScanRootsIncludesActiveDir();
     _syncSettings = await SettingsService.loadOneDriveSyncSettings();
     await _loadCloudIndexFromDisk();
     if (effectiveClientId.isEmpty) {
@@ -281,10 +285,21 @@ class OneDriveController extends ChangeNotifier {
     );
   }
 
+  Future<void> _touchPlaybackRootForScanHistory() async {
+    try {
+      final dir = await _playbackStorageDirectory();
+      final norm = p.normalize(dir.path);
+      if (_playbackScanRootsTouched.add(norm)) {
+        await SettingsService.appendOneDriveDownloadScanRootIfNew(norm);
+      }
+    } catch (_) {}
+  }
+
   /// 若点播缓存文件已存在且非空则装载元数据并返回，否则返回 null（不发起网络）。
   Future<Song?> songFromLocalCacheIfExists(OneDriveGraphItem item) async {
     if (item.isFolder) return null;
     if (!OneDriveConfig.isAudioFileName(item.name)) return null;
+    await _touchPlaybackRootForScanHistory();
     final target = await _localFileForPlayback(item.id, item.name);
     if (!await target.exists()) return null;
     final len = await target.length();
@@ -319,6 +334,7 @@ class OneDriveController extends ChangeNotifier {
     final OneDriveGraphItem use = item.downloadUrl == null
         ? (await _graph.getItem(accessToken: t, itemId: item.id)) ?? item
         : item;
+    await _touchPlaybackRootForScanHistory();
     final target = await _localFileForPlayback(item.id, item.name);
     if (await target.exists()) {
       final len = await target.length();
@@ -1069,6 +1085,7 @@ class OneDriveController extends ChangeNotifier {
     final OneDriveGraphItem use = item.downloadUrl == null
         ? (await _graph.getItem(accessToken: t, itemId: item.id)) ?? item
         : item;
+    await _touchPlaybackRootForScanHistory();
     final target = await _localFileForPlayback(item.id, item.name);
     if (!await target.exists() || await target.length() == 0) {
       await _graph.downloadToFile(
@@ -1126,6 +1143,7 @@ class OneDriveController extends ChangeNotifier {
   /// 扫描点播落地目录（默认 `onedrive_cache` + 互不重叠的用户目录）：列出其中的音频文件并装载元数据。
   ///
   /// 不要求当前已登录 OneDrive；仅读本地磁盘。
+  /// 使用 [recursive: true] 以包含子目录中的文件（例如用户整理的下载目录结构）。
   Future<List<Song>> loadLocallyCachedOneDriveSongs() async {
     final roots = await _onedriveLocalPlaybackRoots();
     final seenPaths = <String>{};
@@ -1133,16 +1151,27 @@ class OneDriveController extends ChangeNotifier {
     for (final root in roots) {
       await root.create(recursive: true);
       if (!await root.exists()) continue;
-      await for (final entity in root.list(
-        recursive: false,
-        followLinks: false,
-      )) {
-        if (entity is! File) continue;
-        if (!OneDriveConfig.isAudioFileName(entity.path)) continue;
-        final norm = p.normalize(entity.path);
-        if (seenPaths.add(norm)) {
-          files.add(entity);
+      try {
+        await for (final entity in root.list(
+          recursive: true,
+          followLinks: true,
+        )) {
+          if (entity is! File) continue;
+          if (!OneDriveConfig.isAudioOrOneDriveCachedFileName(
+            p.basename(entity.path),
+          )) {
+            continue;
+          }
+          final norm = p.normalize(entity.path);
+          if (seenPaths.add(norm)) {
+            files.add(entity);
+          }
         }
+      } on FileSystemException catch (e, st) {
+        assert(() {
+          debugPrint('loadLocallyCachedOneDriveSongs list failed: $e\n$st');
+          return true;
+        }());
       }
     }
     files.sort(
@@ -1153,38 +1182,84 @@ class OneDriveController extends ChangeNotifier {
     );
     final songs = <Song>[];
     for (final f in files) {
-      final s = Song(f.path);
-      await FileUtils.loadSongMeta(s, loadEmbeddedAlbumArt: false);
-      songs.add(s);
+      try {
+        final s = Song(f.path);
+        await FileUtils.loadSongMeta(s, loadEmbeddedAlbumArt: false);
+        songs.add(s);
+      } catch (e, st) {
+        assert(() {
+          debugPrint(
+            'loadLocallyCachedOneDriveSongs skip ${f.path}: $e\n$st',
+          );
+          return true;
+        }());
+      }
     }
     return songs;
   }
 
-  /// 默认缓存目录以及（若配置且存在）用户下载目录；路径相同时只保留一处。
+  /// 默认缓存目录以及（若配置且存在）用户下载目录，加上 [SettingsService.loadOneDriveDownloadScanRoots]
+  /// 中仍存在的路径（避免清空「当前下载目录」后只扫默认目录、历史点播文件「消失」）。
   ///
-  /// 使用 [SettingsService.loadOneDriveLocalDownloadDir] 而非内存字段 [_localDownloadDir]，
-  /// 避免启动阶段 [loadFromStorage] 尚未完成时打开「缓存歌单」只扫到默认目录、漏掉用户目录中的曲目。
+  /// 另尝试 [getApplicationDocumentsDirectory]/onedrive_cache 作为遗留位置。
   Future<List<Directory>> _onedriveLocalPlaybackRoots() async {
     final support = await getApplicationSupportDirectory();
     final def = Directory(p.join(support.path, 'onedrive_cache'));
+
     final roots = <Directory>[def];
+    final seenNorm = <String>{p.normalize(def.path)};
+
+    Future<void> addRoot(Directory dir) async {
+      final n = p.normalize(dir.path);
+      if (seenNorm.contains(n)) return;
+      if (!await dir.exists()) return;
+      try {
+        final st = await dir.stat();
+        if (st.type != FileSystemEntityType.directory) return;
+      } catch (_) {
+        return;
+      }
+      seenNorm.add(n);
+      roots.add(dir);
+    }
+
     final configuredRaw = await SettingsService.loadOneDriveLocalDownloadDir();
     final configured = configuredRaw?.trim();
     if (configured != null && configured.isNotEmpty) {
-      final user = Directory(p.normalize(configured));
-      if (await user.exists()) {
-        try {
-          final st = await user.stat();
-          if (st.type == FileSystemEntityType.directory) {
-            final defPath = p.normalize(def.path);
-            final userPath = p.normalize(user.path);
-            if (userPath != defPath) {
-              roots.add(user);
-            }
-          }
-        } catch (_) {}
-      }
+      await addRoot(Directory(p.normalize(configured)));
     }
+
+    for (final path in await SettingsService.loadOneDriveDownloadScanRoots()) {
+      if (path.isEmpty) continue;
+      await addRoot(Directory(path));
+    }
+
+    try {
+      final docs = await getApplicationDocumentsDirectory();
+      await addRoot(Directory(p.join(docs.path, 'onedrive_cache')));
+    } catch (_) {}
+
+    try {
+      final cacheRoot = await getApplicationCacheDirectory();
+      await addRoot(Directory(p.join(cacheRoot.path, 'onedrive_cache')));
+    } catch (_) {}
+
+    try {
+      final tmp = await getTemporaryDirectory();
+      await addRoot(Directory(p.join(tmp.path, 'onedrive_cache')));
+    } catch (_) {}
+
+    if (Platform.isAndroid) {
+      try {
+        final externalCaches = await getExternalCacheDirectories();
+        if (externalCaches != null) {
+          for (final d in externalCaches) {
+            await addRoot(Directory(p.join(d.path, 'onedrive_cache')));
+          }
+        }
+      } catch (_) {}
+    }
+
     return roots;
   }
 

@@ -35,6 +35,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/wave_progress_bar.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
@@ -1181,6 +1182,53 @@ class _ContinueEmptyCard extends StatelessWidget {
 /// 首页「我的歌单」混色卡宽度；快捷入口正方形边长上限略小于此值（视觉上仍一眼小于歌单卡）。
 const double _kHomePlaylistMixCardWidth = 128;
 
+/// 首页「全部歌曲」卡右上角：封面配色 / 自定义图等（与自建歌单封面 sheet 一致）。
+class _HomeLibraryCarouselMoreMenu extends StatelessWidget {
+  const _HomeLibraryCarouselMoreMenu({required this.user});
+
+  final UserPlaylistProvider user;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return PopupMenuButton<String>(
+      tooltip: l10n.tooltipMoreActions,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      icon: Icon(
+        Icons.more_vert_rounded,
+        size: 20,
+        color: context.gradFg(0.92),
+      ),
+      color: const Color(0xFF2D2D2D),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      offset: const Offset(0, 28),
+      onSelected: (v) async {
+        if (v == 'cover') {
+          await showPlaylistCoverStyleSheet(
+            context,
+            user.homeLibraryPlaylistStubForCoverUi(
+              user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
+            ),
+          );
+        }
+      },
+      itemBuilder: (ctx) {
+        final m = AppLocalizations.of(ctx);
+        return [
+          PopupMenuItem(
+            value: 'cover',
+            child: Text(m.playlistCoverMenuItem),
+          ),
+        ];
+      },
+    );
+  }
+}
+
 class _PlaylistCarousels extends StatelessWidget {
   const _PlaylistCarousels({
     required this.play,
@@ -1219,17 +1267,21 @@ class _PlaylistCarousels extends StatelessWidget {
         : (allN == 0
             ? l10n.homeScanMusicFolder
             : l10n.homeTrackCount(allN));
-    final allCard = _MixCard(
-      title: l10n.homeAllSongs,
-      subtitle: allSubtitle,
-      decoration: playlistCoverCardDecoration(
-        coverStyle: UserPlaylistCoverStyle.gradient(
+    final libCover = user.homeLibraryCoverStyle ??
+        UserPlaylistCoverStyle.gradient(
           const Color(0xFF1565C0),
           const Color(0xFF0D47A1),
-        ),
+        );
+    final libTitle = user.resolvedHomeLibraryTitle(l10n.homeAllSongs);
+    final allCard = _MixCard(
+      title: libTitle,
+      subtitle: allSubtitle,
+      decoration: playlistCoverCardDecoration(
+        coverStyle: libCover,
         fallbackGradientIndex: 0,
       ),
       onTap: onOpenAllSongs,
+      cornerAction: _HomeLibraryCarouselMoreMenu(user: user),
     );
     final order = user.resolvedHomeCarouselOrder();
     final list = user.playlists;
@@ -1932,50 +1984,78 @@ class _MixCard extends StatelessWidget {
     required this.subtitle,
     required this.decoration,
     required this.onTap,
+    this.cornerAction,
   });
   final String title;
   final String subtitle;
   final BoxDecoration decoration;
   final VoidCallback onTap;
+  /// 例如「全部歌曲」卡右上角更多（封面样式）。
+  final Widget? cornerAction;
+
+  /// 与外层 [ListView] 视口高度一致，避免仅靠文字撑高导致封面/渐变被纵向压扁。
+  static const double _cardHeight = 168;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+    return SizedBox(
+      width: _kHomePlaylistMixCardWidth,
+      height: _cardHeight,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: _kHomePlaylistMixCardWidth,
-          padding: const EdgeInsets.all(12),
-          decoration: decoration,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: context.gradFg(),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
+        child: Stack(
+          clipBehavior: Clip.none,
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Ink(
+                    decoration: decoration,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: context.gradFg(),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: context.gradFg(0.8),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: context.gradFg(0.8),
-                  fontSize: 11,
-                ),
+            ),
+            if (cornerAction != null)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: cornerAction!,
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

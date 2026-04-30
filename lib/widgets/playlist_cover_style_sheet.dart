@@ -105,7 +105,11 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
       if (context.mounted) Navigator.pop(context);
       return;
     }
-    await user.setPlaylistCoverStyle(widget.playlist.id, _draft);
+    if (widget.playlist.id == UserPlaylistProvider.homeCarouselLibrarySentinel) {
+      await user.setHomeLibraryCoverStyle(_draft);
+    } else {
+      await user.setPlaylistCoverStyle(widget.playlist.id, _draft);
+    }
     if (context.mounted) Navigator.pop(context);
   }
 

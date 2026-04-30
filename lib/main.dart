@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +13,10 @@ import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
+import 'package:yeah_music/models/playback_session_surface.dart';
+import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/home_page.dart';
+import 'package:yeah_music/platform/open_with_bridge.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
@@ -37,6 +40,7 @@ import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 import 'package:yeah_music/services/android_media_session_bridge.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
+import 'package:yeah_music/utils/file_utils.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -287,6 +291,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _kickOneDriveAutoSyncCheck();
+      _tryConsumeAndroidOpenWith();
     });
   }
 
@@ -299,6 +304,39 @@ class _YeahMusicAppState extends State<YeahMusicApp>
 
   void _kickOneDriveAutoSyncCheck() {
     unawaited(_maybeRunOneDriveAutoSync());
+  }
+
+  Future<void> _tryConsumeAndroidOpenWith() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    for (;;) {
+      if (!mounted) return;
+      final path = await OpenWithBridge.consumePendingPath();
+      if (path == null) return;
+      if (!mounted) return;
+      final folder = context.read<FolderProvider>();
+      final play = context.read<PlayListProvider>();
+      final od = context.read<OneDriveController>();
+      final file = File(path);
+      if (!await file.exists()) continue;
+      if (!mounted) return;
+      try {
+        if (!play.initialized) {
+          await play.init(folder, oneDrive: od);
+        }
+        if (!mounted) return;
+        final song = Song(path);
+        await FileUtils.loadSongMeta(song, loadEmbeddedAlbumArt: false);
+        if (!mounted) return;
+        await play.setPlaybackQueueAndPlay(
+          [song],
+          0,
+          session: PlaybackSessionSurface.adHoc,
+        );
+      } catch (e, st) {
+        appLog.e('打开外部音频失败', error: e, stackTrace: st);
+        return;
+      }
+    }
   }
 
   Future<void> _maybeRunOneDriveAutoSync() async {
@@ -343,6 +381,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
       unawaited(od.loadFromStorage());
     }
     _kickOneDriveAutoSyncCheck();
+    _tryConsumeAndroidOpenWith();
   }
 
   @override
