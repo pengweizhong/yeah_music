@@ -981,7 +981,37 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeGreetingEvening => 'こんばんは';
 
   @override
-  String get homePullRefreshingLocal => '端末に保存した設定を読み込んでいます…';
+  String get homePullLoftTitle => 'この端末から再読み込み';
+
+  @override
+  String get homePullReleaseHint => '離すと保存済み設定を読み込みます';
+
+  @override
+  String get homePullEmptyTease => 'ここには何もありません。引き続けてもムダですよ。';
+
+  @override
+  String get homePullStepThemeWallpaper => 'テーマ（色・グラデーション・壁紙）';
+
+  @override
+  String get homePullStepBrightnessMode => '外観（ライト／ダーク）';
+
+  @override
+  String get homePullStepLanguage => '表示言語';
+
+  @override
+  String get homePullStepPlaylistsCarousel => 'プレイリストとホーム横スクロール順';
+
+  @override
+  String get homePullStepShortcuts => 'ホームのショートカット';
+
+  @override
+  String get homePullStepRecentTopPlayed => '最近再生と再生回数';
+
+  @override
+  String get homePullStepLyricsDisplay => '歌詞表示（保存データを再読み込み）';
+
+  @override
+  String get homePullStepPlaybackPrefs => '再生モード（シャッフル／リピートなど）';
 
   @override
   String get homePullRefreshDone => '端末の保存済み設定を再読み込みしました。';

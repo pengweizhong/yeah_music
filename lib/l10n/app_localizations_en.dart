@@ -1023,8 +1023,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreetingEvening => 'Good evening';
 
   @override
-  String get homePullRefreshingLocal =>
-      'Reading saved settings on this device…';
+  String get homePullLoftTitle => 'Reload from this device';
+
+  @override
+  String get homePullReleaseHint => 'Release to reload saved settings';
+
+  @override
+  String get homePullEmptyTease =>
+      'There\'s nothing here — pulling more won\'t help.';
+
+  @override
+  String get homePullStepThemeWallpaper =>
+      'Theme: colors, gradient & wallpaper';
+
+  @override
+  String get homePullStepBrightnessMode => 'Appearance: light or dark mode';
+
+  @override
+  String get homePullStepLanguage => 'Interface language';
+
+  @override
+  String get homePullStepPlaylistsCarousel => 'Playlists & home carousel order';
+
+  @override
+  String get homePullStepShortcuts => 'Home shortcuts';
+
+  @override
+  String get homePullStepRecentTopPlayed => 'Recent plays & play counts';
+
+  @override
+  String get homePullStepLyricsDisplay =>
+      'Lyrics display (re-read from storage)';
+
+  @override
+  String get homePullStepPlaybackPrefs => 'Playback mode (shuffle / repeat)';
 
   @override
   String get homePullRefreshDone => 'Reloaded settings from local storage.';

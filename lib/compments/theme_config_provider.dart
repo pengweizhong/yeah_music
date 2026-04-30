@@ -52,6 +52,16 @@ class ThemeConfigProvider extends ChangeNotifier {
 
   static const _cacheBaseName = 'theme_user_background';
 
+  /// [Image.file] 缓存键随重载递增，路径不变但文件被覆盖时仍能换图。
+  int _themeBackgroundImageFrame = 0;
+
+  void _evictThemeBackgroundImageCache(String? path) {
+    if (path == null || path.isEmpty) return;
+    final f = File(path);
+    if (!f.existsSync()) return;
+    PaintingBinding.instance.imageCache.evict(FileImage(f));
+  }
+
   /// 外部队路径、相册/云盘路径在冷启动后可能 [Operation not permitted]；可读的会复制到应用支持目录
   Future<void> _ensureBackgroundCacheOrClear() async {
     if (_backgroundImagePath == null) return;
@@ -149,6 +159,8 @@ class ThemeConfigProvider extends ChangeNotifier {
       await prefs.remove('background_image_path');
     }
 
+    _themeBackgroundImageFrame++;
+    _evictThemeBackgroundImageCache(_backgroundImagePath);
     notifyListeners();
   }
 
@@ -196,9 +208,11 @@ class ThemeConfigProvider extends ChangeNotifier {
   Future<void> setBackgroundImage(String? path) async {
     final prefs = await SharedPreferences.getInstance();
     if (path == null) {
+      _evictThemeBackgroundImageCache(_backgroundImagePath);
       await _removeOldThemeCacheFiles();
       _backgroundImagePath = null;
       await prefs.remove('background_image_path');
+      _themeBackgroundImageFrame++;
       notifyListeners();
       return;
     }
@@ -214,6 +228,8 @@ class ThemeConfigProvider extends ChangeNotifier {
       await source.copy(destPath);
       _backgroundImagePath = destPath;
       await prefs.setString('background_image_path', destPath);
+      _themeBackgroundImageFrame++;
+      _evictThemeBackgroundImageCache(destPath);
     } catch (e) {
       rethrow;
     }
@@ -258,6 +274,9 @@ class ThemeConfigProvider extends ChangeNotifier {
                   final h = (sz.height * dpr).round().clamp(1, 4096);
                   return Image.file(
                     File(_backgroundImagePath!),
+                    key: ValueKey<String>(
+                      'ym_theme_bg_${_backgroundImagePath}_$_themeBackgroundImageFrame',
+                    ),
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,

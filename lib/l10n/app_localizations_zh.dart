@@ -966,7 +966,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeGreetingEvening => '晚上好';
 
   @override
-  String get homePullRefreshingLocal => '正在从本机读取已保存的配置…';
+  String get homePullLoftTitle => '从本机重新载入';
+
+  @override
+  String get homePullReleaseHint => '松手即可载入已保存的配置';
+
+  @override
+  String get homePullEmptyTease => '这里什么也没有，再拉也没有用呀';
+
+  @override
+  String get homePullStepThemeWallpaper => '主题：配色、渐变与壁纸';
+
+  @override
+  String get homePullStepBrightnessMode => '外观：浅色 / 深色模式';
+
+  @override
+  String get homePullStepLanguage => '界面语言';
+
+  @override
+  String get homePullStepPlaylistsCarousel => '歌单与首页横滑顺序';
+
+  @override
+  String get homePullStepShortcuts => '首页快捷入口';
+
+  @override
+  String get homePullStepRecentTopPlayed => '最近播放与播放次数';
+
+  @override
+  String get homePullStepLyricsDisplay => '歌词显示（从存储重新读取）';
+
+  @override
+  String get homePullStepPlaybackPrefs => '播放模式（随机 / 循环等）';
 
   @override
   String get homePullRefreshDone => '已从本机存储重新载入配置。';
@@ -2977,7 +3007,37 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get homeGreetingEvening => '晚上好';
 
   @override
-  String get homePullRefreshingLocal => '正在从本机读取已保存的配置…';
+  String get homePullLoftTitle => '从本机重新载入';
+
+  @override
+  String get homePullReleaseHint => '松手即可载入已保存的配置';
+
+  @override
+  String get homePullEmptyTease => '这里什么也没有，再拉也没有用呀';
+
+  @override
+  String get homePullStepThemeWallpaper => '主题：配色、渐变与壁纸';
+
+  @override
+  String get homePullStepBrightnessMode => '外观：浅色 / 深色模式';
+
+  @override
+  String get homePullStepLanguage => '界面语言';
+
+  @override
+  String get homePullStepPlaylistsCarousel => '歌单与首页横滑顺序';
+
+  @override
+  String get homePullStepShortcuts => '首页快捷入口';
+
+  @override
+  String get homePullStepRecentTopPlayed => '最近播放与播放次数';
+
+  @override
+  String get homePullStepLyricsDisplay => '歌词显示（从存储重新读取）';
+
+  @override
+  String get homePullStepPlaybackPrefs => '播放模式（随机 / 循环等）';
 
   @override
   String get homePullRefreshDone => '已从本机存储重新载入配置。';
@@ -4988,7 +5048,37 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeGreetingEvening => '晚上好';
 
   @override
-  String get homePullRefreshingLocal => '正在從本機讀取已儲存的設定…';
+  String get homePullLoftTitle => '從本機重新載入';
+
+  @override
+  String get homePullReleaseHint => '放手即可載入已儲存的設定';
+
+  @override
+  String get homePullEmptyTease => '這裡什麼也沒有，再拉也沒有用呀';
+
+  @override
+  String get homePullStepThemeWallpaper => '主題：配色、漸層與桌布';
+
+  @override
+  String get homePullStepBrightnessMode => '外觀：淺色 / 深色模式';
+
+  @override
+  String get homePullStepLanguage => '介面語言';
+
+  @override
+  String get homePullStepPlaylistsCarousel => '歌單與首頁橫滑順序';
+
+  @override
+  String get homePullStepShortcuts => '首頁捷徑';
+
+  @override
+  String get homePullStepRecentTopPlayed => '最近播放與播放次數';
+
+  @override
+  String get homePullStepLyricsDisplay => '歌詞顯示（從儲存重新讀取）';
+
+  @override
+  String get homePullStepPlaybackPrefs => '播放模式（隨機 / 循環等）';
 
   @override
   String get homePullRefreshDone => '已從本機儲存重新載入設定。';

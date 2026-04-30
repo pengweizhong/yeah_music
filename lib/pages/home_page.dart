@@ -18,8 +18,6 @@ import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
-import 'package:yeah_music/themes/app_locale_provider.dart';
-import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
@@ -36,10 +34,40 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
-import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/wave_progress_bar.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/recent_play_list_row.dart';
+
+/// 下拉略超过该值才显示彩蛋文案（无任何逻辑，仅展示）。
+const double _kLoftDragRevealPx = 20;
+
+/// 阁楼与列表背后的主题色填充。
+Color _homeLoftThemeMid(ThemeConfigProvider tc) {
+  return Color.lerp(tc.primaryColor, tc.secondaryColor, 0.38)!;
+}
+
+Color _homeLoftPanelSurface(
+    ThemeConfigProvider tc, Brightness brightness) {
+  final mid = _homeLoftThemeMid(tc);
+  final base = brightness == Brightness.dark
+      ? const Color(0xFF0C0C0C)
+      : const Color(0xFFEEF0F4);
+  return Color.alphaBlend(mid.withValues(alpha: 0.82), base);
+}
+
+/// 去掉 ScrollBehavior 外包层。
+class _HomeBodyScrollBehavior extends MaterialScrollBehavior {
+  const _HomeBodyScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
 
 /// 应用主页
 class HomePage extends StatefulWidget {
@@ -54,12 +82,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final ScrollController _homeScrollController = ScrollController();
+  final ValueNotifier<double> _loftPullPx = ValueNotifier<double>(0);
   List<String> _recentPaths = [];
   List<({String path, int count})> _mostPlayedRaw = [];
   bool _recentReady = false;
   PlayListProvider? _play;
   QuickEntryConfig _quickEntry = QuickEntryConfig.defaultConfig();
-  bool _homeReloadBusy = false;
 
   @override
   void initState() {
@@ -96,6 +125,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _play?.removeListener(_onPlayListChange);
+    _loftPullPx.dispose();
+    _homeScrollController.dispose();
     super.dispose();
   }
 
@@ -142,41 +173,70 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  /// 下拉刷新：从本机持久化重新载入主题与选项、用户歌单、快捷入口与最近播放（非网络）。
-  Future<void> _reloadPersistedHomeConfig() async {
-    if (!mounted || _homeReloadBusy) return;
-    final themeConfig = context.read<ThemeConfigProvider>();
-    final themeMode = context.read<AppThemeModeProvider>();
-    final locale = context.read<AppLocaleProvider>();
-    final user = context.read<UserPlaylistProvider>();
+  void _onHomeLoftTopPull(double px) {
+    _loftPullPx.value = px;
+  }
 
-    setState(() => _homeReloadBusy = true);
-    try {
-      await Future.wait([
-        themeConfig.reloadFromStorage(),
-        themeMode.reloadFromStorage(),
-        locale.reloadFromStorage(),
-        user.reloadFromHive(),
-        _loadRecentPaths(),
-        _loadQuickEntryConfig(),
-      ]);
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        AppLocalizations.of(context).homePullRefreshDone,
-        kind: AppSnackKind.success,
-      );
-    } catch (e, st) {
-      appLog.e('首页下拉从本机刷新配置失败', error: e, stackTrace: st);
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        AppLocalizations.of(context).homePullRefreshFailed(e.toString()),
-        kind: AppSnackKind.error,
-      );
-    } finally {
-      if (mounted) setState(() => _homeReloadBusy = false);
-    }
+  Widget _buildHomeLoftBand(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeConfigProvider tc,
+  ) {
+    final brightness = Theme.of(context).brightness;
+    final muted = context.gradFg(0.58);
+    final panelBg = _homeLoftPanelSurface(tc, brightness);
+    final borderFg = context.gradBorder(0.22);
+    return AnimatedBuilder(
+      animation: _loftPullPx,
+      builder: (context, _) {
+        final pullPx = _loftPullPx.value;
+        final showTease = pullPx > _kLoftDragRevealPx;
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.none,
+          child: !showTease
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                  child: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(bottom: Radius.circular(18)),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: panelBg,
+                        border: Border(
+                          bottom: BorderSide(color: borderFg),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            l10n.homePullEmptyTease,
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.35,
+                              color: muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+        );
+      },
+    );
   }
 
   void _goQuickEntrySettings() {
@@ -349,6 +409,7 @@ class _HomePageState extends State<HomePage> {
             ),
             body: Consumer2<PlayListProvider, UserPlaylistProvider>(
               builder: (context, play, user, _) {
+                final tc = context.watch<ThemeConfigProvider>();
                 final recentSongs = play.resolveRecentSongsFromPaths(
                   _recentPaths,
                   maxSongs: 8,
@@ -362,21 +423,19 @@ class _HomePageState extends State<HomePage> {
                     play.playList.isNotEmpty;
                 final miniBottom =
                     showMini ? MiniPlayer.barHeight : 0.0;
-                return Stack(
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    RefreshIndicator(
-                      color: context.gradFg(),
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHigh
-                          .withValues(alpha: 0.92),
-                      displacement: 52,
-                      strokeWidth: 2.5,
-                      onRefresh: _reloadPersistedHomeConfig,
+                    _buildHomeLoftBand(context, l10n, tc),
+                    Expanded(
                       child: _HomeScrollBody(
+                        scrollController: _homeScrollController,
+                        onTopOverscrollPx: _onHomeLoftTopPull,
                         quickEntry: _quickEntry,
                         safeBottom:
-                            MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
+                            MediaQuery.paddingOf(context).bottom +
+                                8 +
+                                miniBottom,
                         greeting: _greeting(context),
                         play: play,
                         user: user,
@@ -391,70 +450,13 @@ class _HomePageState extends State<HomePage> {
                         onOpenMostPlayed: _goMostPlayed,
                         onOpenCloudLibrary: _goCloudLibrary,
                         onOpenOneDrive: _goOneDrive,
-                        onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
+                        onOpenOneDriveCachedPlaylist:
+                            _goOneDriveCachedPlaylist,
                         onManageQuickEntry: _goQuickEntrySettings,
                         onOpenUserPlaylist: _goUserPlaylist,
                         songSubtitle: _songSecondaryLine,
                       ),
                     ),
-                    if (_homeReloadBusy)
-                      Positioned.fill(
-                        child: AbsorbPointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surface
-                                  .withValues(alpha: 0.55),
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 36),
-                                child: Material(
-                                  elevation: 8,
-                                  shadowColor:
-                                      Colors.black.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHigh,
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        28, 24, 28, 22),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SizedBox(
-                                          width: 36,
-                                          height: 36,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 3,
-                                            color: context.gradFg(),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          l10n.homePullRefreshingLocal,
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                                height: 1.4,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 );
               },
@@ -483,6 +485,8 @@ class _HomePageState extends State<HomePage> {
 
 class _HomeScrollBody extends StatefulWidget {
   const _HomeScrollBody({
+    required this.scrollController,
+    required this.onTopOverscrollPx,
     required this.quickEntry,
     required this.safeBottom,
     required this.greeting,
@@ -505,6 +509,8 @@ class _HomeScrollBody extends StatefulWidget {
     required this.songSubtitle,
   });
 
+  final ScrollController scrollController;
+  final ValueChanged<double> onTopOverscrollPx;
   final QuickEntryConfig quickEntry;
   final double safeBottom;
   final String greeting;
@@ -536,7 +542,6 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
   static const _gapM = 16.0;
   static const _gapS = 12.0;
 
-  late final ScrollController _scrollController;
   /// [SliverLayoutBuilder] 测得的吸顶分节条在内容中的起点（「最近」一栏）
   double? _recentPlaysSectionStartScroll;
   /// 滚过此 offset 后，吸顶条从「最近」切换为「最多」（= [SliverLayoutBuilder] 在「最多」**流式**分节标题前测得的 `precedingScrollExtent`）
@@ -549,21 +554,23 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()..addListener(_onScrollFrosted);
+    widget.scrollController.addListener(_onScrollFrosted);
   }
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScrollFrosted)
-      ..dispose();
+    widget.scrollController.removeListener(_onScrollFrosted);
     super.dispose();
   }
 
   void _onScrollFrosted() {
     if (!mounted) return;
-    if (_scrollController.hasClients) {
-      _lastScrollOffset = _scrollController.offset;
+    final c = widget.scrollController;
+    if (c.hasClients) {
+      _lastScrollOffset = c.offset;
+      widget.onTopOverscrollPx(c.offset < 0 ? -c.offset : 0);
+    } else {
+      widget.onTopOverscrollPx(0);
     }
     setState(() {});
   }
@@ -703,8 +710,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
 
   /// 单一吸顶条：显示「最近」时叠在列表上为毛玻璃；切到「最多」后同逻辑以「最多」分节为界
   bool _computePlaybackSectionsFrosted() {
-    final o = _scrollController.hasClients
-        ? _scrollController.offset
+    final o = widget.scrollController.hasClients
+        ? widget.scrollController.offset
         : _lastScrollOffset;
     final sr = _recentPlaysSectionStartScroll;
     if (sr == null) {
@@ -736,19 +743,21 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottomPad = widget.safeBottom + 20.0;
-    if (_scrollController.hasClients) {
-      _lastScrollOffset = _scrollController.offset;
+    if (widget.scrollController.hasClients) {
+      _lastScrollOffset = widget.scrollController.offset;
     }
     final o = _lastScrollOffset;
     final sm = _mostPlayedBarSwitchAt;
     final showMostInBar = sm != null && o + 0.1 >= sm;
     final useFrostedMerged = _computePlaybackSectionsFrosted();
-    return CustomScrollView(
-      controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      slivers: [
+    return ScrollConfiguration(
+      behavior: const _HomeBodyScrollBehavior(),
+      child: CustomScrollView(
+        controller: widget.scrollController,
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 0),
@@ -984,6 +993,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
         ],
         SliverToBoxAdapter(child: SizedBox(height: bottomPad)),
       ],
+      ),
     );
   }
 

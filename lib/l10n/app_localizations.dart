@@ -1914,11 +1914,71 @@ abstract class AppLocalizations {
   /// **'Good evening'**
   String get homeGreetingEvening;
 
-  /// No description provided for @homePullRefreshingLocal.
+  /// No description provided for @homePullLoftTitle.
   ///
   /// In en, this message translates to:
-  /// **'Reading saved settings on this device…'**
-  String get homePullRefreshingLocal;
+  /// **'Reload from this device'**
+  String get homePullLoftTitle;
+
+  /// No description provided for @homePullReleaseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to reload saved settings'**
+  String get homePullReleaseHint;
+
+  /// No description provided for @homePullEmptyTease.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s nothing here — pulling more won\'t help.'**
+  String get homePullEmptyTease;
+
+  /// No description provided for @homePullStepThemeWallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme: colors, gradient & wallpaper'**
+  String get homePullStepThemeWallpaper;
+
+  /// No description provided for @homePullStepBrightnessMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance: light or dark mode'**
+  String get homePullStepBrightnessMode;
+
+  /// No description provided for @homePullStepLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface language'**
+  String get homePullStepLanguage;
+
+  /// No description provided for @homePullStepPlaylistsCarousel.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists & home carousel order'**
+  String get homePullStepPlaylistsCarousel;
+
+  /// No description provided for @homePullStepShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Home shortcuts'**
+  String get homePullStepShortcuts;
+
+  /// No description provided for @homePullStepRecentTopPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent plays & play counts'**
+  String get homePullStepRecentTopPlayed;
+
+  /// No description provided for @homePullStepLyricsDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics display (re-read from storage)'**
+  String get homePullStepLyricsDisplay;
+
+  /// No description provided for @homePullStepPlaybackPrefs.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback mode (shuffle / repeat)'**
+  String get homePullStepPlaybackPrefs;
 
   /// No description provided for @homePullRefreshDone.
   ///
