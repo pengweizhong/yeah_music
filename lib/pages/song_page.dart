@@ -2239,6 +2239,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   await MusicService().playCurrentFromPlaylist(
                                     queue: playListProvider.playList,
                                     currentIndex: playListProvider.currentIndex,
+                                    useAndroidConcatQueue:
+                                        playListProvider.playbackMode !=
+                                            PlaybackMode.playOnce,
                                   );
                                   if (!context.mounted) return;
                                   await playListProvider.recordRecentForCurrent();

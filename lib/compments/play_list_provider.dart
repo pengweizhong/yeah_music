@@ -379,6 +379,7 @@ class PlayListProvider extends ChangeNotifier {
     await MusicService().playCurrentFromPlaylist(
       queue: _playbackQueueOverride!,
       currentIndex: _currentIndex,
+      useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
     );
     await RecentPlayService.recordPath(
       song.path,
@@ -444,6 +445,45 @@ class PlayListProvider extends ChangeNotifier {
     }
   }
 
+  /// 冷启动即从 Hive 恢复播放模式；勿仅在 SongPage 加载，否则首页/曲库发起播放时仍为默认顺序，
+  /// Android 整段队列会在曲末自动连播下一首，表现为「仅播放一次」无效。
+  Future<void> _hydratePlaybackModeFromStorage() async {
+    try {
+      _playbackMode = await SettingsService.loadPlaybackMode();
+      _shuffledIndices = null;
+      _shuffledPlayedIndices = [];
+      if (_playbackMode == PlaybackMode.singleLoop) {
+        MusicService().setLoopMode(LoopMode.one);
+      } else {
+        MusicService().setLoopMode(LoopMode.off);
+      }
+      await _syncAndroidCarMediaSession();
+    } catch (e, st) {
+      appLog.e('加载播放模式失败', error: e, stackTrace: st);
+    }
+  }
+
+  /// 已在 Android concat 会话中时切换到「仅播放一次」，需重建为单曲源，否则会由系统在曲末自动切下一曲。
+  Future<void> _rebindAndroidCurrentAsSingleConcatDisabled() async {
+    try {
+      final list = playList;
+      if (list.isEmpty || list.length <= 1) return;
+      final idx = _currentIndex.clamp(0, list.length - 1);
+      final pos = MusicService.lastPosition;
+      await MusicService().playCurrentFromPlaylist(
+        queue: list,
+        currentIndex: idx,
+        useAndroidConcatQueue: false,
+      );
+      if (pos > Duration.zero) {
+        await Future<void>.delayed(const Duration(milliseconds: 48));
+        await MusicService().seek(pos);
+      }
+    } catch (e, st) {
+      appLog.e('仅播放一次：重建单曲会话失败', error: e, stackTrace: st);
+    }
+  }
+
   /// 从 FolderProvider 加载歌曲（优化版本，支持大量歌曲）。
   /// [oneDrive] 非 null 时会并入 OneDrive 点播落地缓存路径中的音频。
   Future<void> init(
@@ -464,6 +504,8 @@ class PlayListProvider extends ChangeNotifier {
       await _loadOneDriveOverlayFrom(oneDrive);
     }
     _initialized = true;
+
+    await _hydratePlaybackModeFromStorage();
 
     // 进程重启后不保留上一会话的「下一曲播放」插播队列（仅供当次会话）。
     _clearDeferredPlayNext();
@@ -656,6 +698,7 @@ class PlayListProvider extends ChangeNotifier {
         await playAt(resume);
         return;
       }
+      await MusicService().pause();
       return;
     }
 
@@ -874,6 +917,7 @@ class PlayListProvider extends ChangeNotifier {
       await MusicService().playCurrentFromPlaylist(
         queue: list,
         currentIndex: _currentIndex,
+        useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
       );
       await RecentPlayService.recordPath(
         playing.path,
@@ -958,7 +1002,17 @@ class PlayListProvider extends ChangeNotifier {
       MusicService().setLoopMode(LoopMode.off);
     }
 
-    unawaited(_syncAndroidCarMediaSession());
+    unawaited(() async {
+      await _syncAndroidCarMediaSession();
+      if (!kIsWeb &&
+          Platform.isAndroid &&
+          mode == PlaybackMode.playOnce &&
+          MusicService.androidCarQueueActive &&
+          playList.length > 1) {
+        await _rebindAndroidCurrentAsSingleConcatDisabled();
+      }
+    }());
+
     notifyListeners();
   }
 

@@ -60,16 +60,20 @@ class MusicService {
 
   /// 按当前播放列表与索引开始播放。
   ///
-  /// Android 且列表多于一首时始终构建 [ConcatenatingAudioSource]，使通知/车机上的上一首、下一首与
-  /// 真实曲目对应（否则仅单文件会话，`hasPrevious` 在首曲为 false，紧凑通知易把停播当成「上一首」）。
-  /// 封面/内嵌图仍受「显示封面」开关影响，不依赖「启用车载歌词」。
+  /// Android 且列表多于一首时默认构建 [ConcatenatingAudioSource]，使通知/车机上的上一首、下一首与
+  /// 真实曲目对应。
+  ///
+  /// 「仅播放一次」等业务场景须传 [useAndroidConcatQueue] 为 false：否则会由系统在曲目末尾自动连播
+  /// 下一首，应用层无法在原生 concatenating 队列之前拦截。
   Future<void> playCurrentFromPlaylist({
     required List<Song> queue,
     required int currentIndex,
+    bool useAndroidConcatQueue = true,
   }) async {
     if (queue.isEmpty) return;
     final i = currentIndex.clamp(0, queue.length - 1);
-    final useFullPlayerQueue = Platform.isAndroid && queue.length > 1;
+    final useFullPlayerQueue =
+        useAndroidConcatQueue && Platform.isAndroid && queue.length > 1;
     if (useFullPlayerQueue) {
       final f = _playChain
           .catchError((Object? e) {
