@@ -15,6 +15,7 @@ import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
+import 'package:yeah_music/utils/song_path_utils.dart';
 
 int _coverContentFingerprint(List<int> bytes) {
   final len = bytes.length;
@@ -48,7 +49,14 @@ class MusicService {
   /// Android 多曲时 [playCurrentFromPlaylist] 会构建整段队列（与「车载歌词」开关无关）；单文件模式为 false。
   static bool androidCarQueueActive = false;
 
+  /// 最近一次成功构建 Android 整队列时的 [queue] 引用；与本次调用 [identical] 时用 [seek] 切索引，避免整轨重建卡顿。
+  static List<Song>? _lastAndroidQueueRef;
+
   static Future<void> _playChain = Future.value();
+
+  static void _invalidateAndroidQueueReuse() {
+    _lastAndroidQueueRef = null;
+  }
 
   /// 按当前播放列表与索引开始播放。
   ///
@@ -96,19 +104,23 @@ class MusicService {
 
   Future<void> _playSongBody(Song song) async {
     androidCarQueueActive = false;
+    _invalidateAndroidQueueReuse();
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         await _player.stop();
         await _player.setVolume(1.0);
         if (attempt == 0) {
-          await Future<void>.delayed(const Duration(milliseconds: 32));
+          await Future<void>.delayed(const Duration(milliseconds: 12));
         } else {
-          await Future<void>.delayed(const Duration(milliseconds: 64));
+          await Future<void>.delayed(const Duration(milliseconds: 28));
         }
         final tag = await _tagForSong(song);
         await _player.setAudioSource(_buildAudioSource(song, tag: tag));
         await _player.seek(Duration.zero);
-        play();
+        // 勿 await play()：部分机型/后端上该 Future 长期不结束会卡死整条 _playChain 与 UI 触发的 playAt。
+        _player.play();
+        isPlaying = _player.playing;
+        await Future<void>.delayed(const Duration(milliseconds: 24));
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
           unawaited(pushAndroidNotificationForSong(song, abortIfStaleGeneration: g));
@@ -138,20 +150,57 @@ class MusicService {
   }
 
   Future<void> _playQueueBody(List<Song> queue, int index) async {
-    androidCarQueueActive = false;
     if (queue.isEmpty) return;
     final idx = index.clamp(0, queue.length - 1);
-    final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
-    final lyricStyle = await SettingsService.loadLyricSettings();
+
+    // 同一 [queue] 实例（曲库缓存列表或同一用户歌单覆盖队列）内切歌：只 seek，避免全量 MediaItem + setAudioSources。
+    if (Platform.isAndroid &&
+        queue.length > 1 &&
+        androidCarQueueActive &&
+        identical(queue, _lastAndroidQueueRef)) {
+      try {
+        final seq = _player.sequence;
+        if (seq.isEmpty || seq.length != queue.length) {
+          throw StateError('sequence length mismatch');
+        }
+        final tag = seq[idx].tag;
+        final expectedPath = queue[idx].path;
+        final actualPath = tag is MediaItem
+            ? filePathFromMediaItemId(tag.id)
+            : (tag is Song ? tag.path : null);
+        if (actualPath == null ||
+            normSongPath(actualPath) != normSongPath(expectedPath)) {
+          throw StateError('sequence path mismatch at current index');
+        }
+        await _player.seek(Duration.zero, index: idx);
+        _player.play();
+        isPlaying = _player.playing;
+        androidCarQueueActive = true;
+        _lastAndroidQueueRef = queue;
+        if (Platform.isAndroid) {
+          final g = ++_androidMediaSessionSyncGeneration;
+          final s = queue[idx];
+          unawaited(pushAndroidNotificationForSong(s, abortIfStaleGeneration: g));
+        }
+        return;
+      } catch (e) {
+        appLog.d('Android 队列内快速切曲不可用，整轨重建: $e');
+        _invalidateAndroidQueueReuse();
+      }
+    }
+
+    androidCarQueueActive = false;
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         await _player.stop();
         await _player.setVolume(1.0);
         if (attempt == 0) {
-          await Future<void>.delayed(const Duration(milliseconds: 32));
+          await Future<void>.delayed(const Duration(milliseconds: 12));
         } else {
-          await Future<void>.delayed(const Duration(milliseconds: 64));
+          await Future<void>.delayed(const Duration(milliseconds: 28));
         }
+        final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
+        final lyricStyle = await SettingsService.loadLyricSettings();
         final children = <AudioSource>[];
         for (final s in queue) {
           final tag = await buildMediaItemForSong(
@@ -168,7 +217,10 @@ class MusicService {
           initialPosition: Duration.zero,
         );
         androidCarQueueActive = true;
-        play();
+        _lastAndroidQueueRef = queue;
+        _player.play();
+        isPlaying = _player.playing;
+        await Future<void>.delayed(const Duration(milliseconds: 24));
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
           final s = queue[idx];
@@ -182,6 +234,7 @@ class MusicService {
           continue;
         }
         appLog.e('设置队列音频并播放失败', error: e);
+        _invalidateAndroidQueueReuse();
         return;
       }
     }
@@ -412,6 +465,7 @@ class MusicService {
     try {
       isPlaying = false;
       androidCarQueueActive = false;
+      _invalidateAndroidQueueReuse();
       await _player.stop();
     } finally {
       try {

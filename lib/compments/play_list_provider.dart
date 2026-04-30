@@ -25,6 +25,9 @@ import '../models/folder.dart';
 import 'folder_provider.dart';
 import 'onedrive_controller.dart';
 
+/// Hive：上次播放曲目路径（冷启动优先按路径恢复迷你条，避免仅索引在合并顺序变化后错位）。
+const String _kHiveLastPlayedPathKey = 'last_played_path';
+
 /// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
 String _libraryPathKey(String path) {
   final t = path.trim();
@@ -40,6 +43,15 @@ class PlayListProvider extends ChangeNotifier {
 
   StreamSubscription<PlayerState>? _playerCompletionSubscription;
   StreamSubscription<int?>? _playerIndexSubscription;
+
+  /// 串行切歌 / 换队列，避免连点下一曲时多次 [playAt] 与 [MusicService] 交错导致打断加载后不播放。
+  Future<void> _playbackNavChain = Future<void>.value();
+
+  /// 连点「下一曲」合并为一次 [_applyPlayNextSteps]，避免每一步都完整 await 播放器。
+  int _coalescedPlayNextSteps = 0;
+
+  /// 连点「上一曲」合并。
+  int _coalescedPlayPrevSteps = 0;
 
   bool get initialized => _initialized;
 
@@ -68,6 +80,12 @@ class PlayListProvider extends ChangeNotifier {
 
   /// 随机播放时的当前随机列表
   List<int>? _shuffledIndices;
+
+  /// 单曲循环时「下一曲播放」只保留最近一次指定的曲目（[_libraryPathKey]）。
+  String? _playNextAfterCurrentSingleLoopPath;
+
+  /// 非单曲循环：后进先出；当前曲播放完毕后依次弹出并播放。
+  final List<String> _playNextAfterCurrentStack = [];
 
   /// 缓存的播放列表（文件夹合并 + OneDrive 本地缓存叠加，不含临时队列）
   List<Song>? _cachedPlayList;
@@ -206,6 +224,23 @@ class PlayListProvider extends ChangeNotifier {
     return out;
   }
 
+  /// [playAt] / [setPlaybackQueueAndPlay] / 合并后的上下曲均经此排队执行。
+  Future<void> _enqueuePlaybackNav(Future<void> Function() job) async {
+    final f = _playbackNavChain
+        .catchError((Object? e) {
+          appLog.d('playback nav 前序(可忽略): $e');
+        })
+        .then((_) async {
+          try {
+            await job();
+          } catch (e, st) {
+            appLog.e('playback nav 任务失败', error: e, stackTrace: st);
+          }
+        });
+    _playbackNavChain = f;
+    return f;
+  }
+
   /// 把所有文件夹里的歌曲合并成一个大列表（使用缓存优化性能），
   /// 若已设置 [_playbackQueueOverride] 则返回覆盖队列。
   List<Song> get playList {
@@ -221,6 +256,39 @@ class PlayListProvider extends ChangeNotifier {
     _cachedPlayList = null;
   }
 
+  void _clearDeferredPlayNext() {
+    _playNextAfterCurrentSingleLoopPath = null;
+    _playNextAfterCurrentStack.clear();
+  }
+
+  int _indexInPlayListByPathKey(String pathKey) {
+    if (pathKey.isEmpty) return -1;
+    final list = playList;
+    for (var i = 0; i < list.length; i++) {
+      if (_libraryPathKey(list[i].path) == pathKey) return i;
+    }
+    return -1;
+  }
+
+  /// 当前曲播放结束后紧接着播放 [song]（见「更多」菜单）。
+  ///
+  /// - 单曲循环：多次指定仅保留最后一次，播放完毕后单曲循环该曲。
+  /// - 其它模式：后进先出排队。
+  ///
+  /// 若 [song] 不在当前 [playList]（含临时歌单队列）中则返回 false。
+  bool enqueuePlayAfterCurrent(Song song) {
+    final key = _libraryPathKey(song.path);
+    if (key.isEmpty) return false;
+    if (_indexInPlayListByPathKey(key) < 0) return false;
+    if (_playbackMode == PlaybackMode.singleLoop) {
+      _playNextAfterCurrentSingleLoopPath = key;
+    } else {
+      _playNextAfterCurrentStack.add(key);
+    }
+    notifyListeners();
+    return true;
+  }
+
   /// 将播放队列设为 [songs]（顺序与列表一致），并从 [index] 开始播放。
   ///
   /// [recordRecent] / [bumpPlayCount] 控制 [RecentPlayService.recordPath] 行为，并在切歌 [playAt] 时沿用，直至 [clearPlaybackQueueOverride]。
@@ -234,7 +302,30 @@ class PlayListProvider extends ChangeNotifier {
     required PlaybackSessionSurface session,
     String? userPlaylistId,
   }) async {
+    return _enqueuePlaybackNav(() async {
+      await _setPlaybackQueueAndPlayImpl(
+        songs,
+        index,
+        recordRecent: recordRecent,
+        bumpPlayCount: bumpPlayCount,
+        session: session,
+        userPlaylistId: userPlaylistId,
+      );
+    });
+  }
+
+  Future<void> _setPlaybackQueueAndPlayImpl(
+    List<Song> songs,
+    int index, {
+    required bool recordRecent,
+    required bool bumpPlayCount,
+    required PlaybackSessionSurface session,
+    String? userPlaylistId,
+  }) async {
     if (songs.isEmpty) return;
+    _clearDeferredPlayNext();
+    _coalescedPlayNextSteps = 0;
+    _coalescedPlayPrevSteps = 0;
     if (session == PlaybackSessionSurface.userPlaylist) {
       assert(
         userPlaylistId != null && userPlaylistId.isNotEmpty,
@@ -259,6 +350,7 @@ class PlayListProvider extends ChangeNotifier {
       updateRecentList: recordRecent,
       bumpPlayCount: bumpPlayCount,
     );
+    await _saveCurrentPlaybackSnapshot();
     unawaited(_syncAndroidCarMediaSession());
     notifyListeners();
   }
@@ -268,6 +360,9 @@ class PlayListProvider extends ChangeNotifier {
     if (_playbackQueueOverride == null) return;
     final path = relocateCurrentSong ? currentSong?.path : null;
     _playbackQueueOverride = null;
+    _clearDeferredPlayNext();
+    _coalescedPlayNextSteps = 0;
+    _coalescedPlayPrevSteps = 0;
     _statsRecordRecent = true;
     _statsBumpPlayCount = true;
     _clearPlayListCache();
@@ -335,8 +430,8 @@ class PlayListProvider extends ChangeNotifier {
     }
     _initialized = true;
 
-    // 加载上次播放的歌曲索引
-    await _loadLastPlayedIndex();
+    // 加载上次播放（路径优先，兼容旧版仅索引）
+    await _restoreLastPlayedSnapshot();
 
     // 保障 currentIndex 合法
     final list = playList;
@@ -377,7 +472,7 @@ class PlayListProvider extends ChangeNotifier {
       if (i == _currentIndex) return;
       _currentIndex = i;
       notifyListeners();
-      unawaited(_saveCurrentIndex());
+      unawaited(_saveCurrentPlaybackSnapshot());
     });
   }
 
@@ -389,18 +484,48 @@ class PlayListProvider extends ChangeNotifier {
     ) {
       if (state.processingState != ProcessingState.completed) return;
       // 同一次 completion 的同步回调里立刻换源会触发 just_audio Loading interrupted，延后到本事件后执行
-      Future.microtask(() {
-        if (_playbackMode == PlaybackMode.singleLoop) {
-          MusicService().seek(Duration.zero);
-          MusicService().play();
-          return;
-        }
-        if (_playbackMode == PlaybackMode.playOnce) {
-          return;
-        }
-        playNext();
-      });
+      Future.microtask(() => unawaited(_onPlaybackTrackCompleted()));
     });
+  }
+
+  Future<void> _onPlaybackTrackCompleted() async {
+    if (_playbackMode == PlaybackMode.singleLoop) {
+      if (_playNextAfterCurrentSingleLoopPath != null) {
+        final key = _playNextAfterCurrentSingleLoopPath!;
+        _playNextAfterCurrentSingleLoopPath = null;
+        final idx = _indexInPlayListByPathKey(key);
+        if (idx >= 0) {
+          await playAt(idx);
+          return;
+        }
+      }
+      MusicService().seek(Duration.zero);
+      MusicService().play();
+      return;
+    }
+
+    if (_playbackMode == PlaybackMode.playOnce) {
+      while (_playNextAfterCurrentStack.isNotEmpty) {
+        final key = _playNextAfterCurrentStack.removeLast();
+        final idx = _indexInPlayListByPathKey(key);
+        if (idx >= 0) {
+          await playAt(idx);
+          return;
+        }
+      }
+      return;
+    }
+
+    while (_playNextAfterCurrentStack.isNotEmpty) {
+      final key = _playNextAfterCurrentStack.removeLast();
+      final idx = _indexInPlayListByPathKey(key);
+      if (idx >= 0) {
+        await playAt(idx);
+        return;
+      }
+    }
+
+    await _enqueuePlaybackNav(() async => _applyPlayNextSteps(1));
   }
 
   @override
@@ -412,27 +537,47 @@ class PlayListProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  /// 加载上次播放的歌曲索引
-  Future<void> _loadLastPlayedIndex() async {
+  /// 恢复上次播放：优先 [_kHiveLastPlayedPathKey]，其次 legacy `last_played_index`。
+  Future<void> _restoreLastPlayedSnapshot() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final list = playList;
+      if (list.isEmpty) return;
+
+      final pathRaw = box.get(_kHiveLastPlayedPathKey) as String?;
+      if (pathRaw != null && pathRaw.trim().isNotEmpty) {
+        final wanted = _libraryPathKey(pathRaw);
+        final i = list.indexWhere((s) => _libraryPathKey(s.path) == wanted);
+        if (i >= 0) {
+          _currentIndex = i;
+          appLog.d('已按路径恢复上次播放 → 索引 $_currentIndex');
+          return;
+        }
+      }
+
       final savedIndex = box.get('last_played_index', defaultValue: 0) as int?;
       if (savedIndex != null && savedIndex >= 0) {
-        _currentIndex = savedIndex;
-        appLog.d('已恢复播放位置: 索引 $_currentIndex');
+        _currentIndex = savedIndex.clamp(0, list.length - 1);
+        appLog.d('已恢复播放位置(索引): $_currentIndex');
       }
     } catch (e) {
-      appLog.e('加载上次播放索引失败', error: e);
+      appLog.e('加载上次播放快照失败', error: e);
     }
   }
 
-  /// 保存当前播放的歌曲索引
-  Future<void> _saveCurrentIndex() async {
+  /// 写入当前曲目路径与索引（用户歌单等非曲库队列退出后也仍能点亮迷你条）。
+  Future<void> _saveCurrentPlaybackSnapshot() async {
     try {
+      final list = playList;
+      if (list.isEmpty) return;
+      final idx = _currentIndex.clamp(0, list.length - 1);
+      final path = list[idx].path.trim();
+      if (path.isEmpty) return;
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      await box.put('last_played_index', _currentIndex);
+      await box.put('last_played_index', idx);
+      await box.put(_kHiveLastPlayedPathKey, path);
     } catch (e) {
-      appLog.e('保存播放索引失败', error: e);
+      appLog.e('保存上次播放快照失败', error: e);
     }
   }
 
@@ -463,17 +608,8 @@ class PlayListProvider extends ChangeNotifier {
 
   ///新增
   void flushAddPlaylist(Folder folder) {
-    List<Song>? addSongs = folder.songList;
-    // if (addSongs == null || addSongs.isEmpty) {
-    //   return;
-    // }
     putFolder(folder);
     _clearPlayListCache(); // 清除缓存
-    // for (var value in addSongs) {
-    //   if (!playList.contains(value)) {
-    //     playList.add(value);
-    //   }
-    // }
     notifyListeners();
   }
 
@@ -543,6 +679,16 @@ class PlayListProvider extends ChangeNotifier {
 
   /// 播放指定索引；[listSession] 非空时（例如从「最近播放」切到全库索引后 [playAt]）会更新会话面。
   Future<void> playAt(int index, {PlaybackSessionSurface? listSession}) async {
+    final idx = index;
+    final ls = listSession;
+    return _enqueuePlaybackNav(() async {
+      _coalescedPlayNextSteps = 0;
+      _coalescedPlayPrevSteps = 0;
+      await _playAtImpl(idx, listSession: ls);
+    });
+  }
+
+  Future<void> _playAtImpl(int index, {PlaybackSessionSurface? listSession}) async {
     final list = playList;
     if (list.isEmpty) return;
     if (listSession != null) {
@@ -564,11 +710,66 @@ class PlayListProvider extends ChangeNotifier {
       updateRecentList: _statsRecordRecent,
       bumpPlayCount: _statsBumpPlayCount,
     );
-    if (_playbackQueueOverride == null) {
-      await _saveCurrentIndex();
-    }
+    await _saveCurrentPlaybackSnapshot();
     unawaited(_syncAndroidCarMediaSession());
     notifyListeners();
+  }
+
+  /// 连续「下一曲」合并为一步索引推算后单次 [_playAtImpl]。
+  Future<void> _applyPlayNextSteps(int steps) async {
+    final list = playList;
+    if (list.isEmpty || steps <= 0) return;
+
+    switch (_playbackMode) {
+      case PlaybackMode.playOnce:
+        return;
+      case PlaybackMode.singleLoop:
+        await _playAtImpl(_currentIndex);
+        return;
+      case PlaybackMode.sequential:
+      case PlaybackMode.timerShutdown:
+        var idx = _currentIndex;
+        for (var i = 0; i < steps; i++) {
+          idx = (idx + 1) % list.length;
+        }
+        await _playAtImpl(idx);
+        return;
+      case PlaybackMode.shuffle:
+        var idx = _currentIndex;
+        for (var i = 0; i < steps; i++) {
+          idx = _getNextShuffledIndex(list.length);
+        }
+        await _playAtImpl(idx);
+        return;
+    }
+  }
+
+  /// 连续「上一曲」合并。
+  Future<void> _applyPlayPrevSteps(int steps) async {
+    final list = playList;
+    if (list.isEmpty || steps <= 0) return;
+
+    switch (_playbackMode) {
+      case PlaybackMode.singleLoop:
+        await _playAtImpl(_currentIndex);
+        return;
+      case PlaybackMode.sequential:
+      case PlaybackMode.timerShutdown:
+      case PlaybackMode.playOnce:
+        var idx = _currentIndex;
+        for (var i = 0; i < steps; i++) {
+          idx = (idx - 1 + list.length) % list.length;
+        }
+        await _playAtImpl(idx);
+        return;
+      case PlaybackMode.shuffle:
+        var idx = _currentIndex;
+        for (var i = 0; i < steps; i++) {
+          idx = _getPrevShuffledIndex(list.length);
+        }
+        await _playAtImpl(idx);
+        return;
+    }
   }
 
   /// 设置播放模式
@@ -619,57 +820,53 @@ class PlayListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 下一首
+  /// 下一首（支持连点合并为一次换源）。
   Future<void> playNext() async {
     final list = playList;
     if (list.isEmpty) return;
+    if (_playbackMode == PlaybackMode.playOnce) return;
 
-    int next;
-    switch (_playbackMode) {
-      case PlaybackMode.sequential:
-        next = (_currentIndex + 1) % list.length;
-        break;
-      case PlaybackMode.shuffle:
-        next = _getNextShuffledIndex(list.length);
-        break;
-      case PlaybackMode.singleLoop:
-        next = _currentIndex; // 单曲循环，播放同一首
-        break;
-      case PlaybackMode.playOnce:
-        // 仅播放一次，不自动播放下一首
-        return;
-      case PlaybackMode.timerShutdown:
-        next = (_currentIndex + 1) % list.length;
-        break;
-    }
-    await playAt(next);
+    _coalescedPlayNextSteps++;
+    final f = _playbackNavChain
+        .catchError((Object? e) {
+          appLog.d('playback nav 前序(可忽略): $e');
+        })
+        .then((_) async {
+          try {
+            final steps = _coalescedPlayNextSteps;
+            _coalescedPlayNextSteps = 0;
+            if (steps <= 0) return;
+            await _applyPlayNextSteps(steps);
+          } catch (e, st) {
+            appLog.e('playNext 合并步骤失败', error: e, stackTrace: st);
+          }
+        });
+    _playbackNavChain = f;
+    await f;
   }
 
-  /// 上一首
+  /// 上一首（支持连点合并）。
   Future<void> playPrev() async {
     final list = playList;
     if (list.isEmpty) return;
 
-    int prev;
-    switch (_playbackMode) {
-      case PlaybackMode.sequential:
-        prev = (_currentIndex - 1 + list.length) % list.length;
-        break;
-      case PlaybackMode.shuffle:
-        // 随机模式下，上一首也是随机的
-        prev = _getPrevShuffledIndex(list.length);
-        break;
-      case PlaybackMode.singleLoop:
-        prev = _currentIndex; // 单曲循环
-        break;
-      case PlaybackMode.playOnce:
-        prev = (_currentIndex - 1 + list.length) % list.length;
-        break;
-      case PlaybackMode.timerShutdown:
-        prev = (_currentIndex - 1 + list.length) % list.length;
-        break;
-    }
-    await playAt(prev);
+    _coalescedPlayPrevSteps++;
+    final f = _playbackNavChain
+        .catchError((Object? e) {
+          appLog.d('playback nav 前序(可忽略): $e');
+        })
+        .then((_) async {
+          try {
+            final steps = _coalescedPlayPrevSteps;
+            _coalescedPlayPrevSteps = 0;
+            if (steps <= 0) return;
+            await _applyPlayPrevSteps(steps);
+          } catch (e, st) {
+            appLog.e('playPrev 合并步骤失败', error: e, stackTrace: st);
+          }
+        });
+    _playbackNavChain = f;
+    await f;
   }
 
   /// 获取下一个随机索引

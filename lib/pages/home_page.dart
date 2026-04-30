@@ -120,7 +120,10 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     try {
-      await play.init(folder);
+      await play.init(
+        folder,
+        oneDrive: context.read<OneDriveController>(),
+      );
     } catch (e, st) {
       appLog.e('曲库合并（PlayListProvider）初始化失败', error: e, stackTrace: st);
       return;
@@ -139,7 +142,10 @@ class _HomePageState extends State<HomePage> {
     }
     if (!mounted) return;
     if (!play.initialized) {
-      await play.init(folder);
+      await play.init(
+        folder,
+        oneDrive: context.read<OneDriveController>(),
+      );
     }
     if (!mounted) return;
     await _loadRecentPaths();

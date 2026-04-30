@@ -79,6 +79,28 @@ Future<void> showLibrarySongMoreActionsSheet(
                   ),
                   ListTile(
                     leading:
+                        const Icon(Icons.queue_play_next_outlined, color: Colors.white),
+                    title: Text(
+                      l10n.menuPlayNextAfterCurrent,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      final playList = context.read<PlayListProvider>();
+                      final ok = playList.enqueuePlayAfterCurrent(song);
+                      if (!context.mounted) return;
+                      showAppSnackBar(
+                        context,
+                        ok
+                            ? l10n.libraryPlayNextAfterCurrentQueued
+                            : l10n.libraryPlayNextAfterCurrentNotInQueue,
+                        kind:
+                            ok ? AppSnackKind.success : AppSnackKind.neutral,
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading:
                         const Icon(Icons.edit_attributes_outlined, color: Colors.white),
                     title: Text(
                       l10n.songPageMoreEditMusicTagsInline,

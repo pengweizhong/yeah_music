@@ -2,8 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
+import 'package:yeah_music/logging/app_log.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
+import 'package:yeah_music/utils/library_song_batch_ops.dart';
+import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
+import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
@@ -36,6 +42,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     with RouteAware {
   final ScrollController _listScrollController = ScrollController();
   bool _routeObserverSubscribed = false;
+  bool _batchSelect = false;
+  final Set<String> _selectedNormPaths = {};
   String? _lastAutoScrollPathNorm;
   bool _autoscrollInFlight = false;
   List<Song> _lastOrderedSongs = const [];
@@ -159,13 +167,223 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   Future<void> _saveSort() =>
       saveUserPlaylistSortPreferences(_sortType, _isAscending);
 
+  void _invalidateResolvedSongsCache() {
+    if (!mounted) return;
+    setState(() {
+      _memoOrderKey = null;
+      _memoOrderedSongs = null;
+      _songsResolveKey = null;
+      _songsResolveFuture = null;
+    });
+  }
+
+  void _exitBatchSelect() {
+    setState(() {
+      _batchSelect = false;
+      _selectedNormPaths.clear();
+    });
+  }
+
+  void _toggleBatchPath(String path) {
+    final k = normSongPath(path);
+    setState(() {
+      if (_selectedNormPaths.contains(k)) {
+        _selectedNormPaths.remove(k);
+      } else {
+        _selectedNormPaths.add(k);
+      }
+    });
+  }
+
+  void _selectAllVisible(List<Song> visible) {
+    setState(() {
+      for (final s in visible) {
+        _selectedNormPaths.add(normSongPath(s.path));
+      }
+    });
+  }
+
+  List<Song> _selectedSongsInListOrder(List<Song> visibleOrdered) {
+    final out = <Song>[];
+    for (final s in visibleOrdered) {
+      if (_selectedNormPaths.contains(normSongPath(s.path))) {
+        out.add(s);
+      }
+    }
+    return out;
+  }
+
+  Future<void> _confirmBatchDelete(
+    BuildContext context,
+    List<Song> orderedSongs,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final selected = _selectedSongsInListOrder(orderedSongs);
+    if (selected.isEmpty) {
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
+      return;
+    }
+    final ok = await showAppConfirmDialog(
+      context: context,
+      title: l10n.libraryBatchDeleteConfirmTitle,
+      message: l10n.libraryBatchDeleteConfirmMessage,
+      icon: Icons.delete_outline_rounded,
+      confirmIsDestructive: true,
+      cancelLabel: l10n.actionCancel,
+      confirmLabel: l10n.actionDelete,
+    );
+    if (ok != true || !context.mounted) return;
+    final folder = context.read<FolderProvider>();
+    final playList = context.read<PlayListProvider>();
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) await userPl.init();
+    try {
+      await deleteLibrarySongsAndRefresh(
+        folderProvider: folder,
+        playListProvider: playList,
+        userPlaylistProvider: userPl,
+        songs: selected,
+      );
+      if (context.mounted) {
+        _exitBatchSelect();
+        _invalidateResolvedSongsCache();
+        showAppSnackBar(
+          context,
+          l10n.librarySongsDeletedN(selected.length),
+          kind: AppSnackKind.success,
+        );
+      }
+    } catch (e) {
+      appLog.e('user playlist batch delete failed', error: e);
+      if (context.mounted) {
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
+      }
+    }
+  }
+
+  Future<void> _batchAddToPlaylists(
+    BuildContext context,
+    List<Song> orderedSongs,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final selected = _selectedSongsInListOrder(orderedSongs);
+    if (selected.isEmpty) {
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
+      return;
+    }
+    final ok = await showAddManyToUserPlaylistsSheet(context, selected);
+    if (ok && context.mounted) {
+      _exitBatchSelect();
+    }
+  }
+
+  Future<void> _batchUploadOneDrive(
+    BuildContext context,
+    List<Song> orderedSongs,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final od = context.read<OneDriveDownloadQueueController>();
+    final selected = _selectedSongsInListOrder(orderedSongs);
+    if (selected.isEmpty) {
+      showAppSnackBar(context, l10n.libraryBatchNoneSelected);
+      return;
+    }
+    try {
+      await od.enqueueLibraryUploads(selected);
+      if (!context.mounted) return;
+      _exitBatchSelect();
+      showAppSnackBar(
+        context,
+        l10n.libraryBatchUploadQueued,
+        kind: AppSnackKind.success,
+        action: SnackBarAction(
+          label: l10n.libraryBatchOpenQueue,
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const OneDriveDownloadQueuePage(
+                  initialTab: OneDriveTransferQueueTab.upload,
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } on StateError catch (e) {
+      final msg = '$e';
+      if (!context.mounted) return;
+      final text = msg.contains('not signed')
+          ? l10n.libraryBatchUploadNeedSignIn
+          : msg.contains('upload folder unset')
+              ? l10n.libraryBatchUploadNeedCloudFolder
+              : '$e';
+      showAppSnackBar(context, text, kind: AppSnackKind.error);
+    } catch (e) {
+      if (context.mounted) {
+        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
+      }
+    }
+  }
+
+  Widget _userPlaylistBatchActionBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<Song> orderedSongs,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 8,
+      color: scheme.surface.withValues(alpha: 0.92),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: () => _selectAllVisible(orderedSongs),
+                child: Text(l10n.libraryBatchSelectAll),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${_selectedNormPaths.length}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.libraryBatchUploadOneDrive,
+                icon: const Icon(Icons.cloud_upload_outlined),
+                onPressed: () => _batchUploadOneDrive(context, orderedSongs),
+              ),
+              IconButton(
+                tooltip: l10n.libraryBatchAddToPlaylist,
+                icon: const Icon(Icons.playlist_add),
+                onPressed: () => _batchAddToPlaylists(context, orderedSongs),
+              ),
+              IconButton(
+                tooltip: l10n.libraryBatchDelete,
+                icon: Icon(Icons.delete_outline, color: scheme.error),
+                onPressed: () => _confirmBatchDelete(context, orderedSongs),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showSortOptions() {
     showSongSortBottomSheet(
       context,
       sortType: _sortType,
       isAscending: _isAscending,
       includeAddedToPlaylistOption: true,
-        onApply: (type, ascending) {
+      onApply: (type, ascending) {
         setState(() {
           _sortType = type;
           _isAscending = ascending;
@@ -377,135 +595,243 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
               }
             }
 
-            return SongPlaylistThemedScaffold(
-              appBar: AppBar(
-                title: Text(
-                  pl.name,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                iconTheme: const IconThemeData(color: Colors.white),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.search),
-                    tooltip: l10n.homeSearchTooltip,
-                    onPressed: orderedSongs.isEmpty
-                        ? null
-                        : () {
-                            showSearch(
-                              context: context,
-                              delegate: SongSearchDelegate(
-                                orderedSongs,
-                                playList,
-                                playbackContextQueue: orderedSongs,
-                                userPlaylistIdForContext: pl.id,
-                                searchFieldLabelText: l10n.playlistSearchHint,
-                              ),
-                            );
-                          },
+            return PopScope(
+              canPop: !_batchSelect,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop && _batchSelect) {
+                  _exitBatchSelect();
+                }
+              },
+              child: SongPlaylistThemedScaffold(
+                appBar: AppBar(
+                  leading: _batchSelect
+                      ? IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: _exitBatchSelect,
+                        )
+                      : null,
+                  title: Text(
+                    _batchSelect
+                        ? '${_selectedNormPaths.length}'
+                        : pl.name,
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.sort),
-                    tooltip: l10n.tooltipSort,
-                    onPressed: _showSortOptions,
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    onSelected: (value) async {
-                      if (value == 'cover') {
-                        await showPlaylistCoverStyleSheet(context, pl);
-                      } else if (value == 'rename') {
-                        await _renamePlaylist(context, pl, userPl);
-                      } else if (value == 'export') {
-                        await _exportThisPlaylist(context, pl, userPl);
-                      } else if (value == 'delete') {
-                        await _confirmDeletePlaylist(context, userPl);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'cover',
-                        child: Text(l10n.playlistCoverMenuItem),
-                      ),
-                      PopupMenuItem(
-                        value: 'rename',
-                        child: Text(l10n.menuRename),
-                      ),
-                      PopupMenuItem(
-                        value: 'export',
-                        child: Text(l10n.menuExportThis),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text(l10n.menuDeletePlaylist),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              body: SongPlaylistBodyUnderlapColumn(
-                child: orderedSongs.isEmpty
-                    ? Center(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  actions: [
+                    if (_batchSelect)
+                      TextButton(
+                        onPressed: _exitBatchSelect,
                         child: Text(
-                          l10n.playlistEmptyNoSongs,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                          ),
+                          l10n.libraryBatchDone,
+                          style: const TextStyle(color: Colors.white),
                         ),
                       )
-                    : SongPlaylistSongListView(
-                        scrollController: _listScrollController,
-                        songs: orderedSongs,
-                        itemBuilder: (context, song, index, isRowCurrent) {
-                          return Dismissible(
-                            key: ValueKey<String>(
-                              '${pl.id}_${index}_${normSongPath(song.path)}',
-                            ),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              color: Colors.red.shade800,
-                              child: const Icon(
-                                Icons.remove_circle_outline,
-                                color: Colors.white,
-                              ),
-                            ),
-                            onDismissed: (_) {
-                              _memoOrderKey = null;
-                              _memoOrderedSongs = null;
-                              _songsResolveKey = null;
-                              _songsResolveFuture = null;
-                              userPl.removeSongFromPlaylist(pl.id, song);
-                            },
-                            child: CompactSongListRow(
-                              key: ValueKey<String>(
-                                'row_${pl.id}_${index}_${normSongPath(song.path)}',
-                              ),
-                              song: song,
-                              title: song.title ?? l10n.pageUnknownTitle,
-                              subtitle: songListSecondaryLine(song),
-                              isCurrent: isRowCurrent,
-                              onTap: () async {
-                                final playListProv =
-                                    context.read<PlayListProvider>();
-                                if (isRowCurrent) {
-                                  await toggleCurrentRowPlayback(playListProv);
-                                  return;
-                                }
-                                await playListProv.setPlaybackQueueAndPlay(
-                                  orderedSongs,
-                                  index,
-                                  session: PlaybackSessionSurface.userPlaylist,
-                                  userPlaylistId: pl.id,
+                    else ...[
+                      IconButton(
+                        icon: const Icon(Icons.search),
+                        tooltip: l10n.homeSearchTooltip,
+                        onPressed: orderedSongs.isEmpty
+                            ? null
+                            : () {
+                                showSearch(
+                                  context: context,
+                                  delegate: SongSearchDelegate(
+                                    orderedSongs,
+                                    playList,
+                                    playbackContextQueue: orderedSongs,
+                                    userPlaylistIdForContext: pl.id,
+                                    searchFieldLabelText:
+                                        l10n.playlistSearchHint,
+                                    onSongMore: (ctx, song) {
+                                      showLibrarySongMoreActionsSheet(
+                                        ctx,
+                                        song,
+                                        afterMutation: () {
+                                          if (!mounted) return;
+                                          _invalidateResolvedSongsCache();
+                                        },
+                                      );
+                                    },
+                                  ),
                                 );
                               },
-                            ),
-                          );
-                        },
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.sort),
+                        tooltip: l10n.tooltipSort,
+                        onPressed: _showSortOptions,
+                      ),
+                      PopupMenuButton<String>(
+                        icon:
+                            const Icon(Icons.more_vert, color: Colors.white),
+                        onSelected: (value) async {
+                          if (value == 'cover') {
+                            await showPlaylistCoverStyleSheet(context, pl);
+                          } else if (value == 'rename') {
+                            await _renamePlaylist(context, pl, userPl);
+                          } else if (value == 'export') {
+                            await _exportThisPlaylist(context, pl, userPl);
+                          } else if (value == 'delete') {
+                            await _confirmDeletePlaylist(context, userPl);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'cover',
+                            child: Text(l10n.playlistCoverMenuItem),
+                          ),
+                          PopupMenuItem(
+                            value: 'rename',
+                            child: Text(l10n.menuRename),
+                          ),
+                          PopupMenuItem(
+                            value: 'export',
+                            child: Text(l10n.menuExportThis),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(l10n.menuDeletePlaylist),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+                body: SongPlaylistBodyUnderlapColumn(
+                  child: orderedSongs.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.music_note,
+                                size: 64,
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.playlistEmptyNoSongs,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: SongPlaylistSongListView(
+                                scrollController: _listScrollController,
+                                songs: orderedSongs,
+                                listBottomInsetExtra:
+                                    _batchSelect ? 64 : 0,
+                                itemBuilder:
+                                    (context, song, index, isRowCurrent) {
+                                  return Dismissible(
+                                    key: ValueKey<String>(
+                                      '${pl.id}_${index}_${normSongPath(song.path)}',
+                                    ),
+                                    direction: _batchSelect
+                                        ? DismissDirection.none
+                                        : DismissDirection.endToStart,
+                                    background: Container(
+                                      alignment: Alignment.centerRight,
+                                      padding:
+                                          const EdgeInsets.only(right: 20),
+                                      color: Colors.red.shade800,
+                                      child: const Icon(
+                                        Icons.remove_circle_outline,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    onDismissed: (_) {
+                                      _memoOrderKey = null;
+                                      _memoOrderedSongs = null;
+                                      _songsResolveKey = null;
+                                      _songsResolveFuture = null;
+                                      userPl.removeSongFromPlaylist(
+                                        pl.id,
+                                        song,
+                                      );
+                                    },
+                                    child: CompactSongListRow(
+                                      key: ValueKey<String>(
+                                        'row_${pl.id}_${index}_${normSongPath(song.path)}',
+                                      ),
+                                      song: song,
+                                      title:
+                                          song.title ?? l10n.pageUnknownTitle,
+                                      subtitle:
+                                          songListSecondaryLine(song),
+                                      isCurrent: isRowCurrent,
+                                      showAddToPlaylist: false,
+                                      onMoreMenuTap: () {
+                                        showLibrarySongMoreActionsSheet(
+                                          context,
+                                          song,
+                                          afterMutation: () {
+                                            if (!mounted) return;
+                                            _invalidateResolvedSongsCache();
+                                          },
+                                        );
+                                      },
+                                      selectionMode: _batchSelect,
+                                      isSelected: _selectedNormPaths
+                                          .contains(
+                                        normSongPath(song.path),
+                                      ),
+                                      onSelectionTap: () =>
+                                          _toggleBatchPath(song.path),
+                                      onLongPress: () {
+                                        setState(() {
+                                          _batchSelect = true;
+                                          _selectedNormPaths.add(
+                                            normSongPath(song.path),
+                                          );
+                                        });
+                                      },
+                                      onTap: () async {
+                                        if (_batchSelect) {
+                                          _toggleBatchPath(song.path);
+                                          return;
+                                        }
+                                        final playListProv = context
+                                            .read<PlayListProvider>();
+                                        if (isRowCurrent) {
+                                          await toggleCurrentRowPlayback(
+                                            playListProv,
+                                          );
+                                          return;
+                                        }
+                                        await playListProv
+                                            .setPlaybackQueueAndPlay(
+                                          orderedSongs,
+                                          index,
+                                          session: PlaybackSessionSurface
+                                              .userPlaylist,
+                                          userPlaylistId: pl.id,
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            if (_batchSelect)
+                              _userPlaylistBatchActionBar(
+                                context,
+                                l10n,
+                                orderedSongs,
+                              ),
+                          ],
+                        ),
+                ),
               ),
             );
           },

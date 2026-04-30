@@ -138,15 +138,18 @@ class FolderProvider extends ChangeNotifier {
     //加载歌曲
     try {
       final dir = Directory(folderPath);
-      // 先检查目录是否存在和可访问
-      if (!await dir.exists()) {
-        appLog.e("文件夹不存在：$folderPath");
-        folder.songList = [];
-        if (save) await folder.save();
+      var exists = await dir.exists();
+      if (!exists) {
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        exists = await dir.exists();
+      }
+      // 路径短时不可用时不覆盖 Hive 内已有列表，避免 SD 卡卸载等偶发情况丢库
+      if (!exists) {
+        appLog.w('文件夹暂时不可访问（保留已缓存曲目列表）: $folderPath');
         if (listen) notifyListeners();
         return;
       }
-      
+
       // 使用异步方式列出文件，避免阻塞UI
       final songFiles = await _listAudioFilesAsync(dir);
       appLog.d("文件夹${dir.path}下找到了${songFiles.length}首歌曲");
@@ -183,18 +186,11 @@ class FolderProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      appLog.e('访问文件夹失败: $folderPath', error: e);
-      // 权限错误时，清空歌曲列表，避免显示错误数据
-      folder.songList = [];
-      if (save) {
-        try {
-          await folder.save();
-        } catch (_) {}
-      }
+      appLog.e('访问文件夹失败（未清空已持久化的曲目列表）: $folderPath', error: e);
       if (listen) {
         notifyListeners();
       }
-      rethrow; // 重新抛出异常，让调用者知道出错了
+      rethrow;
     }
   }
 

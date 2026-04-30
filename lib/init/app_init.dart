@@ -52,19 +52,38 @@ class AppInit {
     Hive.registerAdapter(SongAdapter());
     Hive.registerAdapter(LyricSettingsAdapter());
 
+    /// 多次重试后再删库重建，避免瞬时 IO / 文件锁导致误删音乐源。
     Future<void> openWithRecovery(
       String name,
-      Future<void> Function() open,
-    ) async {
-      try {
-        await open();
-      } catch (e) {
-        appLog.w('打开 Hive box 失败，将删除后重建: $name', error: e);
+      Future<void> Function() open, {
+      int attemptsBeforeDelete = 6,
+    }) async {
+      for (var attempt = 0; attempt < attemptsBeforeDelete; attempt++) {
         try {
-          await Hive.deleteBoxFromDisk(name);
           await open();
-        } catch (_) {
-          // 忽略
+          return;
+        } catch (e) {
+          final isLast = attempt == attemptsBeforeDelete - 1;
+          appLog.w(
+            '打开 Hive box 失败 (${attempt + 1}/$attemptsBeforeDelete): $name',
+            error: e,
+          );
+          if (!isLast) {
+            await Future<void>.delayed(
+              Duration(milliseconds: 60 * (1 << attempt)),
+            );
+            continue;
+          }
+          appLog.e(
+            'Hive box 多次打开失败，删除损坏文件并重建（仅此路径会清空该 box）: $name',
+            error: e,
+          );
+          try {
+            await Hive.deleteBoxFromDisk(name);
+          } catch (del, st) {
+            appLog.w('删除 Hive box 失败: $name', error: del, stackTrace: st);
+          }
+          await open();
         }
       }
     }
@@ -85,6 +104,7 @@ class AppInit {
           () async {
             await Hive.openBox<Folder>(Constant.hiveFolderBox);
           },
+          attemptsBeforeDelete: 10,
         )
       else
         Future<void>.value(),

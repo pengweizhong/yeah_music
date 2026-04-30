@@ -2292,6 +2292,24 @@ abstract class AppLocalizations {
   /// **'Add to playlist'**
   String get tooltipAddToPlaylist;
 
+  /// No description provided for @menuPlayNextAfterCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Play after current track'**
+  String get menuPlayNextAfterCurrent;
+
+  /// No description provided for @libraryPlayNextAfterCurrentQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'This track will play when the current one ends.'**
+  String get libraryPlayNextAfterCurrentQueued;
+
+  /// No description provided for @libraryPlayNextAfterCurrentNotInQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'This track is not in the current playback queue.'**
+  String get libraryPlayNextAfterCurrentNotInQueue;
+
   /// No description provided for @tooltipDone.
   ///
   /// In en, this message translates to:

@@ -1166,6 +1166,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tooltipAddToPlaylist => '加入歌单';
 
   @override
+  String get menuPlayNextAfterCurrent => '下一曲播放';
+
+  @override
+  String get libraryPlayNextAfterCurrentQueued => '当前曲目结束后将播放所选歌曲';
+
+  @override
+  String get libraryPlayNextAfterCurrentNotInQueue => '所选歌曲不在当前播放队列中';
+
+  @override
   String get tooltipDone => '完成';
 
   @override
@@ -3208,6 +3217,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get tooltipAddToPlaylist => '加入歌单';
+
+  @override
+  String get menuPlayNextAfterCurrent => '下一曲播放';
+
+  @override
+  String get libraryPlayNextAfterCurrentQueued => '当前曲目结束后将播放所选歌曲';
+
+  @override
+  String get libraryPlayNextAfterCurrentNotInQueue => '所选歌曲不在当前播放队列中';
 
   @override
   String get tooltipDone => '完成';
@@ -5253,6 +5271,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tooltipAddToPlaylist => '加入歌單';
+
+  @override
+  String get menuPlayNextAfterCurrent => '下一曲播放';
+
+  @override
+  String get libraryPlayNextAfterCurrentQueued => '目前曲目結束後將播放所選歌曲';
+
+  @override
+  String get libraryPlayNextAfterCurrentNotInQueue => '所選歌曲不在目前播放佇列中';
 
   @override
   String get tooltipDone => '完成';

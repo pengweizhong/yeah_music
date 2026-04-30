@@ -1233,6 +1233,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipAddToPlaylist => 'Add to playlist';
 
   @override
+  String get menuPlayNextAfterCurrent => 'Play after current track';
+
+  @override
+  String get libraryPlayNextAfterCurrentQueued =>
+      'This track will play when the current one ends.';
+
+  @override
+  String get libraryPlayNextAfterCurrentNotInQueue =>
+      'This track is not in the current playback queue.';
+
+  @override
   String get tooltipDone => 'Done';
 
   @override

@@ -1183,6 +1183,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tooltipAddToPlaylist => 'プレイリストに追加';
 
   @override
+  String get menuPlayNextAfterCurrent => '現在の曲の次に再生';
+
+  @override
+  String get libraryPlayNextAfterCurrentQueued => '現在の曲が終わったあとにこの曲を再生します。';
+
+  @override
+  String get libraryPlayNextAfterCurrentNotInQueue => 'この曲は現在の再生キューにありません。';
+
+  @override
   String get tooltipDone => '完了';
 
   @override
