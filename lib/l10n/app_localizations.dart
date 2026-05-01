@@ -4688,6 +4688,480 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload'**
   String get oneDriveTaskDirectionUpload;
+
+  /// No description provided for @homeEntrySongRecognizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Song ID'**
+  String get homeEntrySongRecognizer;
+
+  /// No description provided for @songRecognizerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Song recognition'**
+  String get songRecognizerTitle;
+
+  /// No description provided for @songRecognizerModeInApp.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app'**
+  String get songRecognizerModeInApp;
+
+  /// No description provided for @songRecognizerModeAmbient.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambient'**
+  String get songRecognizerModeAmbient;
+
+  /// No description provided for @songRecognizerModeInAppHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on this screen. We record ~10s from the microphone for best accuracy.'**
+  String get songRecognizerModeInAppHelp;
+
+  /// No description provided for @songRecognizerModeAmbientHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen continuously every ~20s while this page is open. Hold the phone near the speaker playing music (other apps or devices). May not work if you leave the app—keep it foreground for reliability.'**
+  String get songRecognizerModeAmbientHelp;
+
+  /// No description provided for @songRecognizerStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get songRecognizerStart;
+
+  /// No description provided for @songRecognizerSnackbarStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognizing…'**
+  String get songRecognizerSnackbarStarted;
+
+  /// No description provided for @songRecognizerSnackbarCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition cancelled'**
+  String get songRecognizerSnackbarCancelled;
+
+  /// No description provided for @songRecognizerStopAmbient.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop ambient listen'**
+  String get songRecognizerStopAmbient;
+
+  /// No description provided for @songRecognizerListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get songRecognizerListening;
+
+  /// No description provided for @songRecognizerRecognizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Identifying…'**
+  String get songRecognizerRecognizing;
+
+  /// No description provided for @songRecognizerHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get songRecognizerHistory;
+
+  /// No description provided for @songRecognizerHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No results yet'**
+  String get songRecognizerHistoryEmpty;
+
+  /// No description provided for @songRecognizerHistoryFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get songRecognizerHistoryFilterAll;
+
+  /// No description provided for @songRecognizerHistoryFilterMatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched'**
+  String get songRecognizerHistoryFilterMatched;
+
+  /// No description provided for @songRecognizerHistoryFilterArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get songRecognizerHistoryFilterArchived;
+
+  /// No description provided for @songRecognizerHistoryEmptyMatched.
+  ///
+  /// In en, this message translates to:
+  /// **'No matched songs in history yet.'**
+  String get songRecognizerHistoryEmptyMatched;
+
+  /// No description provided for @songRecognizerHistoryEmptyArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet.'**
+  String get songRecognizerHistoryEmptyArchived;
+
+  /// No description provided for @songRecognizerDeleteHistoryEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get songRecognizerDeleteHistoryEntryTitle;
+
+  /// No description provided for @songRecognizerDeleteHistoryEntryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this recognition log?'**
+  String get songRecognizerDeleteHistoryEntryMessage;
+
+  /// No description provided for @songRecognizerSwipeArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get songRecognizerSwipeArchive;
+
+  /// No description provided for @songRecognizerSwipeRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get songRecognizerSwipeRestore;
+
+  /// No description provided for @songRecognizerSwipeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get songRecognizerSwipeDelete;
+
+  /// No description provided for @songRecognizerEntryArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to favorites'**
+  String get songRecognizerEntryArchived;
+
+  /// No description provided for @songRecognizerEntryRestoredFromArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favorites'**
+  String get songRecognizerEntryRestoredFromArchive;
+
+  /// No description provided for @songRecognizerCopyEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get songRecognizerCopyEntry;
+
+  /// No description provided for @songRecognizerEntryCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get songRecognizerEntryCopied;
+
+  /// No description provided for @songRecognizerCopyLabelTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time: '**
+  String get songRecognizerCopyLabelTime;
+
+  /// No description provided for @songRecognizerCopyLabelMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode: '**
+  String get songRecognizerCopyLabelMode;
+
+  /// No description provided for @songRecognizerCopyLabelService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service: '**
+  String get songRecognizerCopyLabelService;
+
+  /// No description provided for @songRecognizerCopyLabelSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Song: '**
+  String get songRecognizerCopyLabelSong;
+
+  /// No description provided for @songRecognizerCopyLabelArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist: '**
+  String get songRecognizerCopyLabelArtist;
+
+  /// No description provided for @songRecognizerCopyLabelAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album: '**
+  String get songRecognizerCopyLabelAlbum;
+
+  /// No description provided for @songRecognizerCopyLabelReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Released: '**
+  String get songRecognizerCopyLabelReleased;
+
+  /// No description provided for @songRecognizerCopyLabelAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Music: '**
+  String get songRecognizerCopyLabelAppleMusic;
+
+  /// No description provided for @songRecognizerCopyLabelSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify: '**
+  String get songRecognizerCopyLabelSpotify;
+
+  /// No description provided for @songRecognizerCopyLabelNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Result: '**
+  String get songRecognizerCopyLabelNoMatch;
+
+  /// No description provided for @songRecognizerCopyLabelError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: '**
+  String get songRecognizerCopyLabelError;
+
+  /// No description provided for @songRecognizerClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get songRecognizerClearHistory;
+
+  /// No description provided for @songRecognizerClearHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all recognition history?'**
+  String get songRecognizerClearHistoryConfirm;
+
+  /// No description provided for @songRecognizerNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No match—try a clearer sample or less noise.'**
+  String get songRecognizerNoMatch;
+
+  /// No description provided for @songRecognizerOpenAppleMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Music'**
+  String get songRecognizerOpenAppleMusic;
+
+  /// No description provided for @songRecognizerOpenSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get songRecognizerOpenSpotify;
+
+  /// No description provided for @songRecognizerApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'AudD API token'**
+  String get songRecognizerApiKey;
+
+  /// No description provided for @songRecognizerApiKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'For accurate, quota-backed recognition, create a token at audd.io and paste it here. Empty uses the public “test” token (very limited).'**
+  String get songRecognizerApiKeyHelp;
+
+  /// No description provided for @songRecognizerSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get songRecognizerSave;
+
+  /// No description provided for @songRecognizerMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission is required'**
+  String get songRecognizerMicDenied;
+
+  /// No description provided for @songRecognizerWebUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Song recognition is not available in this browser build.'**
+  String get songRecognizerWebUnsupported;
+
+  /// No description provided for @songRecognizerAccuracyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: 10–12s samples, 44.1kHz; minimize background noise for best results.'**
+  String get songRecognizerAccuracyTip;
+
+  /// No description provided for @songRecognizerDuplicateSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as recent result—skipped log'**
+  String get songRecognizerDuplicateSkipped;
+
+  /// No description provided for @songRecognizerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition failed'**
+  String get songRecognizerError;
+
+  /// No description provided for @songRecognizerAmbientActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambient listening on'**
+  String get songRecognizerAmbientActive;
+
+  /// No description provided for @songRecognizerTokenMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'API token'**
+  String get songRecognizerTokenMenu;
+
+  /// No description provided for @songRecognizerCredentialsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition credentials'**
+  String get songRecognizerCredentialsMenu;
+
+  /// No description provided for @songRecognizerProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition service'**
+  String get songRecognizerProviderLabel;
+
+  /// No description provided for @songRecognizerProviderAudd.
+  ///
+  /// In en, this message translates to:
+  /// **'AudD'**
+  String get songRecognizerProviderAudd;
+
+  /// No description provided for @songRecognizerProviderAcrcloud.
+  ///
+  /// In en, this message translates to:
+  /// **'ACRCloud'**
+  String get songRecognizerProviderAcrcloud;
+
+  /// No description provided for @songRecognizerModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture mode'**
+  String get songRecognizerModeLabel;
+
+  /// No description provided for @songRecognizerAcrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ACRCloud project'**
+  String get songRecognizerAcrTitle;
+
+  /// No description provided for @songRecognizerAcrHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the host and keys from your ACRCloud console (Audio / Video recognition project). Host example: identify-eu-west-1.acrcloud.com — do not include https:// or paths.'**
+  String get songRecognizerAcrHelp;
+
+  /// No description provided for @songRecognizerAcrHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get songRecognizerAcrHost;
+
+  /// No description provided for @songRecognizerAcrHostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'identify-…​.acrcloud.com'**
+  String get songRecognizerAcrHostHint;
+
+  /// No description provided for @songRecognizerAcrAccessKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Key'**
+  String get songRecognizerAcrAccessKey;
+
+  /// No description provided for @songRecognizerAcrSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret Key'**
+  String get songRecognizerAcrSecret;
+
+  /// No description provided for @songRecognizerAcrIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in and save Host, Access Key, and Secret Key for ACRCloud below before recognizing.'**
+  String get songRecognizerAcrIncomplete;
+
+  /// No description provided for @songRecognizerSectionApiConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'API credentials'**
+  String get songRecognizerSectionApiConfig;
+
+  /// No description provided for @songRecognizerConfigHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which engine to use on the song ID screen. Enter and save each provider’s credentials on this page.'**
+  String get songRecognizerConfigHint;
+
+  /// No description provided for @songRecognizerConfigSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get songRecognizerConfigSaved;
+
+  /// No description provided for @songRecognizerAuddCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Token from audd.io — optional; empty uses limited public test quota.'**
+  String get songRecognizerAuddCardSubtitle;
+
+  /// No description provided for @songRecognizerAcrCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ACRCloud'**
+  String get songRecognizerAcrCardTitle;
+
+  /// No description provided for @songRecognizerAcrCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Host, Access Key, Secret Key from your ACRCloud console.'**
+  String get songRecognizerAcrCardSubtitle;
+
+  /// No description provided for @songRecognizerOpenApiConfigSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AudD token & ACRCloud Host / keys'**
+  String get songRecognizerOpenApiConfigSubtitle;
+
+  /// No description provided for @songRecognizerMatchConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Is this the right song?'**
+  String get songRecognizerMatchConfirmTitle;
+
+  /// No description provided for @songRecognizerMatchConfirmArtistLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get songRecognizerMatchConfirmArtistLabel;
+
+  /// No description provided for @songRecognizerMatchConfirmAlbumLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get songRecognizerMatchConfirmAlbumLabel;
+
+  /// No description provided for @songRecognizerMatchConfirmReleaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Released'**
+  String get songRecognizerMatchConfirmReleaseLabel;
+
+  /// No description provided for @songRecognizerMatchConfirmYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, that’s the one'**
+  String get songRecognizerMatchConfirmYes;
+
+  /// No description provided for @songRecognizerMatchConfirmNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, try again'**
+  String get songRecognizerMatchConfirmNo;
 }
 
 class _AppLocalizationsDelegate

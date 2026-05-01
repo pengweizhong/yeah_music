@@ -2569,4 +2569,257 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveTaskDirectionUpload => 'Upload';
+
+  @override
+  String get homeEntrySongRecognizer => 'Song ID';
+
+  @override
+  String get songRecognizerTitle => 'Song recognition';
+
+  @override
+  String get songRecognizerModeInApp => 'In-app';
+
+  @override
+  String get songRecognizerModeAmbient => 'Ambient';
+
+  @override
+  String get songRecognizerModeInAppHelp =>
+      'Stay on this screen. We record ~10s from the microphone for best accuracy.';
+
+  @override
+  String get songRecognizerModeAmbientHelp =>
+      'Listen continuously every ~20s while this page is open. Hold the phone near the speaker playing music (other apps or devices). May not work if you leave the app—keep it foreground for reliability.';
+
+  @override
+  String get songRecognizerStart => 'Listen';
+
+  @override
+  String get songRecognizerSnackbarStarted => 'Recognizing…';
+
+  @override
+  String get songRecognizerSnackbarCancelled => 'Recognition cancelled';
+
+  @override
+  String get songRecognizerStopAmbient => 'Stop ambient listen';
+
+  @override
+  String get songRecognizerListening => 'Listening…';
+
+  @override
+  String get songRecognizerRecognizing => 'Identifying…';
+
+  @override
+  String get songRecognizerHistory => 'History';
+
+  @override
+  String get songRecognizerHistoryEmpty => 'No results yet';
+
+  @override
+  String get songRecognizerHistoryFilterAll => 'All';
+
+  @override
+  String get songRecognizerHistoryFilterMatched => 'Matched';
+
+  @override
+  String get songRecognizerHistoryFilterArchived => 'Favorites';
+
+  @override
+  String get songRecognizerHistoryEmptyMatched =>
+      'No matched songs in history yet.';
+
+  @override
+  String get songRecognizerHistoryEmptyArchived => 'No favorites yet.';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryTitle => 'Delete entry';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryMessage =>
+      'Delete this recognition log?';
+
+  @override
+  String get songRecognizerSwipeArchive => 'Favorite';
+
+  @override
+  String get songRecognizerSwipeRestore => 'Remove';
+
+  @override
+  String get songRecognizerSwipeDelete => 'Delete';
+
+  @override
+  String get songRecognizerEntryArchived => 'Saved to favorites';
+
+  @override
+  String get songRecognizerEntryRestoredFromArchive => 'Removed from favorites';
+
+  @override
+  String get songRecognizerCopyEntry => 'Copy';
+
+  @override
+  String get songRecognizerEntryCopied => 'Copied to clipboard';
+
+  @override
+  String get songRecognizerCopyLabelTime => 'Time: ';
+
+  @override
+  String get songRecognizerCopyLabelMode => 'Mode: ';
+
+  @override
+  String get songRecognizerCopyLabelService => 'Service: ';
+
+  @override
+  String get songRecognizerCopyLabelSong => 'Song: ';
+
+  @override
+  String get songRecognizerCopyLabelArtist => 'Artist: ';
+
+  @override
+  String get songRecognizerCopyLabelAlbum => 'Album: ';
+
+  @override
+  String get songRecognizerCopyLabelReleased => 'Released: ';
+
+  @override
+  String get songRecognizerCopyLabelAppleMusic => 'Apple Music: ';
+
+  @override
+  String get songRecognizerCopyLabelSpotify => 'Spotify: ';
+
+  @override
+  String get songRecognizerCopyLabelNoMatch => 'Result: ';
+
+  @override
+  String get songRecognizerCopyLabelError => 'Error: ';
+
+  @override
+  String get songRecognizerClearHistory => 'Clear history';
+
+  @override
+  String get songRecognizerClearHistoryConfirm =>
+      'Delete all recognition history?';
+
+  @override
+  String get songRecognizerNoMatch =>
+      'No match—try a clearer sample or less noise.';
+
+  @override
+  String get songRecognizerOpenAppleMusic => 'Apple Music';
+
+  @override
+  String get songRecognizerOpenSpotify => 'Spotify';
+
+  @override
+  String get songRecognizerApiKey => 'AudD API token';
+
+  @override
+  String get songRecognizerApiKeyHelp =>
+      'For accurate, quota-backed recognition, create a token at audd.io and paste it here. Empty uses the public “test” token (very limited).';
+
+  @override
+  String get songRecognizerSave => 'Save';
+
+  @override
+  String get songRecognizerMicDenied => 'Microphone permission is required';
+
+  @override
+  String get songRecognizerWebUnsupported =>
+      'Song recognition is not available in this browser build.';
+
+  @override
+  String get songRecognizerAccuracyTip =>
+      'Tip: 10–12s samples, 44.1kHz; minimize background noise for best results.';
+
+  @override
+  String get songRecognizerDuplicateSkipped =>
+      'Same as recent result—skipped log';
+
+  @override
+  String get songRecognizerError => 'Recognition failed';
+
+  @override
+  String get songRecognizerAmbientActive => 'Ambient listening on';
+
+  @override
+  String get songRecognizerTokenMenu => 'API token';
+
+  @override
+  String get songRecognizerCredentialsMenu => 'Recognition credentials';
+
+  @override
+  String get songRecognizerProviderLabel => 'Recognition service';
+
+  @override
+  String get songRecognizerProviderAudd => 'AudD';
+
+  @override
+  String get songRecognizerProviderAcrcloud => 'ACRCloud';
+
+  @override
+  String get songRecognizerModeLabel => 'Capture mode';
+
+  @override
+  String get songRecognizerAcrTitle => 'ACRCloud project';
+
+  @override
+  String get songRecognizerAcrHelp =>
+      'Enter the host and keys from your ACRCloud console (Audio / Video recognition project). Host example: identify-eu-west-1.acrcloud.com — do not include https:// or paths.';
+
+  @override
+  String get songRecognizerAcrHost => 'Host';
+
+  @override
+  String get songRecognizerAcrHostHint => 'identify-…​.acrcloud.com';
+
+  @override
+  String get songRecognizerAcrAccessKey => 'Access Key';
+
+  @override
+  String get songRecognizerAcrSecret => 'Secret Key';
+
+  @override
+  String get songRecognizerAcrIncomplete =>
+      'Please fill in and save Host, Access Key, and Secret Key for ACRCloud below before recognizing.';
+
+  @override
+  String get songRecognizerSectionApiConfig => 'API credentials';
+
+  @override
+  String get songRecognizerConfigHint =>
+      'Choose which engine to use on the song ID screen. Enter and save each provider’s credentials on this page.';
+
+  @override
+  String get songRecognizerConfigSaved => 'Saved';
+
+  @override
+  String get songRecognizerAuddCardSubtitle =>
+      'Token from audd.io — optional; empty uses limited public test quota.';
+
+  @override
+  String get songRecognizerAcrCardTitle => 'ACRCloud';
+
+  @override
+  String get songRecognizerAcrCardSubtitle =>
+      'Host, Access Key, Secret Key from your ACRCloud console.';
+
+  @override
+  String get songRecognizerOpenApiConfigSubtitle =>
+      'AudD token & ACRCloud Host / keys';
+
+  @override
+  String get songRecognizerMatchConfirmTitle => 'Is this the right song?';
+
+  @override
+  String get songRecognizerMatchConfirmArtistLabel => 'Artist';
+
+  @override
+  String get songRecognizerMatchConfirmAlbumLabel => 'Album';
+
+  @override
+  String get songRecognizerMatchConfirmReleaseLabel => 'Released';
+
+  @override
+  String get songRecognizerMatchConfirmYes => 'Yes, that’s the one';
+
+  @override
+  String get songRecognizerMatchConfirmNo => 'No, try again';
 }

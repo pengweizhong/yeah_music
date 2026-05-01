@@ -334,14 +334,9 @@ class ThemeSettingPage extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               themeConfig.setPrimaryColor(color);
-              final hsl = HSLColor.fromColor(color);
-              final sat = hsl.saturation < 0.38 ? 0.38 : hsl.saturation;
-              final secondaryColor = hsl
-                  .withHue((hsl.hue + 28.0) % 360.0)
-                  .withSaturation(sat.clamp(0.0, 0.92))
-                  .withLightness((hsl.lightness + 0.11).clamp(0.12, 0.52))
-                  .toColor();
-              themeConfig.setSecondaryColor(secondaryColor);
+              themeConfig.setSecondaryColor(
+                ThemeConfigProvider.secondaryFromPresetPrimary(color),
+              );
             },
             child: Container(
               width: 50,

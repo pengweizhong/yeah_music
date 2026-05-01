@@ -12,8 +12,10 @@ import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
-import 'package:yeah_music/models/wire_remote_control_config.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
+import 'package:yeah_music/models/wire_remote_control_config.dart';
+import 'package:yeah_music/models/acr_cloud_recognition_config.dart';
+import 'package:yeah_music/models/song_recognition_provider.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
@@ -30,6 +32,12 @@ class SettingsService {
   static const String _timerDurationKey = 'timer_duration';
   static const String _quickEntryOrderKey = 'quick_entry_order';
   static const String _quickEntryHiddenKey = 'quick_entry_hidden';
+  /// AudD 听歌识曲 API Token（https://dashboard.audd.io）；空则请求时使用 `test`（额度极低，仅供试用）。
+  static const String _auddApiTokenKey = 'audd_api_token_v1';
+  /// 识曲引擎：`audd` | `acrcloud`。
+  static const String _songRecognitionProviderKey = 'song_recognition_provider_v1';
+  /// ACRCloud 项目 JSON（host / accessKey / accessSecret）。
+  static const String _acrCloudRecognitionConfigKey = 'acrcloud_recognition_config_v1';
   static const String _oneDriveClientIdKey = 'onedrive_client_id';
   static const String _oneDriveMusicRootIdKey = 'onedrive_music_root_id';
   static const String _oneDriveCloudAppFolderIdKey = 'onedrive_cloud_app_folder_id';
@@ -931,6 +939,84 @@ class SettingsService {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_wireRemoteControlKey, jsonEncode(config.toJson()));
+      } catch (_) {}
+    }
+  }
+
+  static Future<String> loadAuddApiToken() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_auddApiTokenKey);
+      if (v is String) return v;
+      return '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  static Future<void> saveAuddApiToken(String value) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_auddApiTokenKey, value.trim());
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_auddApiTokenKey, value.trim());
+      } catch (_) {}
+    }
+  }
+
+  static Future<SongRecognitionProvider> loadSongRecognitionProvider() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_songRecognitionProviderKey);
+      if (v is String) return songRecognitionProviderFromStorage(v);
+    } catch (_) {}
+    return SongRecognitionProvider.audd;
+  }
+
+  static Future<void> saveSongRecognitionProvider(
+    SongRecognitionProvider provider,
+  ) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_songRecognitionProviderKey, provider.name);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_songRecognitionProviderKey, provider.name);
+      } catch (_) {}
+    }
+  }
+
+  static Future<AcrCloudRecognitionConfig> loadAcrCloudRecognitionConfig() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_acrCloudRecognitionConfigKey);
+      if (v is String) return AcrCloudRecognitionConfig.decode(v);
+    } catch (_) {}
+    return const AcrCloudRecognitionConfig();
+  }
+
+  static Future<void> saveAcrCloudRecognitionConfig(
+    AcrCloudRecognitionConfig config,
+  ) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(
+        _acrCloudRecognitionConfigKey,
+        AcrCloudRecognitionConfig.encode(config),
+      );
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(
+          _acrCloudRecognitionConfigKey,
+          AcrCloudRecognitionConfig.encode(config),
+        );
       } catch (_) {}
     }
   }

@@ -29,25 +29,9 @@ class ThemeConfigProvider extends ChangeNotifier {
           ? kGradLightInkMuted
           : const Color(0xFFD2DEEE);
 
-  /// 浅色模式首装默认：偏 iOS / 流媒体日间的冷灰雾面底，墨色前景（见 [lightUserGradientNeedsInkForeground]）。
-  static const Color _kDefaultGradientPrimaryLight = Color(0xFFEBF0F7);
+  /// 仅主色已持久化、辅色缺失时：按全局亮/暗补足辅色。
   static const Color _kDefaultGradientSecondaryLight = Color(0xFFDCE4F0);
-  /// 深色模式/夜间常见「石墨 slate」底，白字对比稳定。
-  static const Color _kDefaultGradientPrimaryDark = Color(0xFF1C2128);
   static const Color _kDefaultGradientSecondaryDark = Color(0xFF252B34);
-
-  /// 与 [MaterialApp.themeMode] 对齐的默认渐变（首装无 [primary_color] 时），避免浅底白字/深底糊字。
-  static Color _defaultPrimaryForThemeMode(ThemeMode mode) {
-    final light = switch (mode) {
-      ThemeMode.light => true,
-      ThemeMode.dark => false,
-      ThemeMode.system =>
-        PlatformDispatcher.instance.platformBrightness == Brightness.light,
-    };
-    return light
-        ? _kDefaultGradientPrimaryLight
-        : _kDefaultGradientPrimaryDark;
-  }
 
   static Color _defaultSecondaryForThemeMode(ThemeMode mode) {
     final light = switch (mode) {
@@ -61,12 +45,35 @@ class ThemeConfigProvider extends ChangeNotifier {
         : _kDefaultGradientSecondaryDark;
   }
 
+  // 预设种子色（深色为主，白字在暗色 App 主题下可读；浅色模式选浅灰类时由 [lightUserGradientNeedsInkForeground] 切墨字）
+  static const List<Color> presetColors = [
+    Color(0xFF7C2D12), // 活力橙（默认，与前版列表末项一致）
+    Color(0xFF121212), // 经典黑
+    Color(0xFF0A2540), // 深海蓝
+    Color(0xFF4C1D95), // 深紫
+    Color(0xFF14532D), // 森林绿
+    Color(0xFF0F3D4C), // 深青蓝
+    Color(0xFF2D1F3D), // 暗紫
+    Color(0xFF6B4423), // 焦糖棕
+  ];
+
+  /// 与主题设置页预设点选一致：由种子色推导辅色。
+  static Color secondaryFromPresetPrimary(Color primary) {
+    final hsl = HSLColor.fromColor(primary);
+    final sat = hsl.saturation < 0.38 ? 0.38 : hsl.saturation;
+    return hsl
+        .withHue((hsl.hue + 28.0) % 360.0)
+        .withSaturation(sat.clamp(0.0, 0.92))
+        .withLightness((hsl.lightness + 0.11).clamp(0.12, 0.52))
+        .toColor();
+  }
+
   // 主题类型
   ThemeType _themeType = ThemeType.solidColor;
-  Color _primaryColor =
-      ThemeConfigProvider._defaultPrimaryForThemeMode(ThemeMode.system);
+  Color _primaryColor = ThemeConfigProvider.presetColors.first;
   Color _secondaryColor =
-      ThemeConfigProvider._defaultSecondaryForThemeMode(ThemeMode.system);
+      ThemeConfigProvider.secondaryFromPresetPrimary(
+          ThemeConfigProvider.presetColors.first);
   /// 与早期版本一致：主对角线 ↘（左上→右下）。
   PlaylistCoverGradientDirection _gradientDirection =
       PlaylistCoverGradientDirection.diagonalTlBr;
@@ -93,18 +100,6 @@ class ThemeConfigProvider extends ChangeNotifier {
     final w = math.max(a, b) * 0.62 + math.min(a, b) * 0.38;
     return w > 0.50;
   }
-
-  // 预设种子色（深色为主，白字在暗色 App 主题下可读；浅色模式选浅灰类时由 [lightUserGradientNeedsInkForeground] 切墨字）
-  static const List<Color> presetColors = [
-    Color(0xFF18181B), // 锌灰黑（常见中性暗底）
-    Color(0xFF0F172A), // Slate 近黑（通用产品底）
-    Color(0xFF1E3A5F), // 深海蓝（工具/媒体类常见）
-    Color(0xFF1E1B4B), // 靛蓝（流媒体紫调）
-    Color(0xFF14532D), // 墨绿（绿色品牌向）
-    Color(0xFF164E63), // 青灰（冷静专业向）
-    Color(0xFF4A1942), // 酒红紫（Spotify/Apple Music 系常见点缀色相）
-    Color(0xFF7C2D12), // 赭红暖暗（YouTube Premium 系暖底）
-  ];
 
   ThemeConfigProvider() {
     _loadConfig();
@@ -232,14 +227,20 @@ class ThemeConfigProvider extends ChangeNotifier {
 
     // 加载颜色（无持久化键时按全局亮/暗主题取默认，改善浅色模式首次进入可读性）
     final primaryColorValue = prefs.getInt('primary_color');
-    _primaryColor = primaryColorValue != null
-        ? Color(primaryColorValue)
-        : ThemeConfigProvider._defaultPrimaryForThemeMode(globalAppearance);
-
     final secondaryColorValue = prefs.getInt('secondary_color');
-    _secondaryColor = secondaryColorValue != null
-        ? Color(secondaryColorValue)
-        : ThemeConfigProvider._defaultSecondaryForThemeMode(globalAppearance);
+
+    if (primaryColorValue != null) {
+      _primaryColor = Color(primaryColorValue);
+      _secondaryColor = secondaryColorValue != null
+          ? Color(secondaryColorValue)
+          : ThemeConfigProvider._defaultSecondaryForThemeMode(globalAppearance);
+    } else {
+      // 无持久化主色时：默认「活力橙」及配套辅色（与预设首项一致）
+      _primaryColor = presetColors.first;
+      _secondaryColor = secondaryColorValue != null
+          ? Color(secondaryColorValue)
+          : ThemeConfigProvider.secondaryFromPresetPrimary(presetColors.first);
+    }
 
     final dirRaw = prefs.getInt('theme_gradient_direction');
     _gradientDirection = dirRaw == null

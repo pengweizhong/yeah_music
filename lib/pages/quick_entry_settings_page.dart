@@ -50,6 +50,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return l10n.homeEntryOneDrive;
       case QuickEntryConfig.idOneDriveCachePlaylist:
         return l10n.homeEntryOneDriveCachePlaylist;
+      case QuickEntryConfig.idSongRecognizer:
+        return l10n.homeEntrySongRecognizer;
       default:
         return id;
     }
@@ -73,6 +75,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return Icons.cloud_rounded;
       case QuickEntryConfig.idOneDriveCachePlaylist:
         return Icons.download_done_rounded;
+      case QuickEntryConfig.idSongRecognizer:
+        return Icons.mic_rounded;
       default:
         return Icons.apps_rounded;
     }

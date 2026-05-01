@@ -6,6 +6,9 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- 听歌识曲：沙盒内需声明麦克风。 -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
 	<!-- 与 DebugProfile 一致：用户通过「打开文件夹」选中的目录需读写；缺此项 Release 包无法持久化安全作用域书签，添加音乐目录会失灵 -->
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>

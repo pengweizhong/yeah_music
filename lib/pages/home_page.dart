@@ -20,6 +20,7 @@ import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/pages/music_recognition_page.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cached_playlist_page.dart';
@@ -344,6 +345,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
+  void _goMusicRecognition() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const MusicRecognitionPage(),
+      ),
+    );
+  }
+
   void _goUserPlaylist(String playlistId) {
     Navigator.push(
       context,
@@ -434,6 +444,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         onOpenOneDrive: _goOneDrive,
                         onOpenOneDriveCachedPlaylist:
                             _goOneDriveCachedPlaylist,
+                        onOpenMusicRecognition: _goMusicRecognition,
                         onManageQuickEntry: _goQuickEntrySettings,
                         onOpenUserPlaylist: _goUserPlaylist,
                         songSubtitle: _songSecondaryLine,
@@ -484,6 +495,7 @@ class _HomeScrollBody extends StatefulWidget {
     required this.onOpenCloudLibrary,
     required this.onOpenOneDrive,
     required this.onOpenOneDriveCachedPlaylist,
+    required this.onOpenMusicRecognition,
     required this.onManageQuickEntry,
     required this.onOpenUserPlaylist,
     required this.songSubtitle,
@@ -508,6 +520,7 @@ class _HomeScrollBody extends StatefulWidget {
   final VoidCallback onOpenCloudLibrary;
   final VoidCallback onOpenOneDrive;
   final VoidCallback onOpenOneDriveCachedPlaylist;
+  final VoidCallback onOpenMusicRecognition;
   final VoidCallback onManageQuickEntry;
   final void Function(String playlistId) onOpenUserPlaylist;
   final String Function(Song) songSubtitle;
@@ -677,6 +690,16 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
               Icons.download_done_rounded,
               const Color(0xFF00897B),
               widget.onOpenOneDriveCachedPlaylist,
+            ),
+          );
+          break;
+        case QuickEntryConfig.idSongRecognizer:
+          entries.add(
+            _QuickItem(
+              l10n.homeEntrySongRecognizer,
+              Icons.mic_rounded,
+              const Color(0xFFBA68C8),
+              widget.onOpenMusicRecognition,
             ),
           );
           break;

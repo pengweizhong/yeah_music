@@ -13,6 +13,8 @@ class QuickEntryConfig {
   static const idOneDrive = 'onedrive';
   /// OneDrive 点播下载到本地的曲目汇总（默认缓存目录与用户下载目录）。
   static const idOneDriveCachePlaylist = 'onedrive_cache_playlist';
+  /// 听歌识曲（麦克风 + AudD）
+  static const idSongRecognizer = 'song_recognizer';
   /// 规范顺序：默认首页从左到右；[normalizeInPlace] 补全缺失 id 时也按此顺序追加。
   static const allIds = [
     idLibrary,
@@ -23,6 +25,7 @@ class QuickEntryConfig {
     idPlaylists,
     idOneDrive,
     idDiscover,
+    idSongRecognizer,
   ];
 
   /// 全部门口的排列顺序（含被隐藏的，便于管理页排序）

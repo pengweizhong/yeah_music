@@ -45,5 +45,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>用于听歌识曲：通过麦克风采集环境或外放音乐片段以识别曲目。</string>
 </dict>
 </plist>

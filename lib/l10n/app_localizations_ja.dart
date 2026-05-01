@@ -2484,4 +2484,250 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveTaskDirectionUpload => 'アップロード';
+
+  @override
+  String get homeEntrySongRecognizer => '楽曲認識';
+
+  @override
+  String get songRecognizerTitle => '楽曲認識';
+
+  @override
+  String get songRecognizerModeInApp => 'アプリ内';
+
+  @override
+  String get songRecognizerModeAmbient => '環境モード';
+
+  @override
+  String get songRecognizerModeInAppHelp =>
+      'この画面のまま、再生中の音源に近づけ、約 10 秒録音すると精度が上がります。';
+
+  @override
+  String get songRecognizerModeAmbientHelp =>
+      'オンにすると約 20 秒ごとに自動で録音・認識します。スピーカーや他アプリの音に近づけてください。バックグラウンドでは端末によりマイクが止まることがあります。';
+
+  @override
+  String get songRecognizerStart => '聴き取り開始';
+
+  @override
+  String get songRecognizerSnackbarStarted => '認識を開始…';
+
+  @override
+  String get songRecognizerSnackbarCancelled => '認識をキャンセルしました';
+
+  @override
+  String get songRecognizerStopAmbient => '環境モード停止';
+
+  @override
+  String get songRecognizerListening => '録音中…';
+
+  @override
+  String get songRecognizerRecognizing => '認識中…';
+
+  @override
+  String get songRecognizerHistory => '履歴';
+
+  @override
+  String get songRecognizerHistoryEmpty => 'まだありません';
+
+  @override
+  String get songRecognizerHistoryFilterAll => 'すべて';
+
+  @override
+  String get songRecognizerHistoryFilterMatched => '一致のみ';
+
+  @override
+  String get songRecognizerHistoryFilterArchived => 'お気に入り';
+
+  @override
+  String get songRecognizerHistoryEmptyMatched => '一致した曲の履歴はまだありません。';
+
+  @override
+  String get songRecognizerHistoryEmptyArchived => 'お気に入りはまだありません。';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryTitle => '履歴を削除';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryMessage => 'この認識履歴を削除しますか？';
+
+  @override
+  String get songRecognizerSwipeArchive => 'お気に入り';
+
+  @override
+  String get songRecognizerSwipeRestore => '解除';
+
+  @override
+  String get songRecognizerSwipeDelete => '削除';
+
+  @override
+  String get songRecognizerEntryArchived => 'お気に入りに追加しました';
+
+  @override
+  String get songRecognizerEntryRestoredFromArchive => 'お気に入りから外しました';
+
+  @override
+  String get songRecognizerCopyEntry => 'コピー';
+
+  @override
+  String get songRecognizerEntryCopied => 'クリップボードにコピーしました';
+
+  @override
+  String get songRecognizerCopyLabelTime => '日時：';
+
+  @override
+  String get songRecognizerCopyLabelMode => '取得モード：';
+
+  @override
+  String get songRecognizerCopyLabelService => 'サービス：';
+
+  @override
+  String get songRecognizerCopyLabelSong => '曲名：';
+
+  @override
+  String get songRecognizerCopyLabelArtist => 'アーティスト：';
+
+  @override
+  String get songRecognizerCopyLabelAlbum => 'アルバム：';
+
+  @override
+  String get songRecognizerCopyLabelReleased => '発売日：';
+
+  @override
+  String get songRecognizerCopyLabelAppleMusic => 'Apple Music：';
+
+  @override
+  String get songRecognizerCopyLabelSpotify => 'Spotify：';
+
+  @override
+  String get songRecognizerCopyLabelNoMatch => '結果：';
+
+  @override
+  String get songRecognizerCopyLabelError => 'エラー：';
+
+  @override
+  String get songRecognizerClearHistory => '履歴を消去';
+
+  @override
+  String get songRecognizerClearHistoryConfirm => 'すべての履歴を削除しますか？';
+
+  @override
+  String get songRecognizerNoMatch => '一致する楽曲がありません。ノイズを減らして再試行してください。';
+
+  @override
+  String get songRecognizerOpenAppleMusic => 'Apple Music';
+
+  @override
+  String get songRecognizerOpenSpotify => 'Spotify';
+
+  @override
+  String get songRecognizerApiKey => 'AudD API トークン';
+
+  @override
+  String get songRecognizerApiKeyHelp =>
+      'audd.io でトークンを作成して貼り付けてください。空欄は試用トークン（厳しい制限）です。';
+
+  @override
+  String get songRecognizerSave => '保存';
+
+  @override
+  String get songRecognizerMicDenied => 'マイクの許可が必要です';
+
+  @override
+  String get songRecognizerWebUnsupported => 'このブラウザでは楽曲認識に未対応です。';
+
+  @override
+  String get songRecognizerAccuracyTip =>
+      'ヒント: 10〜12 秒、静かな環境でスピーカーに近づけると精度が上がります。';
+
+  @override
+  String get songRecognizerDuplicateSkipped => '直前と同じ結果のため省略しました';
+
+  @override
+  String get songRecognizerError => '認識に失敗しました';
+
+  @override
+  String get songRecognizerAmbientActive => '環境モード稼働中';
+
+  @override
+  String get songRecognizerTokenMenu => 'API トークン';
+
+  @override
+  String get songRecognizerCredentialsMenu => '認証情報';
+
+  @override
+  String get songRecognizerProviderLabel => '認識サービス';
+
+  @override
+  String get songRecognizerProviderAudd => 'AudD';
+
+  @override
+  String get songRecognizerProviderAcrcloud => 'ACRCloud';
+
+  @override
+  String get songRecognizerModeLabel => '取得モード';
+
+  @override
+  String get songRecognizerAcrTitle => 'ACRCloud プロジェクト';
+
+  @override
+  String get songRecognizerAcrHelp =>
+      'コンソールの Host（例: identify-eu-west-1.acrcloud.com、https やパスは含めない）、Access Key、Access Secret を入力してください。';
+
+  @override
+  String get songRecognizerAcrHost => 'Host';
+
+  @override
+  String get songRecognizerAcrHostHint => 'identify-….acrcloud.com';
+
+  @override
+  String get songRecognizerAcrAccessKey => 'Access Key';
+
+  @override
+  String get songRecognizerAcrSecret => 'Secret Key';
+
+  @override
+  String get songRecognizerAcrIncomplete =>
+      '下の Host、Access Key、Secret Key を入力して保存してから認識してください。';
+
+  @override
+  String get songRecognizerSectionApiConfig => 'API 設定';
+
+  @override
+  String get songRecognizerConfigHint =>
+      '楽曲認識の画面で使うプロバイダーを選びます。この画面で各キーを入力して保存してください（端末内のみ）。';
+
+  @override
+  String get songRecognizerConfigSaved => '保存しました';
+
+  @override
+  String get songRecognizerAuddCardSubtitle => 'audd.io のトークン。空欄は制限付きテスト用。';
+
+  @override
+  String get songRecognizerAcrCardTitle => 'ACRCloud';
+
+  @override
+  String get songRecognizerAcrCardSubtitle =>
+      'コンソールの Host、Access Key、Secret Key（音楽認識プロジェクト）。';
+
+  @override
+  String get songRecognizerOpenApiConfigSubtitle =>
+      'AudD トークンと ACRCloud の Host / キー';
+
+  @override
+  String get songRecognizerMatchConfirmTitle => '認識結果';
+
+  @override
+  String get songRecognizerMatchConfirmArtistLabel => 'アーティスト';
+
+  @override
+  String get songRecognizerMatchConfirmAlbumLabel => 'アルバム';
+
+  @override
+  String get songRecognizerMatchConfirmReleaseLabel => '発売日';
+
+  @override
+  String get songRecognizerMatchConfirmYes => 'この曲です';
+
+  @override
+  String get songRecognizerMatchConfirmNo => '違う、もう一度';
 }

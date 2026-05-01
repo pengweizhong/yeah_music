@@ -2455,6 +2455,251 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveTaskDirectionUpload => '上传';
+
+  @override
+  String get homeEntrySongRecognizer => '听歌识曲';
+
+  @override
+  String get songRecognizerTitle => '听歌识曲';
+
+  @override
+  String get songRecognizerModeInApp => '应用内';
+
+  @override
+  String get songRecognizerModeAmbient => '环境聆听';
+
+  @override
+  String get songRecognizerModeInAppHelp =>
+      '请保持在本页，将手机靠近正在播放的音乐，约录制 10 秒以获得较高识别率。';
+
+  @override
+  String get songRecognizerModeAmbientHelp =>
+      '在本页开启后，每隔约 20 秒自动采样识别。请将手机靠近外放或其他 App 播放的扬声器；离开应用后部分机型可能中断麦克风。';
+
+  @override
+  String get songRecognizerStart => '开始识别';
+
+  @override
+  String get songRecognizerSnackbarStarted => '开始识别…';
+
+  @override
+  String get songRecognizerSnackbarCancelled => '已取消识别';
+
+  @override
+  String get songRecognizerStopAmbient => '停止环境聆听';
+
+  @override
+  String get songRecognizerListening => '聆听中…';
+
+  @override
+  String get songRecognizerRecognizing => '识别中…';
+
+  @override
+  String get songRecognizerHistory => '识别记录';
+
+  @override
+  String get songRecognizerHistoryEmpty => '暂无记录';
+
+  @override
+  String get songRecognizerHistoryFilterAll => '全部';
+
+  @override
+  String get songRecognizerHistoryFilterMatched => '成功匹配';
+
+  @override
+  String get songRecognizerHistoryFilterArchived => '收藏';
+
+  @override
+  String get songRecognizerHistoryEmptyMatched => '暂无成功匹配的记录';
+
+  @override
+  String get songRecognizerHistoryEmptyArchived => '暂无收藏记录';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryTitle => '删除记录';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryMessage => '确定删除这条识别记录？';
+
+  @override
+  String get songRecognizerSwipeArchive => '收藏';
+
+  @override
+  String get songRecognizerSwipeRestore => '取消收藏';
+
+  @override
+  String get songRecognizerSwipeDelete => '删除';
+
+  @override
+  String get songRecognizerEntryArchived => '已收藏';
+
+  @override
+  String get songRecognizerEntryRestoredFromArchive => '已取消收藏';
+
+  @override
+  String get songRecognizerCopyEntry => '复制';
+
+  @override
+  String get songRecognizerEntryCopied => '已复制到剪贴板';
+
+  @override
+  String get songRecognizerCopyLabelTime => '时间：';
+
+  @override
+  String get songRecognizerCopyLabelMode => '采集方式：';
+
+  @override
+  String get songRecognizerCopyLabelService => '识别服务：';
+
+  @override
+  String get songRecognizerCopyLabelSong => '歌曲：';
+
+  @override
+  String get songRecognizerCopyLabelArtist => '歌手：';
+
+  @override
+  String get songRecognizerCopyLabelAlbum => '专辑：';
+
+  @override
+  String get songRecognizerCopyLabelReleased => '发行日期：';
+
+  @override
+  String get songRecognizerCopyLabelAppleMusic => 'Apple Music：';
+
+  @override
+  String get songRecognizerCopyLabelSpotify => 'Spotify：';
+
+  @override
+  String get songRecognizerCopyLabelNoMatch => '结果：';
+
+  @override
+  String get songRecognizerCopyLabelError => '错误：';
+
+  @override
+  String get songRecognizerClearHistory => '清空记录';
+
+  @override
+  String get songRecognizerClearHistoryConfirm => '确定删除全部识别历史？';
+
+  @override
+  String get songRecognizerNoMatch => '未匹配到歌曲，可在更安静环境重试或靠近声源。';
+
+  @override
+  String get songRecognizerOpenAppleMusic => 'Apple Music';
+
+  @override
+  String get songRecognizerOpenSpotify => 'Spotify';
+
+  @override
+  String get songRecognizerApiKey => 'AudD API Token';
+
+  @override
+  String get songRecognizerApiKeyHelp =>
+      '正式使用建议在 audd.io 控制台创建 Token 并粘贴到此；留空将使用公开试用 Token（额度极低、易被限流）。';
+
+  @override
+  String get songRecognizerSave => '保存';
+
+  @override
+  String get songRecognizerMicDenied => '需要麦克风权限才能识曲';
+
+  @override
+  String get songRecognizerWebUnsupported => '当前浏览器版本暂不支持听歌识曲。';
+
+  @override
+  String get songRecognizerAccuracyTip => '建议：安静环境、片段约 10–12 秒、手机靠近扬声器，识别更准确。';
+
+  @override
+  String get songRecognizerDuplicateSkipped => '与最近一条结果相同，未重复写入';
+
+  @override
+  String get songRecognizerError => '识别失败';
+
+  @override
+  String get songRecognizerAmbientActive => '环境聆听进行中';
+
+  @override
+  String get songRecognizerTokenMenu => 'API Token';
+
+  @override
+  String get songRecognizerCredentialsMenu => '账号与密钥';
+
+  @override
+  String get songRecognizerProviderLabel => '识别服务';
+
+  @override
+  String get songRecognizerProviderAudd => 'AudD';
+
+  @override
+  String get songRecognizerProviderAcrcloud => 'ACRCloud';
+
+  @override
+  String get songRecognizerModeLabel => '采集方式';
+
+  @override
+  String get songRecognizerAcrTitle => 'ACRCloud 项目';
+
+  @override
+  String get songRecognizerAcrHelp =>
+      '填写控制台中的 Host（如 identify-eu-west-1.acrcloud.com，不要带 https:// 或路径）、Access Key 与 Access Secret（音视频识别项目）。';
+
+  @override
+  String get songRecognizerAcrHost => '主机 Host';
+
+  @override
+  String get songRecognizerAcrHostHint => 'identify-….acrcloud.com';
+
+  @override
+  String get songRecognizerAcrAccessKey => 'Access Key';
+
+  @override
+  String get songRecognizerAcrSecret => 'Secret Key';
+
+  @override
+  String get songRecognizerAcrIncomplete =>
+      '请在本页填写并保存 ACRCloud 的 Host、Access Key 与 Secret Key 后再识别。';
+
+  @override
+  String get songRecognizerSectionApiConfig => '接口配置';
+
+  @override
+  String get songRecognizerConfigHint => '在识曲主页选择使用哪一家；在此页分别填写并保存两套密钥（仅保存在本机）。';
+
+  @override
+  String get songRecognizerConfigSaved => '已保存';
+
+  @override
+  String get songRecognizerAuddCardSubtitle =>
+      '来自 audd.io 的控制台 Token；留空则使用额度极低的公开试用。';
+
+  @override
+  String get songRecognizerAcrCardTitle => 'ACRCloud';
+
+  @override
+  String get songRecognizerAcrCardSubtitle =>
+      '控制台中的 Host、Access Key、Secret Key（音视频识别项目）。';
+
+  @override
+  String get songRecognizerOpenApiConfigSubtitle =>
+      'AudD Token 与 ACRCloud 的 Host、Access Key、Secret Key';
+
+  @override
+  String get songRecognizerMatchConfirmTitle => '识别结果';
+
+  @override
+  String get songRecognizerMatchConfirmArtistLabel => '艺人';
+
+  @override
+  String get songRecognizerMatchConfirmAlbumLabel => '专辑';
+
+  @override
+  String get songRecognizerMatchConfirmReleaseLabel => '发行日期';
+
+  @override
+  String get songRecognizerMatchConfirmYes => '是这首歌';
+
+  @override
+  String get songRecognizerMatchConfirmNo => '不是这首，继续识别';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -4908,6 +5153,251 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveTaskDirectionUpload => '上传';
+
+  @override
+  String get homeEntrySongRecognizer => '听歌识曲';
+
+  @override
+  String get songRecognizerTitle => '听歌识曲';
+
+  @override
+  String get songRecognizerModeInApp => '应用内';
+
+  @override
+  String get songRecognizerModeAmbient => '环境聆听';
+
+  @override
+  String get songRecognizerModeInAppHelp =>
+      '请保持在本页，将手机靠近正在播放的音乐，约录制 10 秒以获得较高识别率。';
+
+  @override
+  String get songRecognizerModeAmbientHelp =>
+      '在本页开启后，每隔约 20 秒自动采样识别。请将手机靠近外放或其他 App 播放的扬声器；离开应用后部分机型可能中断麦克风。';
+
+  @override
+  String get songRecognizerStart => '开始识别';
+
+  @override
+  String get songRecognizerSnackbarStarted => '开始识别…';
+
+  @override
+  String get songRecognizerSnackbarCancelled => '已取消识别';
+
+  @override
+  String get songRecognizerStopAmbient => '停止环境聆听';
+
+  @override
+  String get songRecognizerListening => '聆听中…';
+
+  @override
+  String get songRecognizerRecognizing => '识别中…';
+
+  @override
+  String get songRecognizerHistory => '识别记录';
+
+  @override
+  String get songRecognizerHistoryEmpty => '暂无记录';
+
+  @override
+  String get songRecognizerHistoryFilterAll => '全部';
+
+  @override
+  String get songRecognizerHistoryFilterMatched => '成功匹配';
+
+  @override
+  String get songRecognizerHistoryFilterArchived => '收藏';
+
+  @override
+  String get songRecognizerHistoryEmptyMatched => '暂无成功匹配的记录';
+
+  @override
+  String get songRecognizerHistoryEmptyArchived => '暂无收藏记录';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryTitle => '删除记录';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryMessage => '确定删除这条识别记录？';
+
+  @override
+  String get songRecognizerSwipeArchive => '收藏';
+
+  @override
+  String get songRecognizerSwipeRestore => '取消收藏';
+
+  @override
+  String get songRecognizerSwipeDelete => '删除';
+
+  @override
+  String get songRecognizerEntryArchived => '已收藏';
+
+  @override
+  String get songRecognizerEntryRestoredFromArchive => '已取消收藏';
+
+  @override
+  String get songRecognizerCopyEntry => '复制';
+
+  @override
+  String get songRecognizerEntryCopied => '已复制到剪贴板';
+
+  @override
+  String get songRecognizerCopyLabelTime => '时间：';
+
+  @override
+  String get songRecognizerCopyLabelMode => '采集方式：';
+
+  @override
+  String get songRecognizerCopyLabelService => '识别服务：';
+
+  @override
+  String get songRecognizerCopyLabelSong => '歌曲：';
+
+  @override
+  String get songRecognizerCopyLabelArtist => '歌手：';
+
+  @override
+  String get songRecognizerCopyLabelAlbum => '专辑：';
+
+  @override
+  String get songRecognizerCopyLabelReleased => '发行日期：';
+
+  @override
+  String get songRecognizerCopyLabelAppleMusic => 'Apple Music：';
+
+  @override
+  String get songRecognizerCopyLabelSpotify => 'Spotify：';
+
+  @override
+  String get songRecognizerCopyLabelNoMatch => '结果：';
+
+  @override
+  String get songRecognizerCopyLabelError => '错误：';
+
+  @override
+  String get songRecognizerClearHistory => '清空记录';
+
+  @override
+  String get songRecognizerClearHistoryConfirm => '确定删除全部识别历史？';
+
+  @override
+  String get songRecognizerNoMatch => '未匹配到歌曲，可在更安静环境重试或靠近声源。';
+
+  @override
+  String get songRecognizerOpenAppleMusic => 'Apple Music';
+
+  @override
+  String get songRecognizerOpenSpotify => 'Spotify';
+
+  @override
+  String get songRecognizerApiKey => 'AudD API Token';
+
+  @override
+  String get songRecognizerApiKeyHelp =>
+      '正式使用建议在 audd.io 控制台创建 Token 并粘贴到此；留空将使用公开试用 Token（额度极低、易被限流）。';
+
+  @override
+  String get songRecognizerSave => '保存';
+
+  @override
+  String get songRecognizerMicDenied => '需要麦克风权限才能识曲';
+
+  @override
+  String get songRecognizerWebUnsupported => '当前浏览器版本暂不支持听歌识曲。';
+
+  @override
+  String get songRecognizerAccuracyTip => '建议：安静环境、片段约 10–12 秒、手机靠近扬声器，识别更准确。';
+
+  @override
+  String get songRecognizerDuplicateSkipped => '与最近一条结果相同，未重复写入';
+
+  @override
+  String get songRecognizerError => '识别失败';
+
+  @override
+  String get songRecognizerAmbientActive => '环境聆听进行中';
+
+  @override
+  String get songRecognizerTokenMenu => 'API Token';
+
+  @override
+  String get songRecognizerCredentialsMenu => '账号与密钥';
+
+  @override
+  String get songRecognizerProviderLabel => '识别服务';
+
+  @override
+  String get songRecognizerProviderAudd => 'AudD';
+
+  @override
+  String get songRecognizerProviderAcrcloud => 'ACRCloud';
+
+  @override
+  String get songRecognizerModeLabel => '采集方式';
+
+  @override
+  String get songRecognizerAcrTitle => 'ACRCloud 项目';
+
+  @override
+  String get songRecognizerAcrHelp =>
+      '填写控制台中的 Host（如 identify-eu-west-1.acrcloud.com，不要带 https:// 或路径）、Access Key 与 Access Secret（音视频识别项目）。';
+
+  @override
+  String get songRecognizerAcrHost => '主机 Host';
+
+  @override
+  String get songRecognizerAcrHostHint => 'identify-….acrcloud.com';
+
+  @override
+  String get songRecognizerAcrAccessKey => 'Access Key';
+
+  @override
+  String get songRecognizerAcrSecret => 'Secret Key';
+
+  @override
+  String get songRecognizerAcrIncomplete =>
+      '请在本页填写并保存 ACRCloud 的 Host、Access Key 与 Secret Key 后再识别。';
+
+  @override
+  String get songRecognizerSectionApiConfig => '接口配置';
+
+  @override
+  String get songRecognizerConfigHint => '在识曲主页选择使用哪一家；在此页分别填写并保存两套密钥（仅保存在本机）。';
+
+  @override
+  String get songRecognizerConfigSaved => '已保存';
+
+  @override
+  String get songRecognizerAuddCardSubtitle =>
+      '来自 audd.io 的控制台 Token；留空则使用额度极低的公开试用。';
+
+  @override
+  String get songRecognizerAcrCardTitle => 'ACRCloud';
+
+  @override
+  String get songRecognizerAcrCardSubtitle =>
+      '控制台中的 Host、Access Key、Secret Key（音视频识别项目）。';
+
+  @override
+  String get songRecognizerOpenApiConfigSubtitle =>
+      'AudD Token 与 ACRCloud 的 Host、Access Key、Secret Key';
+
+  @override
+  String get songRecognizerMatchConfirmTitle => '识别结果';
+
+  @override
+  String get songRecognizerMatchConfirmArtistLabel => '艺人';
+
+  @override
+  String get songRecognizerMatchConfirmAlbumLabel => '专辑';
+
+  @override
+  String get songRecognizerMatchConfirmReleaseLabel => '发行日期';
+
+  @override
+  String get songRecognizerMatchConfirmYes => '是这首歌';
+
+  @override
+  String get songRecognizerMatchConfirmNo => '不是这首，继续识别';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -7363,4 +7853,249 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveTaskDirectionUpload => '上傳';
+
+  @override
+  String get homeEntrySongRecognizer => '聽歌識曲';
+
+  @override
+  String get songRecognizerTitle => '聽歌識曲';
+
+  @override
+  String get songRecognizerModeInApp => '應用程式內';
+
+  @override
+  String get songRecognizerModeAmbient => '環境聆聽';
+
+  @override
+  String get songRecognizerModeInAppHelp =>
+      '請留在本頁，將手機靠近正在播放的音樂，約錄製 10 秒以提高辨識率。';
+
+  @override
+  String get songRecognizerModeAmbientHelp =>
+      '在本頁開啟後，約每 20 秒自動取樣辨識。請將手機靠近揚聲器或其他 App 播放的聲音；離開應用程式後部分裝置可能中斷麥克風。';
+
+  @override
+  String get songRecognizerStart => '開始辨識';
+
+  @override
+  String get songRecognizerSnackbarStarted => '開始辨識…';
+
+  @override
+  String get songRecognizerSnackbarCancelled => '已取消辨識';
+
+  @override
+  String get songRecognizerStopAmbient => '停止環境聆聽';
+
+  @override
+  String get songRecognizerListening => '聆聽中…';
+
+  @override
+  String get songRecognizerRecognizing => '辨識中…';
+
+  @override
+  String get songRecognizerHistory => '辨識紀錄';
+
+  @override
+  String get songRecognizerHistoryEmpty => '尚無紀錄';
+
+  @override
+  String get songRecognizerHistoryFilterAll => '全部';
+
+  @override
+  String get songRecognizerHistoryFilterMatched => '成功匹配';
+
+  @override
+  String get songRecognizerHistoryFilterArchived => '收藏';
+
+  @override
+  String get songRecognizerHistoryEmptyMatched => '暫無成功匹配的紀錄';
+
+  @override
+  String get songRecognizerHistoryEmptyArchived => '暫無收藏紀錄';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryTitle => '刪除紀錄';
+
+  @override
+  String get songRecognizerDeleteHistoryEntryMessage => '確定刪除這筆辨識紀錄？';
+
+  @override
+  String get songRecognizerSwipeArchive => '收藏';
+
+  @override
+  String get songRecognizerSwipeRestore => '取消收藏';
+
+  @override
+  String get songRecognizerSwipeDelete => '刪除';
+
+  @override
+  String get songRecognizerEntryArchived => '已收藏';
+
+  @override
+  String get songRecognizerEntryRestoredFromArchive => '已取消收藏';
+
+  @override
+  String get songRecognizerCopyEntry => '複製';
+
+  @override
+  String get songRecognizerEntryCopied => '已複製到剪貼簿';
+
+  @override
+  String get songRecognizerCopyLabelTime => '時間：';
+
+  @override
+  String get songRecognizerCopyLabelMode => '取樣方式：';
+
+  @override
+  String get songRecognizerCopyLabelService => '辨識服務：';
+
+  @override
+  String get songRecognizerCopyLabelSong => '歌曲：';
+
+  @override
+  String get songRecognizerCopyLabelArtist => '歌手：';
+
+  @override
+  String get songRecognizerCopyLabelAlbum => '專輯：';
+
+  @override
+  String get songRecognizerCopyLabelReleased => '發行日期：';
+
+  @override
+  String get songRecognizerCopyLabelAppleMusic => 'Apple Music：';
+
+  @override
+  String get songRecognizerCopyLabelSpotify => 'Spotify：';
+
+  @override
+  String get songRecognizerCopyLabelNoMatch => '結果：';
+
+  @override
+  String get songRecognizerCopyLabelError => '錯誤：';
+
+  @override
+  String get songRecognizerClearHistory => '清空紀錄';
+
+  @override
+  String get songRecognizerClearHistoryConfirm => '確定刪除全部辨識紀錄？';
+
+  @override
+  String get songRecognizerNoMatch => '沒有相符歌曲，請在較安靜環境重試或靠近音源。';
+
+  @override
+  String get songRecognizerOpenAppleMusic => 'Apple Music';
+
+  @override
+  String get songRecognizerOpenSpotify => 'Spotify';
+
+  @override
+  String get songRecognizerApiKey => 'AudD API Token';
+
+  @override
+  String get songRecognizerApiKeyHelp =>
+      '建議至 audd.io 建立 Token 並貼上；留空則使用公開試用 Token（額度極低）。';
+
+  @override
+  String get songRecognizerSave => '儲存';
+
+  @override
+  String get songRecognizerMicDenied => '需要麥克風權限';
+
+  @override
+  String get songRecognizerWebUnsupported => '此瀏覽器版本不支援聽歌識曲。';
+
+  @override
+  String get songRecognizerAccuracyTip => '建議：安靜環境、取樣約 10–12 秒、手機靠近喇叭，辨識較準。';
+
+  @override
+  String get songRecognizerDuplicateSkipped => '與最近一筆相同，未重複寫入';
+
+  @override
+  String get songRecognizerError => '辨識失敗';
+
+  @override
+  String get songRecognizerAmbientActive => '環境聆聽進行中';
+
+  @override
+  String get songRecognizerTokenMenu => 'API Token';
+
+  @override
+  String get songRecognizerCredentialsMenu => '帳號與金鑰';
+
+  @override
+  String get songRecognizerProviderLabel => '辨識服務';
+
+  @override
+  String get songRecognizerProviderAudd => 'AudD';
+
+  @override
+  String get songRecognizerProviderAcrcloud => 'ACRCloud';
+
+  @override
+  String get songRecognizerModeLabel => '取樣方式';
+
+  @override
+  String get songRecognizerAcrTitle => 'ACRCloud 專案';
+
+  @override
+  String get songRecognizerAcrHelp =>
+      '請填寫控制台中的 Host（例如 identify-eu-west-1.acrcloud.com，勿含 https:// 或路徑）、Access Key 與 Access Secret（音訊／視訊辨識專案）。';
+
+  @override
+  String get songRecognizerAcrHost => '主機 Host';
+
+  @override
+  String get songRecognizerAcrHostHint => 'identify-….acrcloud.com';
+
+  @override
+  String get songRecognizerAcrAccessKey => 'Access Key';
+
+  @override
+  String get songRecognizerAcrSecret => 'Secret Key';
+
+  @override
+  String get songRecognizerAcrIncomplete =>
+      '請在本頁填寫並儲存 ACRCloud 的 Host、Access Key 與 Secret Key 後再辨識。';
+
+  @override
+  String get songRecognizerSectionApiConfig => '介面設定';
+
+  @override
+  String get songRecognizerConfigHint => '在識曲首頁選擇使用哪一家；在此頁分別填寫並儲存兩套金鑰（僅存在本機）。';
+
+  @override
+  String get songRecognizerConfigSaved => '已儲存';
+
+  @override
+  String get songRecognizerAuddCardSubtitle =>
+      '來自 audd.io 控制台的 Token；留空則使用額度極低的公開試用。';
+
+  @override
+  String get songRecognizerAcrCardTitle => 'ACRCloud';
+
+  @override
+  String get songRecognizerAcrCardSubtitle =>
+      '控制台中的 Host、Access Key、Secret Key（音視頻辨識專案）。';
+
+  @override
+  String get songRecognizerOpenApiConfigSubtitle =>
+      'AudD Token 與 ACRCloud 的 Host、Access Key、Secret Key';
+
+  @override
+  String get songRecognizerMatchConfirmTitle => '辨識結果';
+
+  @override
+  String get songRecognizerMatchConfirmArtistLabel => '藝人';
+
+  @override
+  String get songRecognizerMatchConfirmAlbumLabel => '專輯';
+
+  @override
+  String get songRecognizerMatchConfirmReleaseLabel => '發行日期';
+
+  @override
+  String get songRecognizerMatchConfirmYes => '是這首歌';
+
+  @override
+  String get songRecognizerMatchConfirmNo => '不是這首，繼續辨識';
 }
