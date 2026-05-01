@@ -608,7 +608,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                     }
                   },
                   itemBuilder: (context) {
-                    final canExport = _filteredSongs.isNotEmpty;
                     return [
                       PopupMenuItem(
                         value: 'cover',
@@ -621,7 +620,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                       ),
                       PopupMenuItem(
                         value: 'export',
-                        enabled: canExport,
                         child: Text(l10n.menuExportThis),
                       ),
                       PopupMenuItem(

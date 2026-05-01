@@ -15,7 +15,6 @@ import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
-import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 const _kSelectAccent = Color(0xFF8AB4F8);
@@ -158,18 +157,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
       _singleSelectOnly = singleOnly;
       _selectedPlaylistIds.clear();
     });
-  }
-
-  Widget _playlistMenuItemRow(IconData icon, String text, {Color? iconColor}) {
-    return Row(
-      children: [
-        Icon(icon, size: 22, color: iconColor ?? Colors.white70),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(text, style: const TextStyle(fontSize: 15, height: 1.2)),
-        ),
-      ],
-    );
   }
 
   Future<void> _handleMainMenu(String v, UserPlaylistProvider user) async {
@@ -394,75 +381,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         );
   }
 
-  Future<void> _renameHomeLibrary(
-    BuildContext context,
-    UserPlaylistProvider user,
-    AppLocalizations l10n,
-  ) async {
-    final name = await showAppTextPromptDialog(
-      context: context,
-      title: l10n.playlistRenameTitle,
-      initialValue: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
-      fieldLabel: l10n.fieldName,
-      cancelLabel: l10n.actionCancel,
-      confirmLabel: l10n.actionSave,
-    );
-    if (name != null && name.isNotEmpty && context.mounted) {
-      await user.setHomeLibraryDisplayName(name);
-    }
-  }
-
-  Future<void> _exportHomeLibraryAllSongs(
-    BuildContext context,
-    UserPlaylistProvider user,
-    PlayListProvider playList,
-  ) async {
-    final l10n = AppLocalizations.of(context);
-    if (!playList.initialized) {
-      showAppSnackBar(
-        context,
-        l10n.homeAllSongsLoading,
-        kind: AppSnackKind.neutral,
-      );
-      return;
-    }
-    final map = user.buildExportMapForLibraryAllSongs(
-      playlistName: user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
-      songPaths: playList.libraryMergedSongs.map((s) => s.path).toList(),
-    );
-    await user.attachPlaylistCoverImagesToExportMap(map);
-    if (!context.mounted) return;
-    final jsonStr = const JsonEncoder.withIndent('  ').convert(map);
-    try {
-      final path = await pickSaveUserPlaylistJson(
-        jsonStr: jsonStr,
-        dialogTitle: l10n.exportDialogTitle,
-        fileName: suggestedLibraryAllSongsExportFileName(
-          user.resolvedHomeLibraryTitle(l10n.homeAllSongs),
-        ),
-      );
-      if (!context.mounted) return;
-      if (path != null && path.isNotEmpty) {
-        showAppSnackBar(
-          context,
-          l10n.exportSaved(path),
-          kind: AppSnackKind.success,
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        showAppSnackBar(context, l10n.exportCancelled);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showAppSnackBar(
-          context,
-          l10n.exportFailed('$e'),
-          kind: AppSnackKind.error,
-        );
-      }
-    }
-  }
-
   Widget _librarySelectBanner(
     BuildContext context,
     AppLocalizations l10n,
@@ -648,57 +566,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                       ),
                     ),
                   ),
-                ),
-                PopupMenuButton<String>(
-                  tooltip: l10n.tooltipMoreActions,
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: Colors.white.withValues(alpha: 0.45),
-                    size: 22,
-                  ),
-                  color: const Color(0xFF2D2D2D),
-                  surfaceTintColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  offset: const Offset(0, 36),
-                  onSelected: (value) async {
-                    if (value == 'cover') {
-                      await showPlaylistCoverStyleSheet(
-                        context,
-                        userPl.homeLibraryPlaylistStubForCoverUi(
-                          userPl.resolvedHomeLibraryTitle(l10n.homeAllSongs),
-                        ),
-                      );
-                    } else if (value == 'rename') {
-                      await _renameHomeLibrary(context, userPl, l10n);
-                    } else if (value == 'export') {
-                      await _exportHomeLibraryAllSongs(context, userPl, playList);
-                    }
-                  },
-                  itemBuilder: (ctx) {
-                    final m = AppLocalizations.of(ctx);
-                    return [
-                      PopupMenuItem(
-                        value: 'cover',
-                        child: Text(m.playlistCoverMenuItem),
-                      ),
-                      PopupMenuItem(
-                        value: 'rename',
-                        child: Text(m.menuRename),
-                      ),
-                      PopupMenuItem(
-                        value: 'export',
-                        child: Text(m.menuExportThis),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        enabled: false,
-                        child: Text(m.menuDeletePlaylist),
-                      ),
-                    ];
-                  },
                 ),
                 ReorderableDragStartListener(
                   index: listIndex,
@@ -898,59 +765,48 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     elevation: 0,
                     iconTheme: const IconThemeData(color: Colors.white),
                     actions: [
-                      PopupMenuButton<String>(
-                        tooltip: l10n.tooltipMoreActions,
-                        icon: const Icon(
-                          Icons.more_vert_rounded,
-                          color: Colors.white,
+                      if (!_singleSelectOnly && userPl.playlists.isNotEmpty)
+                        Builder(
+                          builder: (context) {
+                            final allOn =
+                                _selectedPlaylistIds.length ==
+                                    userPl.playlists.length &&
+                                userPl.playlists.isNotEmpty;
+                            return IconButton(
+                              tooltip: allOn ? l10n.deselectAll : l10n.selectAll,
+                              icon: Icon(
+                                allOn
+                                    ? Icons.deselect_rounded
+                                    : Icons.select_all_rounded,
+                                color: Colors.white,
+                              ),
+                              onPressed: () => _toggleSelectAll(userPl),
+                            );
+                          },
                         ),
-                        color: const Color(0xFF2D2D2D),
-                        surfaceTintColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                      IconButton(
+                        tooltip: l10n.exportSelected,
+                        icon: Icon(
+                          Icons.upload_file_outlined,
+                          color: _selectedPlaylistIds.isNotEmpty
+                              ? Colors.white
+                              : Colors.white38,
                         ),
-                        offset: const Offset(0, kToolbarHeight),
-                        onSelected: (v) => _handleSelectMenu(v, userPl),
-                        itemBuilder: (context) {
-                          final m = AppLocalizations.of(context);
-                          final allOn =
-                              _selectedPlaylistIds.length ==
-                                  userPl.playlists.length &&
-                              userPl.playlists.isNotEmpty;
-                          return [
-                            if (!_singleSelectOnly)
-                              PopupMenuItem(
-                                value: 'toggle_all',
-                                enabled: userPl.playlists.isNotEmpty,
-                                child: _playlistMenuItemRow(
-                                  allOn ? Icons.deselect : Icons.select_all,
-                                  allOn ? m.deselectAll : m.selectAll,
-                                ),
-                              ),
-                            PopupMenuItem(
-                              value: 'export_selected',
-                              enabled: _selectedPlaylistIds.isNotEmpty,
-                              child: _playlistMenuItemRow(
-                                Icons.upload_file_outlined,
-                                m.exportSelected,
-                                iconColor: _selectedPlaylistIds.isNotEmpty
-                                    ? Colors.white70
-                                    : Colors.white30,
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              enabled: _selectedPlaylistIds.isNotEmpty,
-                              child: _playlistMenuItemRow(
-                                Icons.delete_outline_rounded,
-                                m.actionDelete,
-                                iconColor: _selectedPlaylistIds.isNotEmpty
-                                    ? const Color(0xFFFFAB91)
-                                    : Colors.white30,
-                              ),
-                            ),
-                          ];
-                        },
+                        onPressed: _selectedPlaylistIds.isNotEmpty
+                            ? () => _handleSelectMenu('export_selected', userPl)
+                            : null,
+                      ),
+                      IconButton(
+                        tooltip: l10n.actionDelete,
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: _selectedPlaylistIds.isNotEmpty
+                              ? const Color(0xFFFFAB91)
+                              : Colors.white30,
+                        ),
+                        onPressed: _selectedPlaylistIds.isNotEmpty
+                            ? () => _handleSelectMenu('delete', userPl)
+                            : null,
                       ),
                     ],
                   )
@@ -966,24 +822,24 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     elevation: 0,
                     iconTheme: const IconThemeData(color: Colors.white),
                     actions: [
-                      PopupMenuButton<String>(
-                        tooltip: l10n.tooltipMore,
-                        icon: const Icon(
-                          Icons.more_vert_rounded,
-                          color: Colors.white,
-                        ),
-                        color: const Color(0xFF2D2D2D),
-                        surfaceTintColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        offset: const Offset(0, kToolbarHeight),
-                        onSelected: (v) => _handleMainMenu(v, userPl),
-                        itemBuilder: (context) {
-                          final m = AppLocalizations.of(context);
-                          final hasLists = userPl.playlists.isNotEmpty;
-                          return [
-                            if (hasLists) ...[
+                      if (userPl.playlists.isNotEmpty)
+                        PopupMenuButton<String>(
+                          tooltip:
+                              '${l10n.playlistSelectModeSingle} · ${l10n.playlistSelectModeMulti}',
+                          color: const Color(0xFF2D2D2D),
+                          surfaceTintColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          offset: const Offset(0, kToolbarHeight),
+                          icon: Icon(
+                            Icons.checklist_rounded,
+                            color: Colors.white.withValues(alpha: 0.95),
+                          ),
+                          onSelected: (v) => _handleMainMenu(v, userPl),
+                          itemBuilder: (context) {
+                            final m = AppLocalizations.of(context);
+                            return [
                               PopupMenuItem(
                                 value: 'enter_single',
                                 child: _PlaylistMenuRowStatic(
@@ -998,24 +854,26 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                   label: m.playlistSelectModeMulti,
                                 ),
                               ),
-                              const PopupMenuDivider(height: 1),
-                            ],
-                            PopupMenuItem(
-                              value: 'import',
-                              child: _PlaylistMenuRowStatic(
-                                icon: Icons.file_download_outlined,
-                                label: m.menuImportPlaylists,
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'export_all',
-                              child: _PlaylistMenuRowStatic(
-                                icon: Icons.save_alt_outlined,
-                                label: m.exportAll,
-                              ),
-                            ),
-                          ];
-                        },
+                            ];
+                          },
+                        ),
+                      IconButton(
+                        tooltip: l10n.menuImportPlaylists,
+                        icon: Icon(
+                          Icons.file_download_outlined,
+                          color: Colors.white.withValues(alpha: 0.95),
+                        ),
+                        onPressed: () =>
+                            _handleMainMenu('import', userPl),
+                      ),
+                      IconButton(
+                        tooltip: l10n.exportAll,
+                        icon: Icon(
+                          Icons.save_alt_outlined,
+                          color: Colors.white.withValues(alpha: 0.95),
+                        ),
+                        onPressed: () =>
+                            _handleMainMenu('export_all', userPl),
                       ),
                     ],
                   ),
