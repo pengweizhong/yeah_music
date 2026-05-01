@@ -572,6 +572,8 @@ class MusicService {
 
   static Stream<PlayerState> get playerStateStream => _player.playerStateStream;
 
+  static Stream<PlayerException> get errorStream => _player.errorStream;
+
   static Duration? get duration => _player.duration;
 
   static int? get currentIndex => _player.currentIndex;

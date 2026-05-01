@@ -43,8 +43,11 @@ class PlayListProvider extends ChangeNotifier {
 
   StreamSubscription<PlayerState>? _playerCompletionSubscription;
   StreamSubscription<int?>? _playerIndexSubscription;
+  StreamSubscription<PlayerException>? _playerErrorSubscription;
   ProcessingState? _lastProcessingStateFromPlayer;
   bool _completionHandlerRunning = false;
+  bool _errorSkipHandlerRunning = false;
+  DateTime _lastErrorSkipAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// 串行切歌 / 换队列，避免连点下一曲时多次 [playAt] 与 [MusicService] 交错导致打断加载后不播放。
   Future<void> _playbackNavChain = Future<void>.value();
@@ -532,6 +535,7 @@ class PlayListProvider extends ChangeNotifier {
     }
     _attachPlaybackCompletionListener();
     _attachPlayerIndexListener();
+    _attachPlaybackErrorListener();
     if (!kIsWeb && Platform.isAndroid) {
       AndroidCarLyricsSync.attach(this);
     }
@@ -702,6 +706,42 @@ class PlayListProvider extends ChangeNotifier {
     });
   }
 
+  /// Linux/mpv: 解码异常时自动跳到下一曲，避免整队列卡在坏帧。
+  void _attachPlaybackErrorListener() {
+    _playerErrorSubscription?.cancel();
+    _playerErrorSubscription = MusicService.errorStream.listen((error) {
+      if (kIsWeb || !Platform.isLinux) return;
+      if (_errorSkipHandlerRunning) return;
+      final now = DateTime.now();
+      if (now.difference(_lastErrorSkipAt) < const Duration(milliseconds: 900)) {
+        return;
+      }
+      if (_playbackNavDepth > 0) return;
+      if (playList.isEmpty) return;
+      _lastErrorSkipAt = now;
+      _errorSkipHandlerRunning = true;
+      Future<void>.delayed(const Duration(milliseconds: 120), () async {
+        try {
+          if (_playbackMode == PlaybackMode.playOnce) {
+            await MusicService().pause();
+            return;
+          }
+          if (await _tryConsumeDeferredPlayNext()) return;
+          final resume = _takeResumeAfterDeferredIfApplicable();
+          if (resume != null) {
+            await playAt(resume);
+            return;
+          }
+          await _enqueuePlaybackNav(() async => _applyPlayNextSteps(1));
+        } catch (e, st) {
+          appLog.e('Linux 解码异常自动跳过失败', error: e, stackTrace: st);
+        } finally {
+          _errorSkipHandlerRunning = false;
+        }
+      });
+    });
+  }
+
   Future<void> _onPlaybackTrackCompleted() async {
     // Linux (media_kit/mpv): 在 completed 边界立刻换源，偶发触发 ffmpeg flac
     // 帧头/同步码异常。短暂让出事件循环后再切下一首可显著降低该竞态。
@@ -761,6 +801,7 @@ class PlayListProvider extends ChangeNotifier {
     _sleepShutdownTimer?.cancel();
     _playerCompletionSubscription?.cancel();
     _playerIndexSubscription?.cancel();
+    _playerErrorSubscription?.cancel();
     AndroidCarLyricsSync.detach();
     super.dispose();
   }

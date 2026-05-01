@@ -2,6 +2,7 @@
 
 #include <flutter_linux/flutter_linux.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gio/gio.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -11,9 +12,83 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlMethodChannel* taskbar_progress_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+static GDBusConnection* taskbar_progress_dbus_connection() {
+  static GDBusConnection* connection = nullptr;
+  if (connection != nullptr) return connection;
+  g_autoptr(GError) error = nullptr;
+  connection = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error);
+  return connection;
+}
+
+static void emit_taskbar_progress_signal(bool visible, double progress) {
+  auto* conn = taskbar_progress_dbus_connection();
+  if (conn == nullptr) return;
+  if (progress < 0.0) progress = 0.0;
+  if (progress > 1.0) progress = 1.0;
+  g_autofree gchar* app_uri =
+      g_strdup_printf("application://%s.desktop", APPLICATION_ID);
+  GVariantBuilder props_builder;
+  g_variant_builder_init(&props_builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&props_builder, "{sv}", "progress-visible",
+                        g_variant_new_boolean(visible));
+  g_variant_builder_add(&props_builder, "{sv}", "progress",
+                        g_variant_new_double(progress));
+  g_autoptr(GError) error = nullptr;
+  g_dbus_connection_emit_signal(
+      conn, nullptr, "/com/canonical/Unity/LauncherEntry",
+      "com.canonical.Unity.LauncherEntry", "Update",
+      g_variant_new("(sa{sv})", app_uri, &props_builder), &error);
+}
+
+static void taskbar_progress_method_call_cb(FlMethodChannel* channel,
+                                            FlMethodCall* method_call,
+                                            gpointer user_data) {
+  const gchar* method = fl_method_call_get_name(method_call);
+  FlValue* args = fl_method_call_get_args(method_call);
+  g_autoptr(FlMethodResponse) response = nullptr;
+  if (strcmp(method, "setProgress") == 0) {
+    bool visible = true;
+    double progress = 0.0;
+    if (args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP) {
+      FlValue* visible_val = fl_value_lookup_string(args, "visible");
+      if (visible_val != nullptr &&
+          fl_value_get_type(visible_val) == FL_VALUE_TYPE_BOOL) {
+        visible = fl_value_get_bool(visible_val);
+      }
+      FlValue* progress_val = fl_value_lookup_string(args, "progress");
+      if (progress_val != nullptr &&
+          fl_value_get_type(progress_val) == FL_VALUE_TYPE_FLOAT) {
+        progress = fl_value_get_float(progress_val);
+      } else if (progress_val != nullptr &&
+                 fl_value_get_type(progress_val) == FL_VALUE_TYPE_INT) {
+        progress = static_cast<double>(fl_value_get_int(progress_val));
+      }
+    }
+    emit_taskbar_progress_signal(visible, progress);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+  } else if (strcmp(method, "clearProgress") == 0) {
+    emit_taskbar_progress_signal(false, 0.0);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+  } else {
+    response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+  fl_method_call_respond(method_call, response, nullptr);
+}
+
+static void setup_taskbar_progress_channel(MyApplication* self, FlView* view) {
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->taskbar_progress_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "yeah_music/linux_taskbar_progress", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+      self->taskbar_progress_channel, taskbar_progress_method_call_cb,
+      g_object_ref(self), g_object_unref);
+}
 
 static void set_window_icon_from_asset(GtkWindow* window) {
   // Prefer the bundled Flutter asset path. Try both executable-relative and
@@ -108,6 +183,7 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+  setup_taskbar_progress_channel(self, view);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
@@ -154,6 +230,7 @@ static void my_application_shutdown(GApplication* application) {
 // Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  g_clear_object(&self->taskbar_progress_channel);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }

@@ -36,6 +36,7 @@ import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/utils/android_notification_permission.dart';
 import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
+import 'package:yeah_music/widgets/linux_taskbar_progress_host.dart';
 import 'package:yeah_music/widgets/linux_tray_host.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 import 'package:yeah_music/services/android_media_session_bridge.dart';
@@ -424,9 +425,11 @@ class _YeahMusicAppState extends State<YeahMusicApp>
             return DesktopPlaybackShortcutsListener(
               controller: context.read<PlaybackShortcutController>(),
               child: DesktopFloatingLyricsHost(
-                child: LinuxTrayHost(
-                  child: MacosMenuBarLyricsHost(
-                    child: child ?? const SizedBox.shrink(),
+                child: LinuxTaskbarProgressHost(
+                  child: LinuxTrayHost(
+                    child: MacosMenuBarLyricsHost(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
