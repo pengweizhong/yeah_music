@@ -120,7 +120,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       context: context,
       controller: _listScrollController,
       songs: _lastOrderedSongs,
-      itemExtent: kSongPlaylistRowExtent,
+      itemExtent: effectiveSongPlaylistRowExtent(),
       playList: p,
       scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (path) {
@@ -579,7 +579,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                   context: context,
                   controller: _listScrollController,
                   songs: orderedSongs,
-                  itemExtent: kSongPlaylistRowExtent,
+                  itemExtent: effectiveSongPlaylistRowExtent(),
                   playList: playList,
                   scrollToTopWhenCurrentMissingFromList: true,
                   onScrollApplied: (path) {

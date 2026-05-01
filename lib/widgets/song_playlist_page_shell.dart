@@ -26,6 +26,15 @@ double songPlaylistListBottomPadding(BuildContext context) =>
 const double kSongPlaylistRowExtent = 65;
 const double kSongPlaylistRowExtentLinux = 70;
 
+/// 默认歌曲行高在当前平台的有效值（Linux 适当放大以匹配字体度量）。
+double effectiveSongPlaylistRowExtent([double itemExtent = kSongPlaylistRowExtent]) {
+  if (defaultTargetPlatform == TargetPlatform.linux &&
+      itemExtent == kSongPlaylistRowExtent) {
+    return kSongPlaylistRowExtentLinux;
+  }
+  return itemExtent;
+}
+
 /// 主题背景 + Scaffold（extendBodyBehindAppBar）+ MiniPlayer；正文配合 [SongPlaylistBodyUnderlapColumn]。
 class SongPlaylistThemedScaffold extends StatelessWidget {
   const SongPlaylistThemedScaffold({
@@ -126,11 +135,7 @@ class SongPlaylistSongListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomPad =
         songPlaylistListBottomPadding(context) + listBottomInsetExtra;
-    final effectiveItemExtent =
-        defaultTargetPlatform == TargetPlatform.linux &&
-                itemExtent == kSongPlaylistRowExtent
-            ? kSongPlaylistRowExtentLinux
-            : itemExtent;
+    final effectiveItemExtent = effectiveSongPlaylistRowExtent(itemExtent);
     return Consumer<PlayListProvider>(
       builder: (context, playList, _) {
         Widget listCore = ListView.builder(

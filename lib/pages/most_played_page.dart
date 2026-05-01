@@ -79,7 +79,7 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
       context: context,
       controller: _listScrollController,
       songs: songs,
-      itemExtent: kSongPlaylistRowExtent,
+      itemExtent: effectiveSongPlaylistRowExtent(),
       playList: playList,
       scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (_) {
@@ -460,7 +460,7 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
                       context: context,
                       controller: _listScrollController,
                       songs: songs,
-                      itemExtent: kSongPlaylistRowExtent,
+                      itemExtent: effectiveSongPlaylistRowExtent(),
                       playList: playList,
                       scrollToTopWhenCurrentMissingFromList: true,
                       onScrollApplied: (_) {

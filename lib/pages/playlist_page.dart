@@ -134,7 +134,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       context: context,
       controller: _listScrollController,
       songs: songs,
-      itemExtent: kSongPlaylistRowExtent,
+      itemExtent: effectiveSongPlaylistRowExtent(),
       playList: pl,
       scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (p) {
@@ -500,7 +500,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
               context: context,
               controller: _listScrollController,
               songs: _filteredSongs,
-              itemExtent: kSongPlaylistRowExtent,
+              itemExtent: effectiveSongPlaylistRowExtent(),
               playList: playListProvider,
               scrollToTopWhenCurrentMissingFromList: true,
               onScrollApplied: (p) {
@@ -915,7 +915,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         final l10n = AppLocalizations.of(context);
         return ScrollAwareListFrame(
           child: ListView.builder(
-            itemExtent: kSongPlaylistRowExtent,
+            itemExtent: effectiveSongPlaylistRowExtent(),
             itemCount: results.length,
             itemBuilder: (context, index) {
               final song = results[index];
