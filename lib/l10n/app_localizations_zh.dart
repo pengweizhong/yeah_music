@@ -1527,6 +1527,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songPageMoreEditMusicTagsInline => '编辑内嵌标签…';
 
   @override
+  String get songPageInlineTagsUnstableTitle => '提示';
+
+  @override
+  String get songPageInlineTagsUnstableBody =>
+      '此功能尚未完全稳定，写入时可能损坏音频文件内的元数据。建议先克隆或复制该歌曲作为备份后再继续。';
+
+  @override
+  String get songPageInlineTagsUnstableContinue => '仍要继续';
+
+  @override
+  String get songPageInlineTagsUnstableCancel => '取消';
+
+  @override
   String get songPageInlineTagsEditorTitle => '编辑内嵌标签';
 
   @override
@@ -3964,6 +3977,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get songPageMoreEditMusicTagsInline => '编辑内嵌标签…';
+
+  @override
+  String get songPageInlineTagsUnstableTitle => '提示';
+
+  @override
+  String get songPageInlineTagsUnstableBody =>
+      '此功能尚未完全稳定，写入时可能损坏音频文件内的元数据。建议先克隆或复制该歌曲作为备份后再继续。';
+
+  @override
+  String get songPageInlineTagsUnstableContinue => '仍要继续';
+
+  @override
+  String get songPageInlineTagsUnstableCancel => '取消';
 
   @override
   String get songPageInlineTagsEditorTitle => '编辑内嵌标签';
@@ -6405,6 +6431,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get songPageMoreEditMusicTagsInline => '編輯內嵌標籤…';
+
+  @override
+  String get songPageInlineTagsUnstableTitle => '提示';
+
+  @override
+  String get songPageInlineTagsUnstableBody =>
+      '此功能尚未完全穩定，寫入時可能損壞音訊檔內的詮釋資料。建議先複製或拷貝該歌曲作備份後再繼續。';
+
+  @override
+  String get songPageInlineTagsUnstableContinue => '仍要繼續';
+
+  @override
+  String get songPageInlineTagsUnstableCancel => '取消';
 
   @override
   String get songPageInlineTagsEditorTitle => '編輯內嵌標籤';

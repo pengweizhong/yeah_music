@@ -2961,6 +2961,30 @@ abstract class AppLocalizations {
   /// **'Edit embedded tags…'**
   String get songPageMoreEditMusicTagsInline;
 
+  /// No description provided for @songPageInlineTagsUnstableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notice'**
+  String get songPageInlineTagsUnstableTitle;
+
+  /// No description provided for @songPageInlineTagsUnstableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded tag editing isn’t fully stable yet and may corrupt metadata in the file. We recommend copying or duplicating the song as a backup before you continue.'**
+  String get songPageInlineTagsUnstableBody;
+
+  /// No description provided for @songPageInlineTagsUnstableContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get songPageInlineTagsUnstableContinue;
+
+  /// No description provided for @songPageInlineTagsUnstableCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get songPageInlineTagsUnstableCancel;
+
   /// No description provided for @songPageInlineTagsEditorTitle.
   ///
   /// In en, this message translates to:

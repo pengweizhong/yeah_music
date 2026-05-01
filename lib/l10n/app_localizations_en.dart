@@ -1616,6 +1616,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPageMoreEditMusicTagsInline => 'Edit embedded tags…';
 
   @override
+  String get songPageInlineTagsUnstableTitle => 'Notice';
+
+  @override
+  String get songPageInlineTagsUnstableBody =>
+      'Embedded tag editing isn’t fully stable yet and may corrupt metadata in the file. We recommend copying or duplicating the song as a backup before you continue.';
+
+  @override
+  String get songPageInlineTagsUnstableContinue => 'Continue anyway';
+
+  @override
+  String get songPageInlineTagsUnstableCancel => 'Cancel';
+
+  @override
   String get songPageInlineTagsEditorTitle => 'Edit embedded tags';
 
   @override

@@ -18,11 +18,23 @@ import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
 
 /// 底部表单：编辑内嵌标签（写入磁盘后再由调用方刷新内存/Hive）。
+/// 会先弹出风险提示，确认后再打开表单。
 Future<void> showSongInlineTagsEditorSheet({
   required BuildContext navigatorContext,
   required Song song,
   required Future<void> Function(String path) onSavedReload,
 }) async {
+  final l10n = AppLocalizations.of(navigatorContext);
+  final proceed = await showAppConfirmDialog(
+    context: navigatorContext,
+    title: l10n.songPageInlineTagsUnstableTitle,
+    message: l10n.songPageInlineTagsUnstableBody,
+    cancelLabel: l10n.songPageInlineTagsUnstableCancel,
+    confirmLabel: l10n.songPageInlineTagsUnstableContinue,
+    barrierDismissible: false,
+  );
+  if (proceed != true) return;
+  if (!navigatorContext.mounted) return;
   await showModalBottomSheet<void>(
     context: navigatorContext,
     showDragHandle: false,

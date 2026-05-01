@@ -1550,6 +1550,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songPageMoreEditMusicTagsInline => '埋め込みタグを編集…';
 
   @override
+  String get songPageInlineTagsUnstableTitle => '確認';
+
+  @override
+  String get songPageInlineTagsUnstableBody =>
+      'この機能はまだ十分に安定しておらず、書き込みでファイルのメタデータが壊れることがあります。続行する前に曲をコピーや複製でバックアップすることをおすすめします。';
+
+  @override
+  String get songPageInlineTagsUnstableContinue => '続行する';
+
+  @override
+  String get songPageInlineTagsUnstableCancel => 'キャンセル';
+
+  @override
   String get songPageInlineTagsEditorTitle => '埋め込みタグを編集';
 
   @override
