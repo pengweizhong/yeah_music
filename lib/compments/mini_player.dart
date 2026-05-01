@@ -6,6 +6,7 @@ import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/pages/song_page.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
@@ -83,25 +84,21 @@ class MiniPlayer extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                currentSong.title ?? '未知标题',
+                              AutoMarqueeSingleLineText(
+                                text: currentSong.title ?? '未知标题',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                currentSong.artist ?? '未知艺术家',
+                              AutoMarqueeSingleLineText(
+                                text: currentSong.artist ?? '未知艺术家',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.white.withValues(alpha: 0.7),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),

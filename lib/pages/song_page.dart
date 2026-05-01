@@ -38,6 +38,7 @@ import 'package:yeah_music/utils/lyric_highlight_gradient.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
@@ -2036,8 +2037,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                song.title ?? l10n.pageUnknownTitle,
+                              AutoMarqueeSingleLineText(
+                                text: song.title ?? l10n.pageUnknownTitle,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
@@ -2045,21 +2046,17 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               if (song.artist != null && song.artist!.isNotEmpty)
-                                Text(
-                                  song.artist!,
+                                AutoMarqueeSingleLineText(
+                                  text: song.artist!,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white.withValues(alpha: 0.65),
                                     fontWeight: FontWeight.w400,
                                   ),
                                   textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                             ],
                           ),

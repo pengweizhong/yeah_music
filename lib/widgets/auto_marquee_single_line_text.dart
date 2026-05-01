@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 ///
 /// [enableMarquee] 为 false 时不滚动（单行省略），用于「仅当前播放行跑马灯」等场景。
 ///
+/// [textAlign] 仅在单行静态展示（未跑马灯）时生效。
+///
 /// 动画状态混用 [TickerProviderStateMixin]：[LayoutBuilder] 在同一布局阶段可能对子树多次
 /// 回调 build；若在此期间销毁并重建 [AnimationController]，[SingleTickerProviderStateMixin]
 /// 会在尚未释放前一 ticker 槽位时误判「多 ticker」断言。
@@ -16,12 +18,16 @@ class AutoMarqueeSingleLineText extends StatefulWidget {
     required this.text,
     required this.style,
     this.enableMarquee = true,
+    this.textAlign,
     this.gapBetweenLoops = 40,
     this.pixelsPerSecond = 36,
   });
 
   final String text;
   final TextStyle style;
+
+  /// 可用宽度足以单行展示时对齐方式（跑马灯模式下由横向滚动呈现，不适用）。
+  final TextAlign? textAlign;
 
   /// 为 false 时始终使用省略号，不启动滚动动画。
   final bool enableMarquee;
@@ -112,6 +118,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: widget.style,
+            textAlign: widget.textAlign,
           );
         }
         if (!widget.enableMarquee) {
@@ -120,6 +127,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: widget.style,
+            textAlign: widget.textAlign,
           );
         }
         final span = TextSpan(text: widget.text, style: widget.style);
@@ -139,6 +147,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: widget.style,
+            textAlign: widget.textAlign,
           );
         }
 
@@ -151,6 +160,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: widget.style,
+            textAlign: widget.textAlign,
           );
         }
 
