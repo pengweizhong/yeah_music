@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:yeah_music/themes/user_theme_gradient_foreground_scope.dart';
 import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
 
-/// 白昼渐变底上的主字色（对齐 [AppMaterialThemes.light].colorScheme.onSurface）。
-/// 偏冷的近黑墨，略高于夜间白字的「感知对比」需求（浅灰底易发灰晕）。
-const Color kGradLightInk = Color(0xFF050A12);
+/// 白昼渐变底上的主字色（与浅色 [Theme] 正文一致，纯黑以保证对比）。
+const Color kGradLightInk = Color(0xFF000000);
 
-/// 次一级说明、辅助图标（比早期 #2B3441 更深，避免在 scaffold 灰底上发虚）
-const Color kGradLightInkMuted = Color(0xFF192433);
+/// 次一级说明、辅助图标
+const Color kGradLightInkMuted = Color(0xFF424242);
 
 /// 嵌在浅色实色毛玻璃 sheet / dialog 内的子树：优先用当前 [Theme.colorScheme] 墨色，盖住外层亮色渐变强加的白。
 class FrostedSheetForegroundScope extends InheritedWidget {
@@ -73,7 +72,7 @@ extension GradOnThemedBackground on BuildContext {
       return wp.foregroundMuted.withValues(alpha: a);
     }
     if (UserThemeGradientForegroundScope.maybeOf(this) != null) {
-      return Colors.white.withValues(alpha: 0.65);
+      return Colors.white.withValues(alpha: 0.78 * a.clamp(0.0, 1.0));
     }
     if (Theme.of(this).brightness == Brightness.light) {
       return kGradLightInkMuted.withValues(alpha: a);
@@ -119,9 +118,9 @@ abstract final class FrostedPalette {
         /// 白昼与底栏同色实板：与白字链路一致（避免浅色雾面 + 白字发糊）。
         return const Color(0xEE28323D);
       case FrostedSurfaceKind.sheet:
-        return const Color(0xFBF8FAFC);
+        return Colors.white;
       case FrostedSurfaceKind.dialog:
-        return const Color(0xFFF8FAFC);
+        return Colors.white;
     }
   }
 

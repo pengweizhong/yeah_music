@@ -795,7 +795,7 @@
   "librarySongsDeletedN": "{n} 曲を削除しました",
   "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
   "fabNewPlaylist": "新規プレイリスト",
-  "emptyPlaylistsHint": "プレイリストはまだありません。\n再生画面や曲一覧から曲を追加できます。\n\n右上の「⋮」から取り込み／エクスポートや複数選択ができます。",
+  "emptyPlaylistsHint": "プレイリストはまだありません。\n再生画面や曲一覧から曲を追加できます。\n\n右上の「⋮」から取り込みや複数選択ができます。",
   "sortByName": "名前順",
   "sortByPath": "パス順",
   "sortByCreated": "作成日時",

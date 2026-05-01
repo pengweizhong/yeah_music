@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
@@ -100,6 +101,12 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
+    final titleColor =
+        widget.isCurrent ? primary : context.gradFg();
+    final subtitleColor = widget.isCurrent
+        ? primary.withValues(alpha: 0.82)
+        : context.gradFgMuted();
+    final trailingIconColor = context.gradFg(0.72);
     final isLinuxDesktop = defaultTargetPlatform == TargetPlatform.linux;
     final titleStr = _effectiveTitle();
     return VisibilityDetector(
@@ -155,7 +162,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                         widget.isSelected
                             ? Icons.check_circle
                             : Icons.radio_button_unchecked,
-                        color: widget.isSelected ? primary : Colors.white38,
+                        color: widget.isSelected ? primary : context.gradFg(0.38),
                         size: 26,
                       ),
                     ),
@@ -175,7 +182,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                         SongListMarqueeWhenCurrentLine(
                           text: titleStr,
                           style: TextStyle(
-                            color: widget.isCurrent ? primary : Colors.white,
+                            color: titleColor,
                             fontSize: 16,
                             height: isLinuxDesktop ? 1.04 : null,
                             fontWeight: widget.isCurrent
@@ -189,9 +196,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                             ? SongListSubtitleWithQualityMarqueePlayCount(
                                 song: widget.song,
                                 textStyle: TextStyle(
-                                  color: widget.isCurrent
-                                      ? primary.withValues(alpha: 0.82)
-                                      : Colors.white.withValues(alpha: 0.6),
+                                  color: subtitleColor,
                                   fontSize: 13,
                                   height: isLinuxDesktop ? 1.0 : null,
                                 ),
@@ -204,9 +209,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                 fallbackSubtitle: widget.subtitle,
                                 compactBadge: false,
                                 textStyle: TextStyle(
-                                  color: widget.isCurrent
-                                      ? primary.withValues(alpha: 0.82)
-                                      : Colors.white.withValues(alpha: 0.6),
+                                  color: subtitleColor,
                                   fontSize: 13,
                                   height: isLinuxDesktop ? 1.0 : null,
                                 ),
@@ -223,7 +226,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                   if (!widget.selectionMode &&
                       widget.onMoreMenuTap != null)
                     IconButton(
-                      icon: const Icon(Icons.more_horiz, color: Colors.white70),
+                      icon: Icon(Icons.more_horiz, color: trailingIconColor),
                       tooltip: l10n.tooltipMoreActions,
                       onPressed: widget.onMoreMenuTap,
                       padding: EdgeInsets.zero,
@@ -235,7 +238,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                     )
                   else if (!widget.selectionMode && widget.showAddToPlaylist)
                     IconButton(
-                      icon: const Icon(Icons.playlist_add, color: Colors.white70),
+                      icon: Icon(Icons.playlist_add, color: trailingIconColor),
                       tooltip: l10n.tooltipAddToPlaylist,
                       onPressed: () =>
                           showAddToUserPlaylistsSheet(context, widget.song),

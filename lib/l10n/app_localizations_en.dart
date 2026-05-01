@@ -2173,7 +2173,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyPlaylistsHint =>
-      'No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import/export and multi-select.';
+      'No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import and multi-select.';
 
   @override
   String get sortByName => 'By name';

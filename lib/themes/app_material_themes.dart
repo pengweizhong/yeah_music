@@ -9,8 +9,8 @@ const PageTransitionsTheme _kPageTransitions = PageTransitionsTheme(
   },
 );
 
-/// 日间浅色底板（与自定义渐变主页协调），略偏冷灰而非刺白。
-const Color _kLightScaffoldTone = Color(0xFFDDE4ED);
+/// 日间浅色底板（与自定义渐变主页协调），略提亮减轻与墨字之间的「发闷」感。
+const Color _kLightScaffoldTone = Color(0xFFE8EDF5);
 
 abstract final class AppMaterialThemes {
   static ThemeData get light {
@@ -71,7 +71,7 @@ abstract final class AppMaterialThemes {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

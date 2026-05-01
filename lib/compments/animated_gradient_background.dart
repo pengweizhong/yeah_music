@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// 简单背景组件（移除动画，提升性能）
@@ -55,13 +54,13 @@ class GradientColorExtractor {
     return processedColors;
   }
 
-  /// 获取默认颜色（深色主题）
+  /// 获取默认颜色（与 [ThemeConfigProvider] 深色默认渐变协调）
   static List<Color> getDefaultColors() {
     return [
-      const Color(0xFF121212),
-      const Color(0xFF1A1A1A),
-      const Color(0xFF0F0F0F),
-      const Color(0xFF0A0A0A),
+      const Color(0xFF1C2128),
+      const Color(0xFF252B34),
+      const Color(0xFF181C22),
+      const Color(0xFF14181E),
     ];
   }
 }

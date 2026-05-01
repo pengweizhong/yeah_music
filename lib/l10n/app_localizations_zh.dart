@@ -2073,7 +2073,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get emptyPlaylistsHint =>
-      '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入/导出、单选/多选';
+      '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入、单选/多选';
 
   @override
   String get sortByName => '按名称';
@@ -4526,7 +4526,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get emptyPlaylistsHint =>
-      '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入/导出、单选/多选';
+      '还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入、单选/多选';
 
   @override
   String get sortByName => '按名称';
@@ -6981,7 +6981,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get emptyPlaylistsHint =>
-      '尚無歌單\n在播放頁面或歌曲清單可將歌曲加入歌單\n\n可於右上角「⋮」匯入／匯出、單選／多選';
+      '尚無歌單\n在播放頁面或歌曲清單可將歌曲加入歌單\n\n可於右上角「⋮」匯入、單選／多選';
 
   @override
   String get sortByName => '依名稱';

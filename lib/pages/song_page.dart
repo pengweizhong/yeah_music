@@ -47,7 +47,8 @@ import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
-import 'package:yeah_music/widgets/song_metadata_dialog.dart' show showAudioMetadataDialog;
+import 'package:yeah_music/widgets/song_metadata_dialog.dart'
+    show showAudioMetadataDialog;
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
     show AudioMetadata, readMetadata;
@@ -74,6 +75,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   late ScrollController _scrollController;
+
   /// 分屏页右侧歌词列表独立滚动，与全屏 [ListView] 解耦
   late ScrollController _splitLyricScrollController;
 
@@ -182,7 +184,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       );
       // 从迷你条等仅 push [SongPage] 而无 [navToSongPage] 时补标「全库」；不覆盖最近/歌单/adHoc 会话
       if (!playListProvider.hasPlaybackQueueOverride) {
-        final keepNonLibrary = playListProvider.playbackSessionIsRecentList ||
+        final keepNonLibrary =
+            playListProvider.playbackSessionIsRecentList ||
             playListProvider.playbackSessionIsMostPlayedList ||
             playListProvider.playbackSessionIsUserPlaylistKind ||
             playListProvider.playbackSessionIsAdHoc;
@@ -354,7 +357,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _pendingExternalAudioReloadPath = null;
-    SettingsService.lyricsUiStorageRevision.removeListener(_lyricsUiRevListener);
+    SettingsService.lyricsUiStorageRevision.removeListener(
+      _lyricsUiRevListener,
+    );
     unawaited(WakelockPlus.disable());
     _positionSubscription?.cancel();
     _playingSubscription?.cancel();
@@ -397,7 +402,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _openInlineTagsEditor(BuildContext navigatorContext, Song song) async {
+  Future<void> _openInlineTagsEditor(
+    BuildContext navigatorContext,
+    Song song,
+  ) async {
     await showSongInlineTagsEditorSheet(
       navigatorContext: navigatorContext,
       song: song,
@@ -434,7 +442,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       final scrollLine = lineIndex >= 0 ? lineIndex : 0;
       final initialOffset = parsed.length <= 1
           ? 0.0
-          : (scrollLine * _lineScrollUnitEstimate()).clamp(0.0, double.infinity);
+          : (scrollLine * _lineScrollUnitEstimate()).clamp(
+              0.0,
+              double.infinity,
+            );
 
       _scrollController.dispose();
       _scrollController = ScrollController(initialScrollOffset: initialOffset);
@@ -470,11 +481,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _lyrics.isEmpty) return;
         if (_currentLyricIndex >= 0) {
-          _scrollToCurrentLyric(
-            _currentLyricIndex,
-            force: true,
-            instant: true,
-          );
+          _scrollToCurrentLyric(_currentLyricIndex, force: true, instant: true);
         }
       });
     } else {
@@ -552,10 +559,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     // 自动切歌由 PlayListProvider 全局订阅 completion，避免离开本页后无法连播
   }
 
-  void _updateCurrentLyric(
-    Duration position, {
-    bool instantScroll = false,
-  }) {
+  void _updateCurrentLyric(Duration position, {bool instantScroll = false}) {
     final newIndex = LyricsUtils.findCurrentLyricIndex(_lyrics, position);
     // 即使索引相同，也要更新激活状态，确保UI同步
     if (newIndex >= 0 && newIndex < _lyrics.length) {
@@ -572,10 +576,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         // 滚动到当前歌词行
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            _scrollToCurrentLyric(
-              newIndex,
-              instant: instantScroll,
-            );
+            _scrollToCurrentLyric(newIndex, instant: instantScroll);
           }
         });
       }
@@ -599,11 +600,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       return;
     }
     if (_currentPage == 2) {
-      _scrollSplitToCurrentLyric(
-        index,
-        force: force,
-        instant: instant,
-      );
+      _scrollSplitToCurrentLyric(index, force: force, instant: instant);
       return;
     }
     if (!_scrollController.hasClients) return;
@@ -688,11 +685,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       if (instant) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            _scrollSplitToCurrentLyric(
-              index,
-              force: force,
-              instant: instant,
-            );
+            _scrollSplitToCurrentLyric(index, force: force, instant: instant);
           }
         });
       }
@@ -741,11 +734,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       }
     } else if (_currentPage == 1) {
       if (_currentLyricIndex < _lyricKeys.length) {
-        _scrollToCurrentLyric(
-          _currentLyricIndex,
-          force: true,
-          instant: false,
-        );
+        _scrollToCurrentLyric(_currentLyricIndex, force: true, instant: false);
       }
     }
   }
@@ -783,22 +772,21 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       builder: (sheetContext) {
         final h = MediaQuery.sizeOf(sheetContext).height * 0.56;
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
           child: FrostedGlassBottomSheet(
-            child: Theme(
-              data: frostedBottomSheetContentTheme(sheetContext),
-              child: SafeArea(
-                child: SizedBox(
-                  height: h,
-                  child: _PlaybackQueueSheet(
-                    provider: playListProvider,
-                    onPick: (index) async {
-                      Navigator.pop(sheetContext);
-                      await playListProvider.playAt(index);
-                      _initLyrics();
-                      _updateDuration();
-                    },
-                  ),
+            child: SafeArea(
+              child: SizedBox(
+                height: h,
+                child: _PlaybackQueueSheet(
+                  provider: playListProvider,
+                  onPick: (index) async {
+                    Navigator.pop(sheetContext);
+                    await playListProvider.playAt(index);
+                    _initLyrics();
+                    _updateDuration();
+                  },
                 ),
               ),
             ),
@@ -820,36 +808,33 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
           child: FrostedGlassBottomSheet(
-            child: Theme(
-              data: frostedBottomSheetContentTheme(sheetContext),
-              child: SafeArea(
-                top: false,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.9,
-                  ),
-                  child: StatefulBuilder(
-                    builder: (context, setModalState) {
-                      return LyricStyleSettingsPanel(
-                        settings: _settings,
-                        pageContext: context,
-                        keepScreenAwake: _keepScreenAwake,
-                        onKeepScreenAwakeChanged: (v) {
-                          unawaited(
-                            _setKeepScreenAwake(
-                              v,
-                              alsoNotifySheet: () => setModalState(() {}),
-                            ),
-                          );
-                        },
-                        onUpdate: () {
-                          setModalState(() {});
-                          setState(() {});
-                        },
-                        onPersist: _saveSettings,
-                      );
-                    },
-                  ),
+            child: SafeArea(
+              top: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.9,
+                ),
+                child: StatefulBuilder(
+                  builder: (context, setModalState) {
+                    return LyricStyleSettingsPanel(
+                      settings: _settings,
+                      pageContext: context,
+                      keepScreenAwake: _keepScreenAwake,
+                      onKeepScreenAwakeChanged: (v) {
+                        unawaited(
+                          _setKeepScreenAwake(
+                            v,
+                            alsoNotifySheet: () => setModalState(() {}),
+                          ),
+                        );
+                      },
+                      onUpdate: () {
+                        setModalState(() {});
+                        setState(() {});
+                      },
+                      onPersist: _saveSettings,
+                    );
+                  },
                 ),
               ),
             ),
@@ -963,51 +948,47 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        final sheetL10n = AppLocalizations.of(sheetContext);
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
           child: FrostedGlassBottomSheet(
-            child: Theme(
-              data: frostedBottomSheetContentTheme(sheetContext),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                      child: Text(
-                        l10n.playbackModeTitle,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: sheetContext.gradFg(),
+            child: SafeArea(
+              top: false,
+              child: Builder(
+                builder: (inner) {
+                  final innerL10n = AppLocalizations.of(inner);
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        child: Text(
+                          l10n.playbackModeTitle,
+                          style: Theme.of(inner).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                    ...PlaybackMode.values.map((mode) {
-                      final isSelected = provider.playbackMode == mode;
-                      return ListTile(
-                        leading: Icon(
-                          _getPlaybackModeIcon(mode),
-                          color: sheetContext.gradFg(),
-                        ),
-                        title: Text(playbackModeLabel(mode, sheetL10n)),
-                        trailing: isSelected
-                            ? Icon(Icons.check, color: primary)
-                            : null,
-                        onTap: () {
-                          provider.setPlaybackMode(mode);
-                          SettingsService.savePlaybackMode(mode);
-                          Navigator.pop(context);
-                        },
-                      );
-                    }),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                      ...PlaybackMode.values.map((mode) {
+                        final isSelected = provider.playbackMode == mode;
+                        return ListTile(
+                          leading: Icon(_getPlaybackModeIcon(mode)),
+                          title: Text(playbackModeLabel(mode, innerL10n)),
+                          trailing: isSelected
+                              ? Icon(Icons.check, color: primary)
+                              : null,
+                          onTap: () {
+                            provider.setPlaybackMode(mode);
+                            SettingsService.savePlaybackMode(mode);
+                            Navigator.pop(sheetContext);
+                          },
+                        );
+                      }),
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -1060,19 +1041,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: l10n.sleepTimerLabelMinutes,
-                        labelStyle: TextStyle(
-                          color: ctx.gradFgMuted(),
-                        ),
+                        labelStyle: TextStyle(color: ctx.gradFgMuted()),
                         hintText:
                             '$_customTimerMinMinutes–$_customTimerMaxMinutes',
-                        hintStyle: TextStyle(
-                          color: ctx.gradFg(0.38),
-                        ),
+                        hintStyle: TextStyle(color: ctx.gradFg(0.38)),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: ctx.gradBorder(0.22),
-                          ),
+                          borderSide: BorderSide(color: ctx.gradBorder(0.22)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -1183,9 +1158,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       return;
     }
     try {
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(path)]),
-      );
+      await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
     } catch (e, st) {
       appLog.e('share audio file failed', error: e, stackTrace: st);
       if (context.mounted) {
@@ -1197,7 +1170,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   Future<void> _uploadCurrentToOneDrive(BuildContext context, Song song) async {
     final l10n = AppLocalizations.of(context);
     try {
-      await context.read<OneDriveDownloadQueueController>().enqueueLibraryUploads([song]);
+      await context
+          .read<OneDriveDownloadQueueController>()
+          .enqueueLibraryUploads([song]);
       if (!context.mounted) return;
       showAppSnackBar(
         context,
@@ -1222,8 +1197,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       final text = msg.contains('not signed')
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
-              ? l10n.libraryBatchUploadNeedCloudFolder
-              : '$e';
+          ? l10n.libraryBatchUploadNeedCloudFolder
+          : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
@@ -1232,7 +1207,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _openMusicTagEditorExternal(BuildContext context, Song song) async {
+  Future<void> _openMusicTagEditorExternal(
+    BuildContext context,
+    Song song,
+  ) async {
     await MusicTagEditorLauncher.openMusicTagEditorWithFeedback(
       context,
       song,
@@ -1240,7 +1218,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _openSyncedLyricEditorExternal(BuildContext context, Song song) async {
+  Future<void> _openSyncedLyricEditorExternal(
+    BuildContext context,
+    Song song,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final path = song.path.trim();
     if (path.isEmpty) return;
@@ -1290,10 +1271,14 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _confirmDeleteCurrentSong(BuildContext context, Song song) async {
+  Future<void> _confirmDeleteCurrentSong(
+    BuildContext context,
+    Song song,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    final displayName =
-        (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
+    final displayName = (song.title?.trim().isNotEmpty ?? false)
+        ? song.title!.trim()
+        : p.basename(song.path);
 
     final step1 = await showAppConfirmDialog(
       context: context,
@@ -1330,7 +1315,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     navigator.maybePop();
   }
 
-  void _showSongMoreSheet(BuildContext context, PlayListProvider playListProvider) {
+  void _showSongMoreSheet(
+    BuildContext context,
+    PlayListProvider playListProvider,
+  ) {
     final song = playListProvider.currentSong;
     if (song == null) return;
     final navigatorContext = context;
@@ -1346,161 +1334,175 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
           child: FrostedGlassBottomSheet(
-            child: Theme(
-              data: frostedBottomSheetContentTheme(sheetContext),
-              child: SafeArea(
-                top: false,
-                child: Consumer<PlayListProvider>(
-                  builder: (ctx, provider, _) {
-                    return SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                            child: Text(
-                              l10n.songPageMoreSheetTitle,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: sheetContext.gradFg(),
-                              ),
+            child: SafeArea(
+              top: false,
+              child: Consumer<PlayListProvider>(
+                builder: (ctx, provider, _) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                          child: Text(
+                            l10n.songPageMoreSheetTitle,
+                            style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          ListTile(
-                            leading: Icon(
-                              provider.isSleepTimerActive
-                                  ? Icons.timer_off_rounded
-                                  : Icons.timer_rounded,
-                              color: sheetContext.gradFg(),
-                            ),
-                            title: Text(l10n.sleepTimerSheetTitle),
-                            subtitle: provider.isSleepTimerActive
-                                ? Text(l10n.sleepTimerCurrentN(provider.timerDuration))
-                                : null,
-                            trailing: provider.isSleepTimerActive
-                                ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
-                                : null,
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _showTimerSheet(navigatorContext, provider);
-                              });
-                            },
+                        ),
+                        ListTile(
+                          leading: Icon(
+                            provider.isSleepTimerActive
+                                ? Icons.timer_off_rounded
+                                : Icons.timer_rounded,
                           ),
-                          ListTile(
-                            leading: Icon(Icons.info_outline_rounded, color: sheetContext.gradFg()),
-                            title: Text(l10n.songPageMoreQueryMetadata),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _showSongMetadataDialog(navigatorContext, song);
-                              });
-                            },
+                          title: Text(l10n.sleepTimerSheetTitle),
+                          subtitle: provider.isSleepTimerActive
+                              ? Text(
+                                  l10n.sleepTimerCurrentN(
+                                    provider.timerDuration,
+                                  ),
+                                )
+                              : null,
+                          trailing: provider.isSleepTimerActive
+                              ? Icon(
+                                  Icons.check,
+                                  color: Theme.of(ctx).colorScheme.primary,
+                                )
+                              : null,
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _showTimerSheet(navigatorContext, provider);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.info_outline_rounded),
+                          title: Text(l10n.songPageMoreQueryMetadata),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _showSongMetadataDialog(navigatorContext, song);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.refresh_rounded),
+                          title: Text(l10n.libraryReloadMetadata),
+                          onTap: () {
+                            final path = song.path;
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((
+                              _,
+                            ) async {
+                              if (!mounted) return;
+                              final ctx2 = context;
+                              final doneText = AppLocalizations.of(
+                                ctx2,
+                              ).libraryReloadMetadataDone;
+                              await _reloadSongMetaAfterExternalMusicTagEdit(
+                                path,
+                              );
+                              if (!mounted || !ctx2.mounted) return;
+                              showAppSnackBar(
+                                ctx2,
+                                doneText,
+                                kind: AppSnackKind.success,
+                              );
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.cloud_upload_outlined),
+                          title: Text(l10n.songPageMoreUploadOneDrive),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _uploadCurrentToOneDrive(navigatorContext, song);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.share_outlined),
+                          title: Text(l10n.songPageMoreShare),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _shareSongFile(navigatorContext, song);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.edit_attributes_outlined),
+                          title: Text(l10n.songPageMoreEditMusicTagsInline),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _openInlineTagsEditor(navigatorContext, song);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.edit_note_outlined),
+                          title: Text(l10n.songPageMoreEditMusicTagsExternal),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _openMusicTagEditorExternal(
+                                navigatorContext,
+                                song,
+                              );
+                            });
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.subtitles_outlined),
+                          title: Text(l10n.songPageMoreEditLyricsExternal),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _openSyncedLyricEditorExternal(
+                                navigatorContext,
+                                song,
+                              );
+                            });
+                          },
+                        ),
+                        Divider(height: 1, color: ctx.gradBorder(0.2)),
+                        ListTile(
+                          leading: Icon(
+                            Icons.delete_outline_rounded,
+                            color: Theme.of(ctx).colorScheme.error,
                           ),
-                          ListTile(
-                            leading: Icon(Icons.refresh_rounded, color: sheetContext.gradFg()),
-                            title: Text(l10n.libraryReloadMetadata),
-                            onTap: () {
-                              final path = song.path;
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                                if (!mounted) return;
-                                final ctx = context;
-                                final doneText =
-                                    AppLocalizations.of(ctx).libraryReloadMetadataDone;
-                                await _reloadSongMetaAfterExternalMusicTagEdit(path);
-                                if (!mounted || !ctx.mounted) return;
-                                showAppSnackBar(
-                                  ctx,
-                                  doneText,
-                                  kind: AppSnackKind.success,
-                                );
-                              });
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.cloud_upload_outlined, color: sheetContext.gradFg()),
-                            title: Text(l10n.songPageMoreUploadOneDrive),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _uploadCurrentToOneDrive(navigatorContext, song);
-                              });
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.share_outlined, color: sheetContext.gradFg()),
-                            title: Text(l10n.songPageMoreShare),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _shareSongFile(navigatorContext, song);
-                              });
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.edit_attributes_outlined, color: sheetContext.gradFg()),
-                            title: Text(l10n.songPageMoreEditMusicTagsInline),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _openInlineTagsEditor(navigatorContext, song);
-                              });
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.edit_note_outlined, color: sheetContext.gradFg()),
-                            title: Text(l10n.songPageMoreEditMusicTagsExternal),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _openMusicTagEditorExternal(navigatorContext, song);
-                              });
-                            },
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.subtitles_outlined, color: sheetContext.gradFg()),
-                            title: Text(l10n.songPageMoreEditLyricsExternal),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _openSyncedLyricEditorExternal(navigatorContext, song);
-                              });
-                            },
-                          ),
-                          Divider(height: 1, color: sheetContext.gradBorder(0.2)),
-                          ListTile(
-                            leading: Icon(
-                              Icons.delete_outline_rounded,
+                          title: Text(
+                            l10n.actionDelete,
+                            style: TextStyle(
                               color: Theme.of(ctx).colorScheme.error,
                             ),
-                            title: Text(
-                              l10n.actionDelete,
-                              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-                            ),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _confirmDeleteCurrentSong(navigatorContext, song);
-                              });
-                            },
                           ),
-                          const SizedBox(height: 8),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              _confirmDeleteCurrentSong(navigatorContext, song);
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -1518,81 +1520,82 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        final l10n = AppLocalizations.of(sheetContext);
-        final isCustom = provider.isSleepTimerActive &&
+        final isCustom =
+            provider.isSleepTimerActive &&
             !_presetTimerMinutes.contains(provider.timerDuration);
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
           child: FrostedGlassBottomSheet(
-            child: Theme(
-              data: frostedBottomSheetContentTheme(sheetContext),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                      child: Text(
-                        l10n.sleepTimerSheetTitle,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: sheetContext.gradFg(),
+            child: SafeArea(
+              top: false,
+              child: Builder(
+                builder: (inner) {
+                  final l10n = AppLocalizations.of(inner);
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        child: Text(
+                          l10n.sleepTimerSheetTitle,
+                          style: Theme.of(inner).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                    if (provider.isSleepTimerActive)
+                      if (provider.isSleepTimerActive)
+                        ListTile(
+                          leading: const Icon(Icons.timer_off),
+                          title: Text(l10n.sleepTimerCancel),
+                          onTap: () {
+                            provider.cancelSleepTimer();
+                            Navigator.pop(sheetContext);
+                          },
+                        ),
+                      ..._presetTimerMinutes.map((minutes) {
+                        return ListTile(
+                          leading: const Icon(Icons.timer),
+                          title: Text(l10n.sleepTimerMinutesN(minutes)),
+                          trailing:
+                              provider.timerDuration == minutes &&
+                                  provider.isSleepTimerActive
+                              ? Icon(Icons.check, color: primary)
+                              : null,
+                          onTap: () {
+                            _startSleepTimer(minutes, provider);
+                            Navigator.pop(sheetContext);
+                          },
+                        );
+                      }),
                       ListTile(
-                        leading: Icon(Icons.timer_off, color: sheetContext.gradFg()),
-                        title: Text(l10n.sleepTimerCancel),
-                        onTap: () {
-                          provider.cancelSleepTimer();
-                          Navigator.pop(sheetContext);
-                        },
-                      ),
-                    ..._presetTimerMinutes.map((minutes) {
-                      return ListTile(
-                        leading: Icon(Icons.timer, color: sheetContext.gradFg()),
-                        title: Text(l10n.sleepTimerMinutesN(minutes)),
-                        trailing: provider.timerDuration == minutes &&
-                                provider.isSleepTimerActive
+                        leading: const Icon(Icons.edit_outlined),
+                        title: Text(l10n.sleepTimerCustom),
+                        subtitle: isCustom
+                            ? Text(
+                                l10n.sleepTimerCurrentN(provider.timerDuration),
+                              )
+                            : null,
+                        trailing: isCustom
                             ? Icon(Icons.check, color: primary)
                             : null,
-                        onTap: () {
+                        onTap: () async {
+                          final minutes = await _promptCustomTimerMinutes(
+                            sheetContext,
+                            provider.timerDuration,
+                          );
+                          if (!mounted || minutes == null) return;
                           _startSleepTimer(minutes, provider);
-                          Navigator.pop(sheetContext);
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
                         },
-                      );
-                    }),
-                    ListTile(
-                      leading: Icon(Icons.edit_outlined, color: sheetContext.gradFg()),
-                      title: Text(l10n.sleepTimerCustom),
-                      subtitle: isCustom
-                          ? Text(
-                              l10n.sleepTimerCurrentN(provider.timerDuration),
-                            )
-                          : null,
-                      trailing: isCustom
-                          ? Icon(Icons.check, color: primary)
-                          : null,
-                      onTap: () async {
-                        final minutes = await _promptCustomTimerMinutes(
-                          sheetContext,
-                          provider.timerDuration,
-                        );
-                        if (!mounted || minutes == null) return;
-                        _startSleepTimer(minutes, provider);
-                        if (sheetContext.mounted) {
-                          Navigator.pop(sheetContext);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -1687,10 +1690,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       return SizedBox(
         width: side,
         height: side,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: img,
-        ),
+        child: ClipRRect(borderRadius: BorderRadius.circular(16), child: img),
       );
     }
     return ClipRRect(
@@ -1698,20 +1698,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       child: Container(
         width: double.infinity,
         constraints: const BoxConstraints(maxWidth: 400),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: img,
-        ),
+        child: AspectRatio(aspectRatio: 1, child: img),
       ),
     );
   }
 
   /// 与第二页全屏歌词列表行完全一致的单元（显示模式/翻译/高亮/点击 seek）
-  Widget _lyricListItem(
-    int index,
-    Duration effectivePos,
-    GlobalKey? lineKey,
-  ) {
+  Widget _lyricListItem(int index, Duration effectivePos, GlobalKey? lineKey) {
     final line = _lyrics[index];
     final ts = line.timestamp;
     final played = ts != null && ts <= effectivePos;
@@ -1739,28 +1732,20 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     }
 
     if (linesToShow.isEmpty) {
-      return SizedBox(
-        key: lineKey,
-        height: 0.01,
-      );
+      return SizedBox(key: lineKey, height: 0.01);
     }
     final isShowingAll = displayMode == -1;
     final isShowingSingleLine =
         displayMode >= 0 && displayMode < line.lines.length;
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: _settings.lyricLineSpacing / 2,
-      ),
+      padding: EdgeInsets.symmetric(vertical: _settings.lyricLineSpacing / 2),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: ts == null ? null : () => _seekTo(ts),
         child: Container(
           key: lineKey,
-          padding: const EdgeInsets.symmetric(
-            vertical: 6,
-            horizontal: 8,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           child: Column(
             // 占满行宽，否则 [Text.textAlign] 在窄于父级的宽度上无效
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1772,7 +1757,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                     builder: (context) {
                       final originalIndex = isShowingAll ? i : displayMode;
                       final isOriginalLine = originalIndex == 0;
-                      final shouldHighlight = active &&
+                      final shouldHighlight =
+                          active &&
                           ((isShowingAll) ||
                               (isShowingSingleLine &&
                                   originalIndex == displayMode));
@@ -1794,16 +1780,19 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       final rowKind = shouldHighlight
                           ? LyricRowVisualKind.active
                           : (played
-                              ? LyricRowVisualKind.played
-                              : LyricRowVisualKind.upcoming);
-                      final rowGradient =
-                          lyricRowGradientOrNull(_settings, rowKind);
+                                ? LyricRowVisualKind.played
+                                : LyricRowVisualKind.upcoming);
+                      final rowGradient = lyricRowGradientOrNull(
+                        _settings,
+                        rowKind,
+                      );
                       final useRowGradient = rowGradient != null;
                       final solidColor = shouldHighlight
                           ? activeColor
                           : (played ? playedColor : upcomingColor);
-                      final displayColor =
-                          useRowGradient ? Colors.white : solidColor;
+                      final displayColor = useRowGradient
+                          ? Colors.white
+                          : solidColor;
                       return SizedBox(
                         width: double.infinity,
                         child: AnimatedDefaultTextStyle(
@@ -1812,8 +1801,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             fontSize: shouldHighlight && isOriginalLine
                                 ? _settings.originalFontSize + 2
                                 : (isOriginalLine
-                                    ? _settings.originalFontSize
-                                    : _settings.translationFontSize),
+                                      ? _settings.originalFontSize
+                                      : _settings.translationFontSize),
                             fontWeight: shouldHighlight
                                 ? FontWeight.w600
                                 : FontWeight.w400,
@@ -1826,13 +1815,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   blendMode: BlendMode.srcIn,
                                   shaderCallback: (bounds) =>
                                       rowGradient.createShader(
-                                    Rect.fromLTWH(
-                                      0,
-                                      0,
-                                      bounds.width,
-                                      bounds.height,
-                                    ),
-                                  ),
+                                        Rect.fromLTWH(
+                                          0,
+                                          0,
+                                          bounds.width,
+                                          bounds.height,
+                                        ),
+                                      ),
                                   child: Text(
                                     linesToShow[i],
                                     textAlign: _settings.lyricTextAlign,
@@ -1885,13 +1874,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           padding: listPadding,
           itemCount: _lyrics.length,
           itemBuilder: (context, index) {
-            final key =
-                keys.length == _lyrics.length ? keys[index] : null;
-            return _lyricListItem(
-              index,
-              effectivePos,
-              key,
-            );
+            final key = keys.length == _lyrics.length ? keys[index] : null;
+            return _lyricListItem(index, effectivePos, key);
           },
         ),
       ),
@@ -1899,17 +1883,16 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   }
 
   /// 第三页：左为 [_buildCoverArt] 的第三页边长、右为与第二页相同的 [_buildLyricsScrollStack]
-  Widget _buildSplitScreenPage(
-    Song song,
-    Duration effectivePos,
-  ) {
+  Widget _buildSplitScreenPage(Song song, Duration effectivePos) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final l10n = AppLocalizations.of(context);
         const outerH = 16.0;
         const outerHRight = 12.0;
-        final innerW =
-            (constraints.maxWidth - outerH - outerHRight).clamp(0.0, 4000.0);
+        final innerW = (constraints.maxWidth - outerH - outerHRight).clamp(
+          0.0,
+          4000.0,
+        );
         const flexL = 8;
         const flexR = 11;
         final leftColW = innerW * flexL / (flexL + flexR) - 6;
@@ -1948,9 +1931,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             ? Center(
                                 child: Text(
                                   l10n.noLyrics,
-                                  style: TextStyle(
-                                    color: context.gradFg(0.45),
-                                  ),
+                                  style: TextStyle(color: context.gradFg(0.45)),
                                 ),
                               )
                             : _buildLyricsScrollStack(
@@ -2052,7 +2033,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 4),
-                              if (song.artist != null && song.artist!.isNotEmpty)
+                              if (song.artist != null &&
+                                  song.artist!.isNotEmpty)
                                 AutoMarqueeSingleLineText(
                                   text: song.artist!,
                                   style: TextStyle(
@@ -2091,398 +2073,407 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                               },
                             ),
                             child: PageView(
-                      controller: _pageController,
-                      physics: const BouncingScrollPhysics(),
-                      // 启用页面滑动
-                      scrollDirection: Axis.horizontal,
-                      // 水平滑动
-                      allowImplicitScrolling: false,
-                      reverse: false,
-                      // 正常顺序：0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentPage = index;
-                        });
-                        _savePageState(); // 保存页面状态
-                        if (index == 1 && _lyrics.isNotEmpty) {
-                          // 从封面切到歌词时瞬时对齐，避免先看到顶再滚到当前行
-                          _isManualScrolling = false;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (!mounted) return;
-                            _updateCurrentLyric(
-                              _effectivePosition(),
-                              instantScroll: true,
-                            );
-                          });
-                        }
-                        if (index == 2 && _lyrics.isNotEmpty) {
-                          _isManualScrolling = false;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (!mounted) return;
-                            _updateCurrentLyric(
-                              _effectivePosition(),
-                              instantScroll: true,
-                            );
-                          });
-                        }
-                      },
-                      children: [
-                        // 封皮页面（第0页）：横屏可用高度小，需按宽高中较小边限制，避免 AspectRatio 溢出
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            const outerPad = 32.0;
-                            const maxSide = 400.0;
-                            final innerW = constraints.maxWidth - outerPad * 2;
-                            final innerH =
-                                constraints.maxHeight - outerPad * 2;
-                            final side = math
-                                .min(math.min(innerW, innerH), maxSide)
-                                .clamp(1.0, maxSide);
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(outerPad),
-                                child: _buildCoverArt(song, side: side),
-                              ),
-                            );
-                          },
-                        ),
-                        // 歌词页面（第1页）：与 [_buildLyricsScrollStack] 分屏复用
-                        _lyrics.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.music_note,
-                                      size: 64,
-                                      color: context.gradFg(0.45),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l10n.noLyrics,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: context.gradFg(0.55),
+                              controller: _pageController,
+                              physics: const BouncingScrollPhysics(),
+                              // 启用页面滑动
+                              scrollDirection: Axis.horizontal,
+                              // 水平滑动
+                              allowImplicitScrolling: false,
+                              reverse: false,
+                              // 正常顺序：0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentPage = index;
+                                });
+                                _savePageState(); // 保存页面状态
+                                if (index == 1 && _lyrics.isNotEmpty) {
+                                  // 从封面切到歌词时瞬时对齐，避免先看到顶再滚到当前行
+                                  _isManualScrolling = false;
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    if (!mounted) return;
+                                    _updateCurrentLyric(
+                                      _effectivePosition(),
+                                      instantScroll: true,
+                                    );
+                                  });
+                                }
+                                if (index == 2 && _lyrics.isNotEmpty) {
+                                  _isManualScrolling = false;
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    if (!mounted) return;
+                                    _updateCurrentLyric(
+                                      _effectivePosition(),
+                                      instantScroll: true,
+                                    );
+                                  });
+                                }
+                              },
+                              children: [
+                                // 封皮页面（第0页）：横屏可用高度小，需按宽高中较小边限制，避免 AspectRatio 溢出
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    const outerPad = 32.0;
+                                    const maxSide = 400.0;
+                                    final innerW =
+                                        constraints.maxWidth - outerPad * 2;
+                                    final innerH =
+                                        constraints.maxHeight - outerPad * 2;
+                                    final side = math
+                                        .min(math.min(innerW, innerH), maxSide)
+                                        .clamp(1.0, maxSide);
+                                    return Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(outerPad),
+                                        child: _buildCoverArt(song, side: side),
                                       ),
-                                    ),
-                                  ],
+                                    );
+                                  },
                                 ),
-                              )
-                            : _buildLyricsScrollStack(
-                                effectivePos,
-                                controller: _scrollController,
-                                keys: _lyricKeys,
-                                listPadding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 20,
-                                ),
-                                pageIndexForFab: 1,
-                              ),
-                        _buildSplitScreenPage(song, effectivePos),
-                      ],
-                    ),
-                  ),
-                ),
+                                // 歌词页面（第1页）：与 [_buildLyricsScrollStack] 分屏复用
+                                _lyrics.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.music_note,
+                                              size: 64,
+                                              color: context.gradFg(0.45),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              l10n.noLyrics,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: context.gradFg(0.55),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : _buildLyricsScrollStack(
+                                        effectivePos,
+                                        controller: _scrollController,
+                                        keys: _lyricKeys,
+                                        listPadding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 20,
+                                        ),
+                                        pageIndexForFab: 1,
+                                      ),
+                                _buildSplitScreenPage(song, effectivePos),
+                              ],
+                            ),
+                          ),
+                        ),
                         _SongPageIndicator(currentIndex: _currentPage),
                       ],
                     ),
                   ),
 
-                // 横屏时剩余高度小，底部固定区总高度易超过 [Column] 可用空间；整体 scaleDown + 紧缩竖向边距
-                LayoutBuilder(
-                  builder: (context, chromeConstraints) {
-                    return FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.bottomCenter,
-                      child: SizedBox(
-                        width: chromeConstraints.maxWidth,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: compactChrome ? 2 : 4,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        LyricsUtils.formatDuration(
-                                            effectivePos),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: context
-                                              .gradFg(0.55),
+                  // 横屏时剩余高度小，底部固定区总高度易超过 [Column] 可用空间；整体 scaleDown + 紧缩竖向边距
+                  LayoutBuilder(
+                    builder: (context, chromeConstraints) {
+                      return FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.bottomCenter,
+                        child: SizedBox(
+                          width: chromeConstraints.maxWidth,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: compactChrome ? 2 : 4,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          LyricsUtils.formatDuration(
+                                            effectivePos,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: context.gradFg(0.55),
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        LyricsUtils.formatDuration(
-                                            _totalDuration),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: context
-                                              .gradFg(0.55),
+                                        Text(
+                                          LyricsUtils.formatDuration(
+                                            _totalDuration,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: context.gradFg(0.55),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  SliderTheme(
-                                    data: SliderTheme.of(context).copyWith(
-                                      thumbShape:
-                                          const RoundSliderThumbShape(
-                                        enabledThumbRadius: 6,
-                                      ),
-                                      trackHeight: 2,
+                                      ],
                                     ),
-                                    child: Slider(
-                                      value: _totalDuration.inMilliseconds > 0
-                                          ? (effectivePos.inMilliseconds /
-                                                  _totalDuration
-                                                      .inMilliseconds)
-                                              .clamp(0.0, 1.0)
-                                          : 0.0,
-                                      min: 0.0,
-                                      max: 1.0,
-                                      activeColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary,
-                                      inactiveColor:
-                                          context.gradFg(0.25),
-                                      onChangeStart: (_) {
-                                        _isSeeking = true;
-                                        _seekPreview = effectivePos;
-                                        setState(() {});
-                                      },
-                                      onChanged: (value) {
-                                        if (_totalDuration.inMilliseconds >
-                                            0) {
-                                          final newPosition = Duration(
-                                            milliseconds: (value *
-                                                    _totalDuration
-                                                        .inMilliseconds)
-                                                .toInt(),
-                                          );
-                                          _seekPreview = newPosition;
-                                          _updateCurrentLyric(
-                                              _seekPreview);
+                                    SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6,
+                                        ),
+                                        trackHeight: 2,
+                                      ),
+                                      child: Slider(
+                                        value: _totalDuration.inMilliseconds > 0
+                                            ? (effectivePos.inMilliseconds /
+                                                      _totalDuration
+                                                          .inMilliseconds)
+                                                  .clamp(0.0, 1.0)
+                                            : 0.0,
+                                        min: 0.0,
+                                        max: 1.0,
+                                        activeColor: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        inactiveColor: context.gradFg(0.25),
+                                        onChangeStart: (_) {
+                                          _isSeeking = true;
+                                          _seekPreview = effectivePos;
                                           setState(() {});
-                                        }
-                                      },
-                                      onChangeEnd: (value) async {
-                                        if (_totalDuration.inMilliseconds >
-                                            0) {
-                                          final newPosition = Duration(
-                                            milliseconds: ((value.clamp(
-                                                        0.0, 1.0)) *
-                                                    _totalDuration
-                                                        .inMilliseconds)
-                                                .toInt(),
-                                          );
-                                          await _seekTo(newPosition);
-                                        } else {
-                                          _isSeeking = false;
-                                          setState(() {});
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: compactChrome ? 4 : 12,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.skip_previous),
-                                    color: context.gradFg(),
-                                    iconSize: 32,
-                                    onPressed: skipDisabled
-                                        ? null
-                                        : () async {
-                                            await playListProvider
-                                                .playPrev();
-                                            _initLyrics();
-                                            _updateDuration();
-                                          },
-                                  ),
-                                  const SizedBox(width: 24),
-                                  StreamBuilder<bool>(
-                                    stream: MusicService.playingStream,
-                                    initialData: MusicService.isPlaying,
-                                    builder: (context, snapshot) {
-                                      final isPlayingNow =
-                                          snapshot.data ?? false;
-                                      return GestureDetector(
-                                        onTap: () async {
-                                          if (isPlayingNow) {
-                                            MusicService().pause();
-                                          } else {
-                                            if (MusicService.duration !=
-                                                    null &&
-                                                _currentPosition
-                                                        .inMilliseconds >
-                                                    0) {
-                                              MusicService()
-                                                  .seek(_currentPosition);
-                                              MusicService().resume();
-                                            } else {
-                                              final ok = await MusicService()
-                                                  .playCurrentFromPlaylist(
-                                                queue: playListProvider
-                                                    .playList,
-                                                currentIndex:
-                                                    playListProvider
-                                                        .currentIndex,
-                                                useAndroidConcatQueue:
-                                                    playListProvider
-                                                            .playbackMode !=
-                                                        PlaybackMode.playOnce,
-                                              );
-                                              if (!context.mounted) return;
-                                              if (!ok) {
-                                                reportPlaybackFailureToUser(
-                                                    context);
-                                                return;
-                                              }
-                                              await playListProvider
-                                                  .recordRecentForCurrent();
-                                            }
+                                        },
+                                        onChanged: (value) {
+                                          if (_totalDuration.inMilliseconds >
+                                              0) {
+                                            final newPosition = Duration(
+                                              milliseconds:
+                                                  (value *
+                                                          _totalDuration
+                                                              .inMilliseconds)
+                                                      .toInt(),
+                                            );
+                                            _seekPreview = newPosition;
+                                            _updateCurrentLyric(_seekPreview);
+                                            setState(() {});
                                           }
                                         },
-                                        child: Container(
-                                          width: 64,
-                                          height: 64,
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: context
-                                                .gradFg(0.12),
-                                            border: Border.all(
-                                              color: context
-                                                  .gradFg(0.38),
-                                              width: 1.25,
+                                        onChangeEnd: (value) async {
+                                          if (_totalDuration.inMilliseconds >
+                                              0) {
+                                            final newPosition = Duration(
+                                              milliseconds:
+                                                  ((value.clamp(0.0, 1.0)) *
+                                                          _totalDuration
+                                                              .inMilliseconds)
+                                                      .toInt(),
+                                            );
+                                            await _seekTo(newPosition);
+                                          } else {
+                                            _isSeeking = false;
+                                            setState(() {});
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: compactChrome ? 4 : 12,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.skip_previous),
+                                      color: context.gradFg(),
+                                      iconSize: 32,
+                                      onPressed: skipDisabled
+                                          ? null
+                                          : () async {
+                                              await playListProvider.playPrev();
+                                              _initLyrics();
+                                              _updateDuration();
+                                            },
+                                    ),
+                                    const SizedBox(width: 24),
+                                    StreamBuilder<bool>(
+                                      stream: MusicService.playingStream,
+                                      initialData: MusicService.isPlaying,
+                                      builder: (context, snapshot) {
+                                        final isPlayingNow =
+                                            snapshot.data ?? false;
+                                        return GestureDetector(
+                                          onTap: () async {
+                                            if (isPlayingNow) {
+                                              MusicService().pause();
+                                            } else {
+                                              if (MusicService.duration !=
+                                                      null &&
+                                                  _currentPosition
+                                                          .inMilliseconds >
+                                                      0) {
+                                                MusicService().seek(
+                                                  _currentPosition,
+                                                );
+                                                MusicService().resume();
+                                              } else {
+                                                final ok = await MusicService()
+                                                    .playCurrentFromPlaylist(
+                                                      queue: playListProvider
+                                                          .playList,
+                                                      currentIndex:
+                                                          playListProvider
+                                                              .currentIndex,
+                                                      useAndroidConcatQueue:
+                                                          playListProvider
+                                                              .playbackMode !=
+                                                          PlaybackMode.playOnce,
+                                                    );
+                                                if (!context.mounted) return;
+                                                if (!ok) {
+                                                  reportPlaybackFailureToUser(
+                                                    context,
+                                                  );
+                                                  return;
+                                                }
+                                                await playListProvider
+                                                    .recordRecentForCurrent();
+                                              }
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 64,
+                                            height: 64,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: context.gradFg(0.12),
+                                              border: Border.all(
+                                                color: context.gradFg(0.38),
+                                                width: 1.25,
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              isPlayingNow
+                                                  ? Icons.pause
+                                                  : Icons.play_arrow,
+                                              size: 34,
+                                              color: context.gradFg(),
                                             ),
                                           ),
-                                          child: Icon(
-                                            isPlayingNow
-                                                ? Icons.pause
-                                                : Icons.play_arrow,
-                                            size: 34,
-                                            color: context.gradFg(),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(width: 24),
+                                    IconButton(
+                                      icon: const Icon(Icons.skip_next),
+                                      color: context.gradFg(),
+                                      iconSize: 32,
+                                      onPressed: skipDisabled
+                                          ? null
+                                          : () async {
+                                              await playListProvider.playNext();
+                                              _initLyrics();
+                                              _updateDuration();
+                                            },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  12,
+                                  compactChrome ? 4 : 8,
+                                  12,
+                                  compactChrome ? 2 : 4,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _SongToolIcon(
+                                      icon: Icons.translate_rounded,
+                                      onPressed: _showLyricStyleSheet,
+                                      tooltip: l10n.tooltipLyricStyle,
+                                    ),
+                                    _SongToolIcon(
+                                      icon: _lyricLineDisplayModeIcon(),
+                                      iconColor: _globalDisplayMode < 0
+                                          ? null
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                      onPressed: _toggleDisplayMode,
+                                      tooltip: _lyricLineDisplayModeTooltip(
+                                        l10n,
+                                      ),
+                                    ),
+                                    Consumer<PlayListProvider>(
+                                      builder: (context, provider, _) {
+                                        final t = AppLocalizations.of(context);
+                                        return _SongToolIcon(
+                                          icon: _getPlaybackModeIcon(
+                                            provider.playbackMode,
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(width: 24),
-                                  IconButton(
-                                    icon: const Icon(Icons.skip_next),
-                                    color: context.gradFg(),
-                                    iconSize: 32,
-                                    onPressed: skipDisabled
-                                        ? null
-                                        : () async {
-                                            await playListProvider
-                                                .playNext();
-                                            _initLyrics();
-                                            _updateDuration();
+                                          onPressed: () {
+                                            _showPlaybackModeSheet(
+                                              context,
+                                              provider,
+                                            );
                                           },
-                                  ),
-                                ],
+                                          tooltip: playbackModeLabel(
+                                            provider.playbackMode,
+                                            t,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _SongToolIcon(
+                                      icon: Icons.library_add_rounded,
+                                      onPressed: () {
+                                        final song =
+                                            playListProvider.currentSong;
+                                        if (song == null) return;
+                                        showAddToUserPlaylistsSheet(
+                                          context,
+                                          song,
+                                        );
+                                      },
+                                      tooltip: l10n.tooltipAddToPlaylist,
+                                    ),
+                                    _SongToolIcon(
+                                      icon: Icons.more_horiz_rounded,
+                                      onPressed: () {
+                                        _showSongMoreSheet(
+                                          context,
+                                          playListProvider,
+                                        );
+                                      },
+                                      tooltip: l10n.tooltipMore,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                12,
-                                compactChrome ? 4 : 8,
-                                12,
-                                compactChrome ? 2 : 4,
+                              SizedBox(
+                                height: MediaQuery.of(context).padding.bottom,
                               ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _SongToolIcon(
-                                    icon: Icons.translate_rounded,
-                                    onPressed: _showLyricStyleSheet,
-                                    tooltip: l10n.tooltipLyricStyle,
-                                  ),
-                                  _SongToolIcon(
-                                    icon: _lyricLineDisplayModeIcon(),
-                                    iconColor: _globalDisplayMode < 0
-                                        ? null
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                    onPressed: _toggleDisplayMode,
-                                    tooltip: _lyricLineDisplayModeTooltip(
-                                        l10n),
-                                  ),
-                                  Consumer<PlayListProvider>(
-                                    builder: (context, provider, _) {
-                                      final t =
-                                          AppLocalizations.of(context);
-                                      return _SongToolIcon(
-                                        icon: _getPlaybackModeIcon(
-                                            provider.playbackMode),
-                                        onPressed: () {
-                                          _showPlaybackModeSheet(
-                                              context, provider);
-                                        },
-                                        tooltip: playbackModeLabel(
-                                          provider.playbackMode,
-                                          t,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  _SongToolIcon(
-                                    icon: Icons.library_add_rounded,
-                                    onPressed: () {
-                                      final song =
-                                          playListProvider.currentSong;
-                                      if (song == null) return;
-                                      showAddToUserPlaylistsSheet(
-                                          context, song);
-                                    },
-                                    tooltip: l10n.tooltipAddToPlaylist,
-                                  ),
-                                  _SongToolIcon(
-                                    icon: Icons.more_horiz_rounded,
-                                    onPressed: () {
-                                      _showSongMoreSheet(
-                                          context, playListProvider);
-                                    },
-                                    tooltip: l10n.tooltipMore,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                                height:
-                                    MediaQuery.of(context).padding.bottom),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
         );
       },
     );
@@ -2512,9 +2503,7 @@ class _SongPageIndicator extends StatelessWidget {
             height: 4,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
-              color: sel
-                  ? context.gradFg(0.88)
-                  : context.gradFg(0.28),
+              color: sel ? context.gradFg(0.88) : context.gradFg(0.28),
             ),
           );
         }),
@@ -2551,23 +2540,21 @@ class _SongToolIcon extends StatelessWidget {
             padding: const WidgetStatePropertyAll(EdgeInsets.all(8)),
             minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            iconColor: WidgetStatePropertyAll(
-              iconColor ?? context.gradFg(),
-            ),
+            iconColor: WidgetStatePropertyAll(iconColor ?? context.gradFg()),
             iconSize: const WidgetStatePropertyAll(_kIcon),
             backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
-            overlayColor: WidgetStateProperty.resolveWith(
-              (Set<WidgetState> states) {
-                if (states.contains(WidgetState.hovered)) {
-                  return context.gradFg(0.10);
-                }
-                if (states.contains(WidgetState.pressed) ||
-                    states.contains(WidgetState.focused)) {
-                  return context.gradFg(0.16);
-                }
-                return null;
-              },
-            ),
+            overlayColor: WidgetStateProperty.resolveWith((
+              Set<WidgetState> states,
+            ) {
+              if (states.contains(WidgetState.hovered)) {
+                return context.gradFg(0.10);
+              }
+              if (states.contains(WidgetState.pressed) ||
+                  states.contains(WidgetState.focused)) {
+                return context.gradFg(0.16);
+              }
+              return null;
+            }),
             shape: const WidgetStatePropertyAll(CircleBorder()),
             visualDensity: VisualDensity.comfortable,
           ),
@@ -2613,10 +2600,7 @@ class _PendingMainBlend extends StatelessWidget {
 
 /// 播放队列底部表单：定位当前曲目、高亮当前行、动态播放指示器
 class _PlaybackQueueSheet extends StatefulWidget {
-  const _PlaybackQueueSheet({
-    required this.provider,
-    required this.onPick,
-  });
+  const _PlaybackQueueSheet({required this.provider, required this.onPick});
 
   final PlayListProvider provider;
   final Future<void> Function(int index) onPick;
@@ -2633,6 +2617,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   /// 与 [CustomScrollView] 顶部标题 [SliverToBoxAdapter] 视觉高度对齐（用于滚动定位）。
   static const double _kPlayQueueTitleBlock = 46;
   static const double _kPendingSectionTitleBlock = 30;
+
   /// 与 [_PendingMainBlend] 纵向占位一致（padding 2+6 + 渐变条 12）。
   static const double _kBlendBelowPending = 20;
 
@@ -2642,10 +2627,13 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
   StreamSubscription<int?>? _playerQueueIndexSub;
 
   /// 与 [PlayListPage] 一致：全库顺序播放时队列 UI 按排序偏好展示；随机模式下仍为底层合并顺序以免误导。
-  ({List<Song> display, bool sortAlignedUi}) _queueRowsModel(PlayListProvider provider) {
+  ({List<Song> display, bool sortAlignedUi}) _queueRowsModel(
+    PlayListProvider provider,
+  ) {
     final raw = provider.playList;
     final prefs = loadSongSortPreferencesSync();
-    final align = provider.playbackSessionIsLibrary &&
+    final align =
+        provider.playbackSessionIsLibrary &&
         !provider.hasPlaybackQueueOverride &&
         provider.playbackMode != PlaybackMode.shuffle;
     if (!align || raw.isEmpty) {
@@ -2682,22 +2670,29 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     final display = rows.display;
     final aligned = rows.sortAlignedUi;
     final pb = _displayCurrentIndex(provider);
-    _lastHeardDisplayIndex =
-        _displayIdxForPlaybackIdx(pb, raw, display, aligned);
+    _lastHeardDisplayIndex = _displayIdxForPlaybackIdx(
+      pb,
+      raw,
+      display,
+      aligned,
+    );
     _queueScroll = ScrollController();
     widget.provider.addListener(_onProviderChanged);
-    _playerQueueIndexSub =
-        MusicService.currentMediaIndexStream.listen((int? i) {
+    _playerQueueIndexSub = MusicService.currentMediaIndexStream.listen((
+      int? i,
+    ) {
       if (!mounted) return;
-      final before = _displayCurrentIndex(widget.provider,
-          playerIdxOverride: _playerMediaIndex);
+      final before = _displayCurrentIndex(
+        widget.provider,
+        playerIdxOverride: _playerMediaIndex,
+      );
       setState(() => _playerMediaIndex = i);
       if (!MusicService.androidCarQueueActive) return;
-      final after =
-          _displayCurrentIndex(widget.provider, playerIdxOverride: i);
+      final after = _displayCurrentIndex(widget.provider, playerIdxOverride: i);
       if (after != before) {
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _refineQueueScroll(animated: true));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _refineQueueScroll(animated: true),
+        );
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2730,8 +2725,9 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     _lastHeardDisplayIndex = idx;
     setState(() {});
     if (indexMoved) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _refineQueueScroll(animated: true));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _refineQueueScroll(animated: true),
+      );
     }
   }
 
@@ -2739,7 +2735,10 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     var y = _kPlayQueueTitleBlock;
     final pend = provider.pendingPlayAfterCurrentSongs.length;
     if (pend > 0) {
-      y += _kPendingSectionTitleBlock + pend * _kQueueItemExtent + _kBlendBelowPending;
+      y +=
+          _kPendingSectionTitleBlock +
+          pend * _kQueueItemExtent +
+          _kBlendBelowPending;
     }
     return y;
   }
@@ -2767,12 +2766,11 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     final raw = provider.playList;
     final aligned = rows.sortAlignedUi;
     final i = _displayIdxForPlaybackIdx(
-          _displayCurrentIndex(provider),
-          raw,
-          display,
-          aligned,
-        )
-        .clamp(0, display.length - 1);
+      _displayCurrentIndex(provider),
+      raw,
+      display,
+      aligned,
+    ).clamp(0, display.length - 1);
     final pos = _queueScroll.position;
     final viewH = pos.viewportDimension;
 
@@ -2785,8 +2783,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     } else {
       final leading = _leadingPixelsBeforeMainQueue(provider);
       final rowTop = leading + i * _kQueueItemExtent;
-      target =
-          (rowTop - viewH * 0.22).clamp(0.0, pos.maxScrollExtent);
+      target = (rowTop - viewH * 0.22).clamp(0.0, pos.maxScrollExtent);
     }
     if (animated) {
       _queueScroll.animateTo(
@@ -2815,16 +2812,17 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
 
     if (displayList.isEmpty) {
       return Center(
-        child: Text(
-          l10n.queueNoTracks,
-          style: TextStyle(color: fgSoft),
-        ),
+        child: Text(l10n.queueNoTracks, style: TextStyle(color: fgSoft)),
       );
     }
 
     final curPlayback = _displayCurrentIndex(provider);
-    final curDisplay =
-        _displayIdxForPlaybackIdx(curPlayback, rawList, displayList, sortAlignedUi);
+    final curDisplay = _displayIdxForPlaybackIdx(
+      curPlayback,
+      rawList,
+      displayList,
+      sortAlignedUi,
+    );
 
     final pendingPlayNext = provider.pendingPlayAfterCurrentSongs;
 
@@ -2863,73 +2861,66 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             sliver: SliverFixedExtentList(
               itemExtent: _kQueueItemExtent,
-              delegate: SliverChildBuilderDelegate(
-                (context, pi) {
-                  final s = pendingPlayNext[pi];
-                  final sepSoft = context.gradBorder(0.04);
-                  return Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      SizedBox(
-                        height: _kQueueRowH,
-                        child: Material(
-                          color: primary.withValues(alpha: 0.09),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                SongListCover(
-                                  song: s,
-                                  size: 48,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        s.title ?? l10n.pageUnknownTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: primary.withValues(
-                                              alpha: 0.95),
-                                        ),
+              delegate: SliverChildBuilderDelegate((context, pi) {
+                final s = pendingPlayNext[pi];
+                final sepSoft = context.gradBorder(0.04);
+                return Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    SizedBox(
+                      height: _kQueueRowH,
+                      child: Material(
+                        color: primary.withValues(alpha: 0.09),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SongListCover(
+                                song: s,
+                                size: 48,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      s.title ?? l10n.pageUnknownTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: primary.withValues(alpha: 0.95),
                                       ),
-                                      Text(
-                                        s.artist ?? '',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: fgSub,
-                                          fontSize: 13,
-                                        ),
+                                    ),
+                                    Text(
+                                      s.artist ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: fgSub,
+                                        fontSize: 13,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      Container(height: _kQueueSepH, color: sepSoft),
-                    ],
-                  );
-                },
-                childCount: pendingPlayNext.length,
-              ),
+                    ),
+                    Container(height: _kQueueSepH, color: sepSoft),
+                  ],
+                );
+              }, childCount: pendingPlayNext.length),
             ),
           ),
           const SliverToBoxAdapter(child: _PendingMainBlend()),
@@ -2938,88 +2929,77 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
           padding: const EdgeInsets.only(bottom: 12),
           sliver: SliverFixedExtentList(
             itemExtent: _kQueueItemExtent,
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final s = displayList[index];
-                final isCurrent = index == curDisplay;
-                return Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    SizedBox(
-                      key: ValueKey<String>('q_${index}_${s.path}'),
-                      height: _kQueueRowH,
-                      child: Material(
-                        color: isCurrent
-                            ? primary.withValues(alpha: 0.16)
-                            : Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            final pb = sortAlignedUi
-                                ? rawList.indexWhere(
-                                    (x) => x.path == s.path)
-                                : index;
-                            if (pb >= 0) widget.onPick(pb);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                SongListCover(
-                                  song: s,
-                                  size: 48,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      SongListMarqueeWhenCurrentLine(
-                                        text:
-                                            s.title ?? l10n.pageUnknownTitle,
-                                        style: TextStyle(
-                                          fontWeight: isCurrent
-                                              ? FontWeight.w600
-                                              : FontWeight.w500,
-                                          color: isCurrent
-                                              ? primary
-                                              : fg,
-                                        ),
-                                        isCurrentTrack: isCurrent,
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final s = displayList[index];
+              final isCurrent = index == curDisplay;
+              return Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  SizedBox(
+                    key: ValueKey<String>('q_${index}_${s.path}'),
+                    height: _kQueueRowH,
+                    child: Material(
+                      color: isCurrent
+                          ? primary.withValues(alpha: 0.16)
+                          : Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          final pb = sortAlignedUi
+                              ? rawList.indexWhere((x) => x.path == s.path)
+                              : index;
+                          if (pb >= 0) widget.onPick(pb);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SongListCover(
+                                song: s,
+                                size: 48,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SongListMarqueeWhenCurrentLine(
+                                      text: s.title ?? l10n.pageUnknownTitle,
+                                      style: TextStyle(
+                                        fontWeight: isCurrent
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        color: isCurrent ? primary : fg,
                                       ),
-                                      SongListMarqueeWhenCurrentLine(
-                                        text: s.artist ?? '',
-                                        style: TextStyle(
-                                          color: isCurrent
-                                              ? primary.withValues(
-                                                  alpha: 0.8)
-                                              : fgSub,
-                                          fontSize: 13,
-                                        ),
-                                        isCurrentTrack: isCurrent,
+                                      isCurrentTrack: isCurrent,
+                                    ),
+                                    SongListMarqueeWhenCurrentLine(
+                                      text: s.artist ?? '',
+                                      style: TextStyle(
+                                        color: isCurrent
+                                            ? primary.withValues(alpha: 0.8)
+                                            : fgSub,
+                                        fontSize: 13,
                                       ),
-                                    ],
-                                  ),
+                                      isCurrentTrack: isCurrent,
+                                    ),
+                                  ],
                                 ),
-                                if (isCurrent)
-                                  ListRowPlayingIndicator(color: primary),
-                              ],
-                            ),
+                              ),
+                              if (isCurrent)
+                                ListRowPlayingIndicator(color: primary),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    Container(height: _kQueueSepH, color: divColor),
-                  ],
-                );
-              },
-              childCount: displayList.length,
-            ),
+                  ),
+                  Container(height: _kQueueSepH, color: divColor),
+                ],
+              );
+            }, childCount: displayList.length),
           ),
         ),
       ],

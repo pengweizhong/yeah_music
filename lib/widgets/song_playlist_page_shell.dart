@@ -155,10 +155,15 @@ class SongPlaylistSongListView extends StatelessWidget {
         );
 
         if (onRefresh != null) {
+          final light = Theme.of(context).brightness == Brightness.light;
           listCore = RefreshIndicator(
             onRefresh: onRefresh!,
-            color: refreshIndicatorColor ?? Colors.white,
-            backgroundColor: refreshIndicatorBackgroundColor ?? Colors.black54,
+            color: refreshIndicatorColor ??
+                (light ? Theme.of(context).colorScheme.primary : Colors.white),
+            backgroundColor: refreshIndicatorBackgroundColor ??
+                (light
+                    ? Colors.white
+                    : Colors.black54),
             child: listCore,
           );
         }

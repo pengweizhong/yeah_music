@@ -13,7 +13,6 @@ import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
-import 'package:yeah_music/utils/user_playlist_backup_io.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
@@ -72,77 +71,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     }
   }
 
-  /// [selectedIds] 为 `null` 时导出全部；否则仅导出集合中的歌单（须非空）
-  Future<void> _exportPlaylists(
-    BuildContext context,
-    UserPlaylistProvider user, {
-    Set<String>? selectedIds,
-  }) async {
-    final l10n = AppLocalizations.of(context);
-    final Map<String, dynamic> map;
-    if (selectedIds == null) {
-      map = user.buildExportMap();
-    } else {
-      if (selectedIds.isEmpty) {
-        if (context.mounted) {
-          showAppSnackBar(context, l10n.exportSelectFirst);
-        }
-        return;
-      }
-      map = user.buildExportMapForPlaylists(selectedIds);
-      if ((map['playlists'] as List<dynamic>).isEmpty) {
-        if (context.mounted) {
-          showAppSnackBar(context, l10n.exportNoneToExport);
-        }
-        return;
-      }
-    }
-
-    await user.attachPlaylistCoverImagesToExportMap(map);
-    if (!context.mounted) return;
-
-    final encoder = const JsonEncoder.withIndent('  ');
-    final jsonStr = encoder.convert(map);
-    final suggestedName = selectedIds == null
-        ? suggestedAllPlaylistsFileName()
-        : suggestedSubsetPlaylistsFileName(user, selectedIds);
-
-    try {
-      final path = await pickSaveUserPlaylistJson(
-        jsonStr: jsonStr,
-        dialogTitle: selectedIds == null
-            ? l10n.exportAllPlaylists
-            : (selectedIds.length == 1
-                  ? l10n.exportDialogTitle
-                  : l10n.exportSelectedPlaylists),
-        fileName: suggestedName,
-      );
-
-      if (!context.mounted) return;
-      if (path != null && path.isNotEmpty) {
-        showAppSnackBar(
-          context,
-          l10n.exportSaved(path),
-          kind: AppSnackKind.success,
-          duration: const Duration(seconds: 2),
-        );
-        if (_selectMode) {
-          setState(() {
-            _selectMode = false;
-            _singleSelectOnly = false;
-            _selectedPlaylistIds.clear();
-          });
-        }
-      } else {
-        showAppSnackBar(context, l10n.exportCancelled);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showAppSnackBar(context, l10n.exportFailed('$e'), kind: AppSnackKind.error);
-      }
-    }
-  }
-
   void _exitSelectMode() {
     setState(() {
       _selectMode = false;
@@ -169,33 +97,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         break;
       case 'import':
         await _importPlaylists(context, user);
-        break;
-      case 'export_all':
-        await _exportPlaylists(context, user, selectedIds: null);
-        break;
-    }
-  }
-
-  Future<void> _handleSelectMenu(String v, UserPlaylistProvider user) async {
-    switch (v) {
-      case 'toggle_all':
-        if (!_singleSelectOnly) {
-          _toggleSelectAll(user);
-        }
-        break;
-      case 'delete':
-        if (_selectedPlaylistIds.isNotEmpty) {
-          await _confirmDeleteSelected(context, user);
-        }
-        break;
-      case 'export_selected':
-        if (_selectedPlaylistIds.isNotEmpty) {
-          await _exportPlaylists(
-            context,
-            user,
-            selectedIds: Set<String>.from(_selectedPlaylistIds),
-          );
-        }
         break;
     }
   }
@@ -785,18 +686,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                           },
                         ),
                       IconButton(
-                        tooltip: l10n.exportSelected,
-                        icon: Icon(
-                          Icons.upload_file_outlined,
-                          color: _selectedPlaylistIds.isNotEmpty
-                              ? Colors.white
-                              : Colors.white38,
-                        ),
-                        onPressed: _selectedPlaylistIds.isNotEmpty
-                            ? () => _handleSelectMenu('export_selected', userPl)
-                            : null,
-                      ),
-                      IconButton(
                         tooltip: l10n.actionDelete,
                         icon: Icon(
                           Icons.delete_outline_rounded,
@@ -805,7 +694,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               : Colors.white30,
                         ),
                         onPressed: _selectedPlaylistIds.isNotEmpty
-                            ? () => _handleSelectMenu('delete', userPl)
+                            ? () => _confirmDeleteSelected(context, userPl)
                             : null,
                       ),
                     ],
@@ -865,15 +754,6 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         ),
                         onPressed: () =>
                             _handleMainMenu('import', userPl),
-                      ),
-                      IconButton(
-                        tooltip: l10n.exportAll,
-                        icon: Icon(
-                          Icons.save_alt_outlined,
-                          color: Colors.white.withValues(alpha: 0.95),
-                        ),
-                        onPressed: () =>
-                            _handleMainMenu('export_all', userPl),
                       ),
                     ],
                   ),

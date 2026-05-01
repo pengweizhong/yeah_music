@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
 import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
@@ -28,10 +29,44 @@ class ThemeConfigProvider extends ChangeNotifier {
           ? kGradLightInkMuted
           : const Color(0xFFD2DEEE);
 
+  /// 浅色模式首装默认：偏 iOS / 流媒体日间的冷灰雾面底，墨色前景（见 [lightUserGradientNeedsInkForeground]）。
+  static const Color _kDefaultGradientPrimaryLight = Color(0xFFEBF0F7);
+  static const Color _kDefaultGradientSecondaryLight = Color(0xFFDCE4F0);
+  /// 深色模式/夜间常见「石墨 slate」底，白字对比稳定。
+  static const Color _kDefaultGradientPrimaryDark = Color(0xFF1C2128);
+  static const Color _kDefaultGradientSecondaryDark = Color(0xFF252B34);
+
+  /// 与 [MaterialApp.themeMode] 对齐的默认渐变（首装无 [primary_color] 时），避免浅底白字/深底糊字。
+  static Color _defaultPrimaryForThemeMode(ThemeMode mode) {
+    final light = switch (mode) {
+      ThemeMode.light => true,
+      ThemeMode.dark => false,
+      ThemeMode.system =>
+        PlatformDispatcher.instance.platformBrightness == Brightness.light,
+    };
+    return light
+        ? _kDefaultGradientPrimaryLight
+        : _kDefaultGradientPrimaryDark;
+  }
+
+  static Color _defaultSecondaryForThemeMode(ThemeMode mode) {
+    final light = switch (mode) {
+      ThemeMode.light => true,
+      ThemeMode.dark => false,
+      ThemeMode.system =>
+        PlatformDispatcher.instance.platformBrightness == Brightness.light,
+    };
+    return light
+        ? _kDefaultGradientSecondaryLight
+        : _kDefaultGradientSecondaryDark;
+  }
+
   // 主题类型
   ThemeType _themeType = ThemeType.solidColor;
-  Color _primaryColor = const Color(0xFF121212);
-  Color _secondaryColor = const Color(0xFF1A1A1A);
+  Color _primaryColor =
+      ThemeConfigProvider._defaultPrimaryForThemeMode(ThemeMode.system);
+  Color _secondaryColor =
+      ThemeConfigProvider._defaultSecondaryForThemeMode(ThemeMode.system);
   /// 与早期版本一致：主对角线 ↘（左上→右下）。
   PlaylistCoverGradientDirection _gradientDirection =
       PlaylistCoverGradientDirection.diagonalTlBr;
@@ -59,16 +94,16 @@ class ThemeConfigProvider extends ChangeNotifier {
     return w > 0.50;
   }
 
-  // 预设颜色
+  // 预设种子色（深色为主，白字在暗色 App 主题下可读；浅色模式选浅灰类时由 [lightUserGradientNeedsInkForeground] 切墨字）
   static const List<Color> presetColors = [
-    Color(0xFF121212), // 纯黑
-    Color(0xFF1A1A2E), // 深蓝
-    Color(0xFF16213E), // 海军蓝
-    Color(0xFF0F3460), // 深青
-    Color(0xFF1F1F1F), // 深灰
-    Color(0xFF2C1810), // 深棕
-    Color(0xFF1A1520), // 深紫
-    Color(0xFF0D1B2A), // 深蓝黑
+    Color(0xFF18181B), // 锌灰黑（常见中性暗底）
+    Color(0xFF0F172A), // Slate 近黑（通用产品底）
+    Color(0xFF1E3A5F), // 深海蓝（工具/媒体类常见）
+    Color(0xFF1E1B4B), // 靛蓝（流媒体紫调）
+    Color(0xFF14532D), // 墨绿（绿色品牌向）
+    Color(0xFF164E63), // 青灰（冷静专业向）
+    Color(0xFF4A1942), // 酒红紫（Spotify/Apple Music 系常见点缀色相）
+    Color(0xFF7C2D12), // 赭红暖暗（YouTube Premium 系暖底）
   ];
 
   ThemeConfigProvider() {
@@ -190,12 +225,21 @@ class ThemeConfigProvider extends ChangeNotifier {
     final typeIndex = prefs.getInt('theme_type') ?? 0;
     _themeType = ThemeType.values[typeIndex];
 
-    // 加载颜色
-    final primaryColorValue = prefs.getInt('primary_color') ?? 0xFF121212;
-    _primaryColor = Color(primaryColorValue);
+    final globalAppearance =
+        AppThemeModeProvider.themeModeFromStorage(
+          prefs.getInt(AppThemeModeProvider.prefsKey),
+        );
 
-    final secondaryColorValue = prefs.getInt('secondary_color') ?? 0xFF1A1A1A;
-    _secondaryColor = Color(secondaryColorValue);
+    // 加载颜色（无持久化键时按全局亮/暗主题取默认，改善浅色模式首次进入可读性）
+    final primaryColorValue = prefs.getInt('primary_color');
+    _primaryColor = primaryColorValue != null
+        ? Color(primaryColorValue)
+        : ThemeConfigProvider._defaultPrimaryForThemeMode(globalAppearance);
+
+    final secondaryColorValue = prefs.getInt('secondary_color');
+    _secondaryColor = secondaryColorValue != null
+        ? Color(secondaryColorValue)
+        : ThemeConfigProvider._defaultSecondaryForThemeMode(globalAppearance);
 
     final dirRaw = prefs.getInt('theme_gradient_direction');
     _gradientDirection = dirRaw == null

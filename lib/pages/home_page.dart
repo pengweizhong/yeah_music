@@ -907,7 +907,11 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-              child: _SectionTitle(title: l10n.homeSectionMostPlayed),
+              child: _SectionTitle(
+                title: l10n.homeSectionMostPlayed,
+                actionLabel: l10n.homeActionAll,
+                onAction: widget.onOpenMostPlayed,
+              ),
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: _gapS)),

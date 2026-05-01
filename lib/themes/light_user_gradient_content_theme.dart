@@ -7,7 +7,7 @@ import 'package:yeah_music/themes/gradient_ui_colors.dart';
 ThemeData themeForLightUserGradientShell(BuildContext context) {
   final t = Theme.of(context);
   const on = Colors.white;
-  final muted = Colors.white.withValues(alpha: 0.6);
+  final muted = Colors.white.withValues(alpha: 0.72);
   final scheme = t.colorScheme.copyWith(
     onSurface: on,
     onSurfaceVariant: muted,

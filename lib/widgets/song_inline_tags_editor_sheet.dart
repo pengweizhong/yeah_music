@@ -50,15 +50,12 @@ Future<void> showSongInlineTagsEditorSheet({
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.only(bottom: bottomInset),
         child: FrostedGlassBottomSheet(
-          child: Theme(
-            data: frostedBottomSheetContentTheme(sheetContext),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxSheetHeight),
-              child: _SongInlineTagsEditorBody(
-                song: song,
-                navigatorContext: navigatorContext,
-                onSavedReload: onSavedReload,
-              ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxSheetHeight),
+            child: _SongInlineTagsEditorBody(
+              song: song,
+              navigatorContext: navigatorContext,
+              onSavedReload: onSavedReload,
             ),
           ),
         ),
@@ -246,15 +243,17 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
     super.dispose();
   }
 
-  InputDecoration _dec(String label) {
+  InputDecoration _dec(BuildContext context, String label) {
+    final scheme = Theme.of(context).colorScheme;
+    final border = scheme.outline.withValues(alpha: 0.45);
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
-      enabledBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.white24),
+      labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+      enabledBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: border),
       ),
       focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+        borderSide: BorderSide(color: scheme.primary, width: 2),
       ),
     );
   }
@@ -363,6 +362,8 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final onSurface = scheme.onSurface;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final scrollBottomPad = 16.0 + (bottomInset > 0 ? 8.0 : 0.0);
     final preview = _previewCoverBytes();
@@ -381,39 +382,38 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
                 Expanded(
                   child: Text(
                     l10n.songPageInlineTagsEditorTitle,
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: onSurface,
                     ),
                   ),
                 ),
                 IconButton(
                   onPressed:
                       _saving ? null : () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: Colors.white70),
+                  icon: Icon(Icons.close, color: scheme.onSurfaceVariant),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _title,
-              style: const TextStyle(color: Colors.white),
-              decoration: _dec(l10n.songPageInlineTagsFieldTitle),
+              style: TextStyle(color: onSurface),
+              decoration: _dec(context, l10n.songPageInlineTagsFieldTitle),
               textInputAction: TextInputAction.next,
               enabled: !_saving,
             ),
             TextField(
               controller: _artist,
-              style: const TextStyle(color: Colors.white),
-              decoration: _dec(l10n.songPageInlineTagsFieldArtist),
+              style: TextStyle(color: onSurface),
+              decoration: _dec(context, l10n.songPageInlineTagsFieldArtist),
               textInputAction: TextInputAction.next,
               enabled: !_saving,
             ),
             TextField(
               controller: _album,
-              style: const TextStyle(color: Colors.white),
-              decoration: _dec(l10n.songPageInlineTagsFieldAlbum),
+              style: TextStyle(color: onSurface),
+              decoration: _dec(context, l10n.songPageInlineTagsFieldAlbum),
               textInputAction: TextInputAction.next,
               enabled: !_saving,
             ),
@@ -421,7 +421,7 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
             Text(
               l10n.songPageInlineTagsCoverSection,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.85),
+                color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -441,11 +441,13 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
                             fit: BoxFit.cover,
                           )
                         : ColoredBox(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: scheme.surfaceContainerHighest,
                             child: Icon(
                               Icons.album_rounded,
                               size: 40,
-                              color: Colors.white.withValues(alpha: 0.35),
+                              color: scheme.onSurfaceVariant.withValues(
+                                alpha: 0.45,
+                              ),
                             ),
                           ),
                   ),
@@ -474,9 +476,9 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
             ),
             TextField(
               controller: _year,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: onSurface),
               keyboardType: TextInputType.number,
-              decoration: _dec(l10n.songPageInlineTagsFieldYear),
+              decoration: _dec(context, l10n.songPageInlineTagsFieldYear),
               textInputAction: TextInputAction.next,
               enabled: !_saving,
             ),
@@ -485,9 +487,12 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
                 Expanded(
                   child: TextField(
                     controller: _trackNumber,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: onSurface),
                     keyboardType: TextInputType.number,
-                    decoration: _dec(l10n.songPageInlineTagsFieldTrackNumber),
+                    decoration: _dec(
+                      context,
+                      l10n.songPageInlineTagsFieldTrackNumber,
+                    ),
                     textInputAction: TextInputAction.next,
                     enabled: !_saving,
                   ),
@@ -496,9 +501,12 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
                 Expanded(
                   child: TextField(
                     controller: _trackTotal,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: onSurface),
                     keyboardType: TextInputType.number,
-                    decoration: _dec(l10n.songPageInlineTagsFieldTrackTotal),
+                    decoration: _dec(
+                      context,
+                      l10n.songPageInlineTagsFieldTrackTotal,
+                    ),
                     textInputAction: TextInputAction.next,
                     enabled: !_saving,
                   ),
@@ -510,9 +518,12 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
                 Expanded(
                   child: TextField(
                     controller: _discNumber,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: onSurface),
                     keyboardType: TextInputType.number,
-                    decoration: _dec(l10n.songPageInlineTagsFieldDiscNumber),
+                    decoration: _dec(
+                      context,
+                      l10n.songPageInlineTagsFieldDiscNumber,
+                    ),
                     textInputAction: TextInputAction.next,
                     enabled: !_saving,
                   ),
@@ -521,9 +532,12 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
                 Expanded(
                   child: TextField(
                     controller: _discTotal,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: onSurface),
                     keyboardType: TextInputType.number,
-                    decoration: _dec(l10n.songPageInlineTagsFieldDiscTotal),
+                    decoration: _dec(
+                      context,
+                      l10n.songPageInlineTagsFieldDiscTotal,
+                    ),
                     textInputAction: TextInputAction.next,
                     enabled: !_saving,
                   ),
@@ -532,8 +546,8 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
             ),
             TextField(
               controller: _lyrics,
-              style: const TextStyle(color: Colors.white),
-              decoration: _dec(l10n.songPageInlineTagsFieldLyrics),
+              style: TextStyle(color: onSurface),
+              decoration: _dec(context, l10n.songPageInlineTagsFieldLyrics),
               maxLines: 6,
               minLines: 3,
               enabled: !_saving,
@@ -543,10 +557,13 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
             FilledButton(
               onPressed: _saving ? null : () => _save(l10n),
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 22,
                       width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: scheme.primary,
+                      ),
                     )
                   : Text(l10n.songPageInlineTagsSave),
             ),

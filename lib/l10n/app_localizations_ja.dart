@@ -2099,7 +2099,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get emptyPlaylistsHint =>
-      'プレイリストはまだありません。\n再生画面や曲一覧から曲を追加できます。\n\n右上の「⋮」から取り込み／エクスポートや複数選択ができます。';
+      'プレイリストはまだありません。\n再生画面や曲一覧から曲を追加できます。\n\n右上の「⋮」から取り込みや複数選択ができます。';
 
   @override
   String get sortByName => '名前順';

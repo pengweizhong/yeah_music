@@ -9,6 +9,7 @@ Future<void> showCloudTrackSortBottomSheet(
   required bool isAscending,
   required void Function(CloudTrackSortType type, bool ascending) onApply,
 }) {
+  final primary = Theme.of(context).colorScheme.primary;
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: false,
@@ -19,61 +20,80 @@ Future<void> showCloudTrackSortBottomSheet(
       return Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
         child: FrostedGlassBottomSheet(
-          child: Theme(
-            data: frostedBottomSheetContentTheme(ctx),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Text(
-                      l10n.sortOptionsTitle,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: Text(
+                    l10n.sortOptionsTitle,
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.sort_by_alpha, color: Colors.white),
-                    title: Text(l10n.sortByName),
-                    trailing: Icon(
-                      sortType == CloudTrackSortType.fileName
-                          ? (isAscending ? Icons.arrow_upward : Icons.arrow_downward)
-                          : Icons.check_box_outline_blank,
-                      color: Colors.white54,
-                      size: 20,
-                    ),
-                    onTap: () {
-                      if (sortType == CloudTrackSortType.fileName) {
-                        onApply(CloudTrackSortType.fileName, !isAscending);
-                      } else {
-                        onApply(CloudTrackSortType.fileName, true);
-                      }
-                      Navigator.pop(ctx);
-                    },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.sort_by_alpha),
+                  title: Text(l10n.sortByName),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (sortType == CloudTrackSortType.fileName)
+                        Icon(
+                          isAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 20,
+                          color: primary,
+                        ),
+                      if (sortType == CloudTrackSortType.fileName)
+                        const SizedBox(width: 8),
+                      if (sortType == CloudTrackSortType.fileName)
+                        Icon(Icons.check, color: primary),
+                    ],
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.folder_open_outlined, color: Colors.white),
-                    title: Text(l10n.sortByPath),
-                    trailing: Icon(
-                      sortType == CloudTrackSortType.fullPath
-                          ? (isAscending ? Icons.arrow_upward : Icons.arrow_downward)
-                          : Icons.check_box_outline_blank,
-                      color: Colors.white54,
-                      size: 20,
-                    ),
-                    onTap: () {
-                      if (sortType == CloudTrackSortType.fullPath) {
-                        onApply(CloudTrackSortType.fullPath, !isAscending);
-                      } else {
-                        onApply(CloudTrackSortType.fullPath, true);
-                      }
-                      Navigator.pop(ctx);
-                    },
+                  onTap: () {
+                    if (sortType == CloudTrackSortType.fileName) {
+                      onApply(CloudTrackSortType.fileName, !isAscending);
+                    } else {
+                      onApply(CloudTrackSortType.fileName, true);
+                    }
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.folder_open_outlined),
+                  title: Text(l10n.sortByPath),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (sortType == CloudTrackSortType.fullPath)
+                        Icon(
+                          isAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 20,
+                          color: primary,
+                        ),
+                      if (sortType == CloudTrackSortType.fullPath)
+                        const SizedBox(width: 8),
+                      if (sortType == CloudTrackSortType.fullPath)
+                        Icon(Icons.check, color: primary),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                ],
-              ),
+                  onTap: () {
+                    if (sortType == CloudTrackSortType.fullPath) {
+                      onApply(CloudTrackSortType.fullPath, !isAscending);
+                    } else {
+                      onApply(CloudTrackSortType.fullPath, true);
+                    }
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
         ),

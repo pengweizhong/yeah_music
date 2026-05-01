@@ -20,6 +20,7 @@ import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/navigation/app_route_observer.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
@@ -512,14 +513,16 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                 appBar: AppBar(
                   title: Text(
                     pl.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg(0.96)),
                   ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
+                  iconTheme: IconThemeData(color: context.gradFg()),
                 ),
-                body: const Center(
-                  child: CircularProgressIndicator(color: Colors.white70),
+                body: Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               );
             }
@@ -528,11 +531,11 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                 appBar: AppBar(
                   title: Text(
                     pl.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg(0.96)),
                   ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
+                  iconTheme: IconThemeData(color: context.gradFg()),
                 ),
                 body: Center(
                   child: Padding(
@@ -540,9 +543,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                     child: Text(
                       '${snap.error}',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
+                      style: TextStyle(color: context.gradFg(0.86)),
                     ),
                   ),
                 ),
@@ -608,7 +609,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                 appBar: AppBar(
                   leading: _batchSelect
                       ? IconButton(
-                          icon: const Icon(Icons.close),
+                          icon: Icon(Icons.close, color: context.gradFg()),
                           onPressed: _exitBatchSelect,
                         )
                       : null,
@@ -616,23 +617,23 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                     _batchSelect
                         ? '${_selectedNormPaths.length}'
                         : pl.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg(0.96)),
                   ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
+                  iconTheme: IconThemeData(color: context.gradFg()),
                   actions: [
                     if (_batchSelect)
                       TextButton(
                         onPressed: _exitBatchSelect,
                         child: Text(
                           l10n.libraryBatchDone,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: context.gradFg()),
                         ),
                       )
                     else ...[
                       IconButton(
-                        icon: const Icon(Icons.search),
+                        icon: Icon(Icons.search, color: context.gradFg()),
                         tooltip: l10n.homeSearchTooltip,
                         onPressed: orderedSongs.isEmpty
                             ? null
@@ -661,13 +662,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                               },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.sort),
+                        icon: Icon(Icons.sort, color: context.gradFg()),
                         tooltip: l10n.tooltipSort,
                         onPressed: _showSortOptions,
                       ),
                       PopupMenuButton<String>(
-                        icon:
-                            const Icon(Icons.more_vert, color: Colors.white),
+                        icon: Icon(Icons.more_vert, color: context.gradFg()),
                         onSelected: (value) async {
                           if (value == 'cover') {
                             await showPlaylistCoverStyleSheet(context, pl);
@@ -710,14 +710,14 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                               Icon(
                                 Icons.music_note,
                                 size: 64,
-                                color: Colors.white.withValues(alpha: 0.3),
+                                color: context.gradFg(0.28),
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 l10n.playlistEmptyNoSongs,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: context.gradFg(0.52),
                                   fontSize: 16,
                                 ),
                               ),

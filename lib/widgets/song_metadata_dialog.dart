@@ -8,6 +8,8 @@ import 'package:path/path.dart' as p;
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
@@ -139,8 +141,8 @@ class _SongMetadataDialogBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final contentTheme = frostedDialogContentTheme(context);
+    final scheme = contentTheme.colorScheme;
     final mq = MediaQuery.of(context);
     final path = song.path.trim();
     final coverBytes = _pickCoverBytes(meta, song);
@@ -170,13 +172,17 @@ class _SongMetadataDialogBody extends StatelessWidget {
               width: 118,
               child: Text(
                 label,
-                style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                style: contentTheme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             Expanded(
               child: SelectableText(
                 display,
-                style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+                style: contentTheme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface,
+                ),
               ),
             ),
           ],
@@ -191,7 +197,7 @@ class _SongMetadataDialogBody extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             text,
-            style: theme.textTheme.titleSmall?.copyWith(
+            style: contentTheme.textTheme.titleSmall?.copyWith(
               color: scheme.primary,
               fontWeight: FontWeight.w600,
             ),
@@ -204,152 +210,190 @@ class _SongMetadataDialogBody extends StatelessWidget {
     final album = _dashIfEmpty(_decode(meta.album));
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.transparent,
       clipBehavior: Clip.antiAlias,
-      child: SizedBox(
-        width: min(440.0, mq.size.width - 40),
-        height: mq.size.height * 0.82,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.songPageMetadataDialogTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
+      child: Theme(
+        data: contentTheme,
+        child: FrostedSheetForegroundScope(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: FrostedPalette.fill(context, FrostedSurfaceKind.dialog),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: FrostedPalette.edgeLine(context)),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      width: 132,
-                      height: 132,
-                      child: coverChild,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _headerTitle(),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        if (artist != '—')
-                          Text(
-                            artist,
-                            style: theme.textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        if (album != '—') ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            album,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant.withValues(alpha: 0.95),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: SizedBox(
+                width: min(440.0, mq.size.width - 40),
+                height: mq.size.height * 0.82,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 8, 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.songPageMetadataDialogTitle,
+                              style: contentTheme.textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700),
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close_rounded),
                           ),
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.35)),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                children: [
-                  sectionTitle(l10n.songPageMetaSectionTags, topPad: 0),
-                  kv(l10n.songPageMetaFieldTitle, _decode(meta.title)),
-                  kv(l10n.songPageMetaFieldArtist, _decode(meta.artist)),
-                  kv(l10n.songPageMetaFieldAlbum, _decode(meta.album)),
-                  kv(l10n.songPageMetaFieldPerformers, _performersStr()),
-                  kv(l10n.songPageMetaFieldGenre, _genreStr()),
-                  kv(l10n.songPageMetaFieldLanguage, _dashIfEmpty(_decode(meta.language))),
-                  kv(l10n.songPageMetaFieldYear, _yearStr()),
-                  kv(l10n.songPageMetaFieldTrack, _trackStr()),
-                  kv(l10n.songPageMetaFieldDisc, _discStr()),
-                  sectionTitle(l10n.songPageMetaSectionAudio),
-                  kv(l10n.songPageMetaFieldDuration, _durStr()),
-                  kv(l10n.songPageMetaFieldBitrate, _bitrateStr()),
-                  kv(l10n.songPageMetaFieldSampleRate, _hzStr()),
-                  if (lyricsRaw != null && lyricsRaw.isNotEmpty) ...[
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: ExpansionTile(
-                        tilePadding: EdgeInsets.zero,
-                        initiallyExpanded: false,
-                        title: Text(
-                          l10n.songPageMetaFieldEmbeddedLyrics,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: scheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: SelectableText(
-                              lyricsRaw,
-                              style: theme.textTheme.bodyMedium,
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: SizedBox(
+                              width: 132,
+                              height: 132,
+                              child: coverChild,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _headerTitle(),
+                                  style: contentTheme.textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                if (artist != '—')
+                                  Text(
+                                    artist,
+                                    style: contentTheme.textTheme.bodyLarge
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                if (album != '—') ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    album,
+                                    style: contentTheme.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant
+                                              .withValues(alpha: 0.95),
+                                        ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                  sectionTitle(l10n.songPageMetaSectionFile),
-                  kv(l10n.songPageMetaFieldFormat, _formatExtension(path)),
-                  kv(l10n.songPageMetaFieldPath, path),
-                  kv(
-                    l10n.songPageMetaFieldSize,
-                    sizeBytes > 0 ? _formatMetaBytes(sizeBytes) : '—',
-                  ),
-                ],
-              ),
-            ),
-            SafeArea(
-              minimum: const EdgeInsets.only(bottom: 8),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text(l10n.actionOK),
+                    Divider(
+                      height: 1,
+                      color: scheme.outlineVariant.withValues(alpha: 0.35),
                     ),
-                  ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                        children: [
+                          sectionTitle(l10n.songPageMetaSectionTags, topPad: 0),
+                          kv(l10n.songPageMetaFieldTitle, _decode(meta.title)),
+                          kv(
+                            l10n.songPageMetaFieldArtist,
+                            _decode(meta.artist),
+                          ),
+                          kv(l10n.songPageMetaFieldAlbum, _decode(meta.album)),
+                          kv(
+                            l10n.songPageMetaFieldPerformers,
+                            _performersStr(),
+                          ),
+                          kv(l10n.songPageMetaFieldGenre, _genreStr()),
+                          kv(
+                            l10n.songPageMetaFieldLanguage,
+                            _dashIfEmpty(_decode(meta.language)),
+                          ),
+                          kv(l10n.songPageMetaFieldYear, _yearStr()),
+                          kv(l10n.songPageMetaFieldTrack, _trackStr()),
+                          kv(l10n.songPageMetaFieldDisc, _discStr()),
+                          sectionTitle(l10n.songPageMetaSectionAudio),
+                          kv(l10n.songPageMetaFieldDuration, _durStr()),
+                          kv(l10n.songPageMetaFieldBitrate, _bitrateStr()),
+                          kv(l10n.songPageMetaFieldSampleRate, _hzStr()),
+                          if (lyricsRaw != null && lyricsRaw.isNotEmpty) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: ExpansionTile(
+                                tilePadding: EdgeInsets.zero,
+                                initiallyExpanded: false,
+                                title: Text(
+                                  l10n.songPageMetaFieldEmbeddedLyrics,
+                                  style: contentTheme.textTheme.titleSmall
+                                      ?.copyWith(
+                                        color: scheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                                children: [
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: SelectableText(
+                                      lyricsRaw,
+                                      style: contentTheme.textTheme.bodyMedium,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          sectionTitle(l10n.songPageMetaSectionFile),
+                          kv(
+                            l10n.songPageMetaFieldFormat,
+                            _formatExtension(path),
+                          ),
+                          kv(l10n.songPageMetaFieldPath, path),
+                          kv(
+                            l10n.songPageMetaFieldSize,
+                            sizeBytes > 0 ? _formatMetaBytes(sizeBytes) : '—',
+                          ),
+                        ],
+                      ),
+                    ),
+                    SafeArea(
+                      minimum: const EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Text(l10n.actionOK),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

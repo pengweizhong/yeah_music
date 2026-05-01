@@ -22,45 +22,41 @@ void showSongSortBottomSheet(
       return Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
         child: FrostedGlassBottomSheet(
-          child: Theme(
-            data: frostedBottomSheetContentTheme(ctx),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                    child: Text(
-                      l10n.sortOptionsTitle,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: Text(
+                    l10n.sortOptionsTitle,
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.sort_by_alpha, color: Colors.white),
-                    title: Text(l10n.sortByName),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (sortType == SongListSortType.name)
-                          Icon(
-                            isAscending
-                                ? Icons.arrow_upward
-                                : Icons.arrow_downward,
-                            size: 20,
-                            color: primary,
-                          ),
-                        if (sortType == SongListSortType.name)
-                          const SizedBox(width: 8),
-                        if (sortType == SongListSortType.name)
-                          Icon(Icons.check, color: primary),
-                      ],
-                    ),
-                    onTap: () {
+                ),
+                ListTile(
+                  leading: const Icon(Icons.sort_by_alpha),
+                  title: Text(l10n.sortByName),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (sortType == SongListSortType.name)
+                        Icon(
+                          isAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 20,
+                          color: primary,
+                        ),
+                      if (sortType == SongListSortType.name)
+                        const SizedBox(width: 8),
+                      if (sortType == SongListSortType.name)
+                        Icon(Icons.check, color: primary),
+                    ],
+                  ),
+                  onTap: () {
                       if (sortType == SongListSortType.name) {
                         onApply(SongListSortType.name, !isAscending);
                       } else {
@@ -70,7 +66,7 @@ void showSongSortBottomSheet(
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.access_time, color: Colors.white),
+                    leading: const Icon(Icons.access_time),
                     title: Text(l10n.sortByCreated),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -99,7 +95,7 @@ void showSongSortBottomSheet(
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.update, color: Colors.white),
+                    leading: const Icon(Icons.update),
                     title: Text(l10n.sortByUpdated),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -129,10 +125,7 @@ void showSongSortBottomSheet(
                   ),
                   if (includeAddedToPlaylistOption) ...[
                     ListTile(
-                      leading: const Icon(
-                        Icons.playlist_add_check,
-                        color: Colors.white,
-                      ),
+                      leading: const Icon(Icons.playlist_add_check),
                       title: Text(l10n.sortByAddedToPlaylist),
                       subtitle: Text(l10n.sortByAddedToPlaylistSub),
                       trailing: Row(
@@ -170,8 +163,7 @@ void showSongSortBottomSheet(
               ),
             ),
           ),
-        ),
-      );
+        );
     },
   );
 }

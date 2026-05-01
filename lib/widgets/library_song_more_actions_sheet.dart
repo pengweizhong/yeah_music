@@ -39,52 +39,40 @@ Future<void> showLibrarySongMoreActionsSheet(
           bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
         ),
         child: FrostedGlassBottomSheet(
-          child: Theme(
-            data: frostedBottomSheetContentTheme(sheetContext),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                    child: Text(
-                      l10n.songPageMoreSheetTitle,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                  child: Text(
+                    l10n.songPageMoreSheetTitle,
+                    style: Theme.of(sheetContext).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  ListTile(
-                    leading:
-                        const Icon(Icons.drive_file_rename_outline, color: Colors.white),
-                    title: Text(l10n.menuRename,
-                        style: const TextStyle(color: Colors.white)),
-                    onTap: () async {
+                ),
+                ListTile(
+                  leading: const Icon(Icons.drive_file_rename_outline),
+                  title: Text(l10n.menuRename),
+                  onTap: () async {
                       Navigator.pop(sheetContext);
                       final ok = await _renameSongStem(context, song);
                       if (ok) afterMutation?.call();
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.playlist_add, color: Colors.white),
-                    title: Text(l10n.tooltipAddToPlaylist,
-                        style: const TextStyle(color: Colors.white)),
+                    leading: const Icon(Icons.playlist_add),
+                    title: Text(l10n.tooltipAddToPlaylist),
                     onTap: () async {
                       Navigator.pop(sheetContext);
                       await showAddToUserPlaylistsSheet(context, song);
                     },
                   ),
                   ListTile(
-                    leading:
-                        const Icon(Icons.queue_play_next_outlined, color: Colors.white),
-                    title: Text(
-                      l10n.menuPlayNextAfterCurrent,
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                    leading: const Icon(Icons.queue_play_next_outlined),
+                    title: Text(l10n.menuPlayNextAfterCurrent),
                     onTap: () {
                       Navigator.pop(sheetContext);
                       final playList = context.read<PlayListProvider>();
@@ -101,12 +89,8 @@ Future<void> showLibrarySongMoreActionsSheet(
                     },
                   ),
                   ListTile(
-                    leading:
-                        const Icon(Icons.edit_attributes_outlined, color: Colors.white),
-                    title: Text(
-                      l10n.songPageMoreEditMusicTagsInline,
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                    leading: const Icon(Icons.edit_attributes_outlined),
+                    title: Text(l10n.songPageMoreEditMusicTagsInline),
                     onTap: () async {
                       Navigator.pop(sheetContext);
                       await showSongInlineTagsEditorSheet(
@@ -126,12 +110,8 @@ Future<void> showLibrarySongMoreActionsSheet(
                   ),
                   if (Platform.isAndroid)
                     ListTile(
-                      leading:
-                          const Icon(Icons.edit_note_outlined, color: Colors.white),
-                      title: Text(
-                        l10n.songPageMoreEditMusicTagsExternal,
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                      leading: const Icon(Icons.edit_note_outlined),
+                      title: Text(l10n.songPageMoreEditMusicTagsExternal),
                       onTap: () async {
                         Navigator.pop(sheetContext);
                         await MusicTagEditorLauncher.openMusicTagEditorWithFeedback(
@@ -141,19 +121,16 @@ Future<void> showLibrarySongMoreActionsSheet(
                       },
                     ),
                   ListTile(
-                    leading:
-                        const Icon(Icons.info_outline_rounded, color: Colors.white),
-                    title: Text(l10n.songPageMoreQueryMetadata,
-                        style: const TextStyle(color: Colors.white)),
+                    leading: const Icon(Icons.info_outline_rounded),
+                    title: Text(l10n.songPageMoreQueryMetadata),
                     onTap: () async {
                       Navigator.pop(sheetContext);
                       await tryShowAudioMetadataDialogForSong(context, song);
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.refresh_rounded, color: Colors.white),
-                    title: Text(l10n.libraryReloadMetadata,
-                        style: const TextStyle(color: Colors.white)),
+                    leading: const Icon(Icons.refresh_rounded),
+                    title: Text(l10n.libraryReloadMetadata),
                     onTap: () async {
                       Navigator.pop(sheetContext);
                       if (song.path.trim().isEmpty) return;
@@ -162,16 +139,15 @@ Future<void> showLibrarySongMoreActionsSheet(
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.copy_all_outlined, color: Colors.white),
-                    title: Text(l10n.libraryCloneSong,
-                        style: const TextStyle(color: Colors.white)),
+                    leading: const Icon(Icons.copy_all_outlined),
+                    title: Text(l10n.libraryCloneSong),
                     onTap: () async {
                       Navigator.pop(sheetContext);
                       final ok = await _cloneSongStem(context, song);
                       if (ok) afterMutation?.call();
                     },
                   ),
-                  const Divider(height: 1, color: Color(0x33FFFFFF)),
+                  Divider(height: 1, color: Theme.of(sheetContext).dividerColor),
                   ListTile(
                     leading: Icon(
                       Icons.delete_outline_rounded,
@@ -192,9 +168,8 @@ Future<void> showLibrarySongMoreActionsSheet(
                       });
                     },
                   ),
-                  const SizedBox(height: 8),
-                ],
-              ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
         ),

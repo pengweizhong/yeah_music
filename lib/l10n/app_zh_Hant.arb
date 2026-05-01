@@ -795,7 +795,7 @@
   "librarySongsDeletedN": "已刪除 {n} 首歌曲",
   "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
   "fabNewPlaylist": "新增歌單",
-  "emptyPlaylistsHint": "尚無歌單\n在播放頁面或歌曲清單可將歌曲加入歌單\n\n可於右上角「⋮」匯入／匯出、單選／多選",
+  "emptyPlaylistsHint": "尚無歌單\n在播放頁面或歌曲清單可將歌曲加入歌單\n\n可於右上角「⋮」匯入、單選／多選",
   "sortByName": "依名稱",
   "sortByPath": "依路徑",
   "sortByCreated": "依建立時間",

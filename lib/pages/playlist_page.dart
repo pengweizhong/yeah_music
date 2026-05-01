@@ -9,6 +9,7 @@ import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
@@ -529,7 +530,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           appBar: AppBar(
             leading: _batchSelect
                 ? IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: context.gradFg()),
                     onPressed: _exitBatchSelect,
                   )
                 : null,
@@ -537,23 +538,26 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
               _batchSelect
                   ? '${_selectedNormPaths.length}'
                   : l10n.homeAllSongs,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: context.gradFg(0.96),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
+            iconTheme: IconThemeData(color: context.gradFg()),
             actions: [
               if (_batchSelect)
                 TextButton(
                   onPressed: _exitBatchSelect,
                   child: Text(
                     l10n.libraryBatchDone,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.gradFg()),
                   ),
                 )
               else ...[
                 IconButton(
-                  icon: const Icon(Icons.search),
+                  icon: Icon(Icons.search, color: context.gradFg()),
                   onPressed: () {
                     showSearch(
                       context: context,
@@ -568,13 +572,12 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                   tooltip: l10n.homeSearchTooltip,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.sort),
+                  icon: Icon(Icons.sort, color: context.gradFg()),
                   onPressed: _showSortOptions,
                   tooltip: l10n.tooltipSort,
                 ),
                 PopupMenuButton<String>(
-                  icon:
-                      const Icon(Icons.more_vert, color: Colors.white),
+                  icon: Icon(Icons.more_vert, color: context.gradFg()),
                   onSelected: (value) async {
                     if (value == 'cover') {
                       if (!userPlaylistProvider.initialized) {
@@ -637,13 +640,13 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                               Icon(
                                 Icons.music_note,
                                 size: 64,
-                                color: Colors.white.withValues(alpha: 0.3),
+                                color: context.gradFg(0.28),
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 l10n.songsListEmpty,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: context.gradFg(0.52),
                                   fontSize: 16,
                                 ),
                               ),
@@ -732,6 +735,8 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   /// 曲库页：行尾「更多」菜单（重命名、加入歌单、查询/重载元数据）。
   final void Function(BuildContext context, Song song)? onSongMore;
 
+  final String searchFieldLabelText;
+
   SongSearchDelegate(
     this.allSongs,
     this.playListProvider, {
@@ -742,35 +747,41 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
     this.playbackQueueBumpPlayCount = true,
     required this.searchFieldLabelText,
     this.onSongMore,
-  }) : super(
-         searchFieldStyle: const TextStyle(
-           color: Colors.white,
-           fontSize: 20,
-           fontWeight: FontWeight.w400,
-         ),
-       );
-
-  final String searchFieldLabelText;
+  }) : super();
 
   @override
   String get searchFieldLabel => searchFieldLabelText;
 
   @override
   ThemeData appBarTheme(BuildContext context) {
-    return Theme.of(context).copyWith(
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final fg = isLight ? Colors.black : Colors.white;
+    final hint = isLight ? Colors.black54 : const Color(0xB3FFFFFF);
+    final searchStyle = TextStyle(
+      color: fg,
+      fontSize: 20,
+      fontWeight: FontWeight.w400,
+    );
+    return theme.copyWith(
       scaffoldBackgroundColor: Colors.transparent,
       canvasColor: Colors.transparent,
-      appBarTheme: const AppBarThemeData(
+      textTheme: theme.textTheme.copyWith(
+        titleLarge: searchStyle,
+        bodyLarge: searchStyle,
+      ),
+      appBarTheme: AppBarThemeData(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
-        toolbarTextStyle: TextStyle(color: Colors.white),
+        systemOverlayStyle:
+            isLight ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+        iconTheme: IconThemeData(color: fg),
+        titleTextStyle: TextStyle(color: fg, fontSize: 20),
+        toolbarTextStyle: TextStyle(color: fg),
       ),
-      inputDecorationTheme: const InputDecorationTheme(
+      inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.transparent,
         isDense: true,
@@ -778,7 +789,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         border: InputBorder.none,
         enabledBorder: InputBorder.none,
         focusedBorder: InputBorder.none,
-        hintStyle: TextStyle(color: Color(0xB3FFFFFF)),
+        hintStyle: TextStyle(color: hint),
       ),
     );
   }
@@ -811,10 +822,12 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
   @override
   List<Widget> buildActions(BuildContext context) {
+    final fg =
+        Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white;
     return [
       if (query.isNotEmpty)
         IconButton(
-          icon: const Icon(Icons.clear, color: Colors.white),
+          icon: Icon(Icons.clear, color: fg),
           onPressed: () {
             query = '';
           },
@@ -824,8 +837,10 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
   @override
   Widget buildLeading(BuildContext context) {
+    final fg =
+        Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white;
     return IconButton(
-      icon: const Icon(Icons.arrow_back, color: Colors.white),
+      icon: Icon(Icons.arrow_back, color: fg),
       onPressed: () {
         close(context, null);
       },
@@ -894,13 +909,13 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
             Icon(
               Icons.search_off,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.35),
+              color: context.gradFg(0.35),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.searchNoMatchingSongs,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: context.gradFg(0.55),
                 fontSize: 16,
               ),
             ),

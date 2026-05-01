@@ -115,10 +115,11 @@ class FrostedGlassBottomSheet extends StatelessWidget {
     final isLight = Theme.of(context).brightness == Brightness.light;
     final r = BorderRadius.vertical(top: Radius.circular(topRadius));
     final e = FrostedPalette.edgeLine(context);
+    final sigma = isLight ? 0.0 : 16.0;
     return ClipRRect(
       borderRadius: r,
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -168,20 +169,30 @@ class FrostedGlassBottomSheet extends StatelessWidget {
   }
 }
 
-/// 底部毛玻璃上使用的 [Theme]：夜间高对比白字；白天为浅底配深字。
+/// 底部毛玻璃上使用的 [Theme]：夜间高对比白字；白天为白底黑字（与列表/表单可读性一致）。
 ThemeData frostedBottomSheetContentTheme(BuildContext context) {
   final t = Theme.of(context);
   if (t.brightness == Brightness.light) {
+    const ink = Color(0xFF000000);
+    const inkMuted = Color(0xFF424242);
     return t.copyWith(
+      scaffoldBackgroundColor: Colors.white,
       colorScheme: t.colorScheme.copyWith(
-        onSurface: kGradLightInk,
-        onSurfaceVariant: kGradLightInkMuted.withValues(alpha: 0.95),
+        surface: Colors.white,
+        onSurface: ink,
+        onSurfaceVariant: inkMuted,
       ),
+      textTheme: t.textTheme.apply(
+        bodyColor: ink,
+        displayColor: ink,
+        decorationColor: ink,
+      ),
+      iconTheme: const IconThemeData(color: ink, opacity: 1),
       listTileTheme: t.listTileTheme.copyWith(
-        textColor: kGradLightInk,
-        iconColor: kGradLightInk,
+        textColor: ink,
+        iconColor: ink,
       ),
-      dividerTheme: DividerThemeData(color: kGradLightInk.withValues(alpha: 0.12)),
+      dividerTheme: const DividerThemeData(color: Color(0x1F000000)),
     );
   }
   return t.copyWith(
@@ -213,10 +224,12 @@ class FrostedGlassDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = BorderRadius.circular(borderRadius);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final sigma = isLight ? 0.0 : 16.0;
     return ClipRRect(
       borderRadius: r,
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Container(
@@ -251,11 +264,21 @@ class FrostedGlassDialog extends StatelessWidget {
 ThemeData frostedDialogContentTheme(BuildContext context) {
   final t = Theme.of(context);
   if (t.brightness == Brightness.light) {
+    const ink = Color(0xFF000000);
+    const inkMuted = Color(0xFF424242);
     return t.copyWith(
+      scaffoldBackgroundColor: Colors.white,
       colorScheme: t.colorScheme.copyWith(
-        onSurface: kGradLightInk,
-        onSurfaceVariant: kGradLightInkMuted.withValues(alpha: 0.94),
+        surface: Colors.white,
+        onSurface: ink,
+        onSurfaceVariant: inkMuted,
       ),
+      textTheme: t.textTheme.apply(
+        bodyColor: ink,
+        displayColor: ink,
+        decorationColor: ink,
+      ),
+      iconTheme: const IconThemeData(color: ink, opacity: 1),
     );
   }
   return t.copyWith(

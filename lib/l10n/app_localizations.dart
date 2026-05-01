@@ -3966,7 +3966,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptyPlaylistsHint.
   ///
   /// In en, this message translates to:
-  /// **'No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import/export and multi-select.'**
+  /// **'No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import and multi-select.'**
   String get emptyPlaylistsHint;
 
   /// No description provided for @sortByName.

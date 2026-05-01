@@ -795,7 +795,7 @@
   "librarySongsDeletedN": "Deleted {n} song(s)",
   "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
   "fabNewPlaylist": "New playlist",
-  "emptyPlaylistsHint": "No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import/export and multi-select.",
+  "emptyPlaylistsHint": "No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import and multi-select.",
   "sortByName": "By name",
   "sortByPath": "By path",
   "sortByCreated": "By date created",
