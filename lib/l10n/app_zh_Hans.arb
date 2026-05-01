@@ -454,7 +454,7 @@
   "themeGradientRgbDialogTitle": "背景渐变",
   "actionSelect": "选择",
   "fogBackground": "背景雾化",
-  "fogBackgroundDesc": "虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。",
+  "fogBackgroundDesc": "虚化并压暗壁纸，减少对文字图标的干扰。即使调低也会保留轻度整幅压暗与上下边缘渐晕；花纹多或反差大的图建议再调高。默认 45%。",
   "fogWeak": "弱",
   "fogStrong": "强",
   "actionPickImage": "选择图片",

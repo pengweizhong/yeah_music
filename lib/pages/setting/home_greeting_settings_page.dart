@@ -191,9 +191,9 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
                 Text(
                   l10n.settingsHomeGreetingHelp,
                   style: TextStyle(
-                    color: context.gradFgMuted(0.75),
-                    fontSize: 14,
-                    height: 1.45,
+                    color: context.gradFg(0.6),
+                    fontSize: 13,
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 20),

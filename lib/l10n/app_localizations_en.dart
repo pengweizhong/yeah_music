@@ -1254,7 +1254,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fogBackgroundDesc =>
-      'Blur and dim the image so text and icons stay readable. Default 45%.';
+      'Blur and dim the wallpaper so labels stay readable. A light overall dim plus subtle darker top/bottom edges are kept even at low strength; bump it up for busy or high‑contrast photos. Default 45%.';
 
   @override
   String get fogWeak => 'Subtle';

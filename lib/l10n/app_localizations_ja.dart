@@ -1203,7 +1203,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fogBackground => '背景のぼかし・暗さ';
 
   @override
-  String get fogBackgroundDesc => '文字やアイコンを読みやすくするため、背景をぼかして暗くします。既定 45%。';
+  String get fogBackgroundDesc =>
+      '読みやすさのため壁紙をぼかして暗くします。弱めでもベースの減光と上下のわずかなビネットは維持します。模様やコントラストが強い写真は強めがおすすめ。既定は 45%。';
 
   @override
   String get fogWeak => '弱';

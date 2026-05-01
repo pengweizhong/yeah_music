@@ -1183,7 +1183,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fogBackground => '背景雾化';
 
   @override
-  String get fogBackgroundDesc => '虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。';
+  String get fogBackgroundDesc =>
+      '虚化并压暗壁纸，减少对文字图标的干扰。即使调低也会保留轻度整幅压暗与上下边缘渐晕；花纹多或反差大的图建议再调高。默认 45%。';
 
   @override
   String get fogWeak => '弱';
@@ -3635,7 +3636,8 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get fogBackground => '背景雾化';
 
   @override
-  String get fogBackgroundDesc => '虚化并压暗背景图，减轻对文字、图标的干扰。默认 45%，可按需调节。';
+  String get fogBackgroundDesc =>
+      '虚化并压暗壁纸，减少对文字图标的干扰。即使调低也会保留轻度整幅压暗与上下边缘渐晕；花纹多或反差大的图建议再调高。默认 45%。';
 
   @override
   String get fogWeak => '弱';
@@ -6088,7 +6090,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get fogBackground => '背景霧化';
 
   @override
-  String get fogBackgroundDesc => '霧化並調暗背景圖，讓文字與圖示更清楚。預設 45%。';
+  String get fogBackgroundDesc =>
+      '霧化並調暗背景圖，降低對文字的干擾。即使調低也會保留輕壓暗與上下邊緣漸暗；花色或反差強的圖可再調高。預設 45%。';
 
   @override
   String get fogWeak => '弱';

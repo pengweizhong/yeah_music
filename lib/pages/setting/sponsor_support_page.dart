@@ -67,15 +67,10 @@ class SponsorSupportPage extends StatelessWidget {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
         final l10n = AppLocalizations.of(context);
-        final fgMuted = TextStyle(
-          color: context.gradFgMuted(0.82),
-          fontSize: 14,
-          height: 1.45,
-        );
-        final fgSmall = TextStyle(
-          color: context.gradFgMuted(0.68),
-          fontSize: 12.5,
-          height: 1.42,
+        final descStyle = TextStyle(
+          color: context.gradFg(0.6),
+          fontSize: 13,
+          height: 1.35,
         );
 
         Widget sectionTitle(String text) => Padding(
@@ -83,7 +78,7 @@ class SponsorSupportPage extends StatelessWidget {
               child: Text(
                 text,
                 style: TextStyle(
-                  color: context.gradFg(0.92),
+                  color: context.gradFg(),
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.2,
@@ -119,7 +114,7 @@ class SponsorSupportPage extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 subtitle,
-                style: TextStyle(color: context.gradFg(0.62), fontSize: 13),
+                style: TextStyle(color: context.gradFg(0.6), fontSize: 13),
               ),
             ),
             trailing: IconButton(
@@ -153,9 +148,9 @@ class SponsorSupportPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
                 sectionTitle(l10n.settingsSponsorSectionFreeTitle),
-                Text(l10n.settingsSponsorSectionFreeBody, style: fgMuted),
+                Text(l10n.settingsSponsorSectionFreeBody, style: descStyle),
                 sectionTitle(l10n.settingsSponsorSectionStarTitle),
-                Text(l10n.settingsSponsorSectionStarHint, style: fgMuted),
+                Text(l10n.settingsSponsorSectionStarHint, style: descStyle),
                 const SizedBox(height: 8),
                 repoTile(
                   title: l10n.settingsSponsorRepoYeahMusicTitle,
@@ -186,7 +181,7 @@ class SponsorSupportPage extends StatelessWidget {
                   onTap: () => _showTipEasterEgg(context),
                 ),
                 const SizedBox(height: 20),
-                Text(l10n.settingsSponsorExternalHint, style: fgSmall),
+                Text(l10n.settingsSponsorExternalHint, style: descStyle),
               ],
             ),
           ),

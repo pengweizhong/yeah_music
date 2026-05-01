@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/themes/user_theme_gradient_foreground_scope.dart';
+import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
 
 /// 白昼渐变底上的主字色（对齐 [AppMaterialThemes.light].colorScheme.onSurface）。
 /// 偏冷的近黑墨，略高于夜间白字的「感知对比」需求（浅灰底易发灰晕）。
@@ -9,16 +11,30 @@ const Color kGradLightInkMuted = Color(0xFF192433);
 
 /// 与 [MaterialApp] 全局 [ThemeMode] 联动：全屏自定义渐变/背景图上的前景与边框色。
 extension GradOnThemedBackground on BuildContext {
-  /// 主文字/图标（白天：深蓝墨）
+  /// 主文字/图标
   Color gradFg([double a = 1.0]) {
+    final wp = WallpaperReadableScope.maybeOf(this);
+    if (wp != null) {
+      return wp.foreground.withValues(alpha: a);
+    }
+    if (UserThemeGradientForegroundScope.maybeOf(this) != null) {
+      return Colors.white.withValues(alpha: a);
+    }
     if (Theme.of(this).brightness == Brightness.light) {
       return kGradLightInk.withValues(alpha: a);
     }
     return Colors.white.withValues(alpha: a);
   }
 
-  /// 次一级说明文字（白天默认全不透明；夜间为高亮白半透明）
+  /// 次一级说明文字
   Color gradFgMuted([double a = 1.0]) {
+    final wp = WallpaperReadableScope.maybeOf(this);
+    if (wp != null) {
+      return wp.foregroundMuted.withValues(alpha: a);
+    }
+    if (UserThemeGradientForegroundScope.maybeOf(this) != null) {
+      return Colors.white.withValues(alpha: 0.65);
+    }
     if (Theme.of(this).brightness == Brightness.light) {
       return kGradLightInkMuted.withValues(alpha: a);
     }
@@ -27,6 +43,13 @@ extension GradOnThemedBackground on BuildContext {
 
   /// 细边框/分割线/低调装饰
   Color gradBorder([double a = 0.12]) {
+    final wp = WallpaperReadableScope.maybeOf(this);
+    if (wp != null) {
+      return wp.foreground.withValues(alpha: (a * 1.72).clamp(0.0, 1.0));
+    }
+    if (UserThemeGradientForegroundScope.maybeOf(this) != null) {
+      return Colors.white.withValues(alpha: a);
+    }
     if (Theme.of(this).brightness == Brightness.light) {
       return kGradLightInk.withValues(alpha: (a * 1.72).clamp(0.0, 1.0));
     }
@@ -46,7 +69,8 @@ abstract final class FrostedPalette {
       case FrostedSurfaceKind.bottomBar:
         return const Color(0xEE28323D);
       case FrostedSurfaceKind.drawerOrPinned:
-        return const Color(0xF2F5F8FC);
+        /// 白昼与底栏同色实板：与白字链路一致（避免浅色雾面 + 白字发糊）。
+        return const Color(0xEE28323D);
       case FrostedSurfaceKind.sheet:
         return const Color(0xFBF8FAFC);
       case FrostedSurfaceKind.dialog:

@@ -23,11 +23,12 @@ bool _isModifierOnlyKey(LogicalKeyboardKey k) {
 
 Future<SingleActivator?> _recordShortcut(BuildContext context) {
   final l10n = AppLocalizations.of(context);
+  final titleFg = context.gradFg();
+  final bodyFg = context.gradFg(0.6);
   return showFrostedDialog<SingleActivator>(
     context: context,
     child: Builder(
       builder: (ctx) {
-        final scheme = Theme.of(ctx).colorScheme;
         return Padding(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
           child: Column(
@@ -39,7 +40,7 @@ Future<SingleActivator?> _recordShortcut(BuildContext context) {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: scheme.onSurface,
+                  color: titleFg,
                 ),
               ),
               const SizedBox(height: 14),
@@ -67,7 +68,7 @@ Future<SingleActivator?> _recordShortcut(BuildContext context) {
                 child: Text(
                   l10n.settingsPlaybackShortcutsPressKeyHint,
                   style: TextStyle(
-                    color: scheme.onSurfaceVariant,
+                    color: bodyFg,
                     height: 1.45,
                   ),
                 ),
@@ -76,6 +77,7 @@ Future<SingleActivator?> _recordShortcut(BuildContext context) {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
+                  style: TextButton.styleFrom(foregroundColor: titleFg),
                   onPressed: () => Navigator.of(ctx).pop(),
                   child: Text(l10n.actionCancel),
                 ),

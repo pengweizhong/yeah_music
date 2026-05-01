@@ -35,18 +35,18 @@ class LanguageSettingsPage extends StatelessWidget {
                 Text(
                   l10n.languageSettingsDescription,
                   style: TextStyle(
-                    color: context.gradFgMuted(0.75),
-                    fontSize: 14,
-                    height: 1.4,
+                    color: context.gradFg(0.6),
+                    fontSize: 13,
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   l10n.languageRestartNotice,
                   style: TextStyle(
-                    color: context.gradFgMuted(0.65),
+                    color: context.gradFg(0.6),
                     fontSize: 13,
-                    height: 1.4,
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 20),

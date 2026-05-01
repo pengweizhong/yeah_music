@@ -454,7 +454,7 @@
   "themeGradientRgbDialogTitle": "背景漸層",
   "actionSelect": "選擇",
   "fogBackground": "背景霧化",
-  "fogBackgroundDesc": "霧化並調暗背景圖，讓文字與圖示更清楚。預設 45%。",
+  "fogBackgroundDesc": "霧化並調暗背景圖，降低對文字的干擾。即使調低也會保留輕壓暗與上下邊緣漸暗；花色或反差強的圖可再調高。預設 45%。",
   "fogWeak": "弱",
   "fogStrong": "強",
   "actionPickImage": "選擇圖片",

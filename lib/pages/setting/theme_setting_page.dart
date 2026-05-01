@@ -53,7 +53,7 @@ class ThemeSettingPage extends StatelessWidget {
                 Text(
                   l10n.globalThemeDesc,
                   style: TextStyle(
-                    color: context.gradFgMuted(0.75),
+                    color: context.gradFg(0.6),
                     fontSize: 13,
                     height: 1.35,
                   ),
@@ -250,7 +250,7 @@ class ThemeSettingPage extends StatelessWidget {
           Text(
             l10n.themeGradientRgbSectionSubtitle,
             style: TextStyle(
-              color: context.gradFgMuted(0.75),
+              color: context.gradFg(0.6),
               fontSize: 13,
               height: 1.35,
             ),

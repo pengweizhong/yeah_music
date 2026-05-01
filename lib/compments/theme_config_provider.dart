@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show ImageFilter, PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -8,9 +9,24 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
+import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
+import 'package:yeah_music/themes/user_theme_gradient_foreground_scope.dart';
+import 'package:yeah_music/utils/wallpaper_readable_sampler.dart';
 
 /// 主题配置提供者
 class ThemeConfigProvider extends ChangeNotifier {
+  /// 壁纸自适应字色首帧猜色（采样完成前）：亮系统偏墨、暗系统偏白，减轻首屏闪动。
+  static Color _wallpaperInitialFg() =>
+      PlatformDispatcher.instance.platformBrightness == Brightness.light
+          ? kGradLightInk
+          : Colors.white;
+
+  static Color _wallpaperInitialFgMuted() =>
+      PlatformDispatcher.instance.platformBrightness == Brightness.light
+          ? kGradLightInkMuted
+          : const Color(0xFFD2DEEE);
+
   // 主题类型
   ThemeType _themeType = ThemeType.solidColor;
   Color _primaryColor = const Color(0xFF121212);
@@ -19,8 +35,13 @@ class ThemeConfigProvider extends ChangeNotifier {
   PlaylistCoverGradientDirection _gradientDirection =
       PlaylistCoverGradientDirection.diagonalTlBr;
   String? _backgroundImagePath;
-  /// 背景图模式：0~1，控制虚化和压暗程度，越大字越易读（默认 0.45）
+  /// 背景图模式：0~1，控制虚化和压暗程度，越大字越易读（默认 0.45）；壁纸下仍保留底衬压暗与渐晕
   double _backgroundImageEffect = 0.45;
+  /// 根据壁纸缩略图 WCAG 对比度在「高亮白 / 深墨」间自动择一（及对应次级色）
+  Color _wallpaperAdaptiveFg = ThemeConfigProvider._wallpaperInitialFg();
+  Color _wallpaperAdaptiveFgMuted = ThemeConfigProvider._wallpaperInitialFgMuted();
+
+  Timer? _wallpaperReadableSampleDebounce;
 
   ThemeType get themeType => _themeType;
   Color get primaryColor => _primaryColor;
@@ -43,6 +64,12 @@ class ThemeConfigProvider extends ChangeNotifier {
 
   ThemeConfigProvider() {
     _loadConfig();
+  }
+
+  @override
+  void dispose() {
+    _wallpaperReadableSampleDebounce?.cancel();
+    super.dispose();
   }
 
   String _themeImageExtension(String filePath) {
@@ -179,6 +206,8 @@ class ThemeConfigProvider extends ChangeNotifier {
 
     _themeBackgroundImageFrame++;
     _evictThemeBackgroundImageCache(_backgroundImagePath);
+    _resetWallpaperAdaptiveToPlatformGuess();
+    _scheduleWallpaperReadableSample();
     notifyListeners();
   }
 
@@ -187,6 +216,10 @@ class ThemeConfigProvider extends ChangeNotifier {
     _themeType = type;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('theme_type', type.index);
+    _resetWallpaperAdaptiveToPlatformGuess();
+    if (type == ThemeType.backgroundImage) {
+      _scheduleWallpaperReadableSample();
+    }
     notifyListeners();
   }
 
@@ -232,6 +265,7 @@ class ThemeConfigProvider extends ChangeNotifier {
       await prefs.remove('background_image_path');
       _themeBackgroundImageFrame++;
       _scheduleDeferredWallpaperImageCacheClear();
+      _resetWallpaperAdaptiveToPlatformGuess();
       notifyListeners();
       return;
     }
@@ -255,6 +289,7 @@ class ThemeConfigProvider extends ChangeNotifier {
       rethrow;
     }
     notifyListeners();
+    _scheduleWallpaperReadableSample();
   }
 
   /// 裁剪页输出的字节直接写入应用支持目录（当前为 PNG），避免临时文件再读取造成峰值内存翻倍。
@@ -270,6 +305,7 @@ class ThemeConfigProvider extends ChangeNotifier {
     _themeBackgroundImageFrame++;
     _scheduleDeferredWallpaperImageCacheClear();
     notifyListeners();
+    _scheduleWallpaperReadableSample();
   }
 
   /// 背景图雾化/压暗强度 0~1（虚化 + 深色蒙层）
@@ -280,6 +316,47 @@ class ThemeConfigProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('background_image_effect', _backgroundImageEffect);
+    _scheduleWallpaperReadableSample(debounce: true);
+  }
+
+  void _resetWallpaperAdaptiveToPlatformGuess() {
+    _wallpaperAdaptiveFg = ThemeConfigProvider._wallpaperInitialFg();
+    _wallpaperAdaptiveFgMuted = ThemeConfigProvider._wallpaperInitialFgMuted();
+  }
+
+  /// [debounce]：雾化滑条连续拖动时延后合并，避免解码尖峰。
+  void _scheduleWallpaperReadableSample({bool debounce = false}) {
+    if (_themeType != ThemeType.backgroundImage) return;
+    final pth = _backgroundImagePath;
+    if (pth == null || !File(pth).existsSync()) return;
+
+    void runMicro() {
+      final e = _backgroundImageEffect.clamp(0.0, 1.0);
+      final scrim = (0.11 + e * 0.57).clamp(0.0, 0.78);
+      final lumaScale = (1.0 - scrim * 0.48).clamp(0.38, 1.0);
+      Future.microtask(() async {
+        final sample = await sampleWallpaperReadableColors(
+          pth,
+          sampleLumaScale: lumaScale,
+        );
+        if (_themeType != ThemeType.backgroundImage || _backgroundImagePath != pth) return;
+        if (sample == null) return;
+        if (_wallpaperAdaptiveFg == sample.foreground &&
+            _wallpaperAdaptiveFgMuted == sample.foregroundMuted) {
+          return;
+        }
+        _wallpaperAdaptiveFg = sample.foreground;
+        _wallpaperAdaptiveFgMuted = sample.foregroundMuted;
+        notifyListeners();
+      });
+    }
+
+    if (debounce) {
+      _wallpaperReadableSampleDebounce?.cancel();
+      _wallpaperReadableSampleDebounce = Timer(const Duration(milliseconds: 280), runMicro);
+      return;
+    }
+    runMicro();
   }
 
   /// 全页背景：自定义图时用 [ImageFiltered] + 蒙层，其它与 [getBackgroundDecoration] 一致。
@@ -294,8 +371,12 @@ class ThemeConfigProvider extends ChangeNotifier {
         _backgroundImagePath != null &&
         File(_backgroundImagePath!).existsSync()) {
       final e = _backgroundImageEffect.clamp(0.0, 1.0);
-      final sigma = e * 12.0;
-      final scrim = e * 0.68;
+      // 虚化略加强，削弱纹理与细字竞争；滑块为 0 时仍无模糊，由底衬蒙层保证最低可读性
+      final sigma = e * 14.0;
+      // 统一压暗：低档亦保留底衬，避免壁纸亮部/花纹与固定色字（白/墨）直接抢对比
+      final scrim = (0.11 + e * 0.57).clamp(0.0, 0.78);
+      // 顶/底略重，减轻状态栏、底部导航与长列表中部「偶发撞色」
+      final vignette = (0.045 + e * 0.11).clamp(0.045, 0.22);
       return Stack(
         key: ValueKey<int>(_themeBackgroundImageFrame),
         fit: StackFit.expand,
@@ -330,7 +411,7 @@ class ThemeConfigProvider extends ChangeNotifier {
             Positioned.fill(
               child: IgnorePointer(
                 child: ColoredBox(
-                  color: kGradLightInk.withValues(alpha: 0.045),
+                  color: kGradLightInk.withValues(alpha: 0.028 + e * 0.10),
                 ),
               ),
             ),
@@ -343,31 +424,50 @@ class ThemeConfigProvider extends ChangeNotifier {
               ),
             ),
           ),
-          _ThemedOnGradientContent(child: child),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.fromRGBO(0, 0, 0, vignette * 0.88),
+                      Color.fromRGBO(0, 0, 0, vignette * 0.28),
+                      Color.fromRGBO(0, 0, 0, vignette),
+                    ],
+                    stops: const [0.0, 0.48, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          WallpaperReadableScope(
+            foreground: _wallpaperAdaptiveFg,
+            foregroundMuted: _wallpaperAdaptiveFgMuted,
+            child: _ThemedOnGradientContent(child: child),
+          ),
         ],
       );
     }
-    if (isLight) {
-      // 白昼：提亮冷灰渐变，避免「发乌」与中灰字糊在一起（与全局浅色 [Theme] 对齐）
-      return Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8ECF3),
-              Color(0xFFD9E0EA),
-              Color(0xFFC8D2DF),
-            ],
-            stops: [0.0, 0.45, 1.0],
-          ),
+    final useLightUserGradientFg = isLight &&
+        !(_themeType == ThemeType.backgroundImage &&
+            _backgroundImagePath != null &&
+            File(_backgroundImagePath!).existsSync());
+
+    Widget tree = _ThemedOnGradientContent(child: child);
+    if (useLightUserGradientFg) {
+      tree = UserThemeGradientForegroundScope(
+        child: Theme(
+          data: themeForLightUserGradientShell(context),
+          child: tree,
         ),
-        child: _ThemedOnGradientContent(child: child),
       );
     }
+
     return Container(
       decoration: getBackgroundDecoration(),
-      child: _ThemedOnGradientContent(child: child),
+      child: tree,
     );
   }
 
@@ -401,8 +501,17 @@ class _ThemedOnGradientContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-    final c = isLight ? kGradLightInk : Colors.white;
+    final wp = WallpaperReadableScope.maybeOf(context);
+    final Color c;
+    if (wp != null) {
+      c = wp.foreground;
+    } else if (UserThemeGradientForegroundScope.maybeOf(context) != null) {
+      c = Colors.white;
+    } else {
+      c = Theme.of(context).brightness == Brightness.light
+          ? kGradLightInk
+          : Colors.white;
+    }
     return DefaultTextStyle(
       style: TextStyle(color: c, height: 1.3),
       child: IconTheme(
