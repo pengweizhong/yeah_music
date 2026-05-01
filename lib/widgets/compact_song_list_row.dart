@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
@@ -99,6 +100,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
+    final isLinuxDesktop = defaultTargetPlatform == TargetPlatform.linux;
     final titleStr = _effectiveTitle();
     return VisibilityDetector(
       key: ValueKey<String>('list_row_vis_${widget.song.path}'),
@@ -115,15 +117,22 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
             child: Container(
               decoration: BoxDecoration(
                 color: widget.isCurrent
-                    ? primary.withValues(alpha: 0.14)
+                    ? primary.withValues(alpha: isLinuxDesktop ? 0.11 : 0.14)
                     : widget.selectionMode && widget.isSelected
                         ? primary.withValues(alpha: 0.12)
                         : null,
                 border: widget.isCurrent
-                    ? Border.all(
-                        color: primary.withValues(alpha: 0.35),
-                        width: 1,
-                      )
+                    ? (isLinuxDesktop
+                        ? Border(
+                            left: BorderSide(
+                              color: primary.withValues(alpha: 0.60),
+                              width: 2,
+                            ),
+                          )
+                        : Border.all(
+                            color: primary.withValues(alpha: 0.35),
+                            width: 1,
+                          ))
                     : widget.selectionMode && widget.isSelected
                         ? Border.all(
                             color: primary.withValues(alpha: 0.45),
@@ -132,7 +141,10 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                         : null,
                 borderRadius: BorderRadius.circular(10),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: isLinuxDesktop ? 5 : 4,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [

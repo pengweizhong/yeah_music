@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -23,6 +24,7 @@ double songPlaylistListBottomPadding(BuildContext context) =>
 
 /// 歌曲列表固定行高（与 [scheduleScrollListToCurrentSong]、[SongListScrollToCurrentLocate] 一致）。
 const double kSongPlaylistRowExtent = 65;
+const double kSongPlaylistRowExtentLinux = 70;
 
 /// 主题背景 + Scaffold（extendBodyBehindAppBar）+ MiniPlayer；正文配合 [SongPlaylistBodyUnderlapColumn]。
 class SongPlaylistThemedScaffold extends StatelessWidget {
@@ -122,14 +124,19 @@ class SongPlaylistSongListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-        final bottomPad =
-            songPlaylistListBottomPadding(context) + listBottomInsetExtra;
+    final bottomPad =
+        songPlaylistListBottomPadding(context) + listBottomInsetExtra;
+    final effectiveItemExtent =
+        defaultTargetPlatform == TargetPlatform.linux &&
+                itemExtent == kSongPlaylistRowExtent
+            ? kSongPlaylistRowExtentLinux
+            : itemExtent;
     return Consumer<PlayListProvider>(
       builder: (context, playList, _) {
         Widget listCore = ListView.builder(
           controller: scrollController,
           physics: physics,
-          itemExtent: itemExtent,
+          itemExtent: effectiveItemExtent,
           cacheExtent: cacheExtent,
           padding: EdgeInsets.only(bottom: bottomPad),
           itemCount: songs.length,
@@ -154,7 +161,7 @@ class SongPlaylistSongListView extends StatelessWidget {
         return SongListScrollToCurrentLocate(
           controller: scrollController,
           songs: songs,
-          itemExtent: itemExtent,
+          itemExtent: effectiveItemExtent,
           playList: playList,
           locateFabOnlyWhenLibrarySession: locateFabOnlyWhenLibrarySession,
           child: ScrollAwareListFrame(
