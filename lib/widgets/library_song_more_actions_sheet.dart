@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
@@ -41,135 +42,144 @@ Future<void> showLibrarySongMoreActionsSheet(
         child: FrostedGlassBottomSheet(
           child: SafeArea(
             top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                  child: Text(
-                    l10n.songPageMoreSheetTitle,
-                    style: Theme.of(sheetContext).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.drive_file_rename_outline),
-                  title: Text(l10n.menuRename),
-                  onTap: () async {
-                      Navigator.pop(sheetContext);
-                      final ok = await _renameSongStem(context, song);
-                      if (ok) afterMutation?.call();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.playlist_add),
-                    title: Text(l10n.tooltipAddToPlaylist),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      await showAddToUserPlaylistsSheet(context, song);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.queue_play_next_outlined),
-                    title: Text(l10n.menuPlayNextAfterCurrent),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      final playList = context.read<PlayListProvider>();
-                      final ok = playList.enqueuePlayAfterCurrent(song);
-                      if (!context.mounted) return;
-                      showAppSnackBar(
-                        context,
-                        ok
-                            ? l10n.libraryPlayNextAfterCurrentQueued
-                            : l10n.libraryPlayNextAfterCurrentNotInQueue,
-                        kind:
-                            ok ? AppSnackKind.success : AppSnackKind.neutral,
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.edit_attributes_outlined),
-                    title: Text(l10n.songPageMoreEditMusicTagsInline),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      await showSongInlineTagsEditorSheet(
-                        navigatorContext: context,
-                        song: song,
-                        onSavedReload: (path) async {
-                          await reloadAllSongInstancesAfterFileMetadataChanged(
-                            context,
-                            path,
-                            maxEmbeddedArtBytes:
-                                _kLibraryReloadMetaMaxEmbeddedArtBytes,
-                          );
-                          afterMutation?.call();
-                        },
-                      );
-                    },
-                  ),
-                  if (Platform.isAndroid)
+            child: Builder(
+              builder: (inner) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                      child: Text(
+                        l10n.songPageMoreSheetTitle,
+                        style: Theme.of(inner).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                     ListTile(
-                      leading: const Icon(Icons.edit_note_outlined),
-                      title: Text(l10n.songPageMoreEditMusicTagsExternal),
+                      leading: const Icon(Icons.drive_file_rename_outline),
+                      title: Text(l10n.menuRename),
                       onTap: () async {
                         Navigator.pop(sheetContext);
-                        await MusicTagEditorLauncher.openMusicTagEditorWithFeedback(
+                        final ok = await _renameSongStem(context, song);
+                        if (ok) afterMutation?.call();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.playlist_add),
+                      title: Text(l10n.tooltipAddToPlaylist),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await showAddToUserPlaylistsSheet(context, song);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.queue_play_next_outlined),
+                      title: Text(l10n.menuPlayNextAfterCurrent),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        final playList = context.read<PlayListProvider>();
+                        final ok = playList.enqueuePlayAfterCurrent(song);
+                        if (!context.mounted) return;
+                        showAppSnackBar(
                           context,
-                          song,
+                          ok
+                              ? l10n.libraryPlayNextAfterCurrentQueued
+                              : l10n.libraryPlayNextAfterCurrentNotInQueue,
+                          kind: ok
+                              ? AppSnackKind.success
+                              : AppSnackKind.neutral,
                         );
                       },
                     ),
-                  ListTile(
-                    leading: const Icon(Icons.info_outline_rounded),
-                    title: Text(l10n.songPageMoreQueryMetadata),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      await tryShowAudioMetadataDialogForSong(context, song);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.refresh_rounded),
-                    title: Text(l10n.libraryReloadMetadata),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      if (song.path.trim().isEmpty) return;
-                      await _reloadSongMetadataFromDisk(context, song);
-                      afterMutation?.call();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.copy_all_outlined),
-                    title: Text(l10n.libraryCloneSong),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      final ok = await _cloneSongStem(context, song);
-                      if (ok) afterMutation?.call();
-                    },
-                  ),
-                  Divider(height: 1, color: Theme.of(sheetContext).dividerColor),
-                  ListTile(
-                    leading: Icon(
-                      Icons.delete_outline_rounded,
-                      color: Theme.of(sheetContext).colorScheme.error,
+                    ListTile(
+                      leading: const Icon(Icons.edit_attributes_outlined),
+                      title: Text(l10n.songPageMoreEditMusicTagsInline),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await showSongInlineTagsEditorSheet(
+                          navigatorContext: context,
+                          song: song,
+                          onSavedReload: (path) async {
+                            await reloadAllSongInstancesAfterFileMetadataChanged(
+                              context,
+                              path,
+                              maxEmbeddedArtBytes:
+                                  _kLibraryReloadMetaMaxEmbeddedArtBytes,
+                            );
+                            afterMutation?.call();
+                          },
+                        );
+                      },
                     ),
-                    title: Text(
-                      l10n.actionDelete,
-                      style: TextStyle(
-                          color: Theme.of(sheetContext).colorScheme.error),
+                    if (Platform.isAndroid)
+                      ListTile(
+                        leading: const Icon(Icons.edit_note_outlined),
+                        title: Text(l10n.songPageMoreEditMusicTagsExternal),
+                        onTap: () async {
+                          Navigator.pop(sheetContext);
+                          await MusicTagEditorLauncher.openMusicTagEditorWithFeedback(
+                            context,
+                            song,
+                          );
+                        },
+                      ),
+                    ListTile(
+                      leading: const Icon(Icons.info_outline_rounded),
+                      title: Text(l10n.songPageMoreQueryMetadata),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await tryShowAudioMetadataDialogForSong(context, song);
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      WidgetsBinding.instance.addPostFrameCallback((_) async {
-                        if (!context.mounted) return;
-                        final ok =
-                            await _confirmDeleteLibrarySong(context, song);
+                    ListTile(
+                      leading: const Icon(Icons.refresh_rounded),
+                      title: Text(l10n.libraryReloadMetadata),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        if (song.path.trim().isEmpty) return;
+                        await _reloadSongMetadataFromDisk(context, song);
+                        afterMutation?.call();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.copy_all_outlined),
+                      title: Text(l10n.libraryCloneSong),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        final ok = await _cloneSongStem(context, song);
                         if (ok) afterMutation?.call();
-                      });
-                    },
-                  ),
-                const SizedBox(height: 8),
-              ],
+                      },
+                    ),
+                    Divider(height: 1, color: inner.gradBorder(0.12)),
+                    ListTile(
+                      leading: Icon(
+                        Icons.delete_outline_rounded,
+                        color: Theme.of(inner).colorScheme.error,
+                      ),
+                      title: Text(
+                        l10n.actionDelete,
+                        style: TextStyle(
+                          color: Theme.of(inner).colorScheme.error,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          if (!context.mounted) return;
+                          final ok = await _confirmDeleteLibrarySong(
+                            context,
+                            song,
+                          );
+                          if (ok) afterMutation?.call();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -178,7 +188,10 @@ Future<void> showLibrarySongMoreActionsSheet(
   );
 }
 
-Future<void> _reloadSongMetadataFromDisk(BuildContext context, Song song) async {
+Future<void> _reloadSongMetadataFromDisk(
+  BuildContext context,
+  Song song,
+) async {
   final l10n = AppLocalizations.of(context);
   final path = song.path.trim();
   if (path.isEmpty) return;
@@ -188,15 +201,19 @@ Future<void> _reloadSongMetadataFromDisk(BuildContext context, Song song) async 
     maxEmbeddedArtBytes: _kLibraryReloadMetaMaxEmbeddedArtBytes,
   );
   if (!context.mounted) return;
-  showAppSnackBar(context, l10n.libraryReloadMetadataDone,
-      kind: AppSnackKind.success);
+  showAppSnackBar(
+    context,
+    l10n.libraryReloadMetadataDone,
+    kind: AppSnackKind.success,
+  );
 }
 
 /// 删除成功返回 true（用户取消或失败为 false）。
 Future<bool> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
   final l10n = AppLocalizations.of(context);
-  final displayName =
-      (song.title?.trim().isNotEmpty ?? false) ? song.title!.trim() : p.basename(song.path);
+  final displayName = (song.title?.trim().isNotEmpty ?? false)
+      ? song.title!.trim()
+      : p.basename(song.path);
 
   final step1 = await showAppConfirmDialog(
     context: context,
@@ -231,8 +248,11 @@ Future<bool> _confirmDeleteLibrarySong(BuildContext context, Song song) async {
       songs: [song],
     );
     if (context.mounted) {
-      showAppSnackBar(context, l10n.librarySongsDeletedN(1),
-          kind: AppSnackKind.success);
+      showAppSnackBar(
+        context,
+        l10n.librarySongsDeletedN(1),
+        kind: AppSnackKind.success,
+      );
     }
     return true;
   } catch (e) {
@@ -280,13 +300,14 @@ Future<bool> _cloneSongStem(BuildContext context, Song song) async {
       newStem: newStem,
     );
     final failed = dest == null;
-    final feedbackMsg =
-        failed ? l10n.libraryCloneSongFailed : l10n.libraryCloneSongDone;
-    final feedbackKind =
-        failed ? AppSnackKind.error : AppSnackKind.success;
+    final feedbackMsg = failed
+        ? l10n.libraryCloneSongFailed
+        : l10n.libraryCloneSongDone;
+    final feedbackKind = failed ? AppSnackKind.error : AppSnackKind.success;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final mountedCtx =
-          context.mounted ? context : appScaffoldMessengerKey.currentContext;
+      final mountedCtx = context.mounted
+          ? context
+          : appScaffoldMessengerKey.currentContext;
       if (mountedCtx == null) return;
       showAppSnackBar(mountedCtx, feedbackMsg, kind: feedbackKind);
     });
@@ -294,8 +315,9 @@ Future<bool> _cloneSongStem(BuildContext context, Song song) async {
   } catch (e) {
     appLog.e('single clone failed', error: e);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final mountedCtx =
-          context.mounted ? context : appScaffoldMessengerKey.currentContext;
+      final mountedCtx = context.mounted
+          ? context
+          : appScaffoldMessengerKey.currentContext;
       if (mountedCtx == null) return;
       showAppSnackBar(mountedCtx, '$e', kind: AppSnackKind.error);
     });
@@ -339,8 +361,11 @@ Future<bool> _renameSongStem(BuildContext context, Song song) async {
       newStem: newStem,
     );
     if (context.mounted) {
-      showAppSnackBar(context, l10n.libraryRenameSingleDone,
-          kind: AppSnackKind.success);
+      showAppSnackBar(
+        context,
+        l10n.libraryRenameSingleDone,
+        kind: AppSnackKind.success,
+      );
     }
     return true;
   } catch (e) {

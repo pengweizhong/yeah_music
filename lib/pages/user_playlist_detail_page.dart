@@ -13,6 +13,7 @@ import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -90,7 +91,10 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     if (!context.mounted) return [];
     await playList.refreshOneDriveLibraryOverlay(od);
     if (!context.mounted) return [];
-    return userPl.songsForPlaylistWithDiskFallback(pl, playList.libraryMergedSongs);
+    return userPl.songsForPlaylistWithDiskFallback(
+      pl,
+      playList.libraryMergedSongs,
+    );
   }
 
   @override
@@ -316,8 +320,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       final text = msg.contains('not signed')
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
-              ? l10n.libraryBatchUploadNeedCloudFolder
-              : '$e';
+          ? l10n.libraryBatchUploadNeedCloudFolder
+          : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
@@ -614,9 +618,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                         )
                       : null,
                   title: Text(
-                    _batchSelect
-                        ? '${_selectedNormPaths.length}'
-                        : pl.name,
+                    _batchSelect ? '${_selectedNormPaths.length}' : pl.name,
                     style: TextStyle(color: context.gradFg(0.96)),
                   ),
                   backgroundColor: Colors.transparent,
@@ -666,37 +668,40 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                         tooltip: l10n.tooltipSort,
                         onPressed: _showSortOptions,
                       ),
-                      PopupMenuButton<String>(
-                        icon: Icon(Icons.more_vert, color: context.gradFg()),
-                        onSelected: (value) async {
-                          if (value == 'cover') {
-                            await showPlaylistCoverStyleSheet(context, pl);
-                          } else if (value == 'rename') {
-                            await _renamePlaylist(context, pl, userPl);
-                          } else if (value == 'export') {
-                            await _exportThisPlaylist(context, pl, userPl);
-                          } else if (value == 'delete') {
-                            await _confirmDeletePlaylist(context, userPl);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'cover',
-                            child: Text(l10n.playlistCoverMenuItem),
-                          ),
-                          PopupMenuItem(
-                            value: 'rename',
-                            child: Text(l10n.menuRename),
-                          ),
-                          PopupMenuItem(
-                            value: 'export',
-                            child: Text(l10n.menuExportThis),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text(l10n.menuDeletePlaylist),
-                          ),
-                        ],
+                      Theme(
+                        data: frostedBottomSheetContentTheme(context),
+                        child: PopupMenuButton<String>(
+                          icon: Icon(Icons.more_vert, color: context.gradFg()),
+                          onSelected: (value) async {
+                            if (value == 'cover') {
+                              await showPlaylistCoverStyleSheet(context, pl);
+                            } else if (value == 'rename') {
+                              await _renamePlaylist(context, pl, userPl);
+                            } else if (value == 'export') {
+                              await _exportThisPlaylist(context, pl, userPl);
+                            } else if (value == 'delete') {
+                              await _confirmDeletePlaylist(context, userPl);
+                            }
+                          },
+                          itemBuilder: (menuContext) => [
+                            PopupMenuItem(
+                              value: 'cover',
+                              child: Text(l10n.playlistCoverMenuItem),
+                            ),
+                            PopupMenuItem(
+                              value: 'rename',
+                              child: Text(l10n.menuRename),
+                            ),
+                            PopupMenuItem(
+                              value: 'export',
+                              child: Text(l10n.menuExportThis),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text(l10n.menuDeletePlaylist),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],
@@ -731,10 +736,8 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                               child: SongPlaylistSongListView(
                                 scrollController: _listScrollController,
                                 songs: orderedSongs,
-                                listBottomInsetExtra:
-                                    _batchSelect ? 64 : 0,
-                                itemBuilder:
-                                    (context, song, index, isRowCurrent) {
+                                listBottomInsetExtra: _batchSelect ? 64 : 0,
+                                itemBuilder: (context, song, index, isRowCurrent) {
                                   return Dismissible(
                                     key: ValueKey<String>(
                                       '${pl.id}_${index}_${normSongPath(song.path)}',
@@ -744,8 +747,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                         : DismissDirection.endToStart,
                                     background: Container(
                                       alignment: Alignment.centerRight,
-                                      padding:
-                                          const EdgeInsets.only(right: 20),
+                                      padding: const EdgeInsets.only(right: 20),
                                       color: Colors.red.shade800,
                                       child: const Icon(
                                         Icons.remove_circle_outline,
@@ -769,8 +771,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                       song: song,
                                       title:
                                           song.title ?? l10n.pageUnknownTitle,
-                                      subtitle:
-                                          songListSecondaryLine(song),
+                                      subtitle: songListSecondaryLine(song),
                                       isCurrent: isRowCurrent,
                                       showAddToPlaylist: false,
                                       onMoreMenuTap: () {
@@ -784,8 +785,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                         );
                                       },
                                       selectionMode: _batchSelect,
-                                      isSelected: _selectedNormPaths
-                                          .contains(
+                                      isSelected: _selectedNormPaths.contains(
                                         normSongPath(song.path),
                                       ),
                                       onSelectionTap: () =>
@@ -813,12 +813,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                         }
                                         await playListProv
                                             .setPlaybackQueueAndPlay(
-                                          orderedSongs,
-                                          index,
-                                          session: PlaybackSessionSurface
-                                              .userPlaylist,
-                                          userPlaylistId: pl.id,
-                                        );
+                                              orderedSongs,
+                                              index,
+                                              session: PlaybackSessionSurface
+                                                  .userPlaylist,
+                                              userPlaylistId: pl.id,
+                                            );
                                       },
                                     ),
                                   );

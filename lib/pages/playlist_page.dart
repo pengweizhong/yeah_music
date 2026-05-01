@@ -15,6 +15,7 @@ import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/onedrive_controller.dart';
+import '../compments/frosted_glass_panel.dart';
 import '../compments/play_list_provider.dart';
 import '../models/playback_session_surface.dart';
 import '../navigation/app_route_observer.dart';
@@ -44,8 +45,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   bool _routeObserverSubscribed = false;
   bool _batchSelect = false;
   final Set<String> _selectedNormPaths = {};
+
   /// 已按该规范化路径自动滚过屏；仅在一次 [scheduleScrollListToCurrentSong] 的 [onScrollApplied] 中写入。
   String? _lastAutoScrollPathNorm;
+
   /// 防 build 在首次未挂接时重复排队；在 [onScrollApplied]/[onScrollFailed] 中清除
   bool _autoscrollInFlight = false;
 
@@ -71,9 +74,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
 
   /// 按冻结 key 还原 [Song]，剔除已删曲；新歌仅**追加**在末尾（不触发全库重排）。
   List<Song> _materializeFromFrozen(List<Song> playList) {
-    final m = <String, Song>{
-      for (final s in playList) normSongPath(s.path): s,
-    };
+    final m = <String, Song>{for (final s in playList) normSongPath(s.path): s};
     var keys = List<String>.from(_frozenPathKeys!);
     keys.removeWhere((k) => !m.containsKey(k));
     final seen = keys.toSet();
@@ -232,8 +233,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           _sortType = type;
           _isAscending = ascending;
           final sorted = sortSongsCopy(raw, type, ascending);
-          _frozenPathKeys =
-              sorted.map((s) => normSongPath(s.path)).toList();
+          _frozenPathKeys = sorted.map((s) => normSongPath(s.path)).toList();
           _lastAutoScrollPathNorm = null;
           _autoscrollInFlight = false;
         });
@@ -335,7 +335,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     }
   }
 
-
   Future<void> _batchUploadOneDrive(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final od = context.read<OneDriveDownloadQueueController>();
@@ -371,8 +370,8 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       final text = msg.contains('not signed')
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
-              ? l10n.libraryBatchUploadNeedCloudFolder
-              : '$e';
+          ? l10n.libraryBatchUploadNeedCloudFolder
+          : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
@@ -401,7 +400,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                 child: Text(
                   '${_selectedNormPaths.length}',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               IconButton(
@@ -527,186 +529,197 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
             }
           },
           child: SongPlaylistThemedScaffold(
-          appBar: AppBar(
-            leading: _batchSelect
-                ? IconButton(
-                    icon: Icon(Icons.close, color: context.gradFg()),
+            appBar: AppBar(
+              leading: _batchSelect
+                  ? IconButton(
+                      icon: Icon(Icons.close, color: context.gradFg()),
+                      onPressed: _exitBatchSelect,
+                    )
+                  : null,
+              title: Text(
+                _batchSelect
+                    ? '${_selectedNormPaths.length}'
+                    : l10n.homeAllSongs,
+                style: TextStyle(
+                  color: context.gradFg(0.96),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: IconThemeData(color: context.gradFg()),
+              actions: [
+                if (_batchSelect)
+                  TextButton(
                     onPressed: _exitBatchSelect,
+                    child: Text(
+                      l10n.libraryBatchDone,
+                      style: TextStyle(color: context.gradFg()),
+                    ),
                   )
-                : null,
-            title: Text(
-              _batchSelect
-                  ? '${_selectedNormPaths.length}'
-                  : l10n.homeAllSongs,
-              style: TextStyle(
-                color: context.gradFg(0.96),
-                fontWeight: FontWeight.w600,
+                else ...[
+                  IconButton(
+                    icon: Icon(Icons.search, color: context.gradFg()),
+                    onPressed: () {
+                      showSearch(
+                        context: context,
+                        delegate: SongSearchDelegate(
+                          _filteredSongs,
+                          playListProvider,
+                          searchFieldLabelText: l10n.playlistSearchHint,
+                          onSongMore: showLibrarySongMoreActionsSheet,
+                        ),
+                      );
+                    },
+                    tooltip: l10n.homeSearchTooltip,
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.sort, color: context.gradFg()),
+                    onPressed: _showSortOptions,
+                    tooltip: l10n.tooltipSort,
+                  ),
+                  Theme(
+                    data: frostedBottomSheetContentTheme(context),
+                    child: PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: context.gradFg()),
+                      onSelected: (value) async {
+                        if (value == 'cover') {
+                          if (!userPlaylistProvider.initialized) {
+                            await userPlaylistProvider.init();
+                          }
+                          if (!context.mounted) return;
+                          final m = AppLocalizations.of(context);
+                          await showPlaylistCoverStyleSheet(
+                            context,
+                            userPlaylistProvider
+                                .homeLibraryPlaylistStubForCoverUi(
+                                  userPlaylistProvider.resolvedHomeLibraryTitle(
+                                    m.homeAllSongs,
+                                  ),
+                                ),
+                          );
+                        } else if (value == 'export') {
+                          await _exportLibraryAllSongs(
+                            context,
+                            userPlaylistProvider,
+                            _filteredSongs,
+                          );
+                        }
+                      },
+                      itemBuilder: (menuContext) {
+                        return [
+                          PopupMenuItem(
+                            value: 'cover',
+                            child: Text(l10n.playlistCoverMenuItem),
+                          ),
+                          PopupMenuItem(
+                            value: 'rename',
+                            enabled: false,
+                            child: Text(l10n.menuRename),
+                          ),
+                          PopupMenuItem(
+                            value: 'export',
+                            child: Text(l10n.menuExportThis),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            enabled: false,
+                            child: Text(l10n.menuDeletePlaylist),
+                          ),
+                        ];
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            body: SongPlaylistBodyUnderlapColumn(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _filteredSongs.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.music_note,
+                                  size: 64,
+                                  color: context.gradFg(0.28),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  l10n.songsListEmpty,
+                                  style: TextStyle(
+                                    color: context.gradFg(0.52),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : SongPlaylistSongListView(
+                            scrollController: _listScrollController,
+                            songs: _filteredSongs,
+                            locateFabOnlyWhenLibrarySession: true,
+                            listBottomInsetExtra: _batchSelect ? 64 : 0,
+                            itemBuilder: (context, song, index, isRowCurrent) {
+                              return CompactSongListRow(
+                                key: ValueKey<String>(
+                                  'lib_row_${index}_${normSongPath(song.path)}',
+                                ),
+                                song: song,
+                                title: song.title ?? l10n.pageUnknownTitle,
+                                subtitle: songListSecondaryLine(song),
+                                isCurrent: isRowCurrent,
+                                showAddToPlaylist: false,
+                                onMoreMenuTap: () =>
+                                    showLibrarySongMoreActionsSheet(
+                                      context,
+                                      song,
+                                    ),
+                                selectionMode: _batchSelect,
+                                isSelected: _selectedNormPaths.contains(
+                                  normSongPath(song.path),
+                                ),
+                                onSelectionTap: () =>
+                                    _toggleBatchPath(song.path),
+                                onLongPress: () {
+                                  setState(() {
+                                    _batchSelect = true;
+                                    _selectedNormPaths.add(
+                                      normSongPath(song.path),
+                                    );
+                                  });
+                                },
+                                onTap: () async {
+                                  if (_batchSelect) {
+                                    _toggleBatchPath(song.path);
+                                    return;
+                                  }
+                                  if (isRowCurrent) {
+                                    await toggleCurrentRowPlayback(
+                                      playListProvider,
+                                    );
+                                    return;
+                                  }
+                                  await playListProvider
+                                      .setPlaybackQueueAndPlay(
+                                        List<Song>.from(_filteredSongs),
+                                        index,
+                                        session: PlaybackSessionSurface.library,
+                                      );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  if (_batchSelect) _libraryBatchActionBar(context, l10n),
+                ],
               ),
             ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            iconTheme: IconThemeData(color: context.gradFg()),
-            actions: [
-              if (_batchSelect)
-                TextButton(
-                  onPressed: _exitBatchSelect,
-                  child: Text(
-                    l10n.libraryBatchDone,
-                    style: TextStyle(color: context.gradFg()),
-                  ),
-                )
-              else ...[
-                IconButton(
-                  icon: Icon(Icons.search, color: context.gradFg()),
-                  onPressed: () {
-                    showSearch(
-                      context: context,
-                      delegate: SongSearchDelegate(
-                        _filteredSongs,
-                        playListProvider,
-                        searchFieldLabelText: l10n.playlistSearchHint,
-                        onSongMore: showLibrarySongMoreActionsSheet,
-                      ),
-                    );
-                  },
-                  tooltip: l10n.homeSearchTooltip,
-                ),
-                IconButton(
-                  icon: Icon(Icons.sort, color: context.gradFg()),
-                  onPressed: _showSortOptions,
-                  tooltip: l10n.tooltipSort,
-                ),
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: context.gradFg()),
-                  onSelected: (value) async {
-                    if (value == 'cover') {
-                      if (!userPlaylistProvider.initialized) {
-                        await userPlaylistProvider.init();
-                      }
-                      if (!context.mounted) return;
-                      final m = AppLocalizations.of(context);
-                      await showPlaylistCoverStyleSheet(
-                        context,
-                        userPlaylistProvider.homeLibraryPlaylistStubForCoverUi(
-                          userPlaylistProvider.resolvedHomeLibraryTitle(
-                            m.homeAllSongs,
-                          ),
-                        ),
-                      );
-                    } else if (value == 'export') {
-                      await _exportLibraryAllSongs(
-                        context,
-                        userPlaylistProvider,
-                        _filteredSongs,
-                      );
-                    }
-                  },
-                  itemBuilder: (context) {
-                    return [
-                      PopupMenuItem(
-                        value: 'cover',
-                        child: Text(l10n.playlistCoverMenuItem),
-                      ),
-                      PopupMenuItem(
-                        value: 'rename',
-                        enabled: false,
-                        child: Text(l10n.menuRename),
-                      ),
-                      PopupMenuItem(
-                        value: 'export',
-                        child: Text(l10n.menuExportThis),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        enabled: false,
-                        child: Text(l10n.menuDeletePlaylist),
-                      ),
-                    ];
-                  },
-                ),
-              ],
-            ],
           ),
-          body: SongPlaylistBodyUnderlapColumn(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _filteredSongs.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.music_note,
-                                size: 64,
-                                color: context.gradFg(0.28),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.songsListEmpty,
-                                style: TextStyle(
-                                  color: context.gradFg(0.52),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : SongPlaylistSongListView(
-                          scrollController: _listScrollController,
-                          songs: _filteredSongs,
-                          locateFabOnlyWhenLibrarySession: true,
-                          listBottomInsetExtra: _batchSelect ? 64 : 0,
-                          itemBuilder: (context, song, index, isRowCurrent) {
-                            return CompactSongListRow(
-                              key: ValueKey<String>(
-                                'lib_row_${index}_${normSongPath(song.path)}',
-                              ),
-                              song: song,
-                              title: song.title ?? l10n.pageUnknownTitle,
-                              subtitle: songListSecondaryLine(song),
-                              isCurrent: isRowCurrent,
-                              showAddToPlaylist: false,
-                              onMoreMenuTap: () =>
-                                  showLibrarySongMoreActionsSheet(context, song),
-                              selectionMode: _batchSelect,
-                              isSelected: _selectedNormPaths
-                                  .contains(normSongPath(song.path)),
-                              onSelectionTap: () =>
-                                  _toggleBatchPath(song.path),
-                              onLongPress: () {
-                                setState(() {
-                                  _batchSelect = true;
-                                  _selectedNormPaths.add(normSongPath(song.path));
-                                });
-                              },
-                              onTap: () async {
-                                if (_batchSelect) {
-                                  _toggleBatchPath(song.path);
-                                  return;
-                                }
-                                if (isRowCurrent) {
-                                  await toggleCurrentRowPlayback(
-                                    playListProvider,
-                                  );
-                                  return;
-                                }
-                                await playListProvider.setPlaybackQueueAndPlay(
-                                  List<Song>.from(_filteredSongs),
-                                  index,
-                                  session: PlaybackSessionSurface.library,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                ),
-                if (_batchSelect) _libraryBatchActionBar(context, l10n),
-              ],
-            ),
-          ),
-        ),
         );
       },
     );
@@ -775,8 +788,9 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        systemOverlayStyle:
-            isLight ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+        systemOverlayStyle: isLight
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light,
         iconTheme: IconThemeData(color: fg),
         titleTextStyle: TextStyle(color: fg, fontSize: 20),
         toolbarTextStyle: TextStyle(color: fg),
@@ -822,8 +836,9 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
   @override
   List<Widget> buildActions(BuildContext context) {
-    final fg =
-        Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white;
+    final fg = Theme.of(context).brightness == Brightness.light
+        ? Colors.black
+        : Colors.white;
     return [
       if (query.isNotEmpty)
         IconButton(
@@ -837,8 +852,9 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
   @override
   Widget buildLeading(BuildContext context) {
-    final fg =
-        Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white;
+    final fg = Theme.of(context).brightness == Brightness.light
+        ? Colors.black
+        : Colors.white;
     return IconButton(
       icon: Icon(Icons.arrow_back, color: fg),
       onPressed: () {
@@ -882,9 +898,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                 ),
               ),
             ),
-            Positioned.fill(
-              child: _buildSearchResultsContent(context),
-            ),
+            Positioned.fill(child: _buildSearchResultsContent(context)),
           ],
         );
       },
@@ -906,18 +920,11 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: context.gradFg(0.35),
-            ),
+            Icon(Icons.search_off, size: 64, color: context.gradFg(0.35)),
             const SizedBox(height: 16),
             Text(
               l10n.searchNoMatchingSongs,
-              style: TextStyle(
-                color: context.gradFg(0.55),
-                fontSize: 16,
-              ),
+              style: TextStyle(color: context.gradFg(0.55), fontSize: 16),
             ),
           ],
         ),
@@ -934,8 +941,8 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
             itemCount: results.length,
             itemBuilder: (context, index) {
               final song = results[index];
-              final isRowCurrent = current != null &&
-                  songPathsEqual(song.path, current.path);
+              final isRowCurrent =
+                  current != null && songPathsEqual(song.path, current.path);
               return CompactSongListRow(
                 key: ValueKey<String>(
                   'search_${index}_${normSongPath(song.path)}',
@@ -958,7 +965,8 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
                     final q = playbackContextQueue!;
                     final idx = q.indexWhere((s) => s.path == song.path);
                     if (idx < 0) return;
-                    final surface = playbackQueueSession ??
+                    final surface =
+                        playbackQueueSession ??
                         (userPlaylistIdForContext != null
                             ? PlaybackSessionSurface.userPlaylist
                             : PlaybackSessionSurface.adHoc);
