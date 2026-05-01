@@ -3,6 +3,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/rgb_gradient_pickers.dart';
 
 int _argbFromColor(Color c) {
@@ -36,36 +37,31 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     await onPersist();
   }
 
-  static const _on = Colors.white;
-  static final _onMuted = Colors.white.withValues(alpha: 0.5);
-  static final _onDim = Colors.white.withValues(alpha: 0.38);
-  static final _cardFill = Colors.white.withValues(alpha: 0.07);
-  static final _cardBorder = Colors.white.withValues(alpha: 0.12);
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = Theme.of(context);
     final primary = t.colorScheme.primary;
+    final fg = context.gradFg();
 
     return Theme(
       data: t.copyWith(
         sliderTheme: t.sliderTheme.copyWith(
-          activeTrackColor: Colors.white.withValues(alpha: 0.5),
-          inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
-          thumbColor: Colors.white,
+          activeTrackColor: fg.withValues(alpha: 0.5),
+          inactiveTrackColor: fg.withValues(alpha: 0.12),
+          thumbColor: fg,
           overlayColor: WidgetStateColor.resolveWith(
-            (states) => Colors.white.withValues(alpha: 0.1),
+            (states) => fg.withValues(alpha: 0.1),
           ),
         ),
         switchTheme: t.switchTheme.copyWith(
           thumbColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.selected) ? _on : Colors.grey,
+            (states) => states.contains(WidgetState.selected) ? fg : Colors.grey,
           ),
           trackColor: WidgetStateProperty.resolveWith(
             (states) => states.contains(WidgetState.selected)
                 ? primary.withValues(alpha: 0.5)
-                : Colors.white24,
+                : fg.withValues(alpha: 0.24),
           ),
         ),
       ),
@@ -76,12 +72,14 @@ class LyricStyleSettingsPanel extends StatelessWidget {
           children: [
             _buildHeader(context, l10n),
             const SizedBox(height: 6),
-            _sectionLabel(l10n.lyricStyleSectionDisplay, l10n.lyricStyleSectionDisplaySub),
+            _sectionLabel(context, l10n.lyricStyleSectionDisplay, l10n.lyricStyleSectionDisplaySub),
             const SizedBox(height: 8),
             _frostedCard(
+              context,
               child: Column(
                 children: [
                   _switchRow(
+                    context,
                     icon: Icons.subject_rounded,
                     label: l10n.lyricStyleShowOriginal,
                     sub: l10n.lyricStyleShowOriginalSub,
@@ -90,8 +88,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       settings.showOriginal = v;
                     }),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _switchRow(
+                    context,
                     icon: Icons.translate_rounded,
                     label: l10n.lyricStyleShowTranslation,
                     sub: l10n.lyricStyleShowTranslationSub,
@@ -100,8 +99,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       settings.showTranslations = v;
                     }),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _switchRow(
+                    context,
                     icon: Icons.light_mode_rounded,
                     label: l10n.songPageKeepScreenAwake,
                     sub: l10n.lyricStyleKeepScreenAwakeSub,
@@ -112,12 +112,14 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _sectionLabel(l10n.lyricStyleSectionTypography, l10n.lyricStyleSectionTypographySub),
+            _sectionLabel(context, l10n.lyricStyleSectionTypography, l10n.lyricStyleSectionTypographySub),
             const SizedBox(height: 8),
             _frostedCard(
+              context,
               child: Column(
                 children: [
                   _sliderBlock(
+                    context,
                     label: l10n.lyricStyleFontOriginal,
                     value: settings.originalFontSize,
                     min: LyricSettings.minFontSize,
@@ -126,8 +128,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       settings.originalFontSize = v;
                     }),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _sliderBlock(
+                    context,
                     label: l10n.lyricStyleFontTranslation,
                     value: settings.translationFontSize,
                     min: LyricSettings.minFontSize,
@@ -136,8 +139,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       settings.translationFontSize = v;
                     }),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _sliderBlock(
+                    context,
                     label: l10n.lyricStyleLineSpacing,
                     value: settings.lyricLineSpacing,
                     min: LyricSettings.minLineSpacing,
@@ -150,26 +154,27 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _sectionLabel(l10n.lyricStyleSectionLineAlign, null),
+            _sectionLabel(context, l10n.lyricStyleSectionLineAlign, null),
             const SizedBox(height: 8),
             _frostedCard(
+              context,
               child: SegmentedButton<int>(
                 showSelectedIcon: false,
                 segments: [
                   ButtonSegment<int>(
                     value: 0,
                     label: Text(l10n.lyricAlignLeft),
-                    icon: const Icon(Icons.format_align_left_rounded, size: 18),
+                    icon: Icon(Icons.format_align_left_rounded, size: 18, color: fg),
                   ),
                   ButtonSegment<int>(
                     value: 1,
                     label: Text(l10n.lyricAlignCenter),
-                    icon: const Icon(Icons.format_align_center_rounded, size: 18),
+                    icon: Icon(Icons.format_align_center_rounded, size: 18, color: fg),
                   ),
                   ButtonSegment<int>(
                     value: 2,
                     label: Text(l10n.lyricAlignRight),
-                    icon: const Icon(Icons.format_align_right_rounded, size: 18),
+                    icon: Icon(Icons.format_align_right_rounded, size: 18, color: fg),
                   ),
                 ],
                 selected: {settings.lyricTextAlignIndex},
@@ -180,27 +185,29 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                 },
                 style: ButtonStyle(
                   side: WidgetStateProperty.all(
-                    BorderSide(color: _cardBorder),
+                    BorderSide(color: context.gradBorder(0.12)),
                   ),
                   backgroundColor: WidgetStateProperty.resolveWith(
                     (states) {
                       if (states.contains(WidgetState.selected)) {
-                        return Colors.white.withValues(alpha: 0.18);
+                        return fg.withValues(alpha: 0.18);
                       }
-                      return Colors.white.withValues(alpha: 0.04);
+                      return fg.withValues(alpha: 0.04);
                     },
                   ),
-                  foregroundColor: const WidgetStatePropertyAll(Colors.white),
+                  foregroundColor: WidgetStateProperty.all(fg),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            _sectionLabel(l10n.lyricStyleSectionStateColors, l10n.lyricStyleSectionStateColorsSub),
+            _sectionLabel(context, l10n.lyricStyleSectionStateColors, l10n.lyricStyleSectionStateColorsSub),
             const SizedBox(height: 8),
             _frostedCard(
+              context,
               child: Column(
                 children: [
                   _colorStateBlock(
+                    context,
                     accent: const Color(0xFFFFB74D),
                     title: l10n.lyricStyleStateNowPlaying,
                     labelOriginal: l10n.lyricLabelOriginal,
@@ -226,8 +233,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _stateGradientControls(
+                    context,
                     l10n: l10n,
                     title: l10n.lyricStyleActiveGradientTitle,
                     useGradient: settings.activeLyricUseGradient,
@@ -243,8 +251,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       settings.activeLyricGradientDirectionIndex = d;
                     },
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _colorStateBlock(
+                    context,
                     accent: const Color(0xFF81C784),
                     title: l10n.lyricStyleStatePlayed,
                     labelOriginal: l10n.lyricLabelOriginal,
@@ -270,8 +279,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _stateGradientControls(
+                    context,
                     l10n: l10n,
                     title: l10n.lyricStylePlayedGradientTitle,
                     useGradient: settings.playedLyricUseGradient,
@@ -287,8 +297,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       settings.playedLyricGradientDirectionIndex = d;
                     },
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _colorStateBlock(
+                    context,
                     accent: const Color(0xFF64B5F6),
                     title: l10n.lyricStyleStateUpcoming,
                     labelOriginal: l10n.lyricLabelOriginal,
@@ -314,8 +325,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _softDivider(),
+                  _softDivider(context),
                   _stateGradientControls(
+                    context,
                     l10n: l10n,
                     title: l10n.lyricStyleUpcomingGradientTitle,
                     useGradient: settings.upcomingLyricUseGradient,
@@ -337,7 +349,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               l10n.lyricStyleColorPersistNote,
-              style: TextStyle(fontSize: 12, color: _onDim, height: 1.3),
+              style: TextStyle(fontSize: 12, color: context.gradFg(0.38), height: 1.3),
             ),
           ],
         ),
@@ -346,6 +358,8 @@ class LyricStyleSettingsPanel extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
+    final on = context.gradFg();
+    final onMuted = context.gradFgMuted();
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -355,11 +369,11 @@ class LyricStyleSettingsPanel extends StatelessWidget {
             children: [
               Text(
                 l10n.tooltipLyricStyle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
-                  color: _on,
+                  color: on,
                 ),
               ),
               const SizedBox(height: 4),
@@ -367,7 +381,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                 l10n.lyricStyleSyncSubtitle,
                 style: TextStyle(
                   fontSize: 13,
-                  color: _onMuted,
+                  color: onMuted,
                   height: 1.25,
                 ),
               ),
@@ -384,7 +398,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               child: Icon(
                 Icons.close_rounded,
                 size: 24,
-                color: Colors.white.withValues(alpha: 0.75),
+                color: on.withValues(alpha: 0.75),
               ),
             ),
           ),
@@ -393,16 +407,17 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  Widget _sectionLabel(String title, String? subtitle) {
+  Widget _sectionLabel(BuildContext context, String title, String? subtitle) {
+    final on = context.gradFg();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: _on,
+            color: on,
             letterSpacing: 0.6,
           ),
         ),
@@ -410,21 +425,26 @@ class LyricStyleSettingsPanel extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 12, color: _onDim, height: 1.2),
+            style: TextStyle(fontSize: 12, color: context.gradFg(0.38), height: 1.2),
           ),
         ],
       ],
     );
   }
 
-  Widget _frostedCard({required Widget child}) {
+  Widget _frostedCard(BuildContext context, {required Widget child}) {
+    final scheme = Theme.of(context).colorScheme;
+    final cardFill = Theme.of(context).brightness == Brightness.light
+        ? scheme.surfaceContainerHighest.withValues(alpha: 0.42)
+        : Colors.white.withValues(alpha: 0.07);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _cardFill,
+        color: cardFill,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: context.gradBorder(0.12)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.12),
@@ -437,28 +457,30 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  static Widget _softDivider() => Padding(
+  Widget _softDivider(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Divider(
           height: 1,
           thickness: 1,
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.gradBorder(0.08),
         ),
       );
 
-  Widget _switchRow({
+  Widget _switchRow(
+    BuildContext context, {
     required IconData icon,
     required String label,
     String? sub,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
+    final on = context.gradFg();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 22, color: Colors.white.withValues(alpha: 0.7)),
+          Icon(icon, size: 22, color: context.gradFg(0.7)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -466,10 +488,10 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: _on,
+                    color: on,
                     height: 1.2,
                   ),
                 ),
@@ -478,7 +500,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     sub,
                     style: TextStyle(
                       fontSize: 12,
-                      color: _onDim,
+                      color: context.gradFg(0.38),
                       height: 1.25,
                     ),
                   ),
@@ -495,7 +517,8 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  Widget _stateGradientControls({
+  Widget _stateGradientControls(
+    BuildContext sheetContext, {
     required AppLocalizations l10n,
     required String title,
     required bool useGradient,
@@ -510,6 +533,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _switchRow(
+          sheetContext,
           icon: Icons.gradient_rounded,
           label: title,
           sub: l10n.lyricStyleStateGradientSub,
@@ -552,17 +576,17 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               ),
               icon: Icon(
                 Icons.tune_rounded,
-                color: Colors.white.withValues(alpha: 0.9),
+                color: sheetContext.gradFg(0.9),
               ),
               label: Text(
                 l10n.lyricStyleActiveGradientTune,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: sheetContext.gradFg(0.9),
                 ),
               ),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.35),
+                  color: sheetContext.gradBorder(0.35),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -573,13 +597,15 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  Widget _sliderBlock({
+  Widget _sliderBlock(
+    BuildContext context, {
     required String label,
     required double value,
     required double min,
     required double max,
     required ValueChanged<double> onChanged,
   }) {
+    final fg = context.gradFg();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -588,27 +614,27 @@ class LyricStyleSettingsPanel extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: _on,
+                  color: fg,
                 ),
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: fg.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: context.gradBorder(0.12)),
               ),
               child: Text(
                 value.toStringAsFixed(0),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: _on,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  color: fg,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ),
@@ -624,7 +650,8 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  Widget _colorStateBlock({
+  Widget _colorStateBlock(
+    BuildContext context, {
     required Color accent,
     required String title,
     required String labelOriginal,
@@ -635,6 +662,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     required VoidCallback onPick1,
     required VoidCallback onPick2,
   }) {
+    final fg = context.gradFg();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -651,14 +679,14 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Icon(icon, size: 18, color: _onMuted),
+              Icon(icon, size: 18, color: context.gradFgMuted()),
               const SizedBox(width: 6),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: _on,
+                  color: fg,
                 ),
               ),
             ],
@@ -668,6 +696,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: _colorChip(
+                  context,
                   label: labelOriginal,
                   color: c1,
                   onTap: onPick1,
@@ -676,6 +705,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _colorChip(
+                  context,
                   label: labelTranslation,
                   color: c2,
                   onTap: onPick2,
@@ -688,11 +718,13 @@ class LyricStyleSettingsPanel extends StatelessWidget {
     );
   }
 
-  Widget _colorChip({
+  Widget _colorChip(
+    BuildContext context, {
     required String label,
     required Color color,
     required VoidCallback onTap,
   }) {
+    final ink = context.gradFg();
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -701,9 +733,9 @@ class LyricStyleSettingsPanel extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: ink.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: context.gradBorder(0.1)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -712,7 +744,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 13,
-                  color: _onMuted,
+                  color: context.gradFgMuted(),
                 ),
               ),
               const SizedBox(width: 10),
@@ -730,7 +762,7 @@ class LyricStyleSettingsPanel extends StatelessWidget {
                     ),
                   ],
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: context.gradBorder(0.35),
                     width: 1.5,
                   ),
                 ),
@@ -769,68 +801,72 @@ class LyricStyleSettingsPanel extends StatelessWidget {
           child: Theme(
             data: frostedDialogContentTheme(dialogContext),
             child: FrostedGlassDialog(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 20, 18, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      l10n.lyricColorPickerHint,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+              child: Builder(
+                builder: (inner) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        for (final c in colors)
-                          GestureDetector(
-                            onTap: () => Navigator.of(dialogContext).pop(c),
-                            child: Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: c,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: current == c
-                                      ? Theme.of(dialogContext)
-                                          .colorScheme
-                                          .primary
-                                      : Colors.white30,
-                                  width: current == c ? 2.5 : 1,
-                                ),
-                                boxShadow: [
-                                  if (current == c)
-                                    BoxShadow(
-                                      color: Theme.of(
-                                        dialogContext,
-                                      ).colorScheme.primary.withValues(
-                                        alpha: 0.4,
-                                      ),
-                                      blurRadius: 8,
-                                    ),
-                                ],
-                              ),
-                            ),
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: inner.gradFg(),
                           ),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          l10n.lyricColorPickerHint,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: inner.gradFgMuted(),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            for (final c in colors)
+                              GestureDetector(
+                                onTap: () => Navigator.of(dialogContext).pop(c),
+                                child: Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: c,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: current == c
+                                          ? Theme.of(inner)
+                                              .colorScheme
+                                              .primary
+                                          : inner.gradBorder(0.3),
+                                      width: current == c ? 2.5 : 1,
+                                    ),
+                                    boxShadow: [
+                                      if (current == c)
+                                        BoxShadow(
+                                          color: Theme.of(
+                                            inner,
+                                          ).colorScheme.primary.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          blurRadius: 8,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),

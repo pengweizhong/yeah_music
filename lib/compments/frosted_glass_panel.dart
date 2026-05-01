@@ -87,7 +87,9 @@ class FrostedGlassPanel extends StatelessWidget {
               ),
             ],
           ),
-          child: child,
+          child: FrostedDeepTintChromeScope(
+            child: child,
+          ),
         ),
       ),
     );
@@ -152,7 +154,12 @@ class FrostedGlassBottomSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
               ],
-              child,
+              Theme(
+                data: frostedBottomSheetContentTheme(context),
+                child: FrostedSheetForegroundScope(
+                  child: child,
+                ),
+              ),
             ],
           ),
         ),
@@ -229,7 +236,10 @@ class FrostedGlassDialog extends StatelessWidget {
                 ),
               ],
             ),
-            child: child,
+            child: Theme(
+              data: frostedDialogContentTheme(context),
+              child: FrostedSheetForegroundScope(child: child),
+            ),
           ),
         ),
       ),
@@ -282,12 +292,9 @@ Future<T?> showFrostedDialog<T>({
         backgroundColor: Colors.transparent,
         child: SizedBox(
           width: cardW,
-          child: Theme(
-            data: frostedDialogContentTheme(ctx),
-            child: FrostedGlassDialog(
-              maxWidth: cardW,
-              child: child,
-            ),
+          child: FrostedGlassDialog(
+            maxWidth: cardW,
+            child: child,
           ),
         ),
       );

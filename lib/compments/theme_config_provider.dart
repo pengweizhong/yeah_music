@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' show ImageFilter, PlatformDispatcher;
 
@@ -49,6 +50,14 @@ class ThemeConfigProvider extends ChangeNotifier {
   PlaylistCoverGradientDirection get gradientDirection => _gradientDirection;
   String? get backgroundImagePath => _backgroundImagePath;
   double get backgroundImageEffect => _backgroundImageEffect.clamp(0.0, 1.0);
+
+  /// 浅色模式 + 预设/自定义双色渐变：主辅色整体偏亮时用墨色 UI，避免与白字糊成一片。
+  bool get lightUserGradientNeedsInkForeground {
+    final a = _primaryColor.computeLuminance();
+    final b = _secondaryColor.computeLuminance();
+    final w = math.max(a, b) * 0.62 + math.min(a, b) * 0.38;
+    return w > 0.50;
+  }
 
   // 预设颜色
   static const List<Color> presetColors = [
@@ -457,12 +466,19 @@ class ThemeConfigProvider extends ChangeNotifier {
 
     Widget tree = _ThemedOnGradientContent(child: child);
     if (useLightUserGradientFg) {
-      tree = UserThemeGradientForegroundScope(
-        child: Theme(
-          data: themeForLightUserGradientShell(context),
+      if (lightUserGradientNeedsInkForeground) {
+        tree = Theme(
+          data: themeForBrightLightGradientOverlay(context),
           child: tree,
-        ),
-      );
+        );
+      } else {
+        tree = UserThemeGradientForegroundScope(
+          child: Theme(
+            data: themeForLightUserGradientShell(context),
+            child: tree,
+          ),
+        );
+      }
     }
 
     return Container(

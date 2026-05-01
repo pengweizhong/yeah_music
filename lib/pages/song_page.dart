@@ -980,10 +980,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       child: Text(
                         l10n.playbackModeTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: sheetContext.gradFg(),
                         ),
                       ),
                     ),
@@ -992,7 +992,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       return ListTile(
                         leading: Icon(
                           _getPlaybackModeIcon(mode),
-                          color: Colors.white,
+                          color: sheetContext.gradFg(),
                         ),
                         title: Text(playbackModeLabel(mode, sheetL10n)),
                         trailing: isSelected
@@ -1046,32 +1046,32 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                   children: [
                     Text(
                       l10n.sleepTimerCustom,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: ctx.gradFg(),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: controller,
-                      style: const TextStyle(color: Colors.white),
-                      cursorColor: Colors.white,
+                      style: TextStyle(color: ctx.gradFg()),
+                      cursorColor: ctx.gradFg(),
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: l10n.sleepTimerLabelMinutes,
                         labelStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: ctx.gradFgMuted(),
                         ),
                         hintText:
                             '$_customTimerMinMinutes–$_customTimerMaxMinutes',
                         hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.38),
+                          color: ctx.gradFg(0.38),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: ctx.gradBorder(0.22),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -1089,7 +1089,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
                           style: TextButton.styleFrom(
-                            foregroundColor: Colors.white70,
+                            foregroundColor: ctx.gradFg(0.7),
                           ),
                           child: Text(l10n.actionCancel),
                         ),
@@ -1361,10 +1361,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                             child: Text(
                               l10n.songPageMoreSheetTitle,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: sheetContext.gradFg(),
                               ),
                             ),
                           ),
@@ -1373,7 +1373,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                               provider.isSleepTimerActive
                                   ? Icons.timer_off_rounded
                                   : Icons.timer_rounded,
-                              color: Colors.white,
+                              color: sheetContext.gradFg(),
                             ),
                             title: Text(l10n.sleepTimerSheetTitle),
                             subtitle: provider.isSleepTimerActive
@@ -1391,7 +1391,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.info_outline_rounded, color: Colors.white),
+                            leading: Icon(Icons.info_outline_rounded, color: sheetContext.gradFg()),
                             title: Text(l10n.songPageMoreQueryMetadata),
                             onTap: () {
                               Navigator.pop(sheetContext);
@@ -1402,7 +1402,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.refresh_rounded, color: Colors.white),
+                            leading: Icon(Icons.refresh_rounded, color: sheetContext.gradFg()),
                             title: Text(l10n.libraryReloadMetadata),
                             onTap: () {
                               final path = song.path;
@@ -1423,7 +1423,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.cloud_upload_outlined, color: Colors.white),
+                            leading: Icon(Icons.cloud_upload_outlined, color: sheetContext.gradFg()),
                             title: Text(l10n.songPageMoreUploadOneDrive),
                             onTap: () {
                               Navigator.pop(sheetContext);
@@ -1434,7 +1434,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.share_outlined, color: Colors.white),
+                            leading: Icon(Icons.share_outlined, color: sheetContext.gradFg()),
                             title: Text(l10n.songPageMoreShare),
                             onTap: () {
                               Navigator.pop(sheetContext);
@@ -1445,7 +1445,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.edit_attributes_outlined, color: Colors.white),
+                            leading: Icon(Icons.edit_attributes_outlined, color: sheetContext.gradFg()),
                             title: Text(l10n.songPageMoreEditMusicTagsInline),
                             onTap: () {
                               Navigator.pop(sheetContext);
@@ -1456,7 +1456,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.edit_note_outlined, color: Colors.white),
+                            leading: Icon(Icons.edit_note_outlined, color: sheetContext.gradFg()),
                             title: Text(l10n.songPageMoreEditMusicTagsExternal),
                             onTap: () {
                               Navigator.pop(sheetContext);
@@ -1467,7 +1467,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.subtitles_outlined, color: Colors.white),
+                            leading: Icon(Icons.subtitles_outlined, color: sheetContext.gradFg()),
                             title: Text(l10n.songPageMoreEditLyricsExternal),
                             onTap: () {
                               Navigator.pop(sheetContext);
@@ -1477,7 +1477,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                               });
                             },
                           ),
-                          const Divider(height: 1, color: Color(0x33FFFFFF)),
+                          Divider(height: 1, color: sheetContext.gradBorder(0.2)),
                           ListTile(
                             leading: Icon(
                               Icons.delete_outline_rounded,
@@ -1537,16 +1537,16 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       child: Text(
                         l10n.sleepTimerSheetTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: sheetContext.gradFg(),
                         ),
                       ),
                     ),
                     if (provider.isSleepTimerActive)
                       ListTile(
-                        leading: const Icon(Icons.timer_off, color: Colors.white),
+                        leading: Icon(Icons.timer_off, color: sheetContext.gradFg()),
                         title: Text(l10n.sleepTimerCancel),
                         onTap: () {
                           provider.cancelSleepTimer();
@@ -1555,7 +1555,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       ),
                     ..._presetTimerMinutes.map((minutes) {
                       return ListTile(
-                        leading: const Icon(Icons.timer, color: Colors.white),
+                        leading: Icon(Icons.timer, color: sheetContext.gradFg()),
                         title: Text(l10n.sleepTimerMinutesN(minutes)),
                         trailing: provider.timerDuration == minutes &&
                                 provider.isSleepTimerActive
@@ -1568,7 +1568,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       );
                     }),
                     ListTile(
-                      leading: const Icon(Icons.edit_outlined, color: Colors.white),
+                      leading: Icon(Icons.edit_outlined, color: sheetContext.gradFg()),
                       title: Text(l10n.sleepTimerCustom),
                       subtitle: isCustom
                           ? Text(
@@ -1949,7 +1949,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                 child: Text(
                                   l10n.noLyrics,
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.45),
+                                    color: context.gradFg(0.45),
                                   ),
                                 ),
                               )
@@ -1988,7 +1988,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
               body: Center(
                 child: Text(
                   l10n.songNotFound,
-                  style: const TextStyle(color: Colors.white70),
+                  style: TextStyle(color: context.gradFgMuted()),
                 ),
               ),
             ),
@@ -2034,7 +2034,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                          color: Colors.white,
+                          color: context.gradFg(),
                           onPressed: () => Navigator.pop(context),
                         ),
                         Expanded(
@@ -2043,11 +2043,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             children: [
                               AutoMarqueeSingleLineText(
                                 text: song.title ?? l10n.pageUnknownTitle,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
-                                  color: Colors.white,
+                                  color: context.gradFg(),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -2057,7 +2057,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   text: song.artist!,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.white.withValues(alpha: 0.65),
+                                    color: context.gradFg(0.65),
                                     fontWeight: FontWeight.w400,
                                   ),
                                   textAlign: TextAlign.center,
@@ -2067,7 +2067,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         ),
                         IconButton(
                           icon: const Icon(Icons.list, size: 24),
-                          color: Colors.white,
+                          color: context.gradFg(),
                           onPressed: () {
                             _showPlayListSheet(context, playListProvider);
                           },
@@ -2155,14 +2155,14 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                     Icon(
                                       Icons.music_note,
                                       size: 64,
-                                      color: Colors.white.withValues(alpha: 0.45),
+                                      color: context.gradFg(0.45),
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
                                       l10n.noLyrics,
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.white.withValues(alpha: 0.55),
+                                        color: context.gradFg(0.55),
                                       ),
                                     ),
                                   ],
@@ -2217,8 +2217,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                             effectivePos),
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.55),
+                                          color: context
+                                              .gradFg(0.55),
                                         ),
                                       ),
                                       Text(
@@ -2226,8 +2226,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                             _totalDuration),
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.55),
+                                          color: context
+                                              .gradFg(0.55),
                                         ),
                                       ),
                                     ],
@@ -2252,8 +2252,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                       activeColor: Theme.of(context)
                                           .colorScheme
                                           .primary,
-                                      inactiveColor: Colors.white
-                                          .withValues(alpha: 0.25),
+                                      inactiveColor:
+                                          context.gradFg(0.25),
                                       onChangeStart: (_) {
                                         _isSeeking = true;
                                         _seekPreview = effectivePos;
@@ -2306,7 +2306,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.skip_previous),
-                                    color: Colors.white,
+                                    color: context.gradFg(),
                                     iconSize: 32,
                                     onPressed: skipDisabled
                                         ? null
@@ -2367,11 +2367,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                           alignment: Alignment.center,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Colors.white
-                                                .withValues(alpha: 0.12),
+                                            color: context
+                                                .gradFg(0.12),
                                             border: Border.all(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.38),
+                                              color: context
+                                                  .gradFg(0.38),
                                               width: 1.25,
                                             ),
                                           ),
@@ -2380,7 +2380,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                                 ? Icons.pause
                                                 : Icons.play_arrow,
                                             size: 34,
-                                            color: Colors.white,
+                                            color: context.gradFg(),
                                           ),
                                         ),
                                       );
@@ -2389,7 +2389,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   const SizedBox(width: 24),
                                   IconButton(
                                     icon: const Icon(Icons.skip_next),
-                                    color: Colors.white,
+                                    color: context.gradFg(),
                                     iconSize: 32,
                                     onPressed: skipDisabled
                                         ? null
@@ -2513,8 +2513,8 @@ class _SongPageIndicator extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
               color: sel
-                  ? Colors.white.withValues(alpha: 0.88)
-                  : Colors.white.withValues(alpha: 0.28),
+                  ? context.gradFg(0.88)
+                  : context.gradFg(0.28),
             ),
           );
         }),
@@ -2551,17 +2551,19 @@ class _SongToolIcon extends StatelessWidget {
             padding: const WidgetStatePropertyAll(EdgeInsets.all(8)),
             minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            iconColor: WidgetStatePropertyAll(iconColor ?? Colors.white),
+            iconColor: WidgetStatePropertyAll(
+              iconColor ?? context.gradFg(),
+            ),
             iconSize: const WidgetStatePropertyAll(_kIcon),
             backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
             overlayColor: WidgetStateProperty.resolveWith(
               (Set<WidgetState> states) {
                 if (states.contains(WidgetState.hovered)) {
-                  return Colors.white.withValues(alpha: 0.10);
+                  return context.gradFg(0.10);
                 }
                 if (states.contains(WidgetState.pressed) ||
                     states.contains(WidgetState.focused)) {
-                  return Colors.white.withValues(alpha: 0.16);
+                  return context.gradFg(0.16);
                 }
                 return null;
               },

@@ -74,14 +74,29 @@ class _MenuPageState extends State<MenuPage> {
                       SizedBox(
                         height: 168,
                         child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Image.asset(
-                                'assets/icons/yeah_music1.png',
-                                height: 112,
-                                fit: BoxFit.contain,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                child: Image.asset(
+                                  'assets/icons/yeah_music1.png',
+                                  height: 112,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),

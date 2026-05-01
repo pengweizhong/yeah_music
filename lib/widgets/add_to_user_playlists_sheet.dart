@@ -87,6 +87,8 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
     final titleName = first.title ?? first.path.split('/').last;
 
     final scheme = Theme.of(context).colorScheme;
+    final on = scheme.onSurface;
+    final onMuted = scheme.onSurfaceVariant;
     final maxListHeight = MediaQuery.sizeOf(context).height * 0.52;
 
     final sheetTitle = widget.songs.length == 1
@@ -106,10 +108,10 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
             child: Text(
               sheetTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: on,
                 height: 1.3,
               ),
               maxLines: 3,
@@ -122,7 +124,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
               helpText,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.55),
+                color: onMuted.withValues(alpha: 0.95),
               ),
             ),
           ),
@@ -134,19 +136,19 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                 Expanded(
                   child: TextField(
                     controller: _newNameController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
+                    style: TextStyle(color: on),
+                    cursorColor: on,
                     decoration: InputDecoration(
                       hintText: l10n.addToPlaylistHint,
-                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                      hintStyle: TextStyle(color: onMuted.withValues(alpha: 0.82)),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.08),
+                      fillColor: on.withValues(alpha: 0.07),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.22),
+                          color: on.withValues(alpha: 0.22),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -179,7 +181,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                         child: Text(
                           l10n.addToPlaylistNoPlaylistsYet,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.55),
+                            color: onMuted.withValues(alpha: 0.95),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -202,27 +204,30 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                             }
                           });
                         },
-                        checkColor: Colors.black87,
+                        checkColor:
+                            Theme.of(context).brightness == Brightness.light
+                                ? Colors.white
+                                : Colors.black87,
                         fillColor: WidgetStateProperty.resolveWith((states) {
                           if (states.contains(WidgetState.selected)) {
                             return scheme.primary;
                           }
-                          return Colors.white.withValues(alpha: 0.2);
+                          return on.withValues(alpha: 0.12);
                         }),
                         side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.45),
+                          color: on.withValues(alpha: 0.45),
                         ),
                         title: Text(
                           pl.name,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: on,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         subtitle: Text(
                           l10n.homeTrackCount(pl.songPaths.length),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: onMuted.withValues(alpha: 0.95),
                             fontSize: 13,
                           ),
                         ),
@@ -237,7 +242,11 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : onMuted.withValues(alpha: 0.95),
+                  ),
                   child: Text(l10n.actionCancel),
                 ),
                 const Spacer(),

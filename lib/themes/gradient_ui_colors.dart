@@ -9,10 +9,43 @@ const Color kGradLightInk = Color(0xFF050A12);
 /// 次一级说明、辅助图标（比早期 #2B3441 更深，避免在 scaffold 灰底上发虚）
 const Color kGradLightInkMuted = Color(0xFF192433);
 
+/// 嵌在浅色实色毛玻璃 sheet / dialog 内的子树：优先用当前 [Theme.colorScheme] 墨色，盖住外层亮色渐变强加的白。
+class FrostedSheetForegroundScope extends InheritedWidget {
+  const FrostedSheetForegroundScope({super.key, required super.child});
+
+  static FrostedSheetForegroundScope? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<FrostedSheetForegroundScope>();
+  }
+
+  @override
+  bool updateShouldNotify(FrostedSheetForegroundScope oldWidget) => false;
+}
+
+/// 抽屉、迷你播放器条等深色实板毛玻璃内侧：与白字链路对齐，独立于外壳「墨色渐变」样式。
+class FrostedDeepTintChromeScope extends InheritedWidget {
+  const FrostedDeepTintChromeScope({super.key, required super.child});
+
+  static FrostedDeepTintChromeScope? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<FrostedDeepTintChromeScope>();
+  }
+
+  @override
+  bool updateShouldNotify(FrostedDeepTintChromeScope oldWidget) => false;
+}
+
 /// 与 [MaterialApp] 全局 [ThemeMode] 联动：全屏自定义渐变/背景图上的前景与边框色。
 extension GradOnThemedBackground on BuildContext {
   /// 主文字/图标
   Color gradFg([double a = 1.0]) {
+    if (FrostedDeepTintChromeScope.maybeOf(this) != null) {
+      return Colors.white.withValues(alpha: a);
+    }
+    if (FrostedSheetForegroundScope.maybeOf(this) != null) {
+      final on = Theme.of(this).colorScheme.onSurface;
+      return on.withValues(alpha: a);
+    }
     final wp = WallpaperReadableScope.maybeOf(this);
     if (wp != null) {
       return wp.foreground.withValues(alpha: a);
@@ -28,6 +61,13 @@ extension GradOnThemedBackground on BuildContext {
 
   /// 次一级说明文字
   Color gradFgMuted([double a = 1.0]) {
+    if (FrostedDeepTintChromeScope.maybeOf(this) != null) {
+      return Colors.white.withValues(alpha: 0.65 * a.clamp(0.0, 1.0));
+    }
+    if (FrostedSheetForegroundScope.maybeOf(this) != null) {
+      final v = Theme.of(this).colorScheme.onSurfaceVariant;
+      return v.withValues(alpha: (0.88 * a).clamp(0.0, 1.0));
+    }
     final wp = WallpaperReadableScope.maybeOf(this);
     if (wp != null) {
       return wp.foregroundMuted.withValues(alpha: a);
@@ -43,6 +83,13 @@ extension GradOnThemedBackground on BuildContext {
 
   /// 细边框/分割线/低调装饰
   Color gradBorder([double a = 0.12]) {
+    if (FrostedDeepTintChromeScope.maybeOf(this) != null) {
+      return Colors.white.withValues(alpha: a);
+    }
+    if (FrostedSheetForegroundScope.maybeOf(this) != null) {
+      final ink = Theme.of(this).colorScheme.onSurface;
+      return ink.withValues(alpha: (a * 1.72).clamp(0.0, 1.0));
+    }
     final wp = WallpaperReadableScope.maybeOf(this);
     if (wp != null) {
       return wp.foreground.withValues(alpha: (a * 1.72).clamp(0.0, 1.0));
