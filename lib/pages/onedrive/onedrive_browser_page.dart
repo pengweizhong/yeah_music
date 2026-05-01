@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
@@ -245,6 +246,12 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                     ),
               backgroundColor: Colors.transparent,
               elevation: 0,
+              scrolledUnderElevation: 0,
+              shadowColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              flexibleSpace: FrostedGlassPanel.pinnedSection(
+                child: const SizedBox.shrink(),
+              ),
               iconTheme: const IconThemeData(color: Colors.white),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
