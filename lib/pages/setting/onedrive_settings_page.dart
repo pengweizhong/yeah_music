@@ -279,6 +279,7 @@ class OneDriveSettingsPage extends StatefulWidget {
 class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
   /// 列出备份、弹窗选择、到应用完成前的整段恢复流程（与应用内 [isImmediateRestoreBusy] 叠加）。
   bool _restoreFlowBusy = false;
+  bool _signInBusy = false;
 
   @override
   Widget build(BuildContext context) {
@@ -326,6 +327,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                   _AccountCard(
                     l10n: l10n,
                     od: od,
+                    signingIn: _signInBusy,
                     onSignIn: () => _signIn(context, l10n, od),
                     onSignOut: () => _signOut(context, l10n, od),
                   ),
@@ -407,21 +409,30 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     AppLocalizations l10n,
     OneDriveController od,
   ) async {
+    if (_signInBusy) return;
     if (od.isLinuxUnsupported) return;
     if (od.effectiveClientId.isEmpty) {
-      showAppSnackBar(
-        context,
-        l10n.oneDriveAppMissingClientConfig,
-        kind: AppSnackKind.error,
-      );
-      return;
+      final configured = await _promptClientIdIfMissing(context);
+      if (!context.mounted) return;
+      if (!configured || od.effectiveClientId.isEmpty) {
+        showAppSnackBar(
+          context,
+          l10n.oneDriveAppMissingClientConfig,
+          kind: AppSnackKind.error,
+        );
+        return;
+      }
     }
+    setState(() => _signInBusy = true);
     final ok = await od.signIn();
+    if (mounted) {
+      setState(() => _signInBusy = false);
+    }
     if (!context.mounted) return;
     if (!ok) {
       showAppSnackBar(
         context,
-        l10n.oneDriveSignInFailed,
+        od.lastSignInError ?? l10n.oneDriveSignInFailed,
         kind: AppSnackKind.error,
       );
       return;
@@ -436,6 +447,42 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         builder: (_) => const OneDriveCloudPlaylistPage(),
       ),
     );
+  }
+
+  Future<bool> _promptClientIdIfMissing(BuildContext context) async {
+    final od = context.read<OneDriveController>();
+    final c = TextEditingController(text: od.effectiveClientId);
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('OneDrive Client ID'),
+          content: TextField(
+            controller: c,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+              labelText: 'Azure Application (client) ID',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(c.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    if (value == null || value.trim().isEmpty) {
+      return false;
+    }
+    await od.setLegacyClientId(value.trim());
+    return true;
   }
 
   Future<void> _signOut(
@@ -1674,12 +1721,14 @@ class _AccountCard extends StatelessWidget {
   const _AccountCard({
     required this.l10n,
     required this.od,
+    required this.signingIn,
     required this.onSignIn,
     required this.onSignOut,
   });
 
   final AppLocalizations l10n;
   final OneDriveController od;
+  final bool signingIn;
   final VoidCallback onSignIn;
   final VoidCallback onSignOut;
 
@@ -1739,9 +1788,15 @@ class _AccountCard extends StatelessWidget {
                 )
               else
                 FilledButton.icon(
-                  onPressed: onSignIn,
-                  icon: const Icon(Icons.login_rounded, size: 20),
-                  label: Text(l10n.oneDriveSignIn),
+                  onPressed: signingIn ? null : onSignIn,
+                  icon: signingIn
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.login_rounded, size: 20),
+                  label: Text(signingIn ? '登录中...' : l10n.oneDriveSignIn),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF0078D4),
                     foregroundColor: Colors.white,

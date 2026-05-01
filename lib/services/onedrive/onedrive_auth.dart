@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter_appauth/flutter_appauth.dart';
+import 'package:http/http.dart' as http;
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/services/onedrive/onedrive_token_store.dart';
@@ -21,18 +23,30 @@ class OneDriveAuth {
   final OneDriveTokenStore _store;
   final FlutterAppAuth _appAuth;
 
+  static final Uri _deviceCodeEndpoint = Uri.parse(
+    'https://login.microsoftonline.com/common/oauth2/v2.0/devicecode',
+  );
+  static final Uri _tokenEndpoint = Uri.parse(OneDriveConfig.tokenEndpoint);
+
   /// 避免连点触发多路原生 OAuth，全部挂起且日志重复。
   bool _interactiveSignInInFlight = false;
+  String? _lastErrorMessage;
+
+  String? get lastErrorMessage => _lastErrorMessage;
 
   Future<void> signOut() => _store.clear();
 
   /// 交互式登录；Linux 等平台无 [FlutterAppAuth] 支持时返回 null。
   Future<({String access, String refresh, DateTime expiry})?> signIn(String clientId) async {
+    _lastErrorMessage = null;
     if (clientId.trim().isEmpty) return null;
-    if (Platform.isLinux) return null;
+    if (Platform.isLinux) {
+      return _signInByDeviceCode(clientId.trim());
+    }
 
     if (_interactiveSignInInFlight) {
       appLog.w('OneDrive OAuth: 已有登录流程进行中，请勿重复点击');
+      _lastErrorMessage = '登录流程进行中，请稍候';
       return null;
     }
     _interactiveSignInInFlight = true;
@@ -64,17 +78,24 @@ class OneDriveAuth {
       appLog.w(
         'OneDrive OAuth: 用户取消或系统关闭了登录页（release 模式下此前用 d 级日志会完全不显示）',
       );
+      _lastErrorMessage = '已取消登录';
       return null;
     } on FlutterAppAuthPlatformException catch (e, st) {
       final d = e.platformErrorDetails;
+      final errDesc = d.errorDescription ?? '';
+      final err = d.error ?? '';
       appLog.e(
         'OneDrive OAuth: ${d.error} ${d.errorDescription} (type=${d.type} code=${d.code})',
         error: e,
         stackTrace: st,
       );
+      _lastErrorMessage = errDesc.trim().isNotEmpty
+          ? errDesc
+          : (err.trim().isNotEmpty ? err : 'OAuth 平台错误');
       return null;
     } catch (e, st) {
       appLog.e('OneDrive OAuth: authorizeAndExchangeCode 异常', error: e, stackTrace: st);
+      _lastErrorMessage = '$e';
       return null;
     } finally {
       desktopHangWatch?.cancel();
@@ -86,12 +107,14 @@ class OneDriveAuth {
     final refresh = res.refreshToken;
     if (access == null) {
       appLog.w('OneDrive OAuth: 响应缺少 access_token');
+      _lastErrorMessage = '登录返回缺少 access_token';
       return null;
     }
     if (refresh == null || refresh.isEmpty) {
       appLog.w(
         'OneDrive OAuth: 缺少 refresh_token（需确认 Microsoft 已授予 offline_access）；无法长期续期令牌',
       );
+      _lastErrorMessage = '登录返回缺少 refresh_token（请检查 offline_access 权限）';
       return null;
     }
     final expiry = res.accessTokenExpirationDateTime ??
@@ -108,6 +131,7 @@ class OneDriveAuth {
         error: e,
         stackTrace: st,
       );
+      _lastErrorMessage = '令牌保存失败：$e';
       return null;
     }
     appLog.i('OneDrive OAuth: 登录成功');
@@ -123,26 +147,213 @@ class OneDriveAuth {
     if (exp != null && DateTime.now().isBefore(exp.subtract(const Duration(minutes: 2)))) {
       return access;
     }
-    if (Platform.isLinux) return null;
-    final tr = await _appAuth.token(
-      TokenRequest(
-        clientId.trim(),
-        OneDriveConfig.redirectUrl,
+    if (Platform.isLinux) {
+      return _refreshAccessTokenByHttp(
+        clientId: clientId.trim(),
         refreshToken: refresh,
-        serviceConfiguration: _msOAuth2,
-        scopes: OneDriveConfig.scopes,
-      ),
-    );
-    final newAccess = tr.accessToken;
-    final newRefresh = tr.refreshToken ?? refresh;
-    if (newAccess == null) return null;
-    final newExp = tr.accessTokenExpirationDateTime ??
-        DateTime.now().add(const Duration(hours: 1));
-    await _store.save(
-      accessToken: newAccess,
-      refreshToken: newRefresh,
-      accessExpiry: newExp,
-    );
-    return newAccess;
+      );
+    }
+    try {
+      final tr = await _appAuth.token(
+        TokenRequest(
+          clientId.trim(),
+          OneDriveConfig.redirectUrl,
+          refreshToken: refresh,
+          serviceConfiguration: _msOAuth2,
+          scopes: OneDriveConfig.scopes,
+        ),
+      );
+      final newAccess = tr.accessToken;
+      final newRefresh = tr.refreshToken ?? refresh;
+      if (newAccess == null) return null;
+      final newExp = tr.accessTokenExpirationDateTime ??
+          DateTime.now().add(const Duration(hours: 1));
+      await _store.save(
+        accessToken: newAccess,
+        refreshToken: newRefresh,
+        accessExpiry: newExp,
+      );
+      return newAccess;
+    } catch (e, st) {
+      appLog.e('OneDrive OAuth: refresh token 续期失败', error: e, stackTrace: st);
+      return null;
+    }
+  }
+
+  Future<String?> _refreshAccessTokenByHttp({
+    required String clientId,
+    required String refreshToken,
+  }) async {
+    try {
+      final res = await http.post(
+        _tokenEndpoint,
+        headers: const {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: <String, String>{
+          'client_id': clientId,
+          'grant_type': 'refresh_token',
+          'refresh_token': refreshToken,
+          'scope': OneDriveConfig.scopes.join(' '),
+        },
+      );
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        appLog.w('OneDrive OAuth: Linux refresh 失败 ${res.statusCode}: ${res.body}');
+        return null;
+      }
+      final raw = jsonDecode(res.body);
+      if (raw is! Map<String, dynamic>) return null;
+      final newAccess = (raw['access_token'] as String?)?.trim();
+      final newRefresh = ((raw['refresh_token'] as String?)?.trim().isNotEmpty ?? false)
+          ? (raw['refresh_token'] as String).trim()
+          : refreshToken;
+      final expiresIn = (raw['expires_in'] as num?)?.toInt() ?? 3600;
+      if (newAccess == null || newAccess.isEmpty) return null;
+      final expiry = DateTime.now().add(Duration(seconds: expiresIn));
+      await _store.save(
+        accessToken: newAccess,
+        refreshToken: newRefresh,
+        accessExpiry: expiry,
+      );
+      return newAccess;
+    } catch (e, st) {
+      appLog.e('OneDrive OAuth: Linux refresh 异常', error: e, stackTrace: st);
+      return null;
+    }
+  }
+
+  Future<({String access, String refresh, DateTime expiry})?> _signInByDeviceCode(
+    String clientId,
+  ) async {
+    if (_interactiveSignInInFlight) {
+      appLog.w('OneDrive OAuth: 已有登录流程进行中，请勿重复点击');
+      _lastErrorMessage = '登录流程进行中，请稍候';
+      return null;
+    }
+    _interactiveSignInInFlight = true;
+    try {
+      final dc = await http.post(
+        _deviceCodeEndpoint,
+        headers: const {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: <String, String>{
+          'client_id': clientId,
+          'scope': OneDriveConfig.scopes.join(' '),
+        },
+      );
+      if (dc.statusCode < 200 || dc.statusCode >= 300) {
+        appLog.w('OneDrive OAuth: Linux device code 获取失败 ${dc.statusCode}: ${dc.body}');
+        _lastErrorMessage = _friendlyOAuthError(dc.body, fallback: '获取设备码失败（${dc.statusCode}）');
+        return null;
+      }
+      final m = jsonDecode(dc.body);
+      if (m is! Map<String, dynamic>) return null;
+      final deviceCode = (m['device_code'] as String?)?.trim();
+      final userCode = (m['user_code'] as String?)?.trim();
+      final verifyUri = (m['verification_uri_complete'] as String?)?.trim().isNotEmpty == true
+          ? (m['verification_uri_complete'] as String).trim()
+          : (m['verification_uri'] as String?)?.trim();
+      final expiresIn = (m['expires_in'] as num?)?.toInt() ?? 900;
+      var interval = (m['interval'] as num?)?.toInt() ?? 5;
+      final humanMessage = (m['message'] as String?)?.trim();
+      if (deviceCode == null || deviceCode.isEmpty) return null;
+      appLog.i('OneDrive Linux 登录：$humanMessage');
+      if (verifyUri != null && verifyUri.isNotEmpty) {
+        appLog.i('OneDrive Linux 登录地址：$verifyUri');
+        try {
+          await Process.start(
+            'xdg-open',
+            <String>[verifyUri],
+            runInShell: true,
+          );
+        } catch (_) {}
+      }
+      if (userCode != null && userCode.isNotEmpty) {
+        appLog.i('OneDrive Linux 用户码：$userCode');
+      }
+
+      final deadline = DateTime.now().add(Duration(seconds: expiresIn));
+      while (DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(Duration(seconds: interval));
+        final tk = await http.post(
+          _tokenEndpoint,
+          headers: const {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: <String, String>{
+            'client_id': clientId,
+            'grant_type': 'urn:ietf:params:oauth:grant-type:device_code',
+            'device_code': deviceCode,
+          },
+        );
+        if (tk.statusCode >= 200 && tk.statusCode < 300) {
+          final raw = jsonDecode(tk.body);
+          if (raw is! Map<String, dynamic>) return null;
+          final access = (raw['access_token'] as String?)?.trim();
+          final refresh = (raw['refresh_token'] as String?)?.trim();
+          final ttl = (raw['expires_in'] as num?)?.toInt() ?? 3600;
+          if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
+            return null;
+          }
+          final expiry = DateTime.now().add(Duration(seconds: ttl));
+          await _store.save(
+            accessToken: access,
+            refreshToken: refresh,
+            accessExpiry: expiry,
+          );
+          appLog.i('OneDrive Linux 登录成功');
+          return (access: access, refresh: refresh, expiry: expiry);
+        }
+        final rawErr = jsonDecode(tk.body);
+        final err = rawErr is Map<String, dynamic>
+            ? (rawErr['error'] as String?)?.trim()
+            : null;
+        if (err == 'authorization_pending') continue;
+        if (err == 'slow_down') {
+          interval += 2;
+          continue;
+        }
+        if (err == 'authorization_declined' ||
+            err == 'expired_token' ||
+            err == 'bad_verification_code') {
+          appLog.w('OneDrive Linux 登录中断: $err');
+          _lastErrorMessage = '登录中断：$err';
+          return null;
+        }
+        appLog.w('OneDrive Linux 登录失败: ${tk.body}');
+        _lastErrorMessage = _friendlyOAuthError(tk.body, fallback: '登录失败');
+        return null;
+      }
+      appLog.w('OneDrive Linux 登录超时');
+      _lastErrorMessage = '登录超时，请重试';
+      return null;
+    } catch (e, st) {
+      appLog.e('OneDrive Linux 登录异常', error: e, stackTrace: st);
+      _lastErrorMessage = '$e';
+      return null;
+    } finally {
+      _interactiveSignInInFlight = false;
+    }
+  }
+
+  String _friendlyOAuthError(String raw, {required String fallback}) {
+    try {
+      final m = jsonDecode(raw);
+      if (m is! Map<String, dynamic>) return fallback;
+      final err = (m['error'] as String?)?.trim() ?? '';
+      final desc = (m['error_description'] as String?)?.trim() ?? '';
+      if (err == 'invalid_client' &&
+          (desc.contains('must be marked as \'mobile\'') ||
+              desc.contains('must be marked as "mobile"') ||
+              desc.contains('AADSTS70002'))) {
+        return '当前 Client ID 不是公共客户端（移动和桌面应用），请到 Azure 将应用配置为移动和桌面平台后重试';
+      }
+      if (desc.isNotEmpty) return '$err: $desc';
+      if (err.isNotEmpty) return err;
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
   }
 }

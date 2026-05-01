@@ -56,6 +56,7 @@ class OneDriveController extends ChangeNotifier {
   String? _localDownloadDir;
   bool _signedIn = false;
   String? _accountHint;
+  String? _lastSignInError;
 
   /// 每进程内去重，配合 [SettingsService.appendOneDriveDownloadScanRootIfNew] 持久化点播目录。
   final Set<String> _playbackScanRootsTouched = {};
@@ -95,7 +96,8 @@ class OneDriveController extends ChangeNotifier {
   String? get localDownloadDir => _localDownloadDir;
   bool get signedIn => _signedIn;
   String? get accountHint => _accountHint;
-  bool get isLinuxUnsupported => Platform.isLinux;
+  String? get lastSignInError => _lastSignInError;
+  bool get isLinuxUnsupported => false;
 
   List<OneDriveIndexFolder> get indexFolders =>
       List.unmodifiable(_indexFolders);
@@ -115,6 +117,13 @@ class OneDriveController extends ChangeNotifier {
     if (builtIn.isNotEmpty) return builtIn;
     if (_legacyClientId.isNotEmpty) return _legacyClientId;
     return '';
+  }
+
+  Future<void> setLegacyClientId(String? value) async {
+    final v = value?.trim() ?? '';
+    _legacyClientId = v;
+    await SettingsService.saveOneDriveClientId(v.isEmpty ? null : v);
+    notifyListeners();
   }
 
   Future<void> loadFromStorage() async {
@@ -1043,17 +1052,17 @@ class OneDriveController extends ChangeNotifier {
   }
 
   Future<bool> signIn() async {
-    if (isLinuxUnsupported) {
-      return false;
-    }
+    _lastSignInError = null;
     if (effectiveClientId.isEmpty) {
       appLog.w('OneDrive: 无法登录——未配置 Client ID');
+      _lastSignInError = '未配置 OneDrive Client ID';
       return false;
     }
     try {
       final res = await _auth.signIn(effectiveClientId);
       if (res == null) {
         appLog.w('OneDrive: signIn 完成但无有效令牌（参见上方 OAuth 日志）');
+        _lastSignInError = _auth.lastErrorMessage ?? '未获取到有效令牌';
         return false;
       }
       await loadFromStorage();
@@ -1064,12 +1073,14 @@ class OneDriveController extends ChangeNotifier {
         error: e,
         stackTrace: st,
       );
+      _lastSignInError = '$e';
       return false;
     }
   }
 
   Future<void> signOut() async {
     await _auth.signOut();
+    _lastSignInError = null;
     _signedIn = false;
     _accountHint = null;
     _browseChildrenCache.clear();
