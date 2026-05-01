@@ -1,6 +1,7 @@
 #include "my_application.h"
 
 #include <flutter_linux/flutter_linux.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -13,6 +14,38 @@ struct _MyApplication {
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+static void set_window_icon_from_asset(GtkWindow* window) {
+  // Prefer the bundled Flutter asset path. Try both executable-relative and
+  // cwd-relative paths to cover different launch contexts.
+  g_autofree gchar* exe_path = g_file_read_link("/proc/self/exe", nullptr);
+  g_autofree gchar* exe_dir = exe_path ? g_path_get_dirname(exe_path) : nullptr;
+  g_autofree gchar* exe_relative = exe_dir
+      ? g_build_filename(exe_dir, "data", "flutter_assets", "assets", "icons",
+                         "yeah_music1.png", nullptr)
+      : nullptr;
+  g_autofree gchar* cwd_relative = g_build_filename(
+      "data", "flutter_assets", "assets", "icons", "yeah_music1.png", nullptr);
+
+  const gchar* candidates[] = {
+      exe_relative,
+      cwd_relative,
+      "assets/icons/yeah_music1.png",
+      "assets/icons/yeah_music.png",
+      nullptr,
+  };
+
+  for (int i = 0; candidates[i] != nullptr; ++i) {
+    const gchar* path = candidates[i];
+    if (path == nullptr || !g_file_test(path, G_FILE_TEST_EXISTS)) continue;
+    g_autoptr(GError) error = nullptr;
+    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_file(path, &error);
+    if (pixbuf == nullptr) continue;
+    gtk_window_set_icon(window, pixbuf);
+    g_object_unref(pixbuf);
+    return;
+  }
+}
 
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
@@ -53,6 +86,7 @@ static void my_application_activate(GApplication* application) {
   }
 
   gtk_window_set_default_size(window, 1280, 720);
+  set_window_icon_from_asset(window);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
