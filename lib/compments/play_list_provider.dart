@@ -43,6 +43,8 @@ class PlayListProvider extends ChangeNotifier {
 
   StreamSubscription<PlayerState>? _playerCompletionSubscription;
   StreamSubscription<int?>? _playerIndexSubscription;
+  ProcessingState? _lastProcessingStateFromPlayer;
+  bool _completionHandlerRunning = false;
 
   /// 串行切歌 / 换队列，避免连点下一曲时多次 [playAt] 与 [MusicService] 交错导致打断加载后不播放。
   Future<void> _playbackNavChain = Future<void>.value();
@@ -680,13 +682,38 @@ class PlayListProvider extends ChangeNotifier {
     _playerCompletionSubscription = MusicService.playerStateStream.listen((
       state,
     ) {
-      if (state.processingState != ProcessingState.completed) return;
+      final now = state.processingState;
+      final prev = _lastProcessingStateFromPlayer;
+      _lastProcessingStateFromPlayer = now;
+      // 仅在「首次进入 completed」时处理一次，避免同一首 completed 重复回调导致重入切歌。
+      if (now != ProcessingState.completed || prev == ProcessingState.completed) {
+        return;
+      }
+      if (_completionHandlerRunning) return;
       // 同一次 completion 的同步回调里立刻换源会触发 just_audio Loading interrupted，延后到本事件后执行
-      Future.microtask(() => unawaited(_onPlaybackTrackCompleted()));
+      _completionHandlerRunning = true;
+      Future.microtask(() async {
+        try {
+          await _onPlaybackTrackCompleted();
+        } finally {
+          _completionHandlerRunning = false;
+        }
+      });
     });
   }
 
   Future<void> _onPlaybackTrackCompleted() async {
+    // Linux (media_kit/mpv): 在 completed 边界立刻换源，偶发触发 ffmpeg flac
+    // 帧头/同步码异常。短暂让出事件循环后再切下一首可显著降低该竞态。
+    if (!kIsWeb && Platform.isLinux) {
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+      try {
+        // 强制结束上一首后端状态，避免自动切歌时解码器仍卡在尾帧。
+        await MusicService().stop();
+      } catch (_) {}
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+    }
+
     if (_playbackMode == PlaybackMode.singleLoop) {
       if (await _tryConsumeDeferredPlayNext()) return;
       final resume = _takeResumeAfterDeferredIfApplicable();

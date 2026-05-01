@@ -166,6 +166,9 @@ class MusicService {
     _invalidateAndroidQueueReuse();
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
+        if (Platform.isLinux && _player.processingState == ProcessingState.completed) {
+          await Future<void>.delayed(const Duration(milliseconds: 90));
+        }
         await _player.stop();
         await _player.setVolume(1.0);
         if (attempt == 0) {
@@ -252,6 +255,9 @@ class MusicService {
     androidCarQueueActive = false;
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
+        if (Platform.isLinux && _player.processingState == ProcessingState.completed) {
+          await Future<void>.delayed(const Duration(milliseconds: 90));
+        }
         await _player.stop();
         await _player.setVolume(1.0);
         if (attempt == 0) {

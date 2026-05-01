@@ -143,7 +143,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
               ),
               padding: EdgeInsets.symmetric(
                 horizontal: 6,
-                vertical: isLinuxDesktop ? 5 : 4,
+                vertical: 4,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -168,6 +168,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -176,13 +177,14 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                           style: TextStyle(
                             color: widget.isCurrent ? primary : Colors.white,
                             fontSize: 16,
+                            height: isLinuxDesktop ? 1.04 : null,
                             fontWeight: widget.isCurrent
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                           ),
                           isCurrentTrack: widget.isCurrent,
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: isLinuxDesktop ? 1 : 2),
                         widget.trailingPlayCount != null
                             ? SongListSubtitleWithQualityMarqueePlayCount(
                                 song: widget.song,
@@ -191,6 +193,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                       ? primary.withValues(alpha: 0.82)
                                       : Colors.white.withValues(alpha: 0.6),
                                   fontSize: 13,
+                                  height: isLinuxDesktop ? 1.0 : null,
                                 ),
                                 playCount: widget.trailingPlayCount!,
                                 l10n: l10n,
@@ -205,6 +208,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                       ? primary.withValues(alpha: 0.82)
                                       : Colors.white.withValues(alpha: 0.6),
                                   fontSize: 13,
+                                  height: isLinuxDesktop ? 1.0 : null,
                                 ),
                                 isCurrentTrack: widget.isCurrent,
                               ),
