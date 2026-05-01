@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
 const PageTransitionsTheme _kPageTransitions = PageTransitionsTheme(
@@ -8,25 +9,76 @@ const PageTransitionsTheme _kPageTransitions = PageTransitionsTheme(
   },
 );
 
-/// [MaterialApp] 的 [ThemeData]：与启动渐变深色页协调的 [dark]、浅色日间的 [light]。
+/// 日间浅色底板（与自定义渐变主页协调），略偏冷灰而非刺白。
+const Color _kLightScaffoldTone = Color(0xFFDDE4ED);
+
 abstract final class AppMaterialThemes {
   static ThemeData get light {
-    return ThemeData(
+    final baseScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF2D4A7C),
+      brightness: Brightness.light,
+    );
+    final scheme = baseScheme.copyWith(
+      surface: const Color(0xFFF8FAFC),
+      onSurface: kGradLightInk,
+      onSurfaceVariant: kGradLightInkMuted,
+      surfaceContainerHighest: const Color(0xFFEEF1F6),
+      outline: kGradLightInk.withValues(alpha: 0.28),
+      outlineVariant: kGradLightInk.withValues(alpha: 0.18),
+    );
+    final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF2D4A7C),
-        brightness: Brightness.light,
-      ),
-      scaffoldBackgroundColor: const Color(0xFFC5CED9),
-      canvasColor: const Color(0xFFC5CED9),
-      cardColor: const Color(0xFFE0E4EA),
+      colorScheme: scheme,
+    );
+    return base.copyWith(
+      scaffoldBackgroundColor: _kLightScaffoldTone,
+      canvasColor: _kLightScaffoldTone,
+      cardColor: const Color(0xFFFFFFFF),
       pageTransitionsTheme: _kPageTransitions,
+      textTheme: base.textTheme.copyWith(
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w500,
+        ),
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w500,
+        ),
+        bodySmall: base.textTheme.bodySmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w500,
+        ),
+        titleMedium: base.textTheme.titleMedium?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+        titleSmall: base.textTheme.titleSmall?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+        labelLarge: base.textTheme.labelLarge?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+        labelMedium: base.textTheme.labelMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+        labelSmall: base.textTheme.labelSmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF8FAFC),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: kGradLightInk.withValues(alpha: 0.13),
       ),
       scrollbarTheme: const ScrollbarThemeData(interactive: true),
     );
@@ -46,6 +98,7 @@ abstract final class AppMaterialThemes {
       pageTransitionsTheme: _kPageTransitions,
       dialogTheme: DialogThemeData(
         backgroundColor: const Color(0xFF1A1D24),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),

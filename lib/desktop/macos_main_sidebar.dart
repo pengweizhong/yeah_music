@@ -5,6 +5,7 @@ import 'package:yeah_music/pages/setting/folder_page_setting.dart';
 import 'package:yeah_music/pages/setting_page.dart';
 import 'package:yeah_music/pages/statistics_page.dart';
 import 'package:yeah_music/pages/storage_playlist_page.dart';
+import 'package:yeah_music/widgets/app_themed_branding_logo.dart';
 
 /// macOS 主页左侧栏：对应原抽屉 [MenuPage] 的入口，桌面端固定显示、可展开标签。
 class MacosMainSidebar extends StatelessWidget {
@@ -58,10 +59,10 @@ class MacosMainSidebar extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          'assets/icons/icon_512x512@2x.png',
+                        child: AppThemedBrandingLogo(
                           width: 40,
                           height: 40,
+                          fit: BoxFit.cover,
                           filterQuality: FilterQuality.medium,
                         ),
                       ),
@@ -86,10 +87,10 @@ class MacosMainSidebar extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 16, bottom: 8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      'assets/icons/icon_512x512@2x.png',
+                    child: AppThemedBrandingLogo(
                       width: 36,
                       height: 36,
+                      fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
                     ),
                   ),

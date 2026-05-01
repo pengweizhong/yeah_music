@@ -13,6 +13,7 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
@@ -784,17 +785,20 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         return Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
           child: FrostedGlassBottomSheet(
-            child: SafeArea(
-              child: SizedBox(
-                height: h,
-                child: _PlaybackQueueSheet(
-                  provider: playListProvider,
-                  onPick: (index) async {
-                    Navigator.pop(sheetContext);
-                    await playListProvider.playAt(index);
-                    _initLyrics();
-                    _updateDuration();
-                  },
+            child: Theme(
+              data: frostedBottomSheetContentTheme(sheetContext),
+              child: SafeArea(
+                child: SizedBox(
+                  height: h,
+                  child: _PlaybackQueueSheet(
+                    provider: playListProvider,
+                    onPick: (index) async {
+                      Navigator.pop(sheetContext);
+                      await playListProvider.playAt(index);
+                      _initLyrics();
+                      _updateDuration();
+                    },
+                  ),
                 ),
               ),
             ),
@@ -2802,13 +2806,16 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
     final displayList = rows.display;
     final sortAlignedUi = rows.sortAlignedUi;
     final primary = Theme.of(context).colorScheme.primary;
-    final divColor = Colors.white.withValues(alpha: 0.12);
+    final fg = context.gradFg();
+    final fgSoft = context.gradFg(0.55);
+    final fgSub = context.gradFgMuted();
+    final divColor = context.gradBorder(0.12);
 
     if (displayList.isEmpty) {
       return Center(
         child: Text(
           l10n.queueNoTracks,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
+          style: TextStyle(color: fgSoft),
         ),
       );
     }
@@ -2828,10 +2835,10 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
             child: Text(
               l10n.playQueueTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: fg,
               ),
             ),
           ),
@@ -2845,7 +2852,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.55),
+                  color: fgSoft,
                 ),
               ),
             ),
@@ -2857,8 +2864,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
               delegate: SliverChildBuilderDelegate(
                 (context, pi) {
                   final s = pendingPlayNext[pi];
-                  final sepSoft =
-                      Colors.white.withValues(alpha: 0.055);
+                  final sepSoft = context.gradBorder(0.04);
                   return Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
@@ -2904,8 +2910,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.5),
+                                          color: fgSub,
                                           fontSize: 13,
                                         ),
                                       ),
@@ -2981,7 +2986,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                               : FontWeight.w500,
                                           color: isCurrent
                                               ? primary
-                                              : Colors.white,
+                                              : fg,
                                         ),
                                         isCurrentTrack: isCurrent,
                                       ),
@@ -2991,8 +2996,7 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                           color: isCurrent
                                               ? primary.withValues(
                                                   alpha: 0.8)
-                                              : Colors.white.withValues(
-                                                  alpha: 0.5),
+                                              : fgSub,
                                           fontSize: 13,
                                         ),
                                         isCurrentTrack: isCurrent,

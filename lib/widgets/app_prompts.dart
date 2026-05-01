@@ -14,6 +14,7 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/services/github_release_update_checker.dart';
+import 'package:yeah_music/widgets/app_themed_branding_logo.dart';
 
 /// 全局 Snackbar 气质：浮动、圆角、与磨砂弹层同系的深色壳层。
 enum AppSnackKind {
@@ -761,8 +762,9 @@ void showAppAboutDialog(BuildContext context) {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/icons/yeah_music.png',
+                      child: AppThemedBrandingLogo(
+                        width: 80,
+                        height: 80,
                         fit: BoxFit.cover,
                       ),
                     ),

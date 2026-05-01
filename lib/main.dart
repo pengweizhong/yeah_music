@@ -389,6 +389,12 @@ class _YeahMusicAppState extends State<YeahMusicApp>
   }
 
   @override
+  void didChangePlatformBrightness() {
+    // 系统深浅色变化时确保 [MaterialApp]/[Theme]/[MediaQuery] 子树重建（避免仅依赖 Inherited 时偶发不刷新）。
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer2<AppThemeModeProvider, AppLocaleProvider>(
       builder: (context, appearance, locale, _) {

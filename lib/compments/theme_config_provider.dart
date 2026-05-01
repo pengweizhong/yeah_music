@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 
 /// 主题配置提供者
 class ThemeConfigProvider extends ChangeNotifier {
@@ -329,7 +330,7 @@ class ThemeConfigProvider extends ChangeNotifier {
             Positioned.fill(
               child: IgnorePointer(
                 child: ColoredBox(
-                  color: const Color(0xFF0D1117).withValues(alpha: 0.06),
+                  color: kGradLightInk.withValues(alpha: 0.045),
                 ),
               ),
             ),
@@ -347,16 +348,16 @@ class ThemeConfigProvider extends ChangeNotifier {
       );
     }
     if (isLight) {
-      // 中灰冷色渐变，避免「一片死白」；与 [gradFg] 深字对比足够
+      // 白昼：提亮冷灰渐变，避免「发乌」与中灰字糊在一起（与全局浅色 [Theme] 对齐）
       return Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFC5CED9),
-              Color(0xFFB0BAC8),
-              Color(0xFF9BABB8),
+              Color(0xFFE8ECF3),
+              Color(0xFFD9E0EA),
+              Color(0xFFC8D2DF),
             ],
             stops: [0.0, 0.45, 1.0],
           ),
@@ -401,7 +402,7 @@ class _ThemedOnGradientContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final c = isLight ? const Color(0xFF0D1117) : Colors.white;
+    final c = isLight ? kGradLightInk : Colors.white;
     return DefaultTextStyle(
       style: TextStyle(color: c, height: 1.3),
       child: IconTheme(

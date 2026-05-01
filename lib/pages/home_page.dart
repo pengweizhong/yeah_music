@@ -365,7 +365,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             extendBodyBehindAppBar: false,
             extendBody: true,
             backgroundColor: Colors.transparent,
-            drawer: const MenuPage(),
+            drawer: MenuPage(),
             appBar: AppBar(
               centerTitle: false,
               title: Text(

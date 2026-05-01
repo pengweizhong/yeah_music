@@ -65,7 +65,7 @@ class FrostedGlassPanel extends StatelessWidget {
             : Border(
                 bottom: BorderSide(
                   color: Theme.of(context).brightness == Brightness.light
-                      ? const Color(0xFF0D1117).withValues(alpha: 0.12)
+                      ? kGradLightInk.withValues(alpha: 0.14)
                       : Colors.white.withValues(alpha: 0.18),
                 ),
               ))
@@ -144,7 +144,7 @@ class FrostedGlassBottomSheet extends StatelessWidget {
                     height: 4,
                     decoration: BoxDecoration(
                       color: isLight
-                          ? const Color(0xFF0D1117).withValues(alpha: 0.2)
+                          ? kGradLightInk.withValues(alpha: 0.26)
                           : Colors.white.withValues(alpha: 0.32),
                       borderRadius: BorderRadius.circular(2),
                     ),
@@ -161,22 +161,20 @@ class FrostedGlassBottomSheet extends StatelessWidget {
   }
 }
 
-const Color _kLightInkFrost = Color(0xFF0D1117);
-
 /// 底部毛玻璃上使用的 [Theme]：夜间高对比白字；白天为浅底配深字。
 ThemeData frostedBottomSheetContentTheme(BuildContext context) {
   final t = Theme.of(context);
   if (t.brightness == Brightness.light) {
     return t.copyWith(
       colorScheme: t.colorScheme.copyWith(
-        onSurface: _kLightInkFrost,
-        onSurfaceVariant: const Color(0xB30D1117),
+        onSurface: kGradLightInk,
+        onSurfaceVariant: kGradLightInkMuted.withValues(alpha: 0.95),
       ),
       listTileTheme: t.listTileTheme.copyWith(
-        textColor: _kLightInkFrost,
-        iconColor: _kLightInkFrost,
+        textColor: kGradLightInk,
+        iconColor: kGradLightInk,
       ),
-      dividerTheme: const DividerThemeData(color: Color(0x1F0D1117)),
+      dividerTheme: DividerThemeData(color: kGradLightInk.withValues(alpha: 0.12)),
     );
   }
   return t.copyWith(
@@ -239,14 +237,14 @@ class FrostedGlassDialog extends StatelessWidget {
   }
 }
 
-/// [FrostedGlassDialog] 内 [Theme]：夜白字 / 日深字。
+/// 「关于」等与 [showFrostedDialog] 共用的浅色/深色正文色。
 ThemeData frostedDialogContentTheme(BuildContext context) {
   final t = Theme.of(context);
   if (t.brightness == Brightness.light) {
     return t.copyWith(
       colorScheme: t.colorScheme.copyWith(
-        onSurface: _kLightInkFrost,
-        onSurfaceVariant: const Color(0xB30D1117),
+        onSurface: kGradLightInk,
+        onSurfaceVariant: kGradLightInkMuted.withValues(alpha: 0.94),
       ),
     );
   }
