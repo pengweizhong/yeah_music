@@ -759,8 +759,10 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   ThemeData appBarTheme(BuildContext context) {
     return Theme.of(context).copyWith(
       scaffoldBackgroundColor: Colors.transparent,
+      canvasColor: Colors.transparent,
       appBarTheme: const AppBarThemeData(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -769,7 +771,13 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
         toolbarTextStyle: TextStyle(color: Colors.white),
       ),
       inputDecorationTheme: const InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.transparent,
+        isDense: true,
+        contentPadding: EdgeInsets.zero,
         border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
         hintStyle: TextStyle(color: Color(0xB3FFFFFF)),
       ),
     );
@@ -777,11 +785,25 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
 
   @override
   Widget? buildFlexibleSpace(BuildContext context) {
+    final sz = MediaQuery.sizeOf(context);
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
-        return themeConfig.buildThemedBackground(
-          context: context,
-          child: const SizedBox.expand(),
+        return ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            minWidth: sz.width,
+            maxWidth: sz.width,
+            minHeight: sz.height,
+            maxHeight: sz.height,
+            child: SizedBox(
+              width: sz.width,
+              height: sz.height,
+              child: themeConfig.buildThemedBackground(
+                context: context,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -823,12 +845,32 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   Widget _buildSearchResults(BuildContext context) {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
-        return themeConfig.buildThemedBackground(
-          context: context,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints.expand(),
-            child: _buildSearchResultsContent(context),
-          ),
+        final mq = MediaQuery.of(context);
+        final sz = mq.size;
+        final toolbarHeight =
+            AppBarTheme.of(context).toolbarHeight ?? kToolbarHeight;
+        // Scaffold body strips top padding; use viewPadding + toolbar to match AppBar slot height.
+        final overlap = mq.viewPadding.top + toolbarHeight;
+        return Stack(
+          clipBehavior: Clip.none,
+          fit: StackFit.expand,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: -overlap,
+              height: sz.height,
+              child: IgnorePointer(
+                child: themeConfig.buildThemedBackground(
+                  context: context,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: _buildSearchResultsContent(context),
+            ),
+          ],
         );
       },
     );
