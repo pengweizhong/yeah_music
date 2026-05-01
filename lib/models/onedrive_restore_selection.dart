@@ -10,6 +10,7 @@ class OneDriveRestoreSelection {
     required this.restoreQuickEntry,
     required this.restorePlaybackLists,
     required this.restoreLyricsUi,
+    required this.restoreSongRecognition,
     required this.restoreTheme,
     required this.replaceAllPlaylists,
   });
@@ -25,6 +26,7 @@ class OneDriveRestoreSelection {
   final bool restoreQuickEntry;
   final bool restorePlaybackLists;
   final bool restoreLyricsUi;
+  final bool restoreSongRecognition;
   final bool restoreTheme;
 
   final bool replaceAllPlaylists;
@@ -36,5 +38,6 @@ class OneDriveRestoreSelection {
       restoreQuickEntry ||
       restorePlaybackLists ||
       restoreLyricsUi ||
+      restoreSongRecognition ||
       restoreTheme;
 }

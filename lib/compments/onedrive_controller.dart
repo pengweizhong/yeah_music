@@ -554,6 +554,7 @@ class OneDriveController extends ChangeNotifier {
               sync.syncQuickEntry ||
               sync.syncPlaybackListsAndStats ||
               sync.syncLyricsUi ||
+              sync.syncSongRecognition ||
               sync.syncThemeAppearance ||
               sync.syncUserPlaylists;
 
@@ -637,6 +638,16 @@ class OneDriveController extends ChangeNotifier {
             token: token,
             folderItemId: leafId,
             remoteFileName: OneDriveSyncConstants.sliceLyricsUiFileName,
+            utf8Payload: encoder.convert(m),
+          );
+        }
+        if (sync.syncSongRecognition) {
+          final m =
+              await SettingsService.buildCloudBackupSongRecognitionSliceMap();
+          await _uploadUtf8JsonToFolder(
+            token: token,
+            folderItemId: leafId,
+            remoteFileName: OneDriveSyncConstants.sliceSongRecognitionFileName,
             utf8Payload: encoder.convert(m),
           );
         }
@@ -1025,6 +1036,10 @@ class OneDriveController extends ChangeNotifier {
       await applySlice(
         OneDriveSyncConstants.sliceLyricsUiFileName,
         sel.restoreLyricsUi,
+      );
+      await applySlice(
+        OneDriveSyncConstants.sliceSongRecognitionFileName,
+        sel.restoreSongRecognition,
       );
       await applySlice(
         OneDriveSyncConstants.sliceThemeFileName,

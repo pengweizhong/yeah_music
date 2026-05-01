@@ -248,6 +248,9 @@ String _backupSnapshotSubtitle(AppLocalizations l10n, OneDriveCloudBackupSnapsho
   if (s.hasQuickEntryJson) parts.add(l10n.oneDriveRestoreSliceQuickEntry);
   if (s.hasPlaybackListsJson) parts.add(l10n.oneDriveRestoreSlicePlaybackLists);
   if (s.hasLyricsUiJson) parts.add(l10n.oneDriveRestoreSliceLyricsUi);
+  if (s.hasSongRecognitionJson) {
+    parts.add(l10n.oneDriveRestoreSliceSongRecognition);
+  }
   if (s.hasThemeJson) parts.add(l10n.oneDriveRestoreSliceTheme);
   return parts.isEmpty ? '—' : parts.join(' · ');
 }
@@ -788,6 +791,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
   late bool _wantQuick;
   late bool _wantPlayback;
   late bool _wantLyrics;
+  late bool _wantSongRecognition;
   late bool _wantTheme;
   bool _replacePlaylists = false;
 
@@ -828,12 +832,14 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
     _wantQuick = s.hasQuickEntryJson;
     _wantPlayback = s.hasPlaybackListsJson;
     _wantLyrics = s.hasLyricsUiJson;
+    _wantSongRecognition = s.hasSongRecognitionJson;
     _wantTheme = s.hasThemeJson;
     if (s.kind == OneDriveCloudBackupSnapshotKind.legacyFlat) {
       _wantHome = false;
       _wantQuick = false;
       _wantPlayback = false;
       _wantLyrics = false;
+      _wantSongRecognition = false;
       _wantTheme = false;
     }
   }
@@ -885,6 +891,17 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceLyricsUi,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        CheckboxListTile(
+          value: _wantSongRecognition,
+          onChanged: snap.hasSongRecognitionJson
+              ? (v) => setState(() => _wantSongRecognition = v ?? false)
+              : null,
+          activeColor: _accent,
+          title: Text(
+            l10n.oneDriveRestoreSliceSongRecognition,
             style: const TextStyle(color: Colors.white),
           ),
         ),
@@ -1113,6 +1130,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
       restoreQuickEntry: _wantQuick,
       restorePlaybackLists: _wantPlayback,
       restoreLyricsUi: _wantLyrics,
+      restoreSongRecognition: _wantSongRecognition,
       restoreTheme: _wantTheme,
       replaceAllPlaylists: _replacePlaylists,
     );
@@ -1574,6 +1592,24 @@ class _SyncCard extends StatelessWidget {
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemLyricsUiSubtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    value: s.syncSongRecognition,
+                    onChanged: (v) {
+                      od.setSyncSettings(s.copyWith(syncSongRecognition: v));
+                    },
+                    activeThumbColor: const Color(0xFF0078D4),
+                    title: Text(
+                      l10n.oneDriveSyncItemSongRecognition,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      l10n.oneDriveSyncItemSongRecognitionSubtitle,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,

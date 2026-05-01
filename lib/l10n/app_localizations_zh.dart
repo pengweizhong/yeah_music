@@ -662,6 +662,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。';
 
   @override
+  String get oneDriveSyncItemSongRecognition => '听歌识曲与记录';
+
+  @override
+  String get oneDriveSyncItemSongRecognitionSubtitle =>
+      '所用引擎及 AudD / ACRCloud 密钥、本地识别历史。';
+
+  @override
   String get oneDriveSyncItemTheme => '背景主题';
 
   @override
@@ -758,6 +765,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveRestoreSliceLyricsUi => '歌词与屏幕常亮';
+
+  @override
+  String get oneDriveRestoreSliceSongRecognition => '听歌识曲与记录';
 
   @override
   String get oneDriveRestoreSliceTheme => '背景主题';
@@ -3360,6 +3370,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。';
 
   @override
+  String get oneDriveSyncItemSongRecognition => '听歌识曲与记录';
+
+  @override
+  String get oneDriveSyncItemSongRecognitionSubtitle =>
+      '所用引擎及 AudD / ACRCloud 密钥、本地识别历史。';
+
+  @override
   String get oneDriveSyncItemTheme => '背景主题';
 
   @override
@@ -3456,6 +3473,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveRestoreSliceLyricsUi => '歌词与屏幕常亮';
+
+  @override
+  String get oneDriveRestoreSliceSongRecognition => '听歌识曲与记录';
 
   @override
   String get oneDriveRestoreSliceTheme => '背景主题';
@@ -6059,6 +6079,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveSyncItemLyricsUiSubtitle => '歌詞樣式、桌面 / 車載歌詞與播放頁螢幕恆亮等。';
 
   @override
+  String get oneDriveSyncItemSongRecognition => '聽歌識曲與紀錄';
+
+  @override
+  String get oneDriveSyncItemSongRecognitionSubtitle =>
+      '所用引擎及 AudD / ACRCloud 金鑰、本地辨識歷史。';
+
+  @override
   String get oneDriveSyncItemTheme => '背景主題';
 
   @override
@@ -6155,6 +6182,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveRestoreSliceLyricsUi => '歌詞與螢幕恆亮';
+
+  @override
+  String get oneDriveRestoreSliceSongRecognition => '聽歌識曲與紀錄';
 
   @override
   String get oneDriveRestoreSliceTheme => '背景主題';

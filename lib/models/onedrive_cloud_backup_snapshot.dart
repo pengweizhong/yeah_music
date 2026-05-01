@@ -79,11 +79,15 @@ class OneDriveCloudBackupSnapshot
   bool get hasThemeJson =>
       _blob(OneDriveSyncConstants.sliceThemeFileName) != null;
 
+  bool get hasSongRecognitionJson =>
+      _blob(OneDriveSyncConstants.sliceSongRecognitionFileName) != null;
+
   bool get hasAnySliceSettingsJson =>
       hasHomeGreetingJson ||
       hasQuickEntryJson ||
       hasPlaybackListsJson ||
       hasLyricsUiJson ||
+      hasSongRecognitionJson ||
       hasThemeJson;
 
   @override

@@ -13,11 +13,13 @@ import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
+import 'package:yeah_music/models/song_recognition_entry.dart';
 import 'package:yeah_music/models/wire_remote_control_config.dart';
 import 'package:yeah_music/models/acr_cloud_recognition_config.dart';
 import 'package:yeah_music/models/song_recognition_provider.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
+import 'package:yeah_music/services/song_recognition_history_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 class SettingsService {
@@ -1180,6 +1182,10 @@ class SettingsService {
     _homeGreetingCustomSubsKey,
     _homeGreetingSubCycleCursorKey,
     _homeGreetingRotationRandomKey,
+    _auddApiTokenKey,
+    _songRecognitionProviderKey,
+    _acrCloudRecognitionConfigKey,
+    SongRecognitionHistoryService.hiveKeyHistory,
   ];
 
   static const String yeahMusicAppSettingsBackupFormatId = 'yeah_music_app_settings_v1';
@@ -1334,6 +1340,36 @@ class SettingsService {
       _androidCarLyricsEnabledKey: _hiveValueToJsonForCloudBackup(carEn),
       _androidCarLyricsShowCoverKey: _hiveValueToJsonForCloudBackup(carCover),
       _androidCarLyricsSyncLyricsKey: _hiveValueToJsonForCloudBackup(carSync),
+    };
+
+    return <String, dynamic>{
+      'format': yeahMusicAppSettingsBackupFormatId,
+      'version': 1,
+      'app': AppProductInfo.exportMetadataBlock,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'hive': hiveFlat,
+    };
+  }
+
+  /// 听歌识曲：各键始终写出，便于新设备与空历史时也能形成完整切片。
+  static Future<Map<String, dynamic>> buildCloudBackupSongRecognitionSliceMap() async {
+    final token = await loadAuddApiToken();
+    final provider = await loadSongRecognitionProvider();
+    final acr = await loadAcrCloudRecognitionConfig();
+    final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+    final histRaw = box.get(SongRecognitionHistoryService.hiveKeyHistory);
+    final histStr = histRaw is String
+        ? histRaw
+        : (histRaw == null ? '' : '$histRaw');
+
+    final hiveFlat = <String, dynamic>{
+      _auddApiTokenKey: _hiveValueToJsonForCloudBackup(token.trim()),
+      _songRecognitionProviderKey:
+          _hiveValueToJsonForCloudBackup(provider.name),
+      _acrCloudRecognitionConfigKey:
+          _hiveValueToJsonForCloudBackup(AcrCloudRecognitionConfig.encode(acr)),
+      SongRecognitionHistoryService.hiveKeyHistory:
+          _hiveValueToJsonForCloudBackup(histStr),
     };
 
     return <String, dynamic>{
@@ -1699,6 +1735,35 @@ class SettingsService {
         return _asIntForCloudRestore(json, 0).clamp(0, 999999);
       case _homeGreetingRotationRandomKey:
         return _asBoolForCloudRestore(json, false);
+      case _auddApiTokenKey:
+        return '$json'.trim();
+      case _songRecognitionProviderKey:
+        return songRecognitionProviderFromStorage('$json').name;
+      case _acrCloudRecognitionConfigKey:
+        if (json is String) return json;
+        if (json is Map) {
+          return jsonEncode(Map<String,dynamic>.from(json));
+        }
+        return AcrCloudRecognitionConfig.encode(const AcrCloudRecognitionConfig());
+      case SongRecognitionHistoryService.hiveKeyHistory:
+        if (json is String) return json;
+        if (json is List) {
+          final jsonList = json;
+          final rebuilt = <SongRecognitionEntry>[];
+          for (final e in jsonList) {
+            if (e is Map<String,dynamic>) {
+              final x = SongRecognitionEntry.fromJsonMap(e);
+              if (x != null) rebuilt.add(x);
+            } else if (e is Map) {
+              final x = SongRecognitionEntry.fromJsonMap(
+                Map<String,dynamic>.from(e),
+              );
+              if (x != null) rebuilt.add(x);
+            }
+          }
+          return SongRecognitionEntry.encodeList(rebuilt);
+        }
+        return SongRecognitionEntry.encodeList(const []);
       case RecentPlayService.hiveKeyRecentSongPaths:
         if (json is! List) return <dynamic>[];
         return json.map((e) => '$e').where((s) => s.trim().isNotEmpty).toList();

@@ -1338,6 +1338,18 @@ abstract class AppLocalizations {
   /// **'Lyric styling plus floating/car lyrics and keep screen awake.'**
   String get oneDriveSyncItemLyricsUiSubtitle;
 
+  /// No description provided for @oneDriveSyncItemSongRecognition.
+  ///
+  /// In en, this message translates to:
+  /// **'Song ID & recognition history'**
+  String get oneDriveSyncItemSongRecognition;
+
+  /// No description provided for @oneDriveSyncItemSongRecognitionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service choice (AudD / ACRCloud), API tokens, and recognition log stored on device.'**
+  String get oneDriveSyncItemSongRecognitionSubtitle;
+
   /// No description provided for @oneDriveSyncItemTheme.
   ///
   /// In en, this message translates to:
@@ -1523,6 +1535,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lyrics & screen awake'**
   String get oneDriveRestoreSliceLyricsUi;
+
+  /// No description provided for @oneDriveRestoreSliceSongRecognition.
+  ///
+  /// In en, this message translates to:
+  /// **'Song ID & recognition history'**
+  String get oneDriveRestoreSliceSongRecognition;
 
   /// No description provided for @oneDriveRestoreSliceTheme.
   ///

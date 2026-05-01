@@ -4,13 +4,13 @@ import 'package:yeah_music/utils/hive_utils.dart';
 
 /// 本地听歌识曲历史（Hive）
 class SongRecognitionHistoryService {
-  static const String _hiveKey = 'song_recognition_history_v1';
+  static const String hiveKeyHistory = 'song_recognition_history_v1';
   static const int maxEntries = 300;
 
   static Future<List<SongRecognitionEntry>> loadAll() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final raw = box.get(_hiveKey);
+      final raw = box.get(hiveKeyHistory);
       if (raw is! String || raw.isEmpty) return [];
       final list = SongRecognitionEntry.decodeList(raw);
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -24,7 +24,7 @@ class SongRecognitionHistoryService {
     final sorted = [...list]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-    await box.put(_hiveKey, SongRecognitionEntry.encodeList(sorted));
+    await box.put(hiveKeyHistory, SongRecognitionEntry.encodeList(sorted));
   }
 
   static Future<void> prepend(SongRecognitionEntry entry) async {
@@ -59,7 +59,7 @@ class SongRecognitionHistoryService {
   static Future<void> clear() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      await box.delete(_hiveKey);
+      await box.delete(hiveKeyHistory);
     } catch (_) {}
   }
 }

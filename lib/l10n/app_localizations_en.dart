@@ -703,6 +703,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Lyric styling plus floating/car lyrics and keep screen awake.';
 
   @override
+  String get oneDriveSyncItemSongRecognition => 'Song ID & recognition history';
+
+  @override
+  String get oneDriveSyncItemSongRecognitionSubtitle =>
+      'Service choice (AudD / ACRCloud), API tokens, and recognition log stored on device.';
+
+  @override
   String get oneDriveSyncItemTheme => 'Background theme';
 
   @override
@@ -805,6 +812,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveRestoreSliceLyricsUi => 'Lyrics & screen awake';
+
+  @override
+  String get oneDriveRestoreSliceSongRecognition =>
+      'Song ID & recognition history';
 
   @override
   String get oneDriveRestoreSliceTheme => 'Background theme';

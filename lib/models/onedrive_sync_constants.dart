@@ -28,6 +28,10 @@ abstract final class OneDriveSyncConstants {
   /// 背景主题（SharedPreferences appearance）。
   static const String sliceThemeFileName = 'yeah_music_slice_theme.json';
 
+  /// 听歌识曲：AudD / ACRCloud 等与历史记录 Hive。
+  static const String sliceSongRecognitionFileName =
+      'yeah_music_slice_song_recognition.json';
+
   static final RegExp sessionFolderPattern =
       RegExp(r'^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$');
 
@@ -42,5 +46,6 @@ abstract final class OneDriveSyncConstants {
     slicePlaybackListsFileName,
     sliceLyricsUiFileName,
     sliceThemeFileName,
+    sliceSongRecognitionFileName,
   ];
 }

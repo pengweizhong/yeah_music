@@ -51,6 +51,7 @@ class OneDriveSyncSettings {
     required this.syncQuickEntry,
     required this.syncPlaybackListsAndStats,
     required this.syncLyricsUi,
+    required this.syncSongRecognition,
     required this.syncThemeAppearance,
     required this.frequency,
   });
@@ -72,6 +73,9 @@ class OneDriveSyncSettings {
   /// 歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。
   final bool syncLyricsUi;
 
+  /// AudD token、引擎选择、ACRCloud 密钥与本地识别记录。
+  final bool syncSongRecognition;
+
   /// 背景主题（含背景图路径与渐变等 SharedPreferences）。
   final bool syncThemeAppearance;
 
@@ -84,7 +88,8 @@ class OneDriveSyncSettings {
       syncPlaybackListsAndStats ||
       syncLyricsUi ||
       syncThemeAppearance ||
-      syncUserPlaylists;
+      syncUserPlaylists ||
+      syncSongRecognition;
 
   static const OneDriveSyncSettings defaults = OneDriveSyncSettings(
     cloudSyncEnabled: false,
@@ -93,6 +98,7 @@ class OneDriveSyncSettings {
     syncQuickEntry: true,
     syncPlaybackListsAndStats: true,
     syncLyricsUi: true,
+    syncSongRecognition: true,
     syncThemeAppearance: true,
     frequency: OneDriveSyncFrequency.hourly12,
   );
@@ -104,6 +110,7 @@ class OneDriveSyncSettings {
     bool? syncQuickEntry,
     bool? syncPlaybackListsAndStats,
     bool? syncLyricsUi,
+    bool? syncSongRecognition,
     bool? syncThemeAppearance,
     OneDriveSyncFrequency? frequency,
   }) {
@@ -115,6 +122,7 @@ class OneDriveSyncSettings {
       syncPlaybackListsAndStats:
           syncPlaybackListsAndStats ?? this.syncPlaybackListsAndStats,
       syncLyricsUi: syncLyricsUi ?? this.syncLyricsUi,
+      syncSongRecognition: syncSongRecognition ?? this.syncSongRecognition,
       syncThemeAppearance: syncThemeAppearance ?? this.syncThemeAppearance,
       frequency: frequency ?? this.frequency,
     );
@@ -127,6 +135,7 @@ class OneDriveSyncSettings {
         'syncQuickEntry': syncQuickEntry,
         'syncPlaybackListsAndStats': syncPlaybackListsAndStats,
         'syncLyricsUi': syncLyricsUi,
+        'syncSongRecognition': syncSongRecognition,
         'syncThemeAppearance': syncThemeAppearance,
         'frequency': frequency.name,
       };
@@ -160,6 +169,10 @@ class OneDriveSyncSettings {
         ),
         syncLyricsUi: slice(
           m['syncLyricsUi'] as bool?,
+          legacyGate: settingsDefault,
+        ),
+        syncSongRecognition: slice(
+          m['syncSongRecognition'] as bool?,
           legacyGate: settingsDefault,
         ),
         syncThemeAppearance: slice(

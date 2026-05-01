@@ -671,6 +671,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '歌詞スタイル、デスクトップ／車載歌詞、画面スリープ抑制など。';
 
   @override
+  String get oneDriveSyncItemSongRecognition => '楽曲認識と履歴';
+
+  @override
+  String get oneDriveSyncItemSongRecognitionSubtitle =>
+      '利用サービス、AudD / ACRCloud のトークン、端末側の認識履歴。';
+
+  @override
   String get oneDriveSyncItemTheme => '背景テーマ';
 
   @override
@@ -770,6 +777,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveRestoreSliceLyricsUi => '歌詞と画面スリープ抑制';
+
+  @override
+  String get oneDriveRestoreSliceSongRecognition => '楽曲認識と履歴';
 
   @override
   String get oneDriveRestoreSliceTheme => '背景テーマ';
