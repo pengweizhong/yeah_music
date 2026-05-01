@@ -64,19 +64,22 @@ class MusicService {
   /// 应在 Hive 初始化成功后调用一次。
   static void attachListeningTimeTracker() {
     if (_listeningPlayingSub != null) return;
-    _listeningPlayingSub =
-        _player.playingStream.listen(_onPlayingChangedForListeningTracker);
+    _listeningPlayingSub = _player.playingStream.listen(
+      _onPlayingChangedForListeningTracker,
+    );
   }
 
   static void _onPlayingChangedForListeningTracker(bool playing) {
     if (playing) {
       _listeningWallAnchor = DateTime.now();
       _listeningPeriodicFlushTimer?.cancel();
-      _listeningPeriodicFlushTimer =
-          Timer.periodic(const Duration(seconds: 8), (_) {
-        if (!_player.playing) return;
-        _flushListeningWallClock(periodic: true);
-      });
+      _listeningPeriodicFlushTimer = Timer.periodic(
+        const Duration(seconds: 8),
+        (_) {
+          if (!_player.playing) return;
+          _flushListeningWallClock(periodic: true);
+        },
+      );
     } else {
       _listeningPeriodicFlushTimer?.cancel();
       _listeningPeriodicFlushTimer = null;
@@ -166,7 +169,8 @@ class MusicService {
     _invalidateAndroidQueueReuse();
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        if (Platform.isLinux && _player.processingState == ProcessingState.completed) {
+        if (Platform.isLinux &&
+            _player.processingState == ProcessingState.completed) {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
         await _player.stop();
@@ -185,7 +189,9 @@ class MusicService {
         await Future<void>.delayed(const Duration(milliseconds: 24));
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
-          unawaited(pushAndroidNotificationForSong(song, abortIfStaleGeneration: g));
+          unawaited(
+            pushAndroidNotificationForSong(song, abortIfStaleGeneration: g),
+          );
         }
         return true;
       } catch (e) {
@@ -243,7 +249,9 @@ class MusicService {
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
           final s = queue[idx];
-          unawaited(pushAndroidNotificationForSong(s, abortIfStaleGeneration: g));
+          unawaited(
+            pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
+          );
         }
         return true;
       } catch (e) {
@@ -255,7 +263,8 @@ class MusicService {
     androidCarQueueActive = false;
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        if (Platform.isLinux && _player.processingState == ProcessingState.completed) {
+        if (Platform.isLinux &&
+            _player.processingState == ProcessingState.completed) {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
         await _player.stop();
@@ -290,7 +299,9 @@ class MusicService {
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
           final s = queue[idx];
-          unawaited(pushAndroidNotificationForSong(s, abortIfStaleGeneration: g));
+          unawaited(
+            pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
+          );
         }
         return true;
       } catch (e) {
@@ -362,11 +373,7 @@ class MusicService {
       try {
         initialSubtitle = ExternalLyricLineFormatter(
           lyricStyle: style,
-        ).formatLine(
-          song: song,
-          position: subtitlePosition,
-          l10n: null,
-        );
+        ).formatLine(song: song, position: subtitlePosition, l10n: null);
       } catch (_) {}
     }
     String? displayDescription;
@@ -409,7 +416,8 @@ class MusicService {
             song,
             loadEmbeddedAlbumArt: true,
             storeLyricsWithTrack: wantLyrics,
-            maxEmbeddedArtBytes: SongLibraryMetadataHydrator.maxEmbeddedArtBytes,
+            maxEmbeddedArtBytes:
+                SongLibraryMetadataHydrator.maxEmbeddedArtBytes,
           );
           ApplicationUtils.evictSongCoverProvidersForPath(song.path);
           scheduleEmbeddedSongMetadataPersist(song);
@@ -577,4 +585,24 @@ class MusicService {
   static Duration? get duration => _player.duration;
 
   static int? get currentIndex => _player.currentIndex;
+
+  /// 当前正在解码的这一轨对应的本地路径（与 [currentIndex] 在 [AudioPlayer.sequence] 中的 tag 一致）。
+  /// 用于合并曲库顺序变化后把 [PlayListProvider] 的索引按「在播文件」对齐，避免出现声音与迷你条/首页卡片不一致。
+  static String? tryCurrentPlayingPath() {
+    try {
+      final idx = _player.currentIndex;
+      if (idx == null || idx < 0) return null;
+      final seq = _player.sequence;
+      if (seq.isEmpty || idx >= seq.length) return null;
+      final tag = seq[idx].tag;
+      if (tag is Song) return tag.path;
+      if (tag is MediaItem) {
+        final p = filePathFromMediaItemId(tag.id);
+        return p.trim().isEmpty ? null : p;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
 }

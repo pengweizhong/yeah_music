@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
@@ -10,8 +11,10 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
+import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import '../compments/onedrive_controller.dart';
@@ -157,7 +160,16 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   void initState() {
     super.initState();
 
-    // 加载排序配置
+    // 已在内存打开 root box 时同步读偏好，避免首帧默认排序后再被异步结果整表重排「跳一下」
+    if (Hive.isBoxOpen(Constant.hiveRootPath)) {
+      try {
+        final box = HiveUtils.getBox<dynamic>(Constant.hiveRootPath);
+        final prefs = songSortPreferencesReadFromBox(box);
+        _sortType = prefs.type;
+        _isAscending = prefs.ascending;
+        _sortPrefsLoaded = true;
+      } catch (_) {}
+    }
     _loadSortSettings();
 
     // 使用postFrameCallback避免在build期间调用setState
@@ -187,17 +199,23 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   Future<void> _loadSortSettings() async {
     try {
       final prefs = await loadSongSortPreferences();
-      if (mounted) {
-        setState(() {
-          _sortType = prefs.type;
-          _isAscending = prefs.ascending;
-          _sortPrefsLoaded = true;
+      if (!mounted) return;
+      final prefsMatchState =
+          prefs.type == _sortType && prefs.ascending == _isAscending;
+      final needUpdate = !prefsMatchState || !_sortPrefsLoaded;
+      if (!needUpdate) return;
+      setState(() {
+        _sortType = prefs.type;
+        _isAscending = prefs.ascending;
+        _sortPrefsLoaded = true;
+        if (!prefsMatchState) {
           _frozenPathKeys = null;
-          // 首帧可能已按默认排序滚过；读到真实偏好后允许重新对齐当前曲。
           _lastAutoScrollPathNorm = null;
           _autoscrollInFlight = false;
-        });
-        appLog.d('曲库页: 排序已加载 ($_sortType, asc=$_isAscending)');
+        }
+      });
+      if (!prefsMatchState) {
+        appLog.d('曲库页: 排序已加载 (${prefs.type}, asc=${prefs.ascending})');
       }
     } catch (e) {
       appLog.e('曲库页: 加载排序设置失败', error: e);

@@ -266,6 +266,70 @@ class PlayListProvider extends ChangeNotifier {
     _cachedPlayList = null;
   }
 
+  /// 合并曲库缓存失效时：按解码器当前在播路径重算 [_currentIndex]，避免列表合并顺序变化后「在播 A、UI 指向 B」。
+  void _invalidateMergedLibraryCacheSyncingCurrentIndex() {
+    _clearPlayListCache();
+    _relocateCurrentIndexToMatchPlayingMedia();
+  }
+
+  void _relocateCurrentIndexToMatchPlayingMedia() {
+    if (_playbackQueueOverride != null) return;
+    final lib = _computeMergedLibrarySongs();
+    _cachedPlayList = lib;
+    final path = MusicService.tryCurrentPlayingPath();
+    if (path != null && path.trim().isNotEmpty) {
+      final wanted = _libraryPathKey(path);
+      final i = lib.indexWhere((s) => _libraryPathKey(s.path) == wanted);
+      if (i >= 0) {
+        _currentIndex = i;
+        return;
+      }
+    }
+    if (lib.isEmpty) {
+      _currentIndex = 0;
+    } else {
+      _currentIndex = _currentIndex.clamp(0, lib.length - 1);
+    }
+  }
+
+  /// Android 队列索引通知：在「全库合并」会话下优先按正在解码的文件路径对齐，避免与 ExoPlayer 队列顺序暂时不一致时错位。
+  void _applyAndroidPlayerIndexToProviderIndex(int playerIdx) {
+    if (_playbackQueueOverride != null) {
+      final list = playList;
+      if (playerIdx < 0 || playerIdx >= list.length) return;
+      if (playerIdx != _currentIndex) {
+        _currentIndex = playerIdx;
+        notifyListeners();
+        unawaited(_saveCurrentPlaybackSnapshot());
+      }
+      return;
+    }
+
+    final path = MusicService.tryCurrentPlayingPath();
+    if (path != null && path.trim().isNotEmpty) {
+      final wanted = _libraryPathKey(path);
+      final list = playList;
+      final byPath = list.indexWhere((s) => _libraryPathKey(s.path) == wanted);
+      if (byPath >= 0) {
+        if (byPath != _currentIndex) {
+          _currentIndex = byPath;
+          notifyListeners();
+          unawaited(_saveCurrentPlaybackSnapshot());
+        }
+        return;
+      }
+    }
+
+    final list = playList;
+    if (playerIdx >= 0 &&
+        playerIdx < list.length &&
+        playerIdx != _currentIndex) {
+      _currentIndex = playerIdx;
+      notifyListeners();
+      unawaited(_saveCurrentPlaybackSnapshot());
+    }
+  }
+
   void _clearDeferredPlayNext() {
     _playNextAfterCurrentQueue.clear();
     _resumePlaylistIndexAfterDeferred = null;
@@ -442,7 +506,7 @@ class PlayListProvider extends ChangeNotifier {
   /// 从 [OneDriveController.loadLocallyCachedOneDriveSongs] 刷新叠加曲目并刷新合并缓存。
   Future<void> refreshOneDriveLibraryOverlay(OneDriveController od) async {
     await _loadOneDriveOverlayFrom(od);
-    _clearPlayListCache();
+    _invalidateMergedLibraryCacheSyncingCurrentIndex();
     notifyListeners();
   }
 
@@ -569,16 +633,11 @@ class PlayListProvider extends ChangeNotifier {
       previousPlayerIndex = i;
 
       if (_playbackNavDepth > 0) {
-        if (i != _currentIndex) {
-          _currentIndex = i;
-          notifyListeners();
-          unawaited(_saveCurrentPlaybackSnapshot());
-        }
+        _applyAndroidPlayerIndexToProviderIndex(i);
         return;
       }
 
-      final naturalConcatAdvance =
-          _isNaturalConcatAdvanceForDeferred(prev, i);
+      final naturalConcatAdvance = _isNaturalConcatAdvanceForDeferred(prev, i);
       if (naturalConcatAdvance) {
         if (_hasDeferredPlayNextQueued()) {
           unawaited(
@@ -595,21 +654,19 @@ class PlayListProvider extends ChangeNotifier {
         }
       }
 
-      if (i != _currentIndex) {
-        _currentIndex = i;
-        notifyListeners();
-        unawaited(_saveCurrentPlaybackSnapshot());
-      }
+      _applyAndroidPlayerIndexToProviderIndex(i);
     });
   }
 
-  bool _hasDeferredPlayNextQueued() =>
-      _playNextAfterCurrentQueue.isNotEmpty;
+  bool _hasDeferredPlayNextQueued() => _playNextAfterCurrentQueue.isNotEmpty;
 
   /// Android 整段 Concatenating 队列下，曲目之间往往不发 [ProcessingState.completed]，
   /// 用「playlist 顺序上下一首」判断是否自然过轨（与 ExoPlayer 队列一致）。
   /// 不强制要求 prev 与 [_currentIndex] 相等，避免 Provider 索引偶发漂移时漏触发。
-  bool _isNaturalConcatAdvanceForDeferred(int? prevPlayerIndex, int newPlayerIndex) {
+  bool _isNaturalConcatAdvanceForDeferred(
+    int? prevPlayerIndex,
+    int newPlayerIndex,
+  ) {
     if (prevPlayerIndex == null) return false;
     if (_playbackMode == PlaybackMode.singleLoop) return false;
     if (newPlayerIndex == prevPlayerIndex) return false;
@@ -631,18 +688,10 @@ class PlayListProvider extends ChangeNotifier {
         await playAt(resume);
         return;
       }
-      if (fallbackPlayerIndex != _currentIndex) {
-        _currentIndex = fallbackPlayerIndex;
-        notifyListeners();
-        unawaited(_saveCurrentPlaybackSnapshot());
-      }
+      _applyAndroidPlayerIndexToProviderIndex(fallbackPlayerIndex);
     } catch (e, st) {
       appLog.e('Android concat 边界消耗「下一曲播放」失败', error: e, stackTrace: st);
-      if (fallbackPlayerIndex != _currentIndex) {
-        _currentIndex = fallbackPlayerIndex;
-        notifyListeners();
-        unawaited(_saveCurrentPlaybackSnapshot());
-      }
+      _applyAndroidPlayerIndexToProviderIndex(fallbackPlayerIndex);
     }
   }
 
@@ -663,8 +712,10 @@ class PlayListProvider extends ChangeNotifier {
       if (_resumePlaylistIndexAfterDeferred == null) {
         final list = playList;
         if (list.isNotEmpty) {
-          _resumePlaylistIndexAfterDeferred =
-              _currentIndex.clamp(0, list.length - 1);
+          _resumePlaylistIndexAfterDeferred = _currentIndex.clamp(
+            0,
+            list.length - 1,
+          );
         }
       }
       final key = _playNextAfterCurrentQueue.removeAt(0);
@@ -690,7 +741,8 @@ class PlayListProvider extends ChangeNotifier {
       final prev = _lastProcessingStateFromPlayer;
       _lastProcessingStateFromPlayer = now;
       // 仅在「首次进入 completed」时处理一次，避免同一首 completed 重复回调导致重入切歌。
-      if (now != ProcessingState.completed || prev == ProcessingState.completed) {
+      if (now != ProcessingState.completed ||
+          prev == ProcessingState.completed) {
         return;
       }
       if (_completionHandlerRunning) return;
@@ -713,7 +765,8 @@ class PlayListProvider extends ChangeNotifier {
       if (kIsWeb || !Platform.isLinux) return;
       if (_errorSkipHandlerRunning) return;
       final now = DateTime.now();
-      if (now.difference(_lastErrorSkipAt) < const Duration(milliseconds: 900)) {
+      if (now.difference(_lastErrorSkipAt) <
+          const Duration(milliseconds: 900)) {
         return;
       }
       if (_playbackNavDepth > 0) return;
@@ -785,7 +838,8 @@ class PlayListProvider extends ChangeNotifier {
       return;
     }
 
-    final concatAndroid = !kIsWeb &&
+    final concatAndroid =
+        !kIsWeb &&
         Platform.isAndroid &&
         MusicService.androidCarQueueActive &&
         playList.length > 1;
@@ -872,13 +926,12 @@ class PlayListProvider extends ChangeNotifier {
 
   void putFolder(Folder folder) {
     folderPlaylistMap.putIfAbsent(folder.path, () => folder.songList ?? []);
-    _clearPlayListCache(); // 清除缓存
+    _invalidateMergedLibraryCacheSyncingCurrentIndex();
   }
 
   ///新增
   void flushAddPlaylist(Folder folder) {
     putFolder(folder);
-    _clearPlayListCache(); // 清除缓存
     notifyListeners();
   }
 
@@ -894,7 +947,7 @@ class PlayListProvider extends ChangeNotifier {
     //   }
     // }
     folderPlaylistMap.remove(folder.path);
-    _clearPlayListCache(); // 清除缓存
+    _invalidateMergedLibraryCacheSyncingCurrentIndex();
     notifyListeners();
   }
 
@@ -916,15 +969,6 @@ class PlayListProvider extends ChangeNotifier {
     //感觉应该可以无脑更新   不用这么麻烦
     folderPlaylistMap.remove(folder.path);
     putFolder(folder);
-    _clearPlayListCache(); // 清除缓存
-    if (_playbackQueueOverride == null) {
-      final list = _computeMergedLibrarySongs();
-      if (list.isEmpty) {
-        _currentIndex = 0;
-      } else if (_currentIndex >= list.length) {
-        _currentIndex = 0;
-      }
-    }
     notifyListeners();
   }
 
@@ -1150,8 +1194,7 @@ class PlayListProvider extends ChangeNotifier {
             if (steps <= 0) return;
             var remaining = steps;
             while (remaining > 0 && _playNextAfterCurrentQueue.isNotEmpty) {
-              final consumed =
-                  await _tryConsumeDeferredPlayNext();
+              final consumed = await _tryConsumeDeferredPlayNext();
               if (!consumed) break;
               remaining--;
             }
