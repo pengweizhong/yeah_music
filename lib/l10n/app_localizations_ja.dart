@@ -994,6 +994,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveDownloadQueueTooltip => 'ダウンロードキュー';
 
   @override
+  String get oneDriveBrowserRefreshTooltip =>
+      'このフォルダを更新（一覧キャッシュを消去してクラウドから再取得）';
+
+  @override
   String oneDriveEnqueueAddedSingle(String name) {
     return '「$name」をキューに追加しました。';
   }

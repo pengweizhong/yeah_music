@@ -369,6 +369,7 @@
   "oneDriveUploadQueuePageHint": "端末からのアップロードはここに表示されます。上のボタンで一時停止・再開・停止できます。履歴を消すとダウンロード履歴も消えます。",
   "oneDriveDownloadQueueSubtitle": "アップロード・ダウンロードと再生",
   "oneDriveDownloadQueueTooltip": "ダウンロードキュー",
+  "oneDriveBrowserRefreshTooltip": "このフォルダを更新（一覧キャッシュを消去してクラウドから再取得）",
   "oneDriveEnqueueAddedSingle": "「{name}」をキューに追加しました。",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {

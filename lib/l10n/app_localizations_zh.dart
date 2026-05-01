@@ -978,6 +978,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveDownloadQueueTooltip => '下载队列';
 
   @override
+  String get oneDriveBrowserRefreshTooltip => '刷新本页（清除列表缓存并从云端重新加载）';
+
+  @override
   String oneDriveEnqueueAddedSingle(String name) {
     return '已将「$name」添加到下载队列';
   }
@@ -3412,6 +3415,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveDownloadQueueTooltip => '下载队列';
+
+  @override
+  String get oneDriveBrowserRefreshTooltip => '刷新本页（清除列表缓存并从云端重新加载）';
 
   @override
   String oneDriveEnqueueAddedSingle(String name) {
@@ -5849,6 +5855,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveDownloadQueueTooltip => '下載佇列';
+
+  @override
+  String get oneDriveBrowserRefreshTooltip => '重新整理本頁（清除列表快取並從雲端重新載入）';
 
   @override
   String oneDriveEnqueueAddedSingle(String name) {

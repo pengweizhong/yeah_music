@@ -59,6 +59,9 @@ class OneDriveController extends ChangeNotifier {
   /// 每进程内去重，配合 [SettingsService.appendOneDriveDownloadScanRootIfNew] 持久化点播目录。
   final Set<String> _playbackScanRootsTouched = {};
 
+  /// 「打开 OneDrive」浏览页 [listChildren] 的子项缓存；根目录 parent 键为 `''`。
+  final Map<String, List<OneDriveGraphItem>> _browseChildrenCache = {};
+
   List<OneDriveIndexFolder> _indexFolders = [];
   List<OneDriveCloudTrack> _cloudTracks = [];
   DateTime? _cloudIndexAt;
@@ -1061,15 +1064,37 @@ class OneDriveController extends ChangeNotifier {
     await _auth.signOut();
     _signedIn = false;
     _accountHint = null;
+    _browseChildrenCache.clear();
     notifyListeners();
   }
 
+  static String _browseChildrenCacheKey(String? parentItemId) =>
+      parentItemId ?? '';
+
+  /// 清空浏览页已缓存的所有目录列表（登出时已自动清空）。
+  void clearBrowseChildrenCache() {
+    _browseChildrenCache.clear();
+  }
+
+  /// 使某一父目录下列表缓存失效（例如用户点「刷新本页」）。
+  void invalidateBrowseChildrenCacheForParent(String? parentItemId) {
+    _browseChildrenCache.remove(_browseChildrenCacheKey(parentItemId));
+  }
+
   Future<List<OneDriveGraphItem>> listChildren(String? parentItemId) async {
+    final key = _browseChildrenCacheKey(parentItemId);
+    final hit = _browseChildrenCache[key];
+    if (hit != null) {
+      return List<OneDriveGraphItem>.from(hit);
+    }
     final t = await getAccessToken();
     if (t == null) {
       throw StateError('not signed in');
     }
-    return _graph.listChildren(accessToken: t, parentId: parentItemId);
+    final fresh =
+        await _graph.listChildren(accessToken: t, parentId: parentItemId);
+    _browseChildrenCache[key] = List<OneDriveGraphItem>.from(fresh);
+    return fresh;
   }
 
   /// 将云端文件拉取到本地并生成 [Song]；已存在同 id 缓存则跳过网络。

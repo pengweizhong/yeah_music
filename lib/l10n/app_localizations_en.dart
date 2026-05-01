@@ -1042,6 +1042,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveDownloadQueueTooltip => 'Download queue';
 
   @override
+  String get oneDriveBrowserRefreshTooltip =>
+      'Refresh this folder (clear listing cache and reload from cloud)';
+
+  @override
   String oneDriveEnqueueAddedSingle(String name) {
     return 'Added \"$name\" to the download queue.';
   }

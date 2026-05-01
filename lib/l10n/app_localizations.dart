@@ -1935,6 +1935,12 @@ abstract class AppLocalizations {
   /// **'Download queue'**
   String get oneDriveDownloadQueueTooltip;
 
+  /// No description provided for @oneDriveBrowserRefreshTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh this folder (clear listing cache and reload from cloud)'**
+  String get oneDriveBrowserRefreshTooltip;
+
   /// No description provided for @oneDriveEnqueueAddedSingle.
   ///
   /// In en, this message translates to:

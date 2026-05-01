@@ -369,6 +369,7 @@
   "oneDriveUploadQueuePageHint": "從本機發起的上傳會顯示於此，可用上方按鈕暫停、繼續或停止；清空紀錄會同時影響下載與上傳歷史。",
   "oneDriveDownloadQueueSubtitle": "檢視與控制上傳、下載與播放",
   "oneDriveDownloadQueueTooltip": "下載佇列",
+  "oneDriveBrowserRefreshTooltip": "重新整理本頁（清除列表快取並從雲端重新載入）",
   "oneDriveEnqueueAddedSingle": "已將「{name}」加入下載佇列",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {

@@ -368,6 +368,7 @@
   "oneDriveUploadQueuePageHint": "Library uploads appear here. Use the same controls to pause, resume, or stop.",
   "oneDriveDownloadQueueSubtitle": "Upload & download queue and playback",
   "oneDriveDownloadQueueTooltip": "Download queue",
+  "oneDriveBrowserRefreshTooltip": "Refresh this folder (clear listing cache and reload from cloud)",
   "oneDriveEnqueueAddedSingle": "Added \"{name}\" to the download queue.",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {

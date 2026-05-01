@@ -76,6 +76,15 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
   }
 
+  /// 右上角「刷新」：作废当前目录的列表缓存并从 Graph 重新拉取、再写入缓存。
+  Future<void> _refreshBrowseClearListingCacheAndReload() async {
+    if (_loading) return;
+    final od = context.read<OneDriveController>();
+    final parent = _stack.isEmpty ? null : _stack.last.parentItemId;
+    od.invalidateBrowseChildrenCacheForParent(parent);
+    await _reload();
+  }
+
   Future<void> _reload() async {
     setState(() {
       _loading = true;
@@ -135,6 +144,18 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
     setState(() {
       _selectedFoldersForIndex[id] = frame.title;
     });
+  }
+
+  /// 与系统返回手势/键一致：多级目录先回到上一级，根目录再退出页面。
+  void _popFolderOrExit() {
+    if (_stack.isNotEmpty) {
+      setState(() {
+        _stack.removeLast();
+      });
+      _reload();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _playFile(OneDriveGraphItem item) async {
@@ -202,7 +223,13 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
       builder: (context, theme, _) {
         return theme.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PopScope(
+            canPop: _stack.isEmpty,
+            onPopInvokedWithResult: (bool didPop, Object? result) {
+              if (didPop) return;
+              if (_stack.isNotEmpty) _popFolderOrExit();
+            },
+            child: Scaffold(
             extendBodyBehindAppBar: true,
             extendBody: true,
             backgroundColor: Colors.transparent,
@@ -255,18 +282,15 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
               iconTheme: const IconThemeData(color: Colors.white),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: () {
-                  if (_stack.isNotEmpty) {
-                    setState(() {
-                      _stack.removeLast();
-                    });
-                    _reload();
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
+                onPressed: _popFolderOrExit,
               ),
               actions: [
+                IconButton(
+                  tooltip: l10n.oneDriveBrowserRefreshTooltip,
+                  icon: const Icon(Icons.refresh_rounded),
+                  onPressed:
+                      _loading ? null : () => _refreshBrowseClearListingCacheAndReload(),
+                ),
                 if (!widget.pickFolderForIndex)
                   IconButton(
                     tooltip: l10n.oneDriveDownloadQueueTooltip,
@@ -452,6 +476,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
                     ),
                   ),
             bottomNavigationBar: const MiniPlayer(),
+          ),
           ),
         );
       },
