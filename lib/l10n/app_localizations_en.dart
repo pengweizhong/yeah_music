@@ -305,11 +305,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Source code for this music player';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+  String get settingsSponsorRepoDynamicSql2Title => 'Dynamic-SQL2';
 
   @override
   String get settingsSponsorRepoDynamicSql2Subtitle =>
-      'Dynamic SQL / Java DSL library';
+      'Dynamic SQL2 / Java DSL library';
 
   @override
   String get settingsSponsorEasterEggTriggerLine => 'How to pay / tip';
@@ -404,7 +404,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsOneDriveSubtitle =>
-      'Microsoft account, folders, downloads';
+      'Microsoft account sync, folders, downloads';
 
   @override
   String get settingsOneDriveDesc =>
@@ -454,7 +454,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsWireRemoteSubtitle =>
-      'Wired multi-press and Bluetooth next/prev keys while the app is open';
+      'Wired multi‑click control and Bluetooth‑independent next/previous track buttons';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -922,7 +922,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveAppMissingClientConfig =>
-      'Microsoft sign-in isn’t available in this copy of the app. Grab the version from the store or check for an update.';
+      'This version does not support signing in with a Microsoft account yet, but the feature may be added in the next release.';
 
   @override
   String get oneDriveNeedSignInForPicker =>
@@ -1249,7 +1249,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeGradientRgbSectionSubtitle =>
-      'Fine-tune both gradient colors and direction with RGB sliders (same as playlist cover editor).';
+      'Gradient RGB slider with simultaneous fine‑tuning of both end colors and the gradient direction.';
 
   @override
   String get themeGradientRgbFineTune => 'Edit colors & direction…';
@@ -2431,7 +2431,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricStyleStateGradientSub =>
-      'When on, this two-color gradient overrides the solid picks above for both original and translation. Direction and RGB sliders match the playlist cover editor.';
+      'When on, this two-color gradient overrides the solid picks above for both original and translation.';
 
   @override
   String get lyricStyleActiveGradientTune => 'Edit gradient';

@@ -291,10 +291,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSponsorRepoYeahMusicSubtitle => '本播放器源码仓库';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+  String get settingsSponsorRepoDynamicSql2Title => 'Dynamic-SQL2';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Subtitle => '动态 SQL / Java DSL 开源仓库';
+  String get settingsSponsorRepoDynamicSql2Subtitle =>
+      '动态 SQL2 / Java DSL 开源仓库';
 
   @override
   String get settingsSponsorEasterEggTriggerLine => '查看付费打赏方法';
@@ -385,7 +386,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => '微软账号、目录与下载位置';
+  String get settingsOneDriveSubtitle => '微软账号同步、目录与下载位置';
 
   @override
   String get settingsOneDriveDesc =>
@@ -432,7 +433,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
-  String get settingsWireRemoteSubtitle => '有线连击与蓝牙独立下一曲/上一曲键（应用在前台时生效）';
+  String get settingsWireRemoteSubtitle => '有线连击与蓝牙独立下一曲/上一曲键';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -585,8 +586,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCarLyricsSyncLyricsSubtitle => '副标题显示当前歌词';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc =>
-      '在支持的系统上将副标题更新为当前歌词（与播放页歌词样式一致）。';
+  String get settingsCarLyricsSyncLyricsDesc => '在支持的系统上将副标题更新为当前歌词。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
@@ -653,7 +653,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
-      '最近播放列表、播放次数与累计收听时长（首页与统计页相关 Hive）。';
+      '最近播放列表、播放次数与累计收听时长。';
 
   @override
   String get oneDriveSyncItemLyricsUi => '歌词与播放页';
@@ -863,8 +863,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveMusicUploadFolderFallback => '与云端应用文件夹相同';
 
   @override
-  String get oneDriveAppMissingClientConfig =>
-      '这一版暂时还不能用微软账号登录，试试应用商店的正式版或更新到最新。';
+  String get oneDriveAppMissingClientConfig => '这一版暂时还不能用微软账号登录，下一版本也许会加入该功能';
 
   @override
   String get oneDriveNeedSignInForPicker => '请先登录后再选择 OneDrive 文件夹。';
@@ -1177,8 +1176,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeGradientRgbSectionTitle => '渐变背景';
 
   @override
-  String get themeGradientRgbSectionSubtitle =>
-      '与歌单封面相同的 RGB 滑块，可同时微调两端颜色和渐变方向。';
+  String get themeGradientRgbSectionSubtitle => '渐变 RGB 滑块，可同时微调两端颜色和渐变方向。';
 
   @override
   String get themeGradientRgbFineTune => '编辑双色与方向…';
@@ -2321,8 +2319,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lyricStyleActiveGradientTitle => '正在播放行渐变';
 
   @override
-  String get lyricStyleStateGradientSub =>
-      '开启后，该双色渐变优先于上方原文/译文纯色；关闭则仅用纯色。方向与 RGB 滑块与歌单封面编辑器一致。';
+  String get lyricStyleStateGradientSub => '开启后，该双色渐变优先于上方原文/译文纯色；关闭则仅用纯色。';
 
   @override
   String get lyricStyleActiveGradientTune => '编辑渐变';
@@ -2999,10 +2996,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsSponsorRepoYeahMusicSubtitle => '本播放器源码仓库';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+  String get settingsSponsorRepoDynamicSql2Title => 'Dynamic-SQL2';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Subtitle => '动态 SQL / Java DSL 开源仓库';
+  String get settingsSponsorRepoDynamicSql2Subtitle =>
+      '动态 SQL2 / Java DSL 开源仓库';
 
   @override
   String get settingsSponsorEasterEggTriggerLine => '查看付费打赏方法';
@@ -3093,7 +3091,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => '微软账号、目录与下载位置';
+  String get settingsOneDriveSubtitle => '微软账号同步、目录与下载位置';
 
   @override
   String get settingsOneDriveDesc =>
@@ -3140,7 +3138,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsWireRemoteTitle => '耳机线控';
 
   @override
-  String get settingsWireRemoteSubtitle => '有线连击与蓝牙独立下一曲/上一曲键（应用在前台时生效）';
+  String get settingsWireRemoteSubtitle => '有线连击与蓝牙独立下一曲/上一曲键';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -3293,8 +3291,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsCarLyricsSyncLyricsSubtitle => '副标题显示当前歌词';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc =>
-      '在支持的系统上将副标题更新为当前歌词（与播放页歌词样式一致）。';
+  String get settingsCarLyricsSyncLyricsDesc => '在支持的系统上将副标题更新为当前歌词。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
@@ -3361,7 +3358,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
-      '最近播放列表、播放次数与累计收听时长（首页与统计页相关 Hive）。';
+      '最近播放列表、播放次数与累计收听时长。';
 
   @override
   String get oneDriveSyncItemLyricsUi => '歌词与播放页';
@@ -3571,8 +3568,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveMusicUploadFolderFallback => '与云端应用文件夹相同';
 
   @override
-  String get oneDriveAppMissingClientConfig =>
-      '这一版暂时还不能用微软账号登录，试试应用商店的正式版或更新到最新。';
+  String get oneDriveAppMissingClientConfig => '这一版暂时还不能用微软账号登录，下一版本也许会加入该功能';
 
   @override
   String get oneDriveNeedSignInForPicker => '请先登录后再选择 OneDrive 文件夹。';
@@ -3885,8 +3881,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get themeGradientRgbSectionTitle => '渐变背景';
 
   @override
-  String get themeGradientRgbSectionSubtitle =>
-      '与歌单封面相同的 RGB 滑块，可同时微调两端颜色和渐变方向。';
+  String get themeGradientRgbSectionSubtitle => '渐变 RGB 滑块，可同时微调两端颜色和渐变方向。';
 
   @override
   String get themeGradientRgbFineTune => '编辑双色与方向…';
@@ -5029,8 +5024,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get lyricStyleActiveGradientTitle => '正在播放行渐变';
 
   @override
-  String get lyricStyleStateGradientSub =>
-      '开启后，该双色渐变优先于上方原文/译文纯色；关闭则仅用纯色。方向与 RGB 滑块与歌单封面编辑器一致。';
+  String get lyricStyleStateGradientSub => '开启后，该双色渐变优先于上方原文/译文纯色；关闭则仅用纯色。';
 
   @override
   String get lyricStyleActiveGradientTune => '编辑渐变';
@@ -5707,11 +5701,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsSponsorRepoYeahMusicSubtitle => '本播放器原始碼存放庫';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+  String get settingsSponsorRepoDynamicSql2Title => 'Dynamic-SQL2';
 
   @override
   String get settingsSponsorRepoDynamicSql2Subtitle =>
-      '動態 SQL / Java DSL 開源存放庫';
+      '動態 SQL2 / Java DSL 開源存放庫';
 
   @override
   String get settingsSponsorEasterEggTriggerLine => '查看付費打賞方法';
@@ -5802,7 +5796,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => '微軟帳戶、目錄與下載位置';
+  String get settingsOneDriveSubtitle => '微軟帳戶同步、目錄與下載位置';
 
   @override
   String get settingsOneDriveDesc =>
@@ -5849,7 +5843,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsWireRemoteTitle => '耳機線控';
 
   @override
-  String get settingsWireRemoteSubtitle => '有線連擊與藍牙獨立下一曲／上一曲鍵（應用程式在前景時生效）';
+  String get settingsWireRemoteSubtitle => '有線連擊與藍牙獨立下一曲／上一曲鍵';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -6002,8 +5996,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsCarLyricsSyncLyricsSubtitle => '副標題顯示目前歌詞';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc =>
-      '在支援的系統上將副標題更新為目前歌詞（與播放頁歌詞樣式一致）。';
+  String get settingsCarLyricsSyncLyricsDesc => '在支援的系統上將副標題更新為目前歌詞。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
@@ -6070,7 +6063,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
-      '最近播放列表、播放次數與累計收聽時長（首頁與統計頁相關 Hive）。';
+      '最近播放列表、播放次數與累計收聽時長。';
 
   @override
   String get oneDriveSyncItemLyricsUi => '歌詞與播放頁';
@@ -6280,8 +6273,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveMusicUploadFolderFallback => '與雲端應用程式資料夾相同';
 
   @override
-  String get oneDriveAppMissingClientConfig =>
-      '這一版暫時無法使用 Microsoft 登入，請試試商店正式版或更新到最新。';
+  String get oneDriveAppMissingClientConfig => '這一版暫時還不能使用微軟帳號登入，下一版本或許會加入該功能。';
 
   @override
   String get oneDriveNeedSignInForPicker => '請先登入後再選擇 OneDrive 資料夾。';
@@ -6594,8 +6586,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get themeGradientRgbSectionTitle => '漸層背景';
 
   @override
-  String get themeGradientRgbSectionSubtitle =>
-      '與歌單封面相同的 RGB 滑桿，可同時微調兩端顏色與漸層方向。';
+  String get themeGradientRgbSectionSubtitle => '漸變 RGB 滑桿，可同時微調兩端顏色與漸變方向。';
 
   @override
   String get themeGradientRgbFineTune => '編輯雙色與方向…';
@@ -7739,8 +7730,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lyricStyleActiveGradientTitle => '正在播放行漸層';
 
   @override
-  String get lyricStyleStateGradientSub =>
-      '開啟後，此雙色漸層優先於上方原文/譯文純色；關閉則僅用純色。方向與 RGB 滑桿與歌單封面編輯器一致。';
+  String get lyricStyleStateGradientSub => '開啟後，此雙色漸層優先於上方原文/譯文純色；關閉則僅用純色。';
 
   @override
   String get lyricStyleActiveGradientTune => '編輯漸層';

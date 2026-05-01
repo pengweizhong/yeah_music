@@ -633,13 +633,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSponsorRepoDynamicSql2Title.
   ///
   /// In en, this message translates to:
-  /// **'dynamic-sql2'**
+  /// **'Dynamic-SQL2'**
   String get settingsSponsorRepoDynamicSql2Title;
 
   /// No description provided for @settingsSponsorRepoDynamicSql2Subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Dynamic SQL / Java DSL library'**
+  /// **'Dynamic SQL2 / Java DSL library'**
   String get settingsSponsorRepoDynamicSql2Subtitle;
 
   /// No description provided for @settingsSponsorEasterEggTriggerLine.
@@ -819,7 +819,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsOneDriveSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Microsoft account, folders, downloads'**
+  /// **'Microsoft account sync, folders, downloads'**
   String get settingsOneDriveSubtitle;
 
   /// No description provided for @settingsOneDriveDesc.
@@ -909,7 +909,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsWireRemoteSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Wired multi-press and Bluetooth next/prev keys while the app is open'**
+  /// **'Wired multi‑click control and Bluetooth‑independent next/previous track buttons'**
   String get settingsWireRemoteSubtitle;
 
   /// No description provided for @settingsWireRemoteSubtitleOtherPlatforms.
@@ -1716,7 +1716,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveAppMissingClientConfig.
   ///
   /// In en, this message translates to:
-  /// **'Microsoft sign-in isn’t available in this copy of the app. Grab the version from the store or check for an update.'**
+  /// **'This version does not support signing in with a Microsoft account yet, but the feature may be added in the next release.'**
   String get oneDriveAppMissingClientConfig;
 
   /// No description provided for @oneDriveNeedSignInForPicker.
@@ -2298,7 +2298,7 @@ abstract class AppLocalizations {
   /// No description provided for @themeGradientRgbSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Fine-tune both gradient colors and direction with RGB sliders (same as playlist cover editor).'**
+  /// **'Gradient RGB slider with simultaneous fine‑tuning of both end colors and the gradient direction.'**
   String get themeGradientRgbSectionSubtitle;
 
   /// No description provided for @themeGradientRgbFineTune.
@@ -4428,7 +4428,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricStyleStateGradientSub.
   ///
   /// In en, this message translates to:
-  /// **'When on, this two-color gradient overrides the solid picks above for both original and translation. Direction and RGB sliders match the playlist cover editor.'**
+  /// **'When on, this two-color gradient overrides the solid picks above for both original and translation.'**
   String get lyricStyleStateGradientSub;
 
   /// No description provided for @lyricStyleActiveGradientTune.

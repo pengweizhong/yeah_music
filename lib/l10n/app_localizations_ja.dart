@@ -294,11 +294,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsSponsorRepoYeahMusicSubtitle => 'このプレーヤーのソースコード';
 
   @override
-  String get settingsSponsorRepoDynamicSql2Title => 'dynamic-sql2';
+  String get settingsSponsorRepoDynamicSql2Title => 'Dynamic-SQL2';
 
   @override
   String get settingsSponsorRepoDynamicSql2Subtitle =>
-      '動的 SQL / Java DSL の OSS';
+      '動的 SQL2 / Java DSL の OSS';
 
   @override
   String get settingsSponsorEasterEggTriggerLine => 'お支払い／チップの方法';
@@ -390,7 +390,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsOneDrive => 'OneDrive';
 
   @override
-  String get settingsOneDriveSubtitle => 'Microsoft アカウント・フォルダ・ダウンロード先';
+  String get settingsOneDriveSubtitle => 'Microsoft アカウントの同期、ディレクトリおよびダウンロード先';
 
   @override
   String get settingsOneDriveDesc =>
@@ -438,8 +438,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsWireRemoteTitle => 'ヘッドセット操作';
 
   @override
-  String get settingsWireRemoteSubtitle =>
-      '有線の連打と Bluetooth の次へ／戻るキー（アプリが手前のとき）';
+  String get settingsWireRemoteSubtitle => '有線の連打と Bluetooth の次へ／戻るキー';
 
   @override
   String get settingsWireRemoteSubtitleOtherPlatforms =>
@@ -661,7 +660,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveSyncItemPlaybackListsStatsSubtitle =>
-      '最近再生リスト・再生回数・累計試聴時間（ホームと統計ページの Hive）。';
+      '最近再生リスト・再生回数・累計試聴時間。';
 
   @override
   String get oneDriveSyncItemLyricsUi => '歌詞と再生画面';
@@ -878,7 +877,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveAppMissingClientConfig =>
-      'この版ではまだ Microsoft サインインが使えません。ストア版に更新するか、最新版を入れ直してみてください。';
+      'このバージョンではまだ Microsoft アカウントでのログインはできませんが、次のバージョンで追加される可能性があります。';
 
   @override
   String get oneDriveNeedSignInForPicker =>
@@ -1198,7 +1197,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get themeGradientRgbSectionSubtitle =>
-      'プレイリストカバーと同じ RGB スライダーで、両端の色と向きを調整できます。';
+      'グラデーション RGB スライダーで、両端の色とグラデーション方向を同時に微調整できます。';
 
   @override
   String get themeGradientRgbFineTune => '色と向きを編集…';
@@ -2348,7 +2347,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lyricStyleStateGradientSub =>
-      'オンにすると、この二色グラデーションが上の原文・訳文の単色より優先されます。オフのときは単色のみ。方向と RGB はプレイリストカバー編集と共通です。';
+      'オンにすると、この二色グラデーションが上の原文・訳文の単色より優先されます。オフのときは単色のみ。';
 
   @override
   String get lyricStyleActiveGradientTune => 'グラデーションを編集';
