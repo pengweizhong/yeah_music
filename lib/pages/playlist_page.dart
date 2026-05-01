@@ -122,10 +122,11 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   void didPopNext() {
     if (!mounted) return;
     final pl = context.read<PlayListProvider>();
-    final list = pl.playList;
-    if (list.isEmpty) return;
-    // 不依赖 [Selector] 一定重建：用当前排序现算一份，与列表展示一致
-    final songs = _libraryRows(list);
+    if (!pl.playbackSessionIsLibrary) return;
+    final merged = pl.libraryMergedSongs;
+    if (merged.isEmpty) return;
+    // 与 [build] 一致：展示顺序取自合并曲库而非临时歌单队列
+    final songs = _libraryRows(merged);
     if (songs.isEmpty) return;
     if (_autoscrollInFlight) return;
     _autoscrollInFlight = true;
@@ -171,14 +172,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         listStructureChanged = true;
       }
       if (!context.mounted) return;
-      // 若当前是全库会话且队列已由曲库排序列表覆盖，勿清空：
-      // 否则下一曲按 folder 合并顺序走，与列表冻结排序不一致，表现为「重新进入后顺序乱跳」。
-      if (playListProvider.hasPlaybackQueueOverride &&
-          !playListProvider.playbackSessionIsLibrary) {
-        playListProvider.clearPlaybackQueueOverride();
-        listStructureChanged = true;
-      }
-      if (!mounted) return;
       if (listStructureChanged) {
         setState(() {
           _frozenPathKeys = null;
@@ -233,7 +226,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       sortType: _sortType,
       isAscending: _isAscending,
       onApply: (type, ascending) {
-        final raw = context.read<PlayListProvider>().playList;
+        final raw = context.read<PlayListProvider>().libraryMergedSongs;
         setState(() {
           _sortType = type;
           _isAscending = ascending;
@@ -492,13 +485,14 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   Widget build(BuildContext context) {
     return Consumer2<PlayListProvider, UserPlaylistProvider>(
       builder: (context, playListProvider, userPlaylistProvider, _) {
-        final playList = playListProvider.playList;
-        _filteredSongs = _libraryRows(playList);
+        final mergedLibrary = playListProvider.libraryMergedSongs;
+        _filteredSongs = _libraryRows(mergedLibrary);
         final current = playListProvider.currentSong;
         if (current == null) {
           _lastAutoScrollPathNorm = null;
           _autoscrollInFlight = false;
-        } else if (_filteredSongs.isNotEmpty) {
+        } else if (_filteredSongs.isNotEmpty &&
+            playListProvider.playbackSessionIsLibrary) {
           final n = normSongPath(current.path);
           if (n != _lastAutoScrollPathNorm && !_autoscrollInFlight) {
             _autoscrollInFlight = true;
@@ -523,9 +517,6 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
             );
           }
         }
-        final pathToIndex = <String, int>{
-          for (var i = 0; i < playList.length; i++) playList[i].path: i,
-        };
         final l10n = AppLocalizations.of(context);
         return PopScope(
           canPop: !_batchSelect,
@@ -662,10 +653,9 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                       : SongPlaylistSongListView(
                           scrollController: _listScrollController,
                           songs: _filteredSongs,
+                          locateFabOnlyWhenLibrarySession: true,
                           listBottomInsetExtra: _batchSelect ? 64 : 0,
                           itemBuilder: (context, song, index, isRowCurrent) {
-                            final originalIndex =
-                                pathToIndex[song.path] ?? 0;
                             return CompactSongListRow(
                               key: ValueKey<String>(
                                 'lib_row_${index}_${normSongPath(song.path)}',
@@ -699,21 +689,11 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                   );
                                   return;
                                 }
-                                playListProvider
-                                    .setPlaybackListSessionForLibrary();
-                                if (playListProvider
-                                    .hasPlaybackQueueOverride) {
-                                  await playListProvider
-                                      .playAt(originalIndex);
-                                } else {
-                                  await playListProvider
-                                      .setPlaybackQueueAndPlay(
-                                    List<Song>.from(_filteredSongs),
-                                    index,
-                                    session:
-                                        PlaybackSessionSurface.library,
-                                  );
-                                }
+                                await playListProvider.setPlaybackQueueAndPlay(
+                                  List<Song>.from(_filteredSongs),
+                                  index,
+                                  session: PlaybackSessionSurface.library,
+                                );
                               },
                             );
                           },

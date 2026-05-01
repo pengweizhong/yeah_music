@@ -303,6 +303,7 @@ class SongListScrollToCurrentLocate extends StatelessWidget {
     required this.playList,
     this.tooltip,
     this.forceShowLocateFab = false,
+    this.locateFabOnlyWhenLibrarySession = false,
   });
 
   final Widget child;
@@ -313,16 +314,22 @@ class SongListScrollToCurrentLocate extends StatelessWidget {
   final String? tooltip;
   final bool forceShowLocateFab;
 
+  /// 为 true（仅曲库列表）时：[canLocate] 还要求当前播放会话为全库。
+  final bool locateFabOnlyWhenLibrarySession;
+
   @override
   Widget build(BuildContext context) {
     final inList = isCurrentSongInDisplayList(playList, songs);
+    final canLocate = inList &&
+        (!locateFabOnlyWhenLibrarySession ||
+            playList.playbackSessionIsLibrary);
     return ScrollToCurrentLocateLayer(
       onManualScroll: null,
       isManual: null,
       userActivityListScrollController: controller,
       showOnManualListScrollAlone: true,
       forceShowLocateFab: forceShowLocateFab,
-      canLocate: inList,
+      canLocate: canLocate,
       resetToken: playList.currentSong?.path,
       tooltip: tooltip,
       onLocate: () {

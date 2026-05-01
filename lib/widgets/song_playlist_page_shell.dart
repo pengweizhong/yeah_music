@@ -97,6 +97,8 @@ class SongPlaylistSongListView extends StatelessWidget {
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
     this.listBottomInsetExtra = 0,
+    /// [PlayListPage]：正在播来自其它列表（如歌单）时禁用「定位到当前」FAB，避免误滚乱序。
+    this.locateFabOnlyWhenLibrarySession = false,
   });
 
   final ScrollController scrollController;
@@ -114,6 +116,9 @@ class SongPlaylistSongListView extends StatelessWidget {
 
   /// 附加列表底部留白（例如批量操作条盖住迷你播放器以上区域时上移列表）。
   final double listBottomInsetExtra;
+
+  /// 为 true 时仅在全库会话下允许右下角定位到当前播（会话为歌单/最近等时按钮灰显）。
+  final bool locateFabOnlyWhenLibrarySession;
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +156,7 @@ class SongPlaylistSongListView extends StatelessWidget {
           songs: songs,
           itemExtent: itemExtent,
           playList: playList,
+          locateFabOnlyWhenLibrarySession: locateFabOnlyWhenLibrarySession,
           child: ScrollAwareListFrame(
             scrollController: scrollController,
             child: listCore,
