@@ -5,9 +5,30 @@ import 'dart:typed_data';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
     show AudioMetadata, Picture, PictureType, readMetadata;
 import 'package:charset/charset.dart';
+import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
+import 'package:yeah_music/utils/wav_metadata_reader.dart';
 
 import '../models/song.dart';
+
+/// 读取内嵌元数据；WAV 使用项目内修复实现（库内 RIFF 解析易错位导致标签全空）。
+AudioMetadata readEmbeddedAudioMetadata(
+  File file, {
+  bool getImage = false,
+}) {
+  if (pathLooksLikeWav(file.path)) {
+    try {
+      return readWavMetadataYep(file, getImage: getImage);
+    } catch (e, st) {
+      appLog.w(
+        'WAV 元数据解析失败，回退 audio_metadata_reader: ${file.path}',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+  return readMetadata(file, getImage: getImage);
+}
 
 /// 与详情页 [_pickCoverBytes] 一致：优先封面图类型块再退回首张。
 Uint8List? pickEmbeddedCoverBytesFromPictures(
@@ -51,12 +72,14 @@ class FileUtils {
     late final AudioMetadata metadata;
     var resolvedEmbedImages = loadEmbeddedAlbumArt;
     try {
-      metadata = readMetadata(file, getImage: resolvedEmbedImages);
+      metadata =
+          readEmbeddedAudioMetadata(file, getImage: resolvedEmbedImages);
     } catch (e, st) {
       if (loadEmbeddedAlbumArt) {
         appLog.w('readMetadata 失败，尝试跳过内嵌图: $filename', error: e);
         try {
-          metadata = readMetadata(file, getImage: false);
+          metadata =
+              readEmbeddedAudioMetadata(file, getImage: false);
           resolvedEmbedImages = false;
         } catch (e2) {
           song.title = filename;
@@ -74,10 +97,14 @@ class FileUtils {
         return;
       }
     }
-    String title = decodeString(metadata.title ?? filename);
-    song.album = decodeString(metadata.album);
-    song.artist = decodeString(metadata.artist);
-    song.title = title;
+    String decodedTitle = decodeString(metadata.title ?? filename);
+    if (embeddedDisplayTextLooksCorrupt(decodedTitle)) {
+      decodedTitle = p.basenameWithoutExtension(song.path);
+    }
+    song.title = decodedTitle;
+
+    song.album = _metaFieldOrEmpty(metadata.album);
+    song.artist = _metaFieldOrEmpty(metadata.artist);
     song.duration = metadata.duration;
     song.year = metadata.year;
     song.trackNumber = metadata.trackNumber;
@@ -112,20 +139,58 @@ class FileUtils {
     song.updateDateTime = stat.modified;
   }
 
-  ///尝试解码字符串，优先使用 UTF-8，如果失败则使用 GBK
+  static String _metaFieldOrEmpty(String? raw) {
+    final s = decodeString(raw ?? '');
+    return embeddedDisplayTextLooksCorrupt(s) ? '' : s;
+  }
+
+  /// 规范化展示用字符串：
+  /// - Unicode 字面量（含中文）若无法 `latin1.encode` 则直接返回；
+  /// - Latin‑1 可逆时再试 UTF‑8 / GBK / 误解码拉回，多套结果按可读性打分择优。
   static String decodeString(String? raw) {
-    if (raw == null) {
-      return "";
-    }
+    if (raw == null) return '';
+    final t = raw.trim();
+    if (t.isEmpty) return '';
+
+    List<int>? bytes;
     try {
-      return utf8.decode(raw.codeUnits); // 尝试 UTF-8
+      bytes = latin1.encode(t);
     } catch (_) {
-      try {
-        return gbk.decode(raw.codeUnits); // 尝试 GBK
-      } catch (_) {
-        return raw; // 都失败就返回原始
+      return t;
+    }
+
+    final candidates = <String>{t};
+    try {
+      candidates.add(utf8.decode(bytes, allowMalformed: false).trim());
+    } catch (_) {}
+    try {
+      candidates.add(gbk.decode(bytes).trim());
+    } catch (_) {}
+    final recovered = recoverLabelFromLatin1Misread(bytes).trim();
+    if (recovered.isNotEmpty) {
+      candidates.add(recovered);
+    }
+
+    String best = '';
+    var bestScore = -999999;
+    if (!looksLikeGbkOfUtf8Garbage(t) && !containsUnicodeReplacementChar(t)) {
+      best = t;
+      bestScore = tagEmbeddingTextScoreForUi(t);
+    }
+    for (final s in candidates) {
+      final x = s.trim();
+      if (x.isEmpty) continue;
+      if (looksLikeGbkOfUtf8Garbage(x)) continue;
+      if (containsUnicodeReplacementChar(x)) continue;
+      final sc = tagEmbeddingTextScoreForUi(x);
+      if (sc > bestScore ||
+          (sc == bestScore && x.length > best.length)) {
+        bestScore = sc;
+        best = x;
       }
     }
+    if (best.isEmpty) best = t;
+    return normalizeLatin1MisreadUtf8(best);
   }
 
   // 歌词解析请使用 `lib/utils/lyrics_utils.dart`（支持同一时间戳多行/多语言）

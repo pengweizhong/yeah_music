@@ -440,7 +440,7 @@ Future<void> tryShowAudioMetadataDialogForSong(
   }
   late final AudioMetadata meta;
   try {
-    meta = readMetadata(file, getImage: true);
+    meta = readEmbeddedAudioMetadata(file, getImage: true);
   } catch (e, st) {
     appLog.e('read metadata for sheet failed', error: e, stackTrace: st);
     if (!context.mounted) return;

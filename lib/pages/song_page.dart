@@ -51,7 +51,7 @@ import 'package:yeah_music/widgets/song_metadata_dialog.dart'
     show showAudioMetadataDialog;
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
-    show AudioMetadata, readMetadata;
+    show AudioMetadata;
 
 class SongPage extends StatefulWidget {
   int index;
@@ -1117,7 +1117,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     }
     late final AudioMetadata meta;
     try {
-      meta = readMetadata(file, getImage: true);
+      meta = readEmbeddedAudioMetadata(file, getImage: true);
     } catch (e, st) {
       appLog.e('read song metadata failed', error: e, stackTrace: st);
       if (!context.mounted) return;
