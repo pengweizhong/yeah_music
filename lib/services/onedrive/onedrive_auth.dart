@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_appauth/flutter_appauth.dart';
@@ -20,12 +21,34 @@ class OneDriveAuth {
   final OneDriveTokenStore _store;
   final FlutterAppAuth _appAuth;
 
+  /// 避免连点触发多路原生 OAuth，全部挂起且日志重复。
+  bool _interactiveSignInInFlight = false;
+
   Future<void> signOut() => _store.clear();
 
   /// 交互式登录；Linux 等平台无 [FlutterAppAuth] 支持时返回 null。
   Future<({String access, String refresh, DateTime expiry})?> signIn(String clientId) async {
     if (clientId.trim().isEmpty) return null;
     if (Platform.isLinux) return null;
+
+    if (_interactiveSignInInFlight) {
+      appLog.w('OneDrive OAuth: 已有登录流程进行中，请勿重复点击');
+      return null;
+    }
+    _interactiveSignInInFlight = true;
+
+    appLog.i(
+      'OneDrive OAuth: 开始授权…（macOS 将在系统浏览器中打开 Microsoft 登录页，完成后跳回本应用）',
+    );
+
+    Timer? desktopHangWatch;
+    if (!Platform.isLinux && !Platform.isIOS && !Platform.isAndroid) {
+      desktopHangWatch = Timer.periodic(const Duration(seconds: 25), (_) {
+        appLog.w(
+          'OneDrive OAuth: 仍在等待：请在已打开的浏览器中完成登录并同意权限；若无浏览器窗口请先切到 Dock/其它桌面。',
+        );
+      });
+    }
 
     late final AuthorizationTokenResponse res;
     try {
@@ -38,7 +61,9 @@ class OneDriveAuth {
         ),
       );
     } on FlutterAppAuthUserCancelledException {
-      appLog.d('OneDrive OAuth: 用户取消登录');
+      appLog.w(
+        'OneDrive OAuth: 用户取消或系统关闭了登录页（release 模式下此前用 d 级日志会完全不显示）',
+      );
       return null;
     } on FlutterAppAuthPlatformException catch (e, st) {
       final d = e.platformErrorDetails;
@@ -51,7 +76,12 @@ class OneDriveAuth {
     } catch (e, st) {
       appLog.e('OneDrive OAuth: authorizeAndExchangeCode 异常', error: e, stackTrace: st);
       return null;
+    } finally {
+      desktopHangWatch?.cancel();
+      _interactiveSignInInFlight = false;
     }
+
+    appLog.i('OneDrive OAuth: 授权页返回，正在校验 token 响应');
     final access = res.accessToken;
     final refresh = res.refreshToken;
     if (access == null) {
@@ -66,11 +96,21 @@ class OneDriveAuth {
     }
     final expiry = res.accessTokenExpirationDateTime ??
         DateTime.now().add(const Duration(hours: 1));
-    await _store.save(
-      accessToken: access,
-      refreshToken: refresh,
-      accessExpiry: expiry,
-    );
+    try {
+      await _store.save(
+        accessToken: access,
+        refreshToken: refresh,
+        accessExpiry: expiry,
+      );
+    } catch (e, st) {
+      appLog.e(
+        'OneDrive OAuth: 令牌写入安全存储失败（macOS 钥匙串权限/不可用会导致静默登录失败）',
+        error: e,
+        stackTrace: st,
+      );
+      return null;
+    }
+    appLog.i('OneDrive OAuth: 登录成功');
     return (access: access, refresh: refresh, expiry: expiry);
   }
 

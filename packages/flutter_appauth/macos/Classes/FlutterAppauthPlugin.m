@@ -2,6 +2,37 @@
 
 #import "FlutterAppauthPlugin.h"
 
+/// Microsoft等 IdP 常把回调打成 `scheme://host/?query`（path 为 `/`），而请求里 redirect 常为
+/// `scheme://host`（path 空）。AppAuth `shouldHandleURL` 逐字比 path → resume 恒为 NO、Dart 永久等待。
+static NSURL *YeahMusic_AppAuthNormalizeOAuthRedirectURL(NSURL *url) {
+  if (!url) {
+    return url;
+  }
+  NSURLComponents *c = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
+  if (!c) {
+    return url;
+  }
+  if ([c.path isEqualToString:@"/"]) {
+    c.path = @"";
+  }
+  return c.URL ?: url;
+}
+
+static BOOL YeahMusic_AppAuthResumeIfPossible(id<OIDExternalUserAgentSession> flow,
+                                              NSURL *url) {
+  if (!flow || !url) {
+    return NO;
+  }
+  if ([flow resumeExternalUserAgentFlowWithURL:url]) {
+    return YES;
+  }
+  NSURL *n = YeahMusic_AppAuthNormalizeOAuthRedirectURL(url);
+  if (n && ![n.absoluteString isEqualToString:url.absoluteString]) {
+    return [flow resumeExternalUserAgentFlowWithURL:n];
+  }
+  return NO;
+}
+
 @interface ArgumentProcessor : NSObject
 + (id _Nullable)processArgumentValue:(NSDictionary *)arguments
                              withKey:(NSString *)key;
@@ -516,9 +547,11 @@ static FlutterAppauthPlugin *primaryMacOSOAuthPlugin;
   if (!url) {
     return;
   }
-  if ([_currentAuthorizationFlow resumeExternalUserAgentFlowWithURL:url]) {
+  if (YeahMusic_AppAuthResumeIfPossible(_currentAuthorizationFlow, url)) {
     _currentAuthorizationFlow = nil;
+    return;
   }
+  NSLog(@"YeahMusic FlutterAppauth: OAuth resume failed url=%@", url.absoluteString);
 }
 
 - (void)handleGetURLEvent:(NSAppleEventDescriptor *)event
@@ -526,8 +559,7 @@ static FlutterAppauthPlugin *primaryMacOSOAuthPlugin;
   NSString *URLString =
       [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
   NSURL *URL = [NSURL URLWithString:URLString];
-  // 与 iOS `application:openURL:` 一致：仅在 resume 成功时释放 flow。
-  if ([_currentAuthorizationFlow resumeExternalUserAgentFlowWithURL:URL]) {
+  if (YeahMusic_AppAuthResumeIfPossible(_currentAuthorizationFlow, URL)) {
     _currentAuthorizationFlow = nil;
   }
 }

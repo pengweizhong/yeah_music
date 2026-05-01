@@ -1,4 +1,28 @@
 #import "AppAuthMacOSAuthorization.h"
+#import <Cocoa/Cocoa.h>
+
+/// 供登出等对「会话内 WebView」无强依赖的流程使用。
+static NSWindow *yeahMusicFlutterPresentingWindowForOAuth(void) {
+  NSApplication *app = [NSApplication sharedApplication];
+  NSWindow *w = app.keyWindow;
+  if (w != nil) {
+    return w;
+  }
+  w = app.mainWindow;
+  if (w != nil) {
+    return w;
+  }
+  for (NSWindow *candidate in app.windows) {
+    if (!candidate.isVisible) {
+      continue;
+    }
+    if ((candidate.styleMask & NSWindowStyleMaskBorderless) != 0) {
+      continue;
+    }
+    return candidate;
+  }
+  return nil;
+}
 
 @implementation AppAuthMacOSAuthorization
 
@@ -32,10 +56,12 @@
               codeChallenge:codeChallenge
         codeChallengeMethod:OIDOAuthorizationRequestCodeChallengeMethodS256
        additionalParameters:additionalParameters];
-  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
+  // authorize 固定在系统默认浏览器打开：Flutter 宿主内 ASWebAuthenticationSession 常见「start 成功但永不 completion」，
+  // 导致 Dart authorizeAndExchangeCode 永久挂起。回调仍由自定义 scheme + AppDelegate 交给 AppAuth resume。
+  NSWindow *authorizePresentingWindow = nil;
   if (exchangeCode) {
     NSObject<OIDExternalUserAgent> *agent =
-        [self userAgentWithPresentingWindow:keyWindow
+        [self userAgentWithPresentingWindow:authorizePresentingWindow
                           externalUserAgent:externalUserAgent];
     return [OIDAuthState
         authStateByPresentingAuthorizationRequest:request
@@ -67,7 +93,7 @@
                                          }];
   } else {
     NSObject<OIDExternalUserAgent> *agent =
-        [self userAgentWithPresentingWindow:keyWindow
+        [self userAgentWithPresentingWindow:authorizePresentingWindow
                           externalUserAgent:externalUserAgent];
     return [OIDAuthorizationService
         presentAuthorizationRequest:request
@@ -133,9 +159,9 @@
                 postLogoutRedirectURL:postLogoutRedirectURL
                  additionalParameters:requestParameters.additionalParameters];
 
-  NSWindow *keyWindow = [[NSApplication sharedApplication] keyWindow];
+  NSWindow *presentingWindow = yeahMusicFlutterPresentingWindowForOAuth();
   id<OIDExternalUserAgent> externalUserAgent =
-      [self userAgentWithPresentingWindow:keyWindow
+      [self userAgentWithPresentingWindow:presentingWindow
                         externalUserAgent:requestParameters.externalUserAgent];
   return [OIDAuthorizationService
       presentEndSessionRequest:endSessionRequest

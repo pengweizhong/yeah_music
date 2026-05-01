@@ -1,6 +1,17 @@
 import Cocoa
 import FlutterMacOS
 import Carbon
+import os.log
+
+/// 工程最低系统为 macOS 10.15；Swift `Logger`(OSLog) 需 11.0。此处用 legacy `OSLog` + `os_log`，在控制台.app 仍可按子系统筛。
+private extension OSLog {
+    static let oauth = OSLog(subsystem: "com.pengwz.yeahMusic", category: "OneDriveOAuth")
+}
+
+private func yeahMusicOAuthNativeLog(_ message: String) {
+    NSLog("%@", message)
+    os_log("%{public}@", log: .oauth, type: .default, message as NSString as CVarArg)
+}
 
 @main
 class AppDelegate: FlutterAppDelegate {
@@ -20,7 +31,7 @@ class AppDelegate: FlutterAppDelegate {
     override func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             if url.scheme?.caseInsensitiveCompare(Self.oauthRedirectScheme) == .orderedSame {
-                NSLog("YeahMusic: openURLs oauth redirect \(url.absoluteString)")
+                yeahMusicOAuthNativeLog("YeahMusic OAuth: openURLs redirect \(url.absoluteString)")
                 if !yeahMusicForwardOAuthRedirectAppleEvent(for: url) {
                     yeahMusicDispatchInternetGetUrlAppleEvent(for: url)
                 }
@@ -49,27 +60,34 @@ class AppDelegate: FlutterAppDelegate {
     /// 将回调 URL 交给已注册的 `FlutterAppauthPlugin`（需在插件内 `publish:` 实例）。
     private func yeahMusicForwardOAuthRedirectAppleEvent(for url: URL) -> Bool {
         guard let engine = yeahMusicPrimaryFlutterEngine() else {
-            NSLog("YeahMusic: oauth forward skipped — no FlutterViewController / engine")
+            yeahMusicOAuthNativeLog(
+                "YeahMusic OAuth: forward skipped — no FlutterViewController / engine"
+            )
             return false
         }
         guard let published = engine.valuePublished(byPlugin: Self.flutterAppAuthPluginKey) else {
-            NSLog("YeahMusic: oauth forward skipped — FlutterAppauthPlugin not published yet")
+            yeahMusicOAuthNativeLog(
+                "YeahMusic OAuth: forward skipped — FlutterAppauthPlugin not published (value nil)"
+            )
             return false
         }
         if published is NSNull {
-            NSLog("YeahMusic: oauth forward skipped — FlutterAppauthPlugin not published yet")
+            yeahMusicOAuthNativeLog(
+                "YeahMusic OAuth: forward skipped — FlutterAppauthPlugin not published (NSNull)"
+            )
             return false
         }
         let plugin = published as NSObject
         // Microsoft 等指标体系的授权码很长；经 Apple Event / stringValue 转发易被截断，改为直接投递 NSURL。
         let selDirect = NSSelectorFromString("deliverOAuthRedirectURL:")
         if plugin.responds(to: selDirect) {
+            yeahMusicOAuthNativeLog("YeahMusic OAuth: forwarding to deliverOAuthRedirectURL:")
             plugin.perform(selDirect, with: url)
             return true
         }
         let selAe = NSSelectorFromString("handleGetURLEvent:withReplyEvent:")
         guard plugin.responds(to: selAe) else {
-            NSLog("YeahMusic: oauth forward skipped — plugin missing handlers")
+            yeahMusicOAuthNativeLog("YeahMusic OAuth: forward skipped — plugin missing handlers")
             return false
         }
         let event = NSAppleEventDescriptor(
@@ -84,6 +102,7 @@ class AppDelegate: FlutterAppDelegate {
             forKeyword: AEKeyword(keyDirectObject)
         )
         let reply = NSAppleEventDescriptor.null()
+        yeahMusicOAuthNativeLog("YeahMusic OAuth: forwarding via handleGetURLEvent (AppleEvent string path)")
         plugin.perform(selAe, with: event, with: reply)
         return true
     }
@@ -102,7 +121,7 @@ class AppDelegate: FlutterAppDelegate {
             forKeyword: AEKeyword(keyDirectObject)
         )
         guard let rawPtr = event.aeDesc else {
-            NSLog("YeahMusic: NSAppleEventDescriptor.aeDesc is nil")
+            yeahMusicOAuthNativeLog("YeahMusic OAuth: NSAppleEventDescriptor.aeDesc is nil")
             return
         }
         var replyAe = AppleEvent()
@@ -113,7 +132,7 @@ class AppDelegate: FlutterAppDelegate {
             handlerRefCon: nullRefCon
         )
         if err != noErr {
-            NSLog("YeahMusic: dispatchRawAppleEvent OSStatus \(err)")
+            yeahMusicOAuthNativeLog("YeahMusic OAuth: dispatchRawAppleEvent OSStatus \(err)")
         }
     }
 

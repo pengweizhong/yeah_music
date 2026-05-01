@@ -4,6 +4,9 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- OneDrive / flutter_appauth 使用 ASWebAuthenticationSession 时需访问 Microsoft HTTPS；无上项则登录页无法在沙盒内加载，Dart 会一直卡在 authorizeAndExchangeCode。 -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 	<key>com.apple.security.cs.allow-jit</key>
 	<true/>
 	<key>com.apple.security.network.server</key>

@@ -99,7 +99,21 @@ NS_ASSUME_NONNULL_BEGIN
 
       _webAuthenticationSession = authenticationSession;
       _webAuthenticationSession.prefersEphemeralWebBrowserSession = YES;
-      return [authenticationSession start];
+      BOOL started = [authenticationSession start];
+      if (!started) {
+        _webAuthenticationSession = nil;
+        id<OIDExternalUserAgentSession> sess = _session;
+        [self cleanUp];
+        if (sess) {
+          NSError *startError = [OIDErrorUtilities
+              errorWithCode:OIDErrorCodeBrowserOpenError
+            underlyingError:nil
+                description:@"ASWebAuthenticationSession failed to start"];
+          [sess failExternalUserAgentFlowWithError:startError];
+        }
+        return NO;
+      }
+      return YES;
     }
   }
 

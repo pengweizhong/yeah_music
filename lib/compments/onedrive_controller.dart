@@ -10,6 +10,7 @@ import 'package:yeah_music/compments/user_playlist_provider.dart'
         parseUserPlaylistExportJson,
         playlistCoverAssetNamesFromDoc;
 import 'package:yeah_music/config/onedrive_config.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/onedrive_cloud_backup_snapshot.dart';
 import 'package:yeah_music/models/onedrive_restore_selection.dart';
@@ -1046,16 +1047,23 @@ class OneDriveController extends ChangeNotifier {
       return false;
     }
     if (effectiveClientId.isEmpty) {
+      appLog.w('OneDrive: 无法登录——未配置 Client ID');
       return false;
     }
     try {
       final res = await _auth.signIn(effectiveClientId);
       if (res == null) {
+        appLog.w('OneDrive: signIn 完成但无有效令牌（参见上方 OAuth 日志）');
         return false;
       }
       await loadFromStorage();
       return _signedIn;
-    } catch (_) {
+    } catch (e, st) {
+      appLog.e(
+        'OneDrive: signIn 未捕获异常（例如令牌存储失败会直接走这里）',
+        error: e,
+        stackTrace: st,
+      );
       return false;
     }
   }

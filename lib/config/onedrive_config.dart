@@ -28,7 +28,9 @@ abstract final class OneDriveConfig {
 
   /// 与 Azure 中「重定向 URI」完全一致（各平台 manifest 已注册此 scheme）。
   /// 注意：除 Android 外，在 **应用注册 → 身份验证 → 移动和桌面应用程序** 中须**再添加同一条**
-  /// `com.pengwz.yeahmusic://oauthredirect`（与 Android 包名无关）；仅配 Android 时 macOS/Windows 会无法完成授权。
+  /// 与 Azure 中「重定向 URI」**逐字一致**（含 path：`com...://oauthredirect` 与 `...//oauthredirect/`
+  /// 在 AppAuth 里视为不同；Microsoft 常带尾斜杠，若遇 macOS 回调无法 resume 见 flutter_appauth
+  /// `YeahMusic_AppAuthNormalizeOAuthRedirectURL`）。
   static const String redirectUrl = 'com.pengwz.yeahmusic://oauthredirect';
 
   /// OAuth 2.0 所用 scope。**不包含** `openid`/`profile`：若走 OIDC 发现并重验 id_token，
