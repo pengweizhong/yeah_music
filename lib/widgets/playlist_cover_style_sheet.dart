@@ -8,6 +8,7 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
 import 'package:yeah_music/widgets/rgb_gradient_pickers.dart';
 
@@ -220,6 +221,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final gradients = _allPresetGradientPairs;
     final fb = _fallbackIndex();
     final bottomPad = MediaQuery.paddingOf(context).bottom;
@@ -242,8 +244,8 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
               children: [
                 Text(
                   l10n.playlistCoverStyleTitle,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.gradFg(),
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                   ),
@@ -252,7 +254,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 Text(
                   l10n.playlistCoverStyleSubtitle,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: context.gradFg(0.55),
                     fontSize: 13,
                     height: 1.35,
                   ),
@@ -292,7 +294,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 Text(
                   _previewSubtitle(l10n),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.72),
+                    color: context.gradFg(0.72),
                     fontSize: 12,
                     height: 1.35,
                   ),
@@ -305,8 +307,8 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                     icon: Icon(
                       Icons.palette_outlined,
                       color: _draft == null
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.white54,
+                          ? scheme.primary
+                          : context.gradFg(0.54),
                       size: 20,
                     ),
                     label: Text(l10n.playlistCoverUseDefaultPalette),
@@ -322,7 +324,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
             child: Text(
               l10n.playlistCoverSolidSection,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
+                color: context.gradFg(0.72),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -343,6 +345,8 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 final presetLen = _presetSolidColors.length;
                 if (i == presetLen) {
                   final sel = _isCustomRgbSolid(_draft);
+                  final borderAccent = context.gradFg();
+                  final borderSubtle = context.gradBorder(0.35);
                   return InkWell(
                     onTap: () => _pickRgb(context, l10n),
                     borderRadius: BorderRadius.circular(10),
@@ -360,16 +364,19 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                                 ],
                               )
                             : null,
-                        color: sel ? null : Colors.white.withValues(alpha: 0.06),
+                        color: sel
+                            ? null
+                            : scheme.surfaceContainerHighest
+                                .withValues(alpha: 0.65),
                         border: Border.all(
-                          color: sel ? Colors.white : Colors.white24,
+                          color: sel ? borderAccent : borderSubtle,
                           width: sel ? 2.5 : 1,
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Icon(
                         sel ? Icons.check_rounded : Icons.tune_rounded,
-                        color: Colors.white.withValues(alpha: sel ? 1 : 0.85),
+                        color: context.gradFg(sel ? 1 : 0.85),
                         size: sel ? 22 : 24,
                       ),
                     ),
@@ -378,6 +385,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 final col = _presetSolidColors[i];
                 final sel = _draft?.isSolid == true &&
                     _draft!.solidColor.toARGB32() == col.toARGB32();
+                final swatchBorder = sel ? Colors.white : Colors.white38;
                 return InkWell(
                   onTap: () =>
                       setState(() => _draft = UserPlaylistCoverStyle.solid(col)),
@@ -388,7 +396,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                       color: col,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: sel ? Colors.white : Colors.white24,
+                        color: swatchBorder,
                         width: sel ? 2.5 : 1,
                       ),
                     ),
@@ -405,7 +413,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
             child: Text(
               l10n.playlistCoverGradientSection,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
+                color: context.gradFg(0.72),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -441,16 +449,18 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                             : null,
                         color: sel
                             ? null
-                            : Colors.white.withValues(alpha: 0.06),
+                            : scheme.surfaceContainerHighest
+                                .withValues(alpha: 0.65),
                         border: Border.all(
-                          color: sel ? Colors.white : Colors.white24,
+                          color:
+                              sel ? context.gradFg() : context.gradBorder(0.35),
                           width: sel ? 2.5 : 1,
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Icon(
                         sel ? Icons.check_rounded : Icons.gradient_rounded,
-                        color: Colors.white.withValues(alpha: sel ? 1 : 0.88),
+                        color: context.gradFg(sel ? 1 : 0.88),
                         size: sel ? 26 : 28,
                       ),
                     ),
@@ -463,6 +473,8 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                         PlaylistCoverGradientDirection.horizontalLtr &&
                     _draft!.gradientColors[0].toARGB32() == g[0].toARGB32() &&
                     _draft!.gradientColors[1].toARGB32() == g[1].toARGB32();
+                final gradSwatchBorder =
+                    picked ? Colors.white : Colors.white38;
                 return InkWell(
                   onTap: () => setState(
                     () => _draft = UserPlaylistCoverStyle.gradient(g[0], g[1]),
@@ -474,7 +486,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                       borderRadius: BorderRadius.circular(12),
                       gradient: playlistCoverLinearGradient(g),
                       border: Border.all(
-                        color: picked ? Colors.white : Colors.white24,
+                        color: gradSwatchBorder,
                         width: picked ? 2.5 : 1,
                       ),
                     ),
@@ -491,7 +503,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
             child: Text(
               l10n.playlistCoverPictureSection,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
+                color: context.gradFg(0.72),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -507,8 +519,8 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                   child: OutlinedButton.icon(
                     onPressed: () => _pickCoverImage(context, l10n),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white38),
+                      foregroundColor: context.gradFg(),
+                      side: BorderSide(color: context.gradBorder(0.38)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     icon: const Icon(Icons.image_outlined),
@@ -520,8 +532,10 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                   IconButton(
                     tooltip: l10n.playlistCoverRemoveImage,
                     onPressed: () => setState(() => _draft = null),
-                    icon:
-                        const Icon(Icons.delete_outline, color: Colors.white70),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: context.gradFg(0.7),
+                    ),
                   ),
                 ],
               ],

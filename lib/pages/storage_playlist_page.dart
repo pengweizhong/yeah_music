@@ -13,6 +13,7 @@ import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/pages/user_playlist_detail_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
@@ -101,17 +102,18 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
     }
   }
 
-  Widget _selectLeadingIcon(bool selected) {
+  Widget _selectLeadingIcon(BuildContext context, bool selected) {
+    final muted = context.gradFg(0.38);
     if (_singleSelectOnly) {
       return Icon(
         selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-        color: selected ? _kSelectAccent : Colors.white38,
+        color: selected ? _kSelectAccent : muted,
         size: 26,
       );
     }
     return Icon(
       selected ? Icons.check_box : Icons.check_box_outline_blank,
-      color: selected ? _kSelectAccent : Colors.white38,
+      color: selected ? _kSelectAccent : muted,
       size: 26,
     );
   }
@@ -304,9 +306,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: context.gradBorder(0.12),
             ),
-            color: Colors.white.withValues(alpha: 0.055),
+            color: context.gradFg(0.055),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -322,7 +324,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.library_music_rounded,
-                    color: Colors.white.withValues(alpha: 0.92),
+                    color: context.gradFg(0.92),
                     size: 22,
                   ),
                 ),
@@ -339,8 +341,8 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.gradFg(),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 height: 1.25,
@@ -349,7 +351,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                           ),
                           Icon(
                             Icons.chevron_right_rounded,
-                            color: Colors.white.withValues(alpha: 0.35),
+                            color: context.gradFg(0.35),
                             size: 22,
                           ),
                         ],
@@ -360,7 +362,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.gradFg(0.5),
                           fontSize: 13,
                           height: 1.2,
                         ),
@@ -626,9 +628,9 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
             appBar: _selectMode
                 ? AppBar(
                     leading: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.close_rounded,
-                        color: Colors.white,
+                        color: context.gradFg(),
                       ),
                       tooltip: l10n.tooltipDone,
                       onPressed: _exitSelectMode,
@@ -642,7 +644,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                               ? l10n.playlistSelectModeSingle
                               : l10n.playlistSelectModeMulti,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.65),
+                            color: context.gradFg(0.65),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.3,
@@ -654,8 +656,8 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                             _selectedPlaylistIds.length,
                             userPl.playlists.length,
                           ),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.gradFg(),
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -664,7 +666,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                     ),
                     backgroundColor: Colors.transparent,
                     elevation: 0,
-                    iconTheme: const IconThemeData(color: Colors.white),
+                    iconTheme: IconThemeData(color: context.gradFg()),
                     actions: [
                       if (!_singleSelectOnly && userPl.playlists.isNotEmpty)
                         Builder(
@@ -679,7 +681,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                 allOn
                                     ? Icons.deselect_rounded
                                     : Icons.select_all_rounded,
-                                color: Colors.white,
+                                color: context.gradFg(),
                               ),
                               onPressed: () => _toggleSelectAll(userPl),
                             );
@@ -691,7 +693,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                           Icons.delete_outline_rounded,
                           color: _selectedPlaylistIds.isNotEmpty
                               ? const Color(0xFFFFAB91)
-                              : Colors.white30,
+                              : context.gradFg(0.3),
                         ),
                         onPressed: _selectedPlaylistIds.isNotEmpty
                             ? () => _confirmDeleteSelected(context, userPl)
@@ -702,14 +704,14 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                 : AppBar(
                     title: Text(
                       l10n.playlistPageTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.gradFg(),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     backgroundColor: Colors.transparent,
                     elevation: 0,
-                    iconTheme: const IconThemeData(color: Colors.white),
+                    iconTheme: IconThemeData(color: context.gradFg()),
                     actions: [
                       if (userPl.playlists.isNotEmpty)
                         PopupMenuButton<String>(
@@ -723,7 +725,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                           offset: const Offset(0, kToolbarHeight),
                           icon: Icon(
                             Icons.checklist_rounded,
-                            color: Colors.white.withValues(alpha: 0.95),
+                            color: context.gradFg(0.95),
                           ),
                           onSelected: (v) => _handleMainMenu(v, userPl),
                           itemBuilder: (context) {
@@ -750,7 +752,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                         tooltip: l10n.menuImportPlaylists,
                         icon: Icon(
                           Icons.file_download_outlined,
-                          color: Colors.white.withValues(alpha: 0.95),
+                          color: context.gradFg(0.95),
                         ),
                         onPressed: () =>
                             _handleMainMenu('import', userPl),
@@ -792,9 +794,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                       l10n.emptyPlaylistsHint,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.65,
-                                        ),
+                                        color: context.gradFg(0.65),
                                       ),
                                     ),
                                   ),
@@ -846,19 +846,14 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                         .withValues(
                                                           alpha: 0.6,
                                                         )
-                                                    : Colors.white
-                                                        .withValues(
-                                                          alpha: 0.12,
-                                                        ),
+                                                    : context.gradBorder(0.12),
                                                 width: 1.2,
                                               ),
                                               color: selected
                                                   ? _kSelectAccent.withValues(
                                                       alpha: 0.12,
                                                     )
-                                                  : Colors.white.withValues(
-                                                      alpha: 0.04,
-                                                    ),
+                                                  : context.gradFg(0.04),
                                             ),
                                             child: Padding(
                                               padding:
@@ -871,6 +866,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                     CrossAxisAlignment.center,
                                                 children: [
                                                   _selectLeadingIcon(
+                                                    context,
                                                     selected,
                                                   ),
                                                   const SizedBox(width: 10),
@@ -883,8 +879,8 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                         Text(
                                                           pl.name,
                                                           style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
+                                                              TextStyle(
+                                                            color: context.gradFg(),
                                                             fontSize: 16,
                                                             fontWeight:
                                                                 FontWeight
@@ -897,10 +893,8 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
                                                         Text(
                                                           '${l10n.homeTrackCount(pl.songPaths.length)} · ${l10n.playlistCreatedOn(pl.createdAt.toString().split(' ').first)}',
                                                           style: TextStyle(
-                                                            color: Colors.white
-                                                                .withValues(
-                                                              alpha: 0.52,
-                                                            ),
+                                                            color: context
+                                                                .gradFg(0.52),
                                                             fontSize: 13,
                                                           ),
                                                         ),
@@ -995,14 +989,24 @@ class _PlaylistMenuRowStatic extends StatelessWidget {
   final IconData icon;
   final String label;
 
+  /// 与本页 [PopupMenuButton] 的深色 `color` 一致，避免浅色主题下沿用黑字而不可读。
+  static const Color _onDarkMenu = Color(0xFFF5F5F5);
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 22, color: Colors.white70),
+        Icon(icon, size: 22, color: _onDarkMenu.withValues(alpha: 0.88)),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(label, style: const TextStyle(fontSize: 15, height: 1.2)),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.2,
+              color: _onDarkMenu,
+            ),
+          ),
         ),
       ],
     );
