@@ -32,12 +32,34 @@ bool _picturesRoughEqual(List<Picture>? a, List<Picture>? b) {
 /// 入库为轻量元数据时可调用本类，在列表等处后台补全：**封面、歌词与其它标签**，同一路径只读文件一次，
 /// [applyTo] 到各 [Song] 实例（不因去重跳过其它引用）。
 /// 与并行上限配合，避免滑动长列表时数十路同时 readMetadata。
+///
+/// 内存路径级 [_cache] 为 **LRU + 条数上限**（大图/歌词快照只保留近期访问的路径），避免长会话无界增长。
 class SongLibraryMetadataHydrator {
   SongLibraryMetadataHydrator._();
 
   static final Map<String, Future<void>> _pending = {};
-  static final Map<String, _MetaSnapshot> _cache = {};
+  /// 插入序即 LRU 序（Dart [Map] 默认 [LinkedHashMap]）；[_cacheTouch] / [_cachePut] 维护。
+  static final Map<String, _MetaSnapshot> _cache = <String, _MetaSnapshot>{};
   static final ConcurrentLimiter _ioLimiter = ConcurrentLimiter(3);
+
+  /// 路径条数上限；单条可含大图与歌词，不宜过大。
+  static const int maxCacheEntries = 384;
+
+  static _MetaSnapshot? _cacheTouch(String path) {
+    final snap = _cache.remove(path);
+    if (snap == null) return null;
+    _cache[path] = snap;
+    return snap;
+  }
+
+  static void _cachePut(String path, _MetaSnapshot snap) {
+    _cache.remove(path);
+    _cache[path] = snap;
+    while (_cache.length > maxCacheEntries) {
+      final k = _cache.keys.first;
+      _cache.remove(k);
+    }
+  }
 
   /// 列表展示经 [ResizeImage] 已降采样；过小会丢弃内嵌图导致大量「无封面」。
   /// 椒盐等项目常保留 ~2MiB 量级 FLAC 内嵌 PNG；调高仍由 UI 缩放，大图主要占内存瞬时峰值。
@@ -52,7 +74,7 @@ class SongLibraryMetadataHydrator {
 
     _maybeSeedCacheFromLibrarySong(song);
 
-    final cached = _cache[p];
+    final cached = _cacheTouch(p);
     if (cached != null) {
       if (cached.matchesSong(song)) {
         return false;
@@ -69,7 +91,7 @@ class SongLibraryMetadataHydrator {
 
     final fut = _pending[p] ??= _loadPath(p);
     await fut;
-    final snap = _cache[p];
+    final snap = _cacheTouch(p);
     if (snap == null) return false;
     if (snap.matchesSong(song)) {
       return false;
@@ -103,7 +125,7 @@ class SongLibraryMetadataHydrator {
     final bytes = song.imageBytes;
     if (bytes == null || bytes.isEmpty) return;
     if (!(song.title?.trim().isNotEmpty ?? false)) return;
-    _cache[p] = _MetaSnapshot.fromSong(song);
+    _cachePut(p, _MetaSnapshot.fromSong(song));
   }
 
   static Future<void> _loadPath(String path) async {
@@ -118,7 +140,7 @@ class SongLibraryMetadataHydrator {
           storeLyricsWithTrack: true,
           maxEmbeddedArtBytes: maxEmbeddedArtBytes,
         );
-        _cache[path] = _MetaSnapshot.fromSong(tmp);
+        _cachePut(path, _MetaSnapshot.fromSong(tmp));
       } catch (e, st) {
         appLog.w('后台补全曲目元数据失败: $path', error: e, stackTrace: st);
       }
