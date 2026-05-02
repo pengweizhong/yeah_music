@@ -76,3 +76,5 @@ flutter:
   generate: true
   assets: # 注册资源
     - assets/icons/
+    # Hive 就绪前占位：可替换为任意 GIF（保持路径与文件名，或改 [kStartupHiveLoadingAsset]）
+    - assets/launch/startup_loading.gif

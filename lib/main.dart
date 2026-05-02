@@ -23,6 +23,7 @@ import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_material_themes.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/welcome/app_startup_clock.dart';
+import 'package:yeah_music/welcome/startup_hive_loading_splash.dart';
 import 'app_scaffold_messenger.dart';
 import 'compments/folder_provider.dart';
 import 'compments/onedrive_controller.dart';
@@ -102,7 +103,7 @@ Future<void> main(List<String> args) async {
   );
 }
 
-/// Hive 就绪前先出一帧纯色占位，再挂载 [MultiProvider] + 主应用，避免长时间纯黑屏。
+/// Hive 就绪前先展示 [StartupHiveLoadingSplash]（可换 GIF），再挂载 [MultiProvider] + 主应用。
 class AppStartupGate extends StatefulWidget {
   const AppStartupGate({super.key});
 
@@ -219,24 +220,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
               brightness: Brightness.dark,
               scaffoldBackgroundColor: const Color(0xFF0A0E14),
             ),
-            home: Scaffold(
-              backgroundColor: const Color(0xFF0A0E14),
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.8,
-                        color: Colors.white.withValues(alpha: 0.82),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            home: const StartupHiveLoadingSplash(),
           );
         },
       );
