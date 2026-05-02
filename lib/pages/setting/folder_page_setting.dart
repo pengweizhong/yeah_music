@@ -86,128 +86,128 @@ class FolderPageSettings extends StatelessWidget {
                                     ).bottom,
                                   ),
                                   child: FrostedGlassBottomSheet(
-                                    child: Theme(
-                                      data: frostedBottomSheetContentTheme(
-                                        sheetContext,
-                                      ),
-                                      child: SafeArea(
-                                        top: false,
-                                        child: SizedBox(
-                                          height: 300,
-                                          width: double.infinity,
-                                          child: SingleChildScrollView(
-                                            padding: const EdgeInsets.fromLTRB(
-                                              16,
-                                              4,
-                                              16,
-                                              20,
-                                            ),
-                                            child: DefaultTextStyle(
-                                              style: const TextStyle(
-                                                color: Colors.white,
+                                    child: SafeArea(
+                                      top: false,
+                                      child: Builder(
+                                        builder: (innerCtx) {
+                                          final theme = Theme.of(innerCtx);
+                                          final cs = theme.colorScheme;
+                                          final body = theme.textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                color: cs.onSurface,
                                                 fontSize: 15,
+                                                height: 1.35,
+                                              ) ??
+                                              TextStyle(
+                                                color: cs.onSurface,
+                                                fontSize: 15,
+                                                height: 1.35,
+                                              );
+                                          final labelStyle = body.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          );
+                                          return SizedBox(
+                                            height: 300,
+                                            width: double.infinity,
+                                            child: SingleChildScrollView(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                16,
+                                                4,
+                                                16,
+                                                20,
                                               ),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    sl.tooltipFolderInfo,
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.white,
+                                              child: DefaultTextStyle(
+                                                style: body,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      sl.tooltipFolderInfo,
+                                                      style: theme
+                                                          .textTheme.titleMedium
+                                                          ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: cs.onSurface,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: 12),
-                                                  Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        sl.folderInfoAlias,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w700,
+                                                    const SizedBox(height: 12),
+                                                    Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          sl.folderInfoAlias,
+                                                          style: labelStyle,
                                                         ),
-                                                      ),
-                                                      Expanded(
-                                                        child: Text(
-                                                          '${folder.name}',
+                                                        Expanded(
+                                                          child: Text(
+                                                            '${folder.name}',
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        sl.folderInfoPath,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w700,
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          sl.folderInfoPath,
+                                                          style: labelStyle,
                                                         ),
-                                                      ),
-                                                      Expanded(
-                                                        child: SelectableText(
-                                                          folder.path,
-                                                          maxLines: null,
-                                                          showCursor: true,
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
+                                                        Expanded(
+                                                          child: SelectableText(
+                                                            folder.path,
+                                                            maxLines: null,
+                                                            showCursor: true,
+                                                            textAlign:
+                                                                TextAlign.start,
+                                                            style: body,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  Row(
-                                                    children: [
-                                                      Text(
-                                                        sl.folderInfoSongCount,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w700,
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                          sl.folderInfoSongCount,
+                                                          style: labelStyle,
                                                         ),
-                                                      ),
-                                                      Text(
-                                                        '${folder.songList?.length}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  Row(
-                                                    children: [
-                                                      Text(
-                                                        sl.folderInfoAdded,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w700,
+                                                        Text(
+                                                          '${folder.songList?.length}',
                                                         ),
-                                                      ),
-                                                      Text(
-                                                        LocalDateUtils.formatDateTime(
-                                                          folder.createdAt,
-                                                          'yyyy-MM-dd HH:mm:ss',
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                          sl.folderInfoAdded,
+                                                          style: labelStyle,
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
+                                                        Text(
+                                                          LocalDateUtils
+                                                              .formatDateTime(
+                                                            folder.createdAt,
+                                                            'yyyy-MM-dd HH:mm:ss',
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ),
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
