@@ -37,11 +37,11 @@ class SongLibraryMetadataHydrator {
 
   static final Map<String, Future<void>> _pending = {};
   static final Map<String, _MetaSnapshot> _cache = {};
-  static final ConcurrentLimiter _ioLimiter = ConcurrentLimiter(2);
+  static final ConcurrentLimiter _ioLimiter = ConcurrentLimiter(3);
 
   /// 列表展示经 [ResizeImage] 已降采样；过小会丢弃内嵌图导致大量「无封面」。
-  /// 与 [FileUtils.loadSongMeta]、`music_service` 通知补图等处对齐同一上限。
-  static const int maxEmbeddedArtBytes = 512 * 1024;
+  /// 椒盐等项目常保留 ~2MiB 量级 FLAC 内嵌 PNG；调高仍由 UI 缩放，大图主要占内存瞬时峰值。
+  static const int maxEmbeddedArtBytes = 1920 * 1024;
 
   /// 若 [Song] 已与缓存一致则返回 false；否则写入并返回 true（便于列表仅在真有变更时 [setState]）。
   ///
@@ -94,8 +94,8 @@ class SongLibraryMetadataHydrator {
     ApplicationUtils.evictSongCoverProvidersForPath(p);
   }
 
-  /// 库内已有完整展示所需元数据时写入 [_cache]，使后续 hydrate 走「已命中」分支、不重复 [readMetadata]。
-  /// 要求非空歌词，以免阻断「仅从文件补歌词」的路径。
+  /// Hive 等已持久化「封面 + 文案」时可预热 [_cache]，避免冷启动对已带封面的 FLAC 重复读文件。
+  /// （不要求先有歌词——否则大量「仅嵌入封面」条目无法命中缓存。）
   static void _maybeSeedCacheFromLibrarySong(Song song) {
     final p = song.path;
     if (p.isEmpty) return;
@@ -103,8 +103,6 @@ class SongLibraryMetadataHydrator {
     final bytes = song.imageBytes;
     if (bytes == null || bytes.isEmpty) return;
     if (!(song.title?.trim().isNotEmpty ?? false)) return;
-    final ly = song.lyrics;
-    if (ly == null || ly.trim().isEmpty) return;
     _cache[p] = _MetaSnapshot.fromSong(song);
   }
 

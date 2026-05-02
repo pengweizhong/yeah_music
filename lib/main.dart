@@ -79,7 +79,7 @@ Future<void> main(List<String> args) async {
 
   AppStartupClock.ensureStarted();
   VisibilityDetectorController.instance.updateInterval =
-      const Duration(milliseconds: 80);
+      const Duration(milliseconds: 166);
   PaintingBinding.instance.imageCache
     ..maximumSize = 500
     ..maximumSizeBytes = 200 << 20;
@@ -219,9 +219,23 @@ class _AppStartupGateState extends State<AppStartupGate> {
               brightness: Brightness.dark,
               scaffoldBackgroundColor: const Color(0xFF0A0E14),
             ),
-            home: const Scaffold(
-              backgroundColor: Color(0xFF0A0E14),
-              body: SizedBox.shrink(),
+            home: Scaffold(
+              backgroundColor: const Color(0xFF0A0E14),
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.8,
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         },

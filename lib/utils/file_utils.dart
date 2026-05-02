@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
     show AudioMetadata, Picture, PictureType, readMetadata;
 import 'package:charset/charset.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/utils/wav_metadata_reader.dart';
@@ -71,15 +73,39 @@ class FileUtils {
     File file = File(song.path);
     late final AudioMetadata metadata;
     var resolvedEmbedImages = loadEmbeddedAlbumArt;
+    Future<AudioMetadata> readMeta(bool image) async {
+      if (!kIsWeb && image) {
+        final path = song.path;
+        return Isolate.run(() {
+          final f = File(path);
+          return readEmbeddedAudioMetadata(f, getImage: true);
+        });
+      }
+      return readEmbeddedAudioMetadata(file, getImage: image);
+    }
+
+    Future<AudioMetadata> readMetaNoImage() async {
+      if (!kIsWeb) {
+        final path = song.path;
+        return Isolate.run(() {
+          final f = File(path);
+          return readEmbeddedAudioMetadata(f, getImage: false);
+        });
+      }
+      return readEmbeddedAudioMetadata(file, getImage: false);
+    }
+
     try {
-      metadata =
-          readEmbeddedAudioMetadata(file, getImage: resolvedEmbedImages);
+      if (resolvedEmbedImages) {
+        metadata = await readMeta(true);
+      } else {
+        metadata = await readMeta(false);
+      }
     } catch (e, st) {
       if (loadEmbeddedAlbumArt) {
         appLog.w('readMetadata 失败，尝试跳过内嵌图: $filename', error: e);
         try {
-          metadata =
-              readEmbeddedAudioMetadata(file, getImage: false);
+          metadata = await readMetaNoImage();
           resolvedEmbedImages = false;
         } catch (e2) {
           song.title = filename;

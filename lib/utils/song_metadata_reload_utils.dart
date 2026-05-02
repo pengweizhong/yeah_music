@@ -14,7 +14,7 @@ import 'package:yeah_music/utils/song_path_utils.dart';
 Future<void> reloadAllSongInstancesAfterFileMetadataChanged(
   BuildContext context,
   String path, {
-  int maxEmbeddedArtBytes = 512 * 1024,
+  int maxEmbeddedArtBytes = SongLibraryMetadataHydrator.maxEmbeddedArtBytes,
   void Function()? afterProvidersNotify,
 }) async {
   final trimmed = path.trim();

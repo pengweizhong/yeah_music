@@ -109,10 +109,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _bootstrap();
-      if (!mounted) return;
       _play = context.read<PlayListProvider>();
       _play!.addListener(_onPlayListChange);
+      await _bootstrap();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_advanceHomeGreetingSubtitle());
@@ -174,15 +173,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       await user.init();
     }
     if (!mounted) return;
-    if (!play.initialized) {
-      await play.init(
-        folder,
-        oneDrive: context.read<OneDriveController>(),
-      );
-    }
-    if (!mounted) return;
     await _loadRecentPaths();
     await _loadQuickEntryConfig();
+    if (!mounted) return;
+    // 首页先就绪再后台合并两千首级目录，缩短「进到主页仍像卡住」体感；MiniPlayer 等对未初始化亦有占位。
+    if (!play.initialized) {
+      unawaited(() async {
+        try {
+          await play.init(
+            folder,
+            oneDrive: context.read<OneDriveController>(),
+          );
+        } catch (e, st) {
+          appLog.e(
+            '曲库合并（PlayListProvider）初始化失败',
+            error: e,
+            stackTrace: st,
+          );
+        }
+        if (mounted) setState(() {});
+      }());
+    }
   }
 
   Future<void> _loadQuickEntryConfig() async {

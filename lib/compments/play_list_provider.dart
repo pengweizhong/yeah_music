@@ -97,8 +97,9 @@ class PlayListProvider extends ChangeNotifier {
   /// 首轮插播生效前正在播放的曲目索引；插播全部播完后 [playAt] 回到该曲继续。
   int? _resumePlaylistIndexAfterDeferred;
 
-  /// 缓存的播放列表（文件夹合并 + OneDrive 本地缓存叠加，不含临时队列）
-  List<Song>? _cachedPlayList;
+  /// 文件夹合并 (+ OneDrive 叠加) 缓存；供 [libraryMergedSongs] 与无临时队列时的 [playList] 共用，
+  /// 避免此前 [libraryMergedSongs] getter 每次都 [expand]+[toList] 分配新列表导致长列表/UI 卡顿。
+  List<Song>? _cachedMergedLibrary;
 
   /// OneDrive 点播落地扫描结果（与文件夹曲目按路径去重后并入 [libraryMergedSongs] / [playList]）
   List<Song>? _onedriveCachedSongs;
@@ -176,7 +177,8 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   /// 文件夹扫描合并后再并入 OneDrive 缓存目录中的曲目（不受 [_playbackQueueOverride] 影响）
-  List<Song> get libraryMergedSongs => _computeMergedLibrarySongs();
+  List<Song> get libraryMergedSongs =>
+      _cachedMergedLibrary ??= _computeMergedLibrarySongs();
 
   /// 在合并曲库中按路径查 [Song]（与当前播放队列是否被歌单覆盖无关）
   Song? songInLibraryByPath(String path) {
@@ -255,15 +257,12 @@ class PlayListProvider extends ChangeNotifier {
   /// 若已设置 [_playbackQueueOverride] 则返回覆盖队列。
   List<Song> get playList {
     if (_playbackQueueOverride != null) return _playbackQueueOverride!;
-    if (_cachedPlayList == null) {
-      _cachedPlayList = _computeMergedLibrarySongs();
-    }
-    return _cachedPlayList!;
+    return _cachedMergedLibrary ??= _computeMergedLibrarySongs();
   }
 
   /// 清除播放列表缓存
   void _clearPlayListCache() {
-    _cachedPlayList = null;
+    _cachedMergedLibrary = null;
   }
 
   /// 合并曲库缓存失效时：按解码器当前在播路径重算 [_currentIndex]，避免列表合并顺序变化后「在播 A、UI 指向 B」。
@@ -275,7 +274,7 @@ class PlayListProvider extends ChangeNotifier {
   void _relocateCurrentIndexToMatchPlayingMedia() {
     if (_playbackQueueOverride != null) return;
     final lib = _computeMergedLibrarySongs();
-    _cachedPlayList = lib;
+    _cachedMergedLibrary = lib;
     final path = MusicService.tryCurrentPlayingPath();
     if (path != null && path.trim().isNotEmpty) {
       final wanted = _libraryPathKey(path);
@@ -476,7 +475,7 @@ class PlayListProvider extends ChangeNotifier {
     _statsBumpPlayCount = true;
     _clearPlayListCache();
     final lib = _computeMergedLibrarySongs();
-    _cachedPlayList = lib;
+    _cachedMergedLibrary = lib;
     if (path != null) {
       final i = lib.indexWhere((s) => s.path == path);
       if (i >= 0) {
