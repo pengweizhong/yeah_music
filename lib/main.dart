@@ -316,12 +316,14 @@ class _YeahMusicAppState extends State<YeahMusicApp>
       final folder = context.read<FolderProvider>();
       final play = context.read<PlayListProvider>();
       final od = context.read<OneDriveController>();
+      //播放队列
+      final userPl = context.read<UserPlaylistProvider>();
       final file = File(path);
       if (!await file.exists()) continue;
       if (!mounted) return;
       try {
         if (!play.initialized) {
-          await play.init(folder, oneDrive: od);
+          await play.init(folder, oneDrive: od, userPlaylists: userPl);
         }
         if (!mounted) return;
         final song = Song(path);

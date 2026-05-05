@@ -50,6 +50,7 @@ class _StoragePlayListPageState extends State<StoragePlayListPage> {
         await playListProvider.init(
           folderProvider,
           oneDrive: context.read<OneDriveController>(),
+          userPlaylists: userPl,
         );
       }
     });

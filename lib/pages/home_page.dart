@@ -155,6 +155,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       await play.init(
         folder,
         oneDrive: context.read<OneDriveController>(),
+        userPlaylists: context.read<UserPlaylistProvider>(),
       );
     } catch (e, st) {
       appLog.e('曲库合并（PlayListProvider）初始化失败', error: e, stackTrace: st);
@@ -183,6 +184,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           await play.init(
             folder,
             oneDrive: context.read<OneDriveController>(),
+            userPlaylists: context.read<UserPlaylistProvider>(),
           );
         } catch (e, st) {
           appLog.e(

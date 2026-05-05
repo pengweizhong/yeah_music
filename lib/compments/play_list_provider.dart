@@ -24,9 +24,19 @@ import 'package:yeah_music/models/constants.dart';
 import '../models/folder.dart';
 import 'folder_provider.dart';
 import 'onedrive_controller.dart';
+import 'user_playlist_provider.dart';
 
 /// Hive：上次播放曲目路径（冷启动优先按路径恢复迷你条，避免仅索引在合并顺序变化后错位）。
 const String _kHiveLastPlayedPathKey = 'last_played_path';
+
+/// Hive：上次播放所属列表（用于冷启动恢复用户歌单队列等）。
+const String _kHiveLastPlaybackSessionKey = 'last_playback_session_surface';
+
+/// Hive：用户歌单会话时对应歌单 id。
+const String _kHiveLastPlaybackUserPlaylistIdKey = 'last_playback_user_playlist_id';
+
+const String _kHiveLastPlaybackRecordRecentKey = 'last_playback_record_recent';
+const String _kHiveLastPlaybackBumpPlayCountKey = 'last_playback_bump_play_count';
 
 /// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
 String _libraryPathKey(String path) {
@@ -473,6 +483,7 @@ class PlayListProvider extends ChangeNotifier {
     _coalescedPlayPrevSteps = 0;
     _statsRecordRecent = true;
     _statsBumpPlayCount = true;
+    _applyPlaybackSession(PlaybackSessionSurface.library);
     _clearPlayListCache();
     final lib = _computeMergedLibrarySongs();
     _cachedMergedLibrary = lib;
@@ -493,6 +504,7 @@ class PlayListProvider extends ChangeNotifier {
     _shuffledIndices = null;
     _shuffledPlayedIndices = [];
     notifyListeners();
+    unawaited(_saveCurrentPlaybackSnapshot());
   }
 
   Song? get currentSong {
@@ -565,6 +577,7 @@ class PlayListProvider extends ChangeNotifier {
   Future<void> init(
     FolderProvider folderProvider, {
     OneDriveController? oneDrive,
+    UserPlaylistProvider? userPlaylists,
   }) async {
     //若本身已经被初始化
     if (_initialized) {
@@ -586,8 +599,12 @@ class PlayListProvider extends ChangeNotifier {
     // 进程重启后不保留上一会话的「下一曲播放」插播队列（仅供当次会话）。
     _clearDeferredPlayNext();
 
-    // 加载上次播放（路径优先，兼容旧版仅索引）
-    await _restoreLastPlayedSnapshot();
+    if (userPlaylists != null && !userPlaylists.initialized) {
+      await userPlaylists.init();
+    }
+
+    // 加载上次播放
+    await _restoreLastPlayedSnapshot(userPlaylists: userPlaylists);
 
     // 保障 currentIndex 合法
     final list = playList;
@@ -860,30 +877,98 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   /// 恢复上次播放：优先 [_kHiveLastPlayedPathKey]，其次 legacy `last_played_index`。
-  Future<void> _restoreLastPlayedSnapshot() async {
+  /// 若上次为自建歌单会话且 [userPlaylists] 可用，则恢复 [_playbackQueueOverride] 为该歌单曲目顺序。
+  Future<void> _restoreLastPlayedSnapshot({
+    UserPlaylistProvider? userPlaylists,
+  }) async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final list = playList;
-      if (list.isEmpty) return;
+
+      PlaybackSessionSurface surface = PlaybackSessionSurface.library;
+      final sessionRaw = box.get(_kHiveLastPlaybackSessionKey) as String?;
+      if (sessionRaw != null && sessionRaw.trim().isNotEmpty) {
+        try {
+          surface = PlaybackSessionSurface.values.byName(sessionRaw.trim());
+        } catch (_) {}
+      }
+
+      _statsRecordRecent =
+          box.get(_kHiveLastPlaybackRecordRecentKey, defaultValue: true) as bool? ??
+              true;
+      _statsBumpPlayCount =
+          box.get(_kHiveLastPlaybackBumpPlayCountKey, defaultValue: true) as bool? ??
+              true;
+
+      final userPidRaw = box.get(_kHiveLastPlaybackUserPlaylistIdKey) as String?;
+      final userPid = userPidRaw?.trim() ?? '';
 
       final pathRaw = box.get(_kHiveLastPlayedPathKey) as String?;
-      if (pathRaw != null && pathRaw.trim().isNotEmpty) {
-        final wanted = _libraryPathKey(pathRaw);
-        final i = list.indexWhere((s) => _libraryPathKey(s.path) == wanted);
-        if (i >= 0) {
-          _currentIndex = i;
-          appLog.d('已按路径恢复上次播放 → 索引 $_currentIndex');
-          return;
+      final savedIndex = box.get('last_played_index', defaultValue: 0) as int?;
+
+      if (surface == PlaybackSessionSurface.userPlaylist &&
+          userPid.isNotEmpty &&
+          userPlaylists != null) {
+        UserPlaylist? playlist;
+        for (final p in userPlaylists.playlists) {
+          if (p.id == userPid) {
+            playlist = p;
+            break;
+          }
+        }
+        if (playlist != null) {
+          final resolved = await userPlaylists.songsForPlaylistWithDiskFallback(
+            playlist,
+            libraryMergedSongs,
+          );
+          if (resolved.isNotEmpty) {
+            _playbackQueueOverride = resolved;
+            _applyPlaybackSession(
+              PlaybackSessionSurface.userPlaylist,
+              userPlaylistId: userPid,
+            );
+            _applyRestoredIndexFromPathOrLegacyIndex(
+              pathRaw,
+              savedIndex,
+            );
+            appLog.d('已恢复用户歌单播放队列 → id=$userPid, ${_currentIndex + 1}/${resolved.length}');
+            return;
+          }
         }
       }
 
-      final savedIndex = box.get('last_played_index', defaultValue: 0) as int?;
-      if (savedIndex != null && savedIndex >= 0) {
-        _currentIndex = savedIndex.clamp(0, list.length - 1);
-        appLog.d('已恢复播放位置(索引): $_currentIndex');
+      _playbackQueueOverride = null;
+      if (surface == PlaybackSessionSurface.userPlaylist) {
+        _applyPlaybackSession(PlaybackSessionSurface.library);
+      } else {
+        _applyPlaybackSession(surface);
       }
+
+      final list = playList;
+      if (list.isEmpty) return;
+
+      _applyRestoredIndexFromPathOrLegacyIndex(pathRaw, savedIndex);
     } catch (e) {
       appLog.e('加载上次播放快照失败', error: e);
+    }
+  }
+
+  void _applyRestoredIndexFromPathOrLegacyIndex(String? pathRaw, int? savedIndex) {
+    final list = playList;
+    if (list.isEmpty) return;
+
+    if (pathRaw != null && pathRaw.trim().isNotEmpty) {
+      final wanted = _libraryPathKey(pathRaw);
+      final i = list.indexWhere((s) => _libraryPathKey(s.path) == wanted);
+      if (i >= 0) {
+        _currentIndex = i;
+        appLog.d('已按路径恢复上次播放 → 索引 $_currentIndex');
+        return;
+      }
+    }
+
+    if (savedIndex != null && savedIndex >= 0) {
+      _currentIndex = savedIndex.clamp(0, list.length - 1);
+      appLog.d('已恢复播放位置(索引): $_currentIndex');
     }
   }
 
@@ -898,6 +983,18 @@ class PlayListProvider extends ChangeNotifier {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       await box.put('last_played_index', idx);
       await box.put(_kHiveLastPlayedPathKey, path);
+      await box.put(_kHiveLastPlaybackSessionKey, _playbackSessionSurface.name);
+      if (_playbackSessionSurface == PlaybackSessionSurface.userPlaylist &&
+          (_playbackSessionUserPlaylistId ?? '').trim().isNotEmpty) {
+        await box.put(
+          _kHiveLastPlaybackUserPlaylistIdKey,
+          _playbackSessionUserPlaylistId!.trim(),
+        );
+      } else {
+        await box.delete(_kHiveLastPlaybackUserPlaylistIdKey);
+      }
+      await box.put(_kHiveLastPlaybackRecordRecentKey, _statsRecordRecent);
+      await box.put(_kHiveLastPlaybackBumpPlayCountKey, _statsBumpPlayCount);
     } catch (e) {
       appLog.e('保存上次播放快照失败', error: e);
     }

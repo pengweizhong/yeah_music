@@ -182,6 +182,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
         await playListProvider.init(
           folderProvider,
           oneDrive: context.read<OneDriveController>(),
+          userPlaylists: context.read<UserPlaylistProvider>(),
         );
         listStructureChanged = true;
       }
@@ -1027,6 +1028,7 @@ Future<void> showLibrarySearch(BuildContext context) async {
     await playListProvider.init(
       folderProvider,
       oneDrive: context.read<OneDriveController>(),
+      userPlaylists: context.read<UserPlaylistProvider>(),
     );
   }
   if (!context.mounted) return;

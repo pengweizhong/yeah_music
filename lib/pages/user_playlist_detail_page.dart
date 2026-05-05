@@ -86,7 +86,11 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     final folder = context.read<FolderProvider>();
     final od = context.read<OneDriveController>();
     if (!playList.initialized) {
-      await playList.init(folder, oneDrive: od);
+      await playList.init(
+        folder,
+        oneDrive: od,
+        userPlaylists: context.read<UserPlaylistProvider>(),
+      );
     }
     if (!context.mounted) return [];
     await playList.refreshOneDriveLibraryOverlay(od);
