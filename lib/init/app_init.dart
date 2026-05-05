@@ -152,9 +152,7 @@ class AppInit {
     appLog.d('Hive: 已就绪');
   }
 
-  /**
-   * 暂时在这里提供一个清理缓存的方法，在开发的时候临时调用
-   */
+  /// 暂时在这里提供一个清理缓存的方法，在开发的时候临时调用
   Future<void> clearHiveCache() async {
     await Hive.deleteBoxFromDisk('settings');
     await Hive.deleteBoxFromDisk(Constant.hiveRootPath);
