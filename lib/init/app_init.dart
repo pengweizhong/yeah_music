@@ -54,7 +54,10 @@ class AppInit {
   Future<void> initHive() async {
     appLog.d('Hive: 开始初始化');
     await Hive.initFlutter();
-
+    appLog.d('Hive: HiveFlutter 已初始化');
+    appLog.d('开始清理缓存');
+    // await clearHiveCache();
+    appLog.d('缓存清理完毕');
     Hive.registerAdapter(FolderAdapter());
     Hive.registerAdapter(SongAdapter());
     Hive.registerAdapter(LyricSettingsAdapter());
@@ -148,4 +151,14 @@ class AppInit {
     }
     appLog.d('Hive: 已就绪');
   }
+
+  /**
+   * 暂时在这里提供一个清理缓存的方法，在开发的时候临时调用
+   */
+  Future<void> clearHiveCache() async {
+    await Hive.deleteBoxFromDisk('settings');
+    await Hive.deleteBoxFromDisk(Constant.hiveRootPath);
+    await Hive.deleteBoxFromDisk(Constant.hiveFolderBox);
+  }
+
 }
