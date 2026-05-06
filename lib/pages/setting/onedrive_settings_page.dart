@@ -166,10 +166,7 @@ Future<OneDriveRestoreSelection?> presentOneDriveRestorePicker({
             padding: EdgeInsets.only(
               bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
             ),
-            child: Theme(
-              data: ThemeData.dark(useMaterial3: true),
-              child: sheetChild,
-            ),
+            child: sheetChild,
           ),
         );
       },
@@ -214,10 +211,7 @@ Future<OneDriveRestoreSelection?> presentOneDriveRestorePicker({
                   ),
                 ],
               ),
-              child: Theme(
-                data: ThemeData.dark(useMaterial3: true),
-                child: sheetChild,
-              ),
+              child: sheetChild,
             ),
           ),
         ),
@@ -795,6 +789,15 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
   late bool _wantTheme;
   bool _replacePlaylists = false;
 
+  Color _textPrimary(BuildContext context) =>
+      Theme.of(context).colorScheme.onSurface;
+  Color _textSecondary(BuildContext context) =>
+      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+  Color _textMuted(BuildContext context) =>
+      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55);
+  Color _dividerColor(BuildContext context) =>
+      Theme.of(context).dividerColor.withValues(alpha: 0.35);
+
   @override
   void initState() {
     super.initState();
@@ -848,6 +851,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
     AppLocalizations l10n,
     OneDriveCloudBackupSnapshot snap,
   ) {
+    final textColor = _textPrimary(context);
     return [
       if (snap.kind == OneDriveCloudBackupSnapshotKind.deviceSession) ...[
         CheckboxListTile(
@@ -858,7 +862,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceHomeGreeting,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -869,7 +873,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceQuickEntry,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -880,7 +884,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSlicePlaybackLists,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -891,7 +895,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceLyricsUi,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -902,7 +906,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceSongRecognition,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -913,7 +917,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceTheme,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
       ],
@@ -926,7 +930,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreLegacySettingsCheckbox,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: textColor),
           ),
         ),
     ];
@@ -955,15 +959,15 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
       },
       title: Text(
         _backupSnapshotRowTitle(l10n, s, tabKind),
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: _textPrimary(context),
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: Text(
         _backupSnapshotSubtitle(l10n, s),
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.45),
+          color: _textMuted(context),
           fontSize: 12,
         ),
       ),
@@ -992,7 +996,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
               Text(
                 l10n.oneDriveRestoreListShowing(visible, total),
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.38),
+                  color: _textMuted(context),
                   fontSize: 12,
                 ),
                 textAlign: TextAlign.center,
@@ -1017,7 +1021,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           child: Text(
             l10n.oneDriveRestoreListShowing(visible, total),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.38),
+              color: _textMuted(context),
               fontSize: 12,
             ),
             textAlign: TextAlign.center,
@@ -1042,8 +1046,8 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
         TabBar(
           controller: _tabController!,
           isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
+          labelColor: _textPrimary(context),
+          unselectedLabelColor: _textSecondary(context),
           indicatorColor: _accent,
           labelPadding: const EdgeInsets.symmetric(horizontal: 12),
           tabs: [
@@ -1075,6 +1079,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
     OneDriveCloudBackupSnapshot snap,
   ) {
     final sliceTiles = _buildSliceTiles(l10n, snap);
+    final textColor = _textPrimary(context);
     return [
       CheckboxListTile(
         value: _wantPlaylists,
@@ -1088,7 +1093,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
         activeColor: _accent,
         title: Text(
           l10n.oneDriveRestorePlaylistCheckbox,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
         ),
       ),
       ...sliceTiles,
@@ -1102,7 +1107,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           },
           title: Text(
             l10n.oneDriveRestorePlaylistModeMerge,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+            style: TextStyle(color: _textSecondary(context)),
           ),
         ),
         RadioListTile<bool>(
@@ -1114,7 +1119,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           },
           title: Text(
             l10n.oneDriveRestorePlaylistModeReplace,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+            style: TextStyle(color: _textSecondary(context)),
           ),
         ),
       ],
@@ -1200,8 +1205,8 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                     Expanded(
                       child: Text(
                         l10n.oneDriveRestoreSheetTitle,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: _textPrimary(context),
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1209,7 +1214,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                     ),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, color: Colors.white54),
+                      icon: Icon(Icons.close, color: _textSecondary(context)),
                     ),
                   ],
                 ),
@@ -1217,7 +1222,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                 Text(
                   l10n.oneDriveRestoreEmpty,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: _textSecondary(context),
                     height: 1.35,
                   ),
                 ),
@@ -1240,8 +1245,8 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
             Expanded(
               child: Text(
                 l10n.oneDriveRestoreSheetTitle,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: _textPrimary(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1249,7 +1254,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
             ),
             IconButton(
               onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.close, color: Colors.white54),
+              icon: Icon(Icons.close, color: _textSecondary(context)),
             ),
           ],
         ),
@@ -1261,7 +1266,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
       child: Text(
         l10n.oneDriveRestoreSubtitle,
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.55),
+          color: _textMuted(context),
           fontSize: 12,
           height: 1.35,
         ),
@@ -1292,7 +1297,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                         child: _backupPickerPanel(l10n),
                       ),
                     ),
-                    const Divider(height: 1, color: Color(0x22FFFFFF)),
+                    Divider(height: 1, color: _dividerColor(context)),
                     Flexible(
                       flex: 48,
                       child: Material(
@@ -1326,10 +1331,9 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                             child: _backupPickerPanel(l10n),
                           ),
                         ),
-                        const VerticalDivider(
+                        Container(
                           width: 1,
-                          thickness: 1,
-                          color: Color(0x22FFFFFF),
+                          color: _dividerColor(context),
                         ),
                         Expanded(
                           flex: 58,
@@ -1344,8 +1348,8 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                                   children: [
                                     Text(
                                       l10n.oneDriveRestoreContentSectionTitle,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: _textPrimary(context),
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -1354,9 +1358,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                                     Text(
                                       l10n.oneDriveRestoreSubtitle,
                                       style: TextStyle(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.52,
-                                        ),
+                                        color: _textMuted(context),
                                         fontSize: 12,
                                         height: 1.35,
                                       ),

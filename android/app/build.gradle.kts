@@ -39,15 +39,29 @@ android {
         manifestPlaceholders["appAuthRedirectScheme"] = "com.pengwz.yeahmusic"
     }
 
-    //  必须先声明 signingConfigs
+    //  必须先声明 signingConfigs, 允许debug下使用
     signingConfigs {
         create("release") {
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
+            val storeFilePath = keystoreProperties["storeFile"]?.toString()
+            val storePasswordValue = keystoreProperties["storePassword"]?.toString()
+            val keyAliasValue = keystoreProperties["keyAlias"]?.toString()
+            val keyPasswordValue = keystoreProperties["keyPassword"]?.toString()
+
+            if (storeFilePath != null &&
+                storePasswordValue != null &&
+                keyAliasValue != null &&
+                keyPasswordValue != null
+            ) {
+                storeFile = file(storeFilePath)
+                storePassword = storePasswordValue
+                keyAlias = keyAliasValue
+                keyPassword = keyPasswordValue
+            } else {
+                println("⚠️ Warning: Missing keystore config, using debug signing.")
+            }
         }
     }
+
 
     //  再声明 buildTypes
     buildTypes {
