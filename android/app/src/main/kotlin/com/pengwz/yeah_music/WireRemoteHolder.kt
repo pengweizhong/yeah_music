@@ -93,6 +93,13 @@ object WireRemoteHolder {
     }
 
     /**
+     * 后台/锁屏广播接收器入口；与前台分发保持一致。
+     */
+    fun onMediaButtonBroadcastEvent(event: KeyEvent?): Boolean {
+        return onMediaButtonEvent(event)
+    }
+
+    /**
      * 线控 / 部分设备的播放键连击。
      *
      * @param repeatCount [KeyEvent.getRepeatCount] 长按会产生重复 DOWN，不参与连击计数。
