@@ -36,37 +36,8 @@ class MainActivity : AudioServiceFragmentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action != KeyEvent.ACTION_DOWN) {
-            return super.dispatchKeyEvent(event)
-        }
-        when (event.keyCode) {
-            KeyEvent.KEYCODE_HEADSETHOOK,
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-            -> {
-                if (WireRemoteHolder.onHeadsetHookDown(event.repeatCount)) {
-                    return true
-                }
-            }
-            KeyEvent.KEYCODE_MEDIA_NEXT,
-            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD,
-            -> {
-                if (event.repeatCount > 0) {
-                    return super.dispatchKeyEvent(event)
-                }
-                if (WireRemoteHolder.onMediaDiscreteKey("next")) {
-                    return true
-                }
-            }
-            KeyEvent.KEYCODE_MEDIA_PREVIOUS,
-            KeyEvent.KEYCODE_MEDIA_REWIND,
-            -> {
-                if (event.repeatCount > 0) {
-                    return super.dispatchKeyEvent(event)
-                }
-                if (WireRemoteHolder.onMediaDiscreteKey("previous")) {
-                    return true
-                }
-            }
+        if (WireRemoteHolder.onMediaButtonEvent(event)) {
+            return true
         }
         return super.dispatchKeyEvent(event)
     }

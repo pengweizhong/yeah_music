@@ -1,5 +1,8 @@
 package com.pengwz.yeah_music
 
+import android.content.Context
+import android.view.KeyEvent
+import com.ryanheise.audioservice.AudioServicePlugin
 import android.os.Handler
 import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
@@ -43,6 +46,15 @@ object WireRemoteHolder {
         }
     }
 
+    fun ensureAttached(context: Context) {
+        if (messenger != null) return
+        try {
+            val engine = AudioServicePlugin.getFlutterEngine(context)
+            attach(engine.dartExecutor.binaryMessenger)
+        } catch (_: Throwable) {
+        }
+    }
+
     /**
      * 蓝牙耳机等常直接发 `MEDIA_NEXT` / `MEDIA_PREVIOUS`，不会走连击计数。
      *
@@ -54,6 +66,30 @@ object WireRemoteHolder {
         val m = messenger ?: return false
         MethodChannel(m, CHANNEL).invokeMethod("mediaDiscrete", kind)
         return true
+    }
+
+    fun onMediaButtonEvent(event: KeyEvent?): Boolean {
+        val e = event ?: return false
+        if (e.action != KeyEvent.ACTION_DOWN) return false
+        return when (e.keyCode) {
+            KeyEvent.KEYCODE_HEADSETHOOK,
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            -> onHeadsetHookDown(e.repeatCount)
+
+            KeyEvent.KEYCODE_MEDIA_NEXT,
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD,
+            -> {
+                if (e.repeatCount > 0) false else onMediaDiscreteKey("next")
+            }
+
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS,
+            KeyEvent.KEYCODE_MEDIA_REWIND,
+            -> {
+                if (e.repeatCount > 0) false else onMediaDiscreteKey("previous")
+            }
+
+            else -> false
+        }
     }
 
     /**

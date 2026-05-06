@@ -1,14 +1,19 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Directory, File, Platform;
 
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/disk_space.dart';
 import 'package:yeah_music/compments/mini_player.dart';
+import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/home_greeting_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
@@ -20,6 +25,7 @@ import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 
@@ -46,6 +52,107 @@ Widget _settingHelpButton(
     padding: EdgeInsets.zero,
     constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
   );
+}
+
+String _formatBytes(int bytes) {
+  if (bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  var size = bytes.toDouble();
+  var unit = 0;
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit++;
+  }
+  final fixed = size >= 100 ? 0 : 1;
+  return '${size.toStringAsFixed(fixed)} ${units[unit]}';
+}
+
+Future<int> _directoryBytes(Directory dir) async {
+  if (!await dir.exists()) return 0;
+  var total = 0;
+  await for (final entity in dir.list(recursive: true, followLinks: false)) {
+    if (entity is! File) continue;
+    try {
+      total += await entity.length();
+    } catch (_) {}
+  }
+  return total;
+}
+
+Future<List<Directory>> _managedCacheDirectories() async {
+  final dirs = <Directory>[];
+  final seen = <String>{};
+  Future<void> addDir(Directory dir) async {
+    final norm = p.normalize(dir.path);
+    if (seen.add(norm)) dirs.add(dir);
+  }
+
+  final appCache = await getApplicationCacheDirectory();
+  await addDir(appCache);
+
+  final support = await getApplicationSupportDirectory();
+  await addDir(Directory(p.join(support.path, 'onedrive_cache')));
+  return dirs;
+}
+
+Future<int> _loadManagedCacheBytes() async {
+  final dirs = await _managedCacheDirectories();
+  var total = 0;
+  for (final d in dirs) {
+    total += await _directoryBytes(d);
+  }
+  total += await _loadHiveCacheFilesBytes();
+  return total;
+}
+
+Future<int> _loadHiveCacheFilesBytes() async {
+  final docs = await getApplicationDocumentsDirectory();
+  final boxes = <String>[
+    'settings',
+    Constant.hiveRootPath,
+    Constant.hiveFolderBox,
+  ];
+  const suffixes = <String>['.hive', '.hivec', '.lock'];
+  var total = 0;
+  for (final name in boxes) {
+    final base = name.trim().toLowerCase();
+    if (base.isEmpty) continue;
+    for (final suffix in suffixes) {
+      final file = File(p.join(docs.path, '$base$suffix'));
+      if (!await file.exists()) continue;
+      try {
+        total += await file.length();
+      } catch (_) {}
+    }
+  }
+  return total;
+}
+
+Future<void> _clearManagedCacheDirectories() async {
+  final dirs = await _managedCacheDirectories();
+  for (final d in dirs) {
+    if (!await d.exists()) continue;
+    await for (final entity in d.list(recursive: false, followLinks: false)) {
+      try {
+        await entity.delete(recursive: true);
+      } catch (_) {}
+    }
+  }
+
+  // 按现有初始化逻辑清掉 Hive 缓存数据（用户已明确要求）。
+  final boxes = <String>[
+    'settings',
+    Constant.hiveRootPath,
+    Constant.hiveFolderBox,
+  ];
+  for (final boxName in boxes) {
+    try {
+      if (Hive.isBoxOpen(boxName)) {
+        await Hive.box(boxName).close();
+      }
+    } catch (_) {}
+    await HiveUtils.deleteHiveBoxDiskFilesBestEffort(boxName);
+  }
 }
 
 /// Android：车载 / 锁屏媒体会话（封面、歌词行、切歌）。
@@ -346,6 +453,7 @@ class SettingPage extends StatelessWidget {
                     ),
                     const PlaybackShortcutsSettingsSection(),
                     const _AndroidCarLyricsSettingsSection(),
+                    const _CacheManagementSection(),
                     const WireRemoteControlSection(),
                     const _DesktopLyricsSettingsSection(),
                     ListTile(
@@ -418,6 +526,182 @@ class SettingPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _CacheManagementSection extends StatefulWidget {
+  const _CacheManagementSection();
+
+  @override
+  State<_CacheManagementSection> createState() => _CacheManagementSectionState();
+}
+
+class _CacheManagementSectionState extends State<_CacheManagementSection> {
+  bool _loadingSize = true;
+  bool _clearing = false;
+  int _cacheBytes = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _reloadSize();
+  }
+
+  Future<void> _reloadSize() async {
+    setState(() => _loadingSize = true);
+    final bytes = await _loadManagedCacheBytes();
+    if (!mounted) return;
+    setState(() {
+      _cacheBytes = bytes;
+      _loadingSize = false;
+    });
+  }
+
+  Future<void> _confirmAndClear() async {
+    if (_clearing) return;
+    final t = _CacheTexts.of(context);
+    final ok = await showAppConfirmDialog(
+      context: context,
+      title: t.dialogTitle,
+      message: t.dialogBody(_formatBytes(_cacheBytes)),
+      icon: Icons.cleaning_services_outlined,
+      cancelLabel: t.cancel,
+      confirmLabel: t.clearAction,
+    );
+    if (ok != true) return;
+
+    setState(() => _clearing = true);
+    try {
+      await _clearManagedCacheDirectories();
+      context.read<OneDriveController>().clearBrowseChildrenCache();
+      if (!mounted) return;
+      await _reloadSize();
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        t.clearDone,
+        kind: AppSnackKind.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, t.clearFailed('$e'), kind: AppSnackKind.error);
+    } finally {
+      if (mounted) {
+        setState(() => _clearing = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = context.gradFg();
+    final fgMuted = context.gradFg(0.6);
+    final t = _CacheTexts.of(context);
+    final subtitle = _loadingSize
+        ? t.measuring
+        : t.currentSize(_formatBytes(_cacheBytes));
+    return ListTile(
+      title: Text(t.title, style: TextStyle(color: fg)),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(color: fgMuted, fontSize: 13),
+      ),
+      leading: Icon(Icons.cleaning_services_outlined, color: fg),
+      trailing: _clearing
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : TextButton(
+              onPressed: _confirmAndClear,
+              style: TextButton.styleFrom(foregroundColor: fg),
+              child: Text(t.clearAction),
+            ),
+      onTap: _clearing ? null : _confirmAndClear,
+    );
+  }
+}
+
+class _CacheTexts {
+  const _CacheTexts._({
+    required this.title,
+    required this.measuring,
+    required this.dialogTitle,
+    required this.cancel,
+    required this.clearAction,
+    required this.clearDone,
+    required this.currentSize,
+    required this.dialogBody,
+    required this.clearFailed,
+  });
+
+  final String title;
+  final String measuring;
+  final String dialogTitle;
+  final String cancel;
+  final String clearAction;
+  final String clearDone;
+  final String Function(String size) currentSize;
+  final String Function(String size) dialogBody;
+  final String Function(String err) clearFailed;
+
+  static _CacheTexts of(BuildContext context) {
+    final tag = Localizations.localeOf(context).toLanguageTag();
+    if (tag.startsWith('ja')) {
+      return _CacheTexts._(
+        title: 'キャッシュ管理',
+        measuring: 'キャッシュを集計中…',
+        dialogTitle: 'キャッシュを削除',
+        cancel: 'キャンセル',
+        clearAction: '削除',
+        clearDone: 'キャッシュを削除しました（完全反映には再起動が必要な場合があります）',
+        currentSize: (size) => '削除可能なキャッシュ: $size',
+        dialogBody: (size) =>
+            '削除可能なキャッシュは約 $size です。今すぐ削除しますか？\n\n※ 端末内の設定とキャッシュデータも削除されます。',
+        clearFailed: (err) => 'キャッシュ削除に失敗しました: $err',
+      );
+    }
+    if (tag.startsWith('zh-Hant')) {
+      return _CacheTexts._(
+        title: '快取管理',
+        measuring: '正在統計快取…',
+        dialogTitle: '清理快取',
+        cancel: '取消',
+        clearAction: '清理',
+        clearDone: '快取已清理（部分設定需重新啟動後才會完全生效）',
+        currentSize: (size) => '目前可清理快取：$size',
+        dialogBody: (size) =>
+            '目前可清理快取約 $size，確定立即清理嗎？\n\n注意：這會清空本機設定與快取資料。',
+        clearFailed: (err) => '快取清理失敗：$err',
+      );
+    }
+    if (tag.startsWith('en')) {
+      return _CacheTexts._(
+        title: 'Cache management',
+        measuring: 'Measuring cache size…',
+        dialogTitle: 'Clear cache',
+        cancel: 'Cancel',
+        clearAction: 'Clear',
+        clearDone:
+            'Cache cleared (some settings may require app restart to fully apply)',
+        currentSize: (size) => 'Clearable cache: $size',
+        dialogBody: (size) =>
+            'About $size can be cleared. Clear now?\n\nNote: this will remove local settings and cached data.',
+        clearFailed: (err) => 'Failed to clear cache: $err',
+      );
+    }
+    return _CacheTexts._(
+      title: '缓存管理',
+      measuring: '正在统计缓存...',
+      dialogTitle: '清理缓存',
+      cancel: '取消',
+      clearAction: '清理',
+      clearDone: '缓存清理完成（部分配置需重启后完全生效）',
+      currentSize: (size) => '当前可清理缓存：$size',
+      dialogBody: (size) => '当前可清理缓存约 $size，确认立即清理吗？\n\n注意：这会清空本地设置与缓存数据。',
+      clearFailed: (err) => '缓存清理失败：$err',
     );
   }
 }
