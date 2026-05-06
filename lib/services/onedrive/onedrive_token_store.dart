@@ -1,9 +1,19 @@
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// 安全保存 OneDrive OAuth 令牌。
 class OneDriveTokenStore {
   OneDriveTokenStore({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+      : _storage = storage ?? _defaultSecureStorage;
+
+  /// macOS 沙盒下默认的 Data Protection 钥匙串会触发 -34018（缺少 entitlement），
+  /// 与 OneDrive 登录后写令牌路径一致，故在桌面 macOS 关闭该标志。
+  static final FlutterSecureStorage _defaultSecureStorage =
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS
+          ? const FlutterSecureStorage(
+              mOptions: MacOsOptions(useDataProtectionKeyChain: false),
+            )
+          : const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
