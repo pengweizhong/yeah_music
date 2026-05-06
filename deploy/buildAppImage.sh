@@ -3,7 +3,7 @@ set -e
 
 # ====================== 【配置区域】======================
 APP_NAME="YeahMusic"         # 应用名
-VERSION="1.0.0"              # 版本号
+# VERSION="1.0.0"           # 已注释，自动从 pubspec.yaml 读取
 ARCH="x86_64"                # 系统架构
 ICON_NAME="yeah_music"       # 图标名
 EXEC_NAME="yeah_music"       # 可执行文件名
@@ -14,6 +14,10 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 
 cd "$PROJECT_ROOT" || exit 1
+
+# 读取版本号（从 pubspec.yaml）
+VERSION=$(grep 'version:' pubspec.yaml | head -n1 | awk '{print $2}' | cut -d'+' -f1)
+echo "🚀 当前版本号：$VERSION (自动从 pubspec.yaml 读取)"
 
 # 清理 + 构建
 flutter clean

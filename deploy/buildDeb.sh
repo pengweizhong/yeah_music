@@ -3,7 +3,7 @@ set -e
 
 # ====================== 【可配置区域】======================
 APP_NAME="YeahMusic"
-VERSION="1.0.0"
+# VERSION="1.0.0"  # 注释掉，自动从 pubspec.yaml 读取
 ARCH="amd64"
 EXEC_NAME="yeah_music"
 ICON_NAME="yeah_music"
@@ -14,6 +14,10 @@ MAINTAINER="PengWeiZhong"
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 cd "$PROJECT_ROOT" || exit 1
+
+# 读取版本号
+VERSION=$(grep 'version:' pubspec.yaml | head -n1 | awk '{print $2}' | cut -d'+' -f1)
+echo "🚀 当前版本：$VERSION (从 pubspec.yaml 自动读取)"
 
 DEB_OUTPUT="${APP_NAME}-${ARCH}-${VERSION}.deb"
 
