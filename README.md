@@ -101,11 +101,14 @@
 
 
 ### macOS
+
+![image-20260507221145584](./README.assets/image-20260507221145584.png)
+
 macOS适配了菜单栏歌词  
 <img src="./README.assets/image-20260506021848996.png" alt="image-20260506021848996" style="zoom:50%;" />
 
 ### KDE
 
-Ubuntu/KDE 桌面下适配了托盘图标
+Ubuntu/KDE 桌面下适配了托盘图标，其余的和macOS界面基本一致，但是无法使用Onedrive。
 
 <img src="./README.assets/image-20260506211712098.png" alt="image-20260506021848996" style="zoom:90%;" />
