@@ -109,7 +109,7 @@ macOS适配了菜单栏歌词
 
 支持切换多行歌词显示模式，最多支持切换10种语言（我认为够用了），切换后的歌词会实时同步到菜单栏歌词和桌面悬浮歌词。
 
-<video src="./README.assets/PixPin_2026-05-07_22-18-19.mp4" controls=""></video>
+![PixPin_2026-05-07_22-18-19](./README.assets/PixPin_2026-05-07_22-18-19.gif)
 
 ### KDE
 
