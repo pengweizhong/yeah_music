@@ -29,7 +29,15 @@ AudioMetadata readEmbeddedAudioMetadata(
       );
     }
   }
-  return readMetadata(file, getImage: getImage);
+  final metadata = readMetadata(file, getImage: getImage);
+  final fixedLyrics = _repairPossiblyTruncatedEmbeddedLyrics(
+    file: file,
+    currentLyrics: metadata.lyrics,
+  );
+  if (fixedLyrics != null && fixedLyrics.trim().isNotEmpty) {
+    metadata.lyrics = fixedLyrics;
+  }
+  return metadata;
 }
 
 /// 与详情页 [_pickCoverBytes] 一致：优先封面图类型块再退回首张。
@@ -236,4 +244,154 @@ class FileUtils {
   //     throw UnsupportedError('This platform is not supported');
   //   }
   // }
+}
+
+String? _repairPossiblyTruncatedEmbeddedLyrics({
+  required File file,
+  required String? currentLyrics,
+}) {
+  final ext = p.extension(file.path).toLowerCase();
+  final now = currentLyrics?.trim() ?? '';
+
+  try {
+    final bytes = file.readAsBytesSync();
+    if (bytes.isEmpty) return currentLyrics;
+    final chunks = <String>[];
+    if (ext == '.mp3') {
+      extractUsLtFromId3Haystack(bytes, chunks);
+    } else if (ext == '.flac') {
+      chunks.addAll(_extractLyricsFromFlacVorbisComment(bytes));
+    }
+    if (chunks.isEmpty) return currentLyrics;
+    final best = _pickBestLyricsCandidate(chunks);
+    if (best == null || best.trim().isEmpty) return currentLyrics;
+    final fromReaderScore = _lyricsCandidateScore(now);
+    final fromContainerScore = _lyricsCandidateScore(best.trim());
+    if (fromContainerScore > fromReaderScore + 20) return best.trim();
+  } catch (_) {}
+  return currentLyrics;
+}
+
+List<String> _extractLyricsFromFlacVorbisComment(Uint8List bytes) {
+  final out = <String>[];
+  if (bytes.length < 8) return out;
+  if (!(bytes[0] == 0x66 && bytes[1] == 0x4c && bytes[2] == 0x61 && bytes[3] == 0x43)) {
+    return out;
+  }
+  var offset = 4;
+  while (offset + 4 <= bytes.length) {
+    final header = bytes[offset];
+    final isLast = (header & 0x80) != 0;
+    final blockType = header & 0x7f;
+    final blockLen =
+        (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
+    offset += 4;
+    if (offset + blockLen > bytes.length) break;
+    if (blockType == 4) {
+      final block = Uint8List.sublistView(bytes, offset, offset + blockLen);
+      out.addAll(_parseVorbisLyricsComments(block));
+    }
+    offset += blockLen;
+    if (isLast) break;
+  }
+  return out;
+}
+
+List<String> _parseVorbisLyricsComments(Uint8List block) {
+  final out = <String>[];
+  if (block.length < 8) return out;
+  var off = 0;
+  final vendorLen = _le32(block, off);
+  off += 4;
+  if (vendorLen < 0 || off + vendorLen > block.length) return out;
+  off += vendorLen;
+  if (off + 4 > block.length) return out;
+  final commentCount = _le32(block, off);
+  off += 4;
+  for (var i = 0; i < commentCount; i++) {
+    if (off + 4 > block.length) break;
+    final len = _le32(block, off);
+    off += 4;
+    if (len < 0 || off + len > block.length) break;
+    final raw = utf8.decode(Uint8List.sublistView(block, off, off + len), allowMalformed: true);
+    off += len;
+    final eq = raw.indexOf('=');
+    if (eq <= 0) continue;
+    final key = raw.substring(0, eq).trim().toUpperCase();
+    final value = raw.substring(eq + 1).trim();
+    if (value.isEmpty) continue;
+    if (key == 'LYRICS' || key == 'UNSYNCEDLYRICS' || key == 'LYRIC' || key == 'LRC') {
+      out.add(value);
+    }
+  }
+  return out;
+}
+
+int _le32(Uint8List b, int o) {
+  if (o + 4 > b.length) return -1;
+  return b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24);
+}
+
+bool _looksLikeTruncatedOrHeaderOnlyLyrics(String lyrics) {
+  if (lyrics.isEmpty) return true;
+  final lines = lyrics
+      .split(RegExp(r'\r\n|\r|\n'))
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+  if (lines.isEmpty) return true;
+
+  final timedCount = RegExp(r'^\[\d{1,3}:[0-5]?\d(?:\.\d{1,3})?]').allMatches(lyrics).length;
+  if (timedCount > 0) return false;
+
+  final headerCount = lines
+      .where((l) => RegExp(r'^\[[A-Za-z][A-Za-z0-9_-]{0,31}:[^\]]*]$').hasMatch(l))
+      .length;
+  // 只有少量头信息、没有时间轴，基本可判为“读到了开头但正文没拿到”。
+  if (headerCount >= 2 && lines.length <= 8) return true;
+
+  // 常见被截断特征：URL/标签行未闭合。
+  if (lyrics.contains('[re:') && !lyrics.contains(']')) return true;
+  if (lyrics.contains('https://') && !lyrics.contains('\n[')) return true;
+  return false;
+}
+
+String? _pickBestLyricsCandidate(List<String> chunks) {
+  String? best;
+  var bestScore = -1 << 30;
+  for (final c in chunks) {
+    final t = c.trim();
+    if (t.isEmpty) continue;
+    final timed = RegExp(r'^\[\d{1,3}:[0-5]?\d(?:\.\d{1,3})?]', multiLine: true)
+        .allMatches(t)
+        .length;
+    final headers =
+        RegExp(r'^\[[A-Za-z][A-Za-z0-9_-]{0,31}:[^\]]*]$', multiLine: true)
+            .allMatches(t)
+            .length;
+    var score = t.length + timed * 120 + headers * 8;
+    if (timed == 0 && headers > 0) score -= 200;
+    if (_looksLikeTruncatedOrHeaderOnlyLyrics(t)) score -= 300;
+    if (score > bestScore) {
+      bestScore = score;
+      best = t;
+    }
+  }
+  return best;
+}
+
+int _lyricsCandidateScore(String lyrics) {
+  final t = lyrics.trim();
+  if (t.isEmpty) return -100000;
+  final timed = RegExp(r'^\[\d{1,3}:[0-5]?\d(?:\.\d{1,3})?]', multiLine: true)
+      .allMatches(t)
+      .length;
+  final headers =
+      RegExp(r'^\[[A-Za-z][A-Za-z0-9_-]{0,31}:[^\]]*]$', multiLine: true)
+          .allMatches(t)
+          .length;
+  var score = t.length + timed * 120 + headers * 8;
+  if (timed == 0 && headers > 0) score -= 200;
+  if (_looksLikeTruncatedOrHeaderOnlyLyrics(t)) score -= 300;
+  return score;
 }
