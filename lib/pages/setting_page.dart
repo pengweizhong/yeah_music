@@ -453,9 +453,9 @@ class SettingPage extends StatelessWidget {
                     ),
                     const PlaybackShortcutsSettingsSection(),
                     const _AndroidCarLyricsSettingsSection(),
-                    const _CacheManagementSection(),
                     const WireRemoteControlSection(),
                     const _DesktopLyricsSettingsSection(),
+                    const _CacheManagementSection(),
                     ListTile(
                       title: Text(
                         l10n.settingsSponsorTitle,
