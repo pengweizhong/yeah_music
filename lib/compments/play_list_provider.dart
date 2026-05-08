@@ -19,6 +19,7 @@ import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/utils/hive_utils.dart';
+import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/models/constants.dart';
 
 import '../models/folder.dart';
@@ -941,6 +942,24 @@ class PlayListProvider extends ChangeNotifier {
         _applyPlaybackSession(PlaybackSessionSurface.library);
       } else {
         _applyPlaybackSession(surface);
+      }
+
+      if (surface == PlaybackSessionSurface.library) {
+        final merged = libraryMergedSongs;
+        if (merged.isNotEmpty) {
+          try {
+            final prefs = await loadSongSortPreferences();
+            _playbackQueueOverride = sortSongsCopy(
+              merged,
+              prefs.type,
+              prefs.ascending,
+            );
+            appLog.d('已恢复曲库播放队列排序（冷启动）');
+          } catch (e, st) {
+            appLog.e('恢复曲库播放队列排序失败', error: e, stackTrace: st);
+            _playbackQueueOverride = null;
+          }
+        }
       }
 
       final list = playList;
