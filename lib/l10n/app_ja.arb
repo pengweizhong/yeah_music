@@ -26,7 +26,9 @@
   "statisticsFormatsMore": "ほか {count} 種類",
   "@statisticsFormatsMore": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "statisticsQualityLabel": "音質の分布",
@@ -41,7 +43,9 @@
   "statisticsRecentEntriesSubtitle": "ローカルに最大 {max} 件まで保存",
   "@statisticsRecentEntriesSubtitle": {
     "placeholders": {
-      "max": { "type": "int" }
+      "max": {
+        "type": "int"
+      }
     }
   },
   "statisticsPlaylistsCountLabel": "マイプレイリスト数",
@@ -54,14 +58,20 @@
   "statisticsDurationHM": "{hours} 時間 {minutes} 分",
   "@statisticsDurationHM": {
     "placeholders": {
-      "hours": { "type": "int" },
-      "minutes": { "type": "int" }
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationMOnly": "{minutes} 分",
   "@statisticsDurationMOnly": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationUnknown": "算出できません",
@@ -92,19 +102,23 @@
   "settingsAboutDialogLicense": "ライセンス",
   "settingsAboutDialogPrivacy": "プライバシー",
   "settingsPrivacyPolicyTitle": "プライバシーポリシー",
-  "settingsPrivacyPolicyBody": "このプライバシーポリシーは Yeah Music に適用されます。Yeah Music はオープンソースで無料の、ローカル優先の音楽プレーヤーです。Yeah Music は開発者が運営するアカウントシステムを提供せず、広告配信サービスを運営せず、広告プロファイルやユーザー行動分析のための第三者分析 SDK を組み込まず、個人情報を販売しません。\n\n1. ローカル音楽とメディアライブラリ\nシステム権限を付与したり音楽フォルダを選択したりすると、Yeah Music はローカルの音声ファイル、ファイル名、ファイルパス、音声タグ、アートワーク、歌詞、プレイリスト、再生履歴を読み取り、ライブラリ表示、再生、タグ編集、再生回数の集計、再生位置の復元、プレイリスト作成に使用します。これらのデータは既定では端末内に保存され、Yeah Music が開発者運営サーバーへ自動送信することはありません。\n\n2. OneDrive 機能\nOneDrive のサインイン、クラウドライブラリ、同期、アップロード、ダウンロードを有効にすると、Yeah Music は Microsoft OneDrive と通信します。アクセストークンは端末の安全なストレージに保存されます。ライブラリ索引、同期データ、アップロードファイル、ダウンロードファイルは、ユーザーの操作に応じて OneDrive とやり取りされます。Microsoft サービスでのデータ処理は Microsoft の規約とプライバシーポリシーに従います。\n\n3. 音楽認識\n音楽認識を使用すると、Yeah Music は短い音声サンプルを録音し、選択または設定した認識サービス（AudD、ACRCloud など）へ送信して照合します。認識結果には曲名、アーティスト、アルバムなどの情報が含まれる場合があります。第三者サービスによる音声処理を望まない場面ではこの機能を使用しないでください。\n\n4. 診断ログ\n診断ログは既定でオフです。有効にすると、Yeah Music は実行ログを端末内に保存します。Android ではヘッドセット／メディアボタンイベントも記録します。ログにはサイズ上限があり、設定で表示、コピー、共有、消去できます。共有前に、ファイルパス、ファイル名、エラー詳細など公開したくない内容が含まれていないか確認してください。\n\n5. 更新確認と外部リンク\nアプリについて画面でバージョン番号をタップして更新を確認すると、Yeah Music は GitHub Release 情報にアクセスします。リポジトリ、スポンサー、その他の外部リンクはブラウザまたはシステムで開きます。外部サイトや第三者サービスのデータ処理は、それぞれのプライバシーポリシーに従います。\n\n6. 権限の利用\nYeah Music はストレージ／メディアライブラリ、マイク、通知、バックグラウンドメディア再生、ネットワークなどの権限を要求する場合があります。これらはローカル音楽の再生・管理、認識用音声の録音、再生通知の表示、ヘッドセットやロック画面操作の処理、OneDrive へのアクセス、更新確認など、対応する機能にのみ使用されます。システム設定で権限を取り消せますが、関連機能は利用できなくなる場合があります。\n\n7. データの保持と削除\nローカルライブラリ索引、再生履歴、プレイリスト、アプリ設定、OneDrive 設定、診断ログは、アプリ内で削除、サインアウト、関連機能の無効化または消去を行うまで、またはアプリをアンインストールするまで端末内に保存されます。アンインストールすると通常はアプリ専用領域のデータが削除されますが、ユーザーが選択した音楽ファイル、公開フォルダにダウンロードしたファイル、エクスポートしたファイルは削除されません。\n\n8. 子どものプライバシー\nYeah Music は子ども向けの専用サービスではなく、子どもの個人情報を意図的に収集しません。未成年者は、ネットワーク、録音、クラウドサービスを伴う機能を保護者の同意と指導のもとで使用してください。\n\n9. 変更と連絡先\nYeah Music は機能変更に応じて本ポリシーを更新する場合があります。重要な変更はアプリ更新またはリリースノートで通知されることがあります。プライバシーやデータ処理に関する質問は、GitHub リポジトリ https://github.com/pengweizhong/yeah_music の Issues から連絡できます。",
+  "settingsPrivacyPolicyBody": "**このプライバシーポリシーは Yeah Music に適用されます。**\n**更新日：2026年5月11日**\n**発効日：2026年5月11日**\n\nYeah Music はオープンソースで無料の、ローカル優先の音楽プレーヤーです。Yeah Music は開発者が運営するアカウントシステムを提供せず、広告配信サービスを運営せず、広告プロファイルやユーザー行動分析のための第三者分析 SDK を組み込まず、個人情報を販売しません。\n\n**1. ローカル音楽とメディアライブラリ**\nシステム権限を付与したり音楽フォルダを選択したりすると、Yeah Music はローカルの音声ファイル、ファイル名、ファイルパス、音声タグ、アートワーク、歌詞、プレイリスト、再生履歴を読み取り、ライブラリ表示、再生、タグ編集、再生回数の集計、再生位置の復元、プレイリスト作成に使用します。これらのデータは既定では端末内に保存され、Yeah Music が開発者運営サーバーへ送信することはありません。\n\n**2. OneDrive 機能**\nOneDrive のサインイン、クラウドライブラリ、同期、アップロード、ダウンロードを有効にすると、Yeah Music は Microsoft OneDrive と通信します。アクセストークンは端末の安全なストレージに保存されます。ライブラリ索引、同期データ、アップロードファイル、ダウンロードファイルは、ユーザーの操作に応じて OneDrive とやり取りされます。Microsoft サービスでのデータ処理は Microsoft の規約とプライバシーポリシーに従います。\n\n**3. 音楽認識**\n音楽認識を使用すると、Yeah Music は短い音声サンプルを録音し、選択または設定した認識サービス（AudD、ACRCloud など）へ送信して照合します。認識結果には曲名、アーティスト、アルバムなどの情報が含まれる場合があります。第三者サービスによる音声処理を望まない場面ではこの機能を使用しないでください。\n\n**4. 診断ログ**\n診断ログは既定でオフです。有効にすると、Yeah Music は実行ログを端末内に保存します。Android ではヘッドセット／メディアボタンイベントも記録します。ログにはサイズ上限があり、設定で表示、コピー、共有、消去できます。共有前に、ファイルパス、ファイル名、エラー詳細など公開したくない内容が含まれていないか確認してください。\n\n**5. 更新確認と外部リンク**\nアプリについて画面でバージョン番号をタップして更新を確認すると、Yeah Music は GitHub Release 情報にアクセスします。リポジトリ、スポンサー、その他の外部リンクはブラウザまたはシステムで開きます。外部サイトや第三者サービスのデータ処理は、それぞれのプライバシーポリシーに従います。\n\n**6. 権限の利用**\nYeah Music はストレージ／メディアライブラリ、マイク、通知、バックグラウンドメディア再生、ネットワークなどの権限を要求する場合があります。これらはローカル音楽の再生・管理、認識用音声の録音、再生通知の表示、ヘッドセットやロック画面操作の処理、OneDrive へのアクセス、更新確認など、対応する機能にのみ使用されます。システム設定で権限を取り消せますが、関連機能は利用できなくなる場合があります。\n\n**7. データの保持と削除**\nローカルライブラリ索引、再生履歴、プレイリスト、アプリ設定、OneDrive 設定、診断ログは、アプリ内で削除、サインアウト、関連機能の無効化または消去を行うまで、またはアプリをアンインストールするまで端末内に保存されます。アンインストールすると通常はアプリ専用領域のデータが削除されますが、ユーザーが選択した音楽ファイル、公開フォルダにダウンロードしたファイル、エクスポートしたファイルは削除されません。\n\n**8. 子どものプライバシー**\nYeah Music は子ども向けの専用サービスではなく、子どもの個人情報を意図的に収集しません。未成年者は、ネットワーク、録音、クラウドサービスを伴う機能を保護者の同意と指導のもとで使用してください。\n\n**9. 変更と連絡先**\nYeah Music は機能変更に応じて本ポリシーを更新する場合があります。重要な変更はアプリ更新またはリリースノートで通知されることがあります。プライバシーやデータ処理に関する質問は、GitHub リポジトリ https://github.com/pengweizhong/yeah_music の Issues から連絡できます。",
   "settingsAboutDialogCopyright": "著作権",
   "settingsAboutDialogClose": "閉じる",
   "settingsAboutDialogVersionLabel": "v{version}",
   "@settingsAboutDialogVersionLabel": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogBuildLabel": "ビルド {buildNumber}",
   "@settingsAboutDialogBuildLabel": {
     "placeholders": {
-      "buildNumber": { "type": "String" }
+      "buildNumber": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogVersionTapHint": "タップして更新を確認",
@@ -114,8 +128,12 @@
   "settingsAboutUpdateAvailableBody": "最新は v{latest} です。お使いのバージョンは v{current} です。",
   "@settingsAboutUpdateAvailableBody": {
     "placeholders": {
-      "latest": { "type": "String" },
-      "current": { "type": "String" }
+      "latest": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutUpdateOpenReleases": "リリースページを開く",
@@ -153,7 +171,9 @@
   "diagnosticLogShareFailed": "ログを共有できませんでした：{error}",
   "@diagnosticLogShareFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "settingsSysinfoSectionDevice": "端末情報",
@@ -299,8 +319,12 @@
   "oneDriveRestoreListShowing": "{shown} / {total}",
   "@oneDriveRestoreListShowing": {
     "placeholders": {
-      "shown": {"type": "int"},
-      "total": {"type": "int"}
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "oneDriveRestoreTabUnknownDevice": "不明なデバイス",
@@ -322,8 +346,12 @@
   "oneDriveBackupSnapshotDeviceSession": "{deviceName} · {sessionStamp}",
   "@oneDriveBackupSnapshotDeviceSession": {
     "placeholders": {
-      "deviceName": {"type": "String"},
-      "sessionStamp": {"type": "String"}
+      "deviceName": {
+        "type": "String"
+      },
+      "sessionStamp": {
+        "type": "String"
+      }
     }
   },
   "oneDriveSyncNowNeedMasterOn": "先に上の「OneDrive に同期」をオンにしてください。",
@@ -397,13 +425,17 @@
   "oneDriveEnqueueAddedSingle": "「{name}」をキューに追加しました。",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveEnqueueAddedMany": "{count} 曲をキューに追加しました。",
   "@oneDriveEnqueueAddedMany": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveDownloadViewQueue": "キューを開く",
@@ -411,7 +443,13 @@
   "oneDriveTransferClearDownloadsList": "ダウンロード一覧をクリア",
   "oneDriveTransferClearUploadsList": "アップロード一覧をクリア",
   "oneDriveError": "OneDrive エラー：{message}",
-  "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
+  "@oneDriveError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "oneDriveUp": "上へ",
   "oneDriveCloudLibraryTitle": "OneDrive · クラウドライブラリ",
   "oneDriveCloudLibrarySubtitle": "追加したフォルダーを再帰的にスキャンしてリスト化。タップでオンデマンド取得（カスタム保存先があるときはそこへ、なければ既定キャッシュ）。取得済みはオフライン再生可能。",
@@ -428,16 +466,30 @@
   "oneDriveAddSelectedFoldersAction": "追加（{count}）",
   "@oneDriveAddSelectedFoldersAction": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveAddFolderTooltip": "クラウドライブラリに追加",
   "oneDriveIndexingEllipsis": "スキャン中…",
   "oneDriveLastIndexed": "最終スキャン: {time}",
-  "@oneDriveLastIndexed": { "placeholders": { "time": { "type": "String" } } },
+  "@oneDriveLastIndexed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "oneDrivePlayAllTracks": "すべて再生",
   "oneDriveTracksCount": "{count} 曲",
-  "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
+  "@oneDriveTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "oneDriveCloudSearchHint": "ファイル名やパスを検索…",
   "oneDriveNoIndexRoots": "フォルダーが未設定です。先に「フォルダーを選ぶ」から設定してください。",
   "oneDriveLastIndexedNever": "最終スキャン: —",
@@ -446,7 +498,9 @@
   "oneDriveRemoveIndexFolderMessage": "「{name}」をインデックスから外しますか？このフォルダーとその下のトラックは一覧から消えます。あとから追加し直せます。",
   "@oneDriveRemoveIndexFolderMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveRemoveIndexFolderAction": "外す",
@@ -486,7 +540,9 @@
   "cannotSaveBackground": "背景画像を保存できません。やり直すか別の画像を試してください：{error}",
   "@cannotSaveBackground": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "themeWallpaperSavedRestartHint": "壁紙を保存しました。画面が変わらない場合は、アプリを完全に終了してから開き直してください。",
@@ -497,7 +553,9 @@
   "startupFailed": "起動に失敗しました：{error}",
   "@startupFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeTagline": "聴き始めの、その一歩。",
@@ -514,7 +572,9 @@
   "welcomeLoadError": "問題が発生しました。ストレージへのアクセスを確認するか、しばらくしてから再試行してください。\n\n{error}",
   "@welcomeLoadError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeFakeUserSettings": "ユーザー設定を読み込み中",
@@ -541,7 +601,9 @@
   "homePullRefreshFailed": "端末からの再読み込みに失敗しました：{error}",
   "@homePullRefreshFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "homeMenuTooltip": "メニュー",
@@ -571,20 +633,28 @@
   "homePlayCount": "{c} 回再生",
   "@homePlayCount": {
     "placeholders": {
-      "c": { "type": "int" }
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homePlayCountWithBase": "{base} · {c} 回再生",
   "@homePlayCountWithBase": {
     "placeholders": {
-      "base": { "type": "String" },
-      "c": { "type": "int" }
+      "base": {
+        "type": "String"
+      },
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homeGreetingLine": "{greeting}。今日は何を聴きますか？",
   "@homeGreetingLine": {
     "placeholders": {
-      "greeting": { "type": "String" }
+      "greeting": {
+        "type": "String"
+      }
     }
   },
   "homeGreetingSub": "下の続きから、またはプレイリストから",
@@ -599,7 +669,9 @@
   "homeTrackCount": "{n} 曲",
   "@homeTrackCount": {
     "placeholders": {
-      "n": { "type": "int" }
+      "n": {
+        "type": "int"
+      }
     }
   },
   "homeAllSongs": "全曲",
@@ -716,7 +788,13 @@
   "fieldNewNameHint": "新しい名前",
   "folderAppBarTitle": "フォルダ",
   "folderSongsCount": "{n} 曲",
-  "@folderSongsCount": { "placeholders": { "n": { "type": "int" } } },
+  "@folderSongsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderInfoAlias": "表示名：",
   "folderInfoPath": "パス：",
   "folderInfoSongCount": "曲数：",
@@ -725,20 +803,56 @@
   "folderReloading": "再読み込み中",
   "folderScanningWait": "フォルダをスキャンしています…",
   "folderLoadOk": "{n} 曲を読み込みました",
-  "@folderLoadOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderLoadOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderLoadFailed": "読み込みに失敗しました：{error}",
-  "@folderLoadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@folderLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderRemoveTitle": "このフォルダを外しますか？",
   "folderRemoveMessage": "「{name}」をライブラリから外しますか？（ディスク上のファイルは削除されません）",
-  "@folderRemoveMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@folderRemoveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "folderDuplicateDialogTitle": "お知らせ",
   "folderDuplicateMessage": "既に追加済みのフォルダです：{path}",
-  "@folderDuplicateMessage": { "placeholders": { "path": { "type": "String" } } },
+  "@folderDuplicateMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddOk": "{n} 曲を追加しました",
-  "@folderAddOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderAddOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderAddErrorTitle": "エラー",
   "folderAddErrorMessage": "フォルダを追加できませんでした：{error}",
-  "@folderAddErrorMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@folderAddErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddNoSelection": "フォルダが選択されていません。",
   "folderRenameDialogTitle": "フォルダ名を変更",
   "playlistPageTitle": "プレイリスト",
@@ -749,11 +863,23 @@
   "playlistDeleteMessage": "このプレイリストを削除しますか？参照のみ失われ、ファイルは削除されません。",
   "playlistDeleteBatchTitle": "複数のプレイリストを削除",
   "playlistDeleteBatchMessage": "選択した {n} 件のプレイリストを削除しますか？参照のみ失われ、ファイルは削除されません。",
-  "@playlistDeleteBatchMessage": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistDeleteBatchMessage": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "playlistDeletedOne": "プレイリストを削除しました",
   "importDialogBody": "曲は「完全なファイルパス」で区別されます。同じタイトルでもファイルが異なれば別扱いで、誤ってマージされません。\n\n• マージ取り込み：同じ id のプレイリストは曲をマージ（パスは重複除去）。バックアップにだけあるプレイリストは新規作成されます。\n• すべて置換：先にローカルのプレイリストをすべて消去してからバックアップで復元します（慎重に）。",
   "playlistCreatedOn": "作成 {date}",
-  "@playlistCreatedOn": { "placeholders": { "date": { "type": "String" } } },
+  "@playlistCreatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "recentPlaysEmptyTitle": "再生履歴はまだありません",
   "quickEntryReorderHint": "ハンドルをドラッグして並べ替え。「ホームに表示」をオフにするとホームから非表示になります。",
   "quickEntryShowOnHome": "ホームに表示",
@@ -792,10 +918,22 @@
   "imageCropFailure": "トリミングできませんでした。",
   "exportCannot": "このプレイリストはエクスポートできません",
   "exportSaved": "エクスポートしました：{path}",
-  "@exportSaved": { "placeholders": { "path": { "type": "String" } } },
+  "@exportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "exportCancelled": "エクスポートをキャンセルしました",
   "exportFailed": "エクスポートに失敗しました：{error}",
-  "@exportFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "exportDialogTitle": "プレイリストをエクスポート",
   "menuRename": "名前を変更",
   "menuExportThis": "このプレイリストをエクスポート…",
@@ -808,17 +946,41 @@
   "exportAll": "すべてエクスポート",
   "importCannotRead": "ファイルを読めません（ファイルサイズや権限を確認してください）",
   "importParseError": "解析できません：{message}",
-  "@importParseError": { "placeholders": { "message": { "type": "String" } } },
+  "@importParseError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "importMerge": "マージで取り込む",
   "importReplaceAll": "すべて置き換え",
   "importMerged": "マージで取り込みました",
   "importReplaced": "置き換えて取り込みました",
   "importFailed": "取り込みに失敗しました：{error}",
-  "@importFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "playlistsDeletedN": "{n} 件のプレイリストを削除しました",
-  "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "librarySongsDeletedN": "{n} 曲を削除しました",
-  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@librarySongsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "fabNewPlaylist": "新規プレイリスト",
   "emptyPlaylistsHint": "プレイリストはまだありません。\n再生画面や曲一覧から曲を追加できます。\n\n右上の「⋮」から取り込みや複数選択ができます。",
   "sortByName": "名前順",
@@ -832,7 +994,13 @@
   "lyricAlignRight": "右",
   "addToPlaylistHint": "新しいプレイリスト名",
   "addToPlaylistUpdatedN": "{n} 件のプレイリストを更新しました",
-  "@addToPlaylistUpdatedN": { "placeholders": { "n": { "type": "int" } } },
+  "@addToPlaylistUpdatedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "noLyrics": "歌詞がありません",
   "songNotFound": "曲がありません",
   "pageUnknownTitle": "不明なタイトル",
@@ -848,24 +1016,63 @@
   "sleepTimerSheetTitle": "タイマーで停止",
   "sleepTimerCancel": "タイマーを解除",
   "sleepTimerMinutesN": "{n} 分",
-  "@sleepTimerMinutesN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerMinutesN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerCustom": "時間を指定",
   "sleepTimerCurrentN": "現在 {n} 分",
-  "@sleepTimerCurrentN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerCurrentN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerLabelMinutes": "分",
   "sleepTimerInvalidRange": "{min}～{max} の整数を入力してください",
-  "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
+  "@sleepTimerInvalidRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerPlayedMinutes": "スリープタイマー：{minutes} 分再生しました",
-  "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@sleepTimerPlayedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "songPageKeepScreenAwake": "再生画面で画面オンのまま",
   "lyricStyleKeepScreenAwakeSub": "再生画面で歌詞を読む間はスリープしません",
   "lyricModeEmptyHint": "表示モードを切り替え",
   "lyricModeAllLines": "複数行：全行表示（タップで1行）",
   "lyricModeSingleLineN": "複数行：{n} 行目のみ（タップで切替）",
-  "@lyricModeSingleLineN": { "placeholders": { "n": { "type": "int" } } },
+  "@lyricModeSingleLineN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sortOptionsTitle": "並べ替え",
   "addToPlaylistTitle": "プレイリストに追加 · {name}",
-  "@addToPlaylistTitle": { "placeholders": { "name": { "type": "String" } } },
+  "@addToPlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "addToPlaylistMultiHelp": "複数選択可能。外すとそのプレイリストから曲を削除します。",
   "addToPlaylistNoPlaylistsYet": "まだプレイリストがありません。上に名前を入れて作成してください。",
   "quickEntrySettingsTitle": "ショートカット",
@@ -877,8 +1084,12 @@
   "playlistSelectCount": "選択 {n} / {m}",
   "@playlistSelectCount": {
     "placeholders": {
-      "n": { "type": "int" },
-      "m": { "type": "int" }
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
     }
   },
   "lyricStyleSyncSubtitle": "再生中画面の歌詞と同じ",

@@ -565,8 +565,8 @@ Future<void> showAppScrollMessageDialog({
                 ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: maxH),
                   child: SingleChildScrollView(
-                    child: Text(
-                      body,
+                    child: Text.rich(
+                      TextSpan(children: _appBoldTextSpans(body)),
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
                         height: 1.48,
@@ -582,6 +582,38 @@ Future<void> showAppScrollMessageDialog({
       },
     ),
   );
+}
+
+List<InlineSpan> _appBoldTextSpans(String text) {
+  final spans = <InlineSpan>[];
+  var cursor = 0;
+
+  while (cursor < text.length) {
+    final start = text.indexOf('**', cursor);
+    if (start < 0) {
+      spans.add(TextSpan(text: text.substring(cursor)));
+      break;
+    }
+
+    final end = text.indexOf('**', start + 2);
+    if (end < 0) {
+      spans.add(TextSpan(text: text.substring(cursor)));
+      break;
+    }
+
+    if (start > cursor) {
+      spans.add(TextSpan(text: text.substring(cursor, start)));
+    }
+    spans.add(
+      TextSpan(
+        text: text.substring(start + 2, end),
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    );
+    cursor = end + 2;
+  }
+
+  return spans.isEmpty ? [TextSpan(text: text)] : spans;
 }
 
 /// 关于页「检查更新」专用结果提示（磨砂卡片 + 单按钮），不使用全局 Snackbar。

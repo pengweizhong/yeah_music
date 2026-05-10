@@ -26,7 +26,9 @@
   "statisticsFormatsMore": "{count} more types",
   "@statisticsFormatsMore": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "statisticsQualityLabel": "Audio quality",
@@ -41,7 +43,9 @@
   "statisticsRecentEntriesSubtitle": "Up to {max} paths kept locally",
   "@statisticsRecentEntriesSubtitle": {
     "placeholders": {
-      "max": { "type": "int" }
+      "max": {
+        "type": "int"
+      }
     }
   },
   "statisticsPlaylistsCountLabel": "Your playlists",
@@ -54,14 +58,20 @@
   "statisticsDurationHM": "{hours} h {minutes} min",
   "@statisticsDurationHM": {
     "placeholders": {
-      "hours": { "type": "int" },
-      "minutes": { "type": "int" }
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationMOnly": "{minutes} min",
   "@statisticsDurationMOnly": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationUnknown": "Could not estimate",
@@ -91,19 +101,23 @@
   "settingsAboutDialogLicense": "License",
   "settingsAboutDialogPrivacy": "Privacy",
   "settingsPrivacyPolicyTitle": "Privacy Policy",
-  "settingsPrivacyPolicyBody": "This Privacy Policy applies to Yeah Music. Yeah Music is an open-source, free, local-first music player. Yeah Music does not provide a developer-operated account system, does not run advertising services, does not integrate third-party analytics SDKs for advertising profiles or user behavior tracking, and does not sell your personal information.\n\n1. Local music and media library\nAfter you grant system permissions or choose music folders, Yeah Music reads local audio files, file names, file paths, audio tags, artwork, lyrics, playlists, and playback history to show your library, play music, edit tags, count plays, restore playback position, and build playlists. By default, this data stays on your device and is not uploaded by Yeah Music to a developer-operated server.\n\n2. OneDrive features\nWhen you enable OneDrive sign-in, cloud library, sync, upload, or download, Yeah Music communicates with Microsoft OneDrive. Access tokens are stored in secure device storage. Library indexes, sync slices, uploaded files, and downloaded files are exchanged with OneDrive only according to your actions. Microsoft services are governed by Microsoft's own terms and privacy policy.\n\n3. Music recognition\nWhen you use music recognition, Yeah Music records a short audio sample and sends it to the recognition provider you choose or configure, such as AudD or ACRCloud. Recognition results may include song title, artist, album, and related metadata. Do not use this feature in situations where you do not want audio to be processed by a third-party service.\n\n4. Diagnostic logs\nDiagnostic logging is off by default. When enabled, Yeah Music stores runtime logs locally. On Android it also records headset/media-button events for troubleshooting. Logs are size-limited and can be viewed, copied, shared, or cleared in Settings. Before sharing logs, please check whether they contain file paths, file names, error details, or other information you do not want to disclose.\n\n5. Update checks and external links\nWhen you tap the version in About to check for updates, Yeah Music accesses GitHub Release information. Repository, sponsor, and other external links open in your browser or system handler. External websites and third-party services process data under their own privacy policies.\n\n6. Permissions\nYeah Music may request storage/media library, microphone, notification, background media playback, and network permissions. These are used only for their related features, such as playing and managing local music, recording recognition samples, showing media notifications, handling headset or lock-screen controls, accessing OneDrive, and checking for updates. You can revoke permissions in system settings, but related features may stop working.\n\n7. Data retention and deletion\nLocal library indexes, playback history, playlists, app settings, OneDrive configuration, and diagnostic logs are stored on your device until you clear them in the app, sign out, disable or clear related features, or uninstall the app. Uninstalling the app usually removes data in the app-private directory, but music files you selected, files downloaded to public folders, and files you exported are not deleted by uninstalling.\n\n8. Children's privacy\nYeah Music is not directed to children and does not knowingly collect children's personal information. Minors should use features involving network access, recording, or cloud services with guardian consent and guidance.\n\n9. Changes and contact\nYeah Music may update this policy as features change. Major changes may be communicated through app updates or release notes. If you have questions about privacy or data handling, contact via GitHub Issues at https://github.com/pengweizhong/yeah_music.",
+  "settingsPrivacyPolicyBody": "**This Privacy Policy applies to Yeah Music.**\n**Last updated: May 11, 2026**\n**Effective date: May 11, 2026**\n\nYeah Music is an open-source, free, local-first music player. Yeah Music does not provide a developer-operated account system, does not run advertising services, does not integrate third-party analytics SDKs for advertising profiles or user behavior tracking, and does not sell your personal information.\n\n**1. Local music and media library**\nAfter you grant system permissions or choose music folders, Yeah Music reads local audio files, file names, file paths, audio tags, artwork, lyrics, playlists, and playback history to show your library, play music, edit tags, count plays, restore playback position, and build playlists. By default, this data stays on your device and is not uploaded to a developer-operated server by Yeah Music.\n\n**2. OneDrive features**\nWhen you enable OneDrive sign-in, cloud library, sync, upload, or download, Yeah Music communicates with Microsoft OneDrive. Access tokens are stored in secure device storage. Library indexes, sync slices, uploaded files, and downloaded files are exchanged with OneDrive only according to your actions. Microsoft services are governed by Microsoft's own terms and privacy policy.\n\n**3. Music recognition**\nWhen you use music recognition, Yeah Music records a short audio sample and sends it to the recognition provider you choose or configure, such as AudD or ACRCloud. Recognition results may include song title, artist, album, and related metadata. Do not use this feature in situations where you do not want audio to be processed by a third-party service.\n\n**4. Diagnostic logs**\nDiagnostic logging is off by default. When enabled, Yeah Music stores runtime logs locally. On Android it also records headset/media-button events for troubleshooting. Logs are size-limited and can be viewed, copied, shared, or cleared in Settings. Before sharing logs, please check whether they contain file paths, file names, error details, or other information you do not want to disclose.\n\n**5. Update checks and external links**\nWhen you tap the version in About to check for updates, Yeah Music accesses GitHub Release information. Repository, sponsor, and other external links open in your browser or system handler. External websites and third-party services process data under their own privacy policies.\n\n**6. Permissions**\nYeah Music may request storage/media library, microphone, notification, background media playback, and network permissions. These are used only for their related features, such as playing and managing local music, recording recognition samples, showing media notifications, handling headset or lock-screen controls, accessing OneDrive, and checking for updates. You can revoke permissions in system settings, but related features may stop working.\n\n**7. Data retention and deletion**\nLocal library indexes, playback history, playlists, app settings, OneDrive configuration, and diagnostic logs are stored on your device until you clear them in the app, sign out, disable or clear related features, or uninstall the app. Uninstalling the app usually removes data in the app-private directory, but music files you selected, files downloaded to public folders, and files you exported are not deleted by uninstalling.\n\n**8. Children's privacy**\nYeah Music is not directed to children and does not knowingly collect children's personal information. Minors should use features involving network access, recording, or cloud services with guardian consent and guidance.\n\n**9. Changes and contact**\nYeah Music may update this policy as features change. Major changes may be communicated through app updates or release notes. If you have questions about privacy or data handling, contact via GitHub Issues at https://github.com/pengweizhong/yeah_music.",
   "settingsAboutDialogCopyright": "Copyright",
   "settingsAboutDialogClose": "Close",
   "settingsAboutDialogVersionLabel": "v{version}",
   "@settingsAboutDialogVersionLabel": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogBuildLabel": "Build {buildNumber}",
   "@settingsAboutDialogBuildLabel": {
     "placeholders": {
-      "buildNumber": { "type": "String" }
+      "buildNumber": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogVersionTapHint": "Tap to check for updates",
@@ -113,8 +127,12 @@
   "settingsAboutUpdateAvailableBody": "Latest release is v{latest}. You're on v{current}.",
   "@settingsAboutUpdateAvailableBody": {
     "placeholders": {
-      "latest": { "type": "String" },
-      "current": { "type": "String" }
+      "latest": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutUpdateOpenReleases": "Open releases",
@@ -152,7 +170,9 @@
   "diagnosticLogShareFailed": "Could not share log: {error}",
   "@diagnosticLogShareFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "settingsSysinfoSectionDevice": "Device",
@@ -298,8 +318,12 @@
   "oneDriveRestoreListShowing": "{shown} / {total}",
   "@oneDriveRestoreListShowing": {
     "placeholders": {
-      "shown": {"type": "int"},
-      "total": {"type": "int"}
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "oneDriveRestoreTabUnknownDevice": "Unknown device",
@@ -321,8 +345,12 @@
   "oneDriveBackupSnapshotDeviceSession": "{deviceName} · {sessionStamp}",
   "@oneDriveBackupSnapshotDeviceSession": {
     "placeholders": {
-      "deviceName": {"type": "String"},
-      "sessionStamp": {"type": "String"}
+      "deviceName": {
+        "type": "String"
+      },
+      "sessionStamp": {
+        "type": "String"
+      }
     }
   },
   "oneDriveSyncNowNeedMasterOn": "Turn on “Sync to OneDrive” above before syncing.",
@@ -396,13 +424,17 @@
   "oneDriveEnqueueAddedSingle": "Added \"{name}\" to the download queue.",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveEnqueueAddedMany": "Added {count} tracks to the download queue.",
   "@oneDriveEnqueueAddedMany": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveDownloadViewQueue": "View queue",
@@ -410,7 +442,13 @@
   "oneDriveTransferClearDownloadsList": "Clear download list",
   "oneDriveTransferClearUploadsList": "Clear upload list",
   "oneDriveError": "OneDrive error: {message}",
-  "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
+  "@oneDriveError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "oneDriveUp": "Up",
   "oneDriveCloudLibraryTitle": "OneDrive · Cloud library",
   "oneDriveCloudLibrarySubtitle": "Folders you add are scanned recursively. Tap a song to fetch on demand (to your chosen download folder if it exists, otherwise the default cache); already-downloaded files play offline.",
@@ -427,16 +465,30 @@
   "oneDriveAddSelectedFoldersAction": "Add ({count})",
   "@oneDriveAddSelectedFoldersAction": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveAddFolderTooltip": "Add folder to cloud library",
   "oneDriveIndexingEllipsis": "Scanning folders…",
   "oneDriveLastIndexed": "Last scanned: {time}",
-  "@oneDriveLastIndexed": { "placeholders": { "time": { "type": "String" } } },
+  "@oneDriveLastIndexed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "oneDrivePlayAllTracks": "Play all",
   "oneDriveTracksCount": "{count} songs",
-  "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
+  "@oneDriveTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "oneDriveCloudSearchHint": "Search file names or paths…",
   "oneDriveNoIndexRoots": "No folders configured. Tap “Choose folders” first.",
   "oneDriveLastIndexedNever": "Last scanned: —",
@@ -445,7 +497,9 @@
   "oneDriveRemoveIndexFolderMessage": "Remove \"{name}\" from the index? Tracks under this folder (including subfolders) will disappear until you add it again.",
   "@oneDriveRemoveIndexFolderMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveRemoveIndexFolderAction": "Remove",
@@ -485,7 +539,9 @@
   "cannotSaveBackground": "Could not save the background image. Try again or use another: {error}",
   "@cannotSaveBackground": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "themeWallpaperSavedRestartHint": "Wallpaper saved. If it doesn't show yet, fully quit the app and reopen.",
@@ -496,7 +552,9 @@
   "startupFailed": "Startup failed: {error}",
   "@startupFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeTagline": "Every listen starts here",
@@ -513,7 +571,9 @@
   "welcomeLoadError": "Something went wrong. Check storage access or try again later.\n\n{error}",
   "@welcomeLoadError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeFakeUserSettings": "Loading user settings",
@@ -540,7 +600,9 @@
   "homePullRefreshFailed": "Could not reload from local storage: {error}",
   "@homePullRefreshFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "homeMenuTooltip": "Menu",
@@ -570,20 +632,28 @@
   "homePlayCount": "Played {c} times",
   "@homePlayCount": {
     "placeholders": {
-      "c": { "type": "int" }
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homePlayCountWithBase": "{base} · Played {c} times",
   "@homePlayCountWithBase": {
     "placeholders": {
-      "base": { "type": "String" },
-      "c": { "type": "int" }
+      "base": {
+        "type": "String"
+      },
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homeGreetingLine": "{greeting}, what would you like to listen to today?",
   "@homeGreetingLine": {
     "placeholders": {
-      "greeting": { "type": "String" }
+      "greeting": {
+        "type": "String"
+      }
     }
   },
   "homeGreetingSub": "Pick up below or start from a playlist.",
@@ -598,7 +668,9 @@
   "homeTrackCount": "{n} songs",
   "@homeTrackCount": {
     "placeholders": {
-      "n": { "type": "int" }
+      "n": {
+        "type": "int"
+      }
     }
   },
   "homeAllSongs": "All songs",
@@ -716,7 +788,13 @@
   "fieldNewNameHint": "New name",
   "folderAppBarTitle": "Folders",
   "folderSongsCount": "{n} songs",
-  "@folderSongsCount": { "placeholders": { "n": { "type": "int" } } },
+  "@folderSongsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderInfoAlias": "Alias:",
   "folderInfoPath": "Path:",
   "folderInfoSongCount": "Songs:",
@@ -725,20 +803,56 @@
   "folderReloading": "Rescanning",
   "folderScanningWait": "Scanning folders…",
   "folderLoadOk": "Loaded {n} songs",
-  "@folderLoadOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderLoadOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderLoadFailed": "Failed to load: {error}",
-  "@folderLoadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@folderLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderRemoveTitle": "Remove this folder?",
   "folderRemoveMessage": "Remove {name} from the library? Music files on disk are not deleted.",
-  "@folderRemoveMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@folderRemoveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "folderDuplicateDialogTitle": "Notice",
   "folderDuplicateMessage": "This folder was already added: {path}",
-  "@folderDuplicateMessage": { "placeholders": { "path": { "type": "String" } } },
+  "@folderDuplicateMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddOk": "Added {n} songs",
-  "@folderAddOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderAddOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderAddErrorTitle": "Error",
   "folderAddErrorMessage": "Could not add folder: {error}",
-  "@folderAddErrorMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@folderAddErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddNoSelection": "No folder was selected.",
   "folderRenameDialogTitle": "Rename folder",
   "playlistPageTitle": "Playlists",
@@ -749,11 +863,23 @@
   "playlistDeleteMessage": "Delete this playlist? References will be lost; music files on disk are not removed.",
   "playlistDeleteBatchTitle": "Delete multiple playlists",
   "playlistDeleteBatchMessage": "Delete the {n} selected playlists? References will be lost; music files on disk are not removed.",
-  "@playlistDeleteBatchMessage": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistDeleteBatchMessage": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "playlistDeletedOne": "Playlist deleted",
   "importDialogBody": "Songs are identified by full file path: same title and artist but different files or quality map to different paths and will not be merged by mistake.\n\n• Merge import: playlists with the same id as local ones merge track lists (paths deduplicated); playlists only in the backup are created.\n• Replace all: clears all local playlists first, then restores from the backup (use with care).",
   "playlistCreatedOn": "Created {date}",
-  "@playlistCreatedOn": { "placeholders": { "date": { "type": "String" } } },
+  "@playlistCreatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "recentPlaysEmptyTitle": "No play history",
   "quickEntryReorderHint": "Drag the handle to reorder. Turn off “Show on home” to hide an entry from the home screen.",
   "quickEntryShowOnHome": "Show on home",
@@ -792,10 +918,22 @@
   "imageCropFailure": "Could not crop this image.",
   "exportCannot": "This playlist cannot be exported",
   "exportSaved": "Exported: {path}",
-  "@exportSaved": { "placeholders": { "path": { "type": "String" } } },
+  "@exportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "exportCancelled": "Export cancelled",
   "exportFailed": "Export failed: {error}",
-  "@exportFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "exportDialogTitle": "Export playlist",
   "menuRename": "Rename",
   "menuExportThis": "Export this playlist…",
@@ -808,17 +946,41 @@
   "exportAll": "Export all",
   "importCannotRead": "Could not read the file (try a smaller backup or check permissions)",
   "importParseError": "Could not parse: {message}",
-  "@importParseError": { "placeholders": { "message": { "type": "String" } } },
+  "@importParseError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "importMerge": "Merge import",
   "importReplaceAll": "Replace all",
   "importMerged": "Imported (merged)",
   "importReplaced": "Imported (replaced)",
   "importFailed": "Import failed: {error}",
-  "@importFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "playlistsDeletedN": "Deleted {n} playlist(s)",
-  "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "librarySongsDeletedN": "Deleted {n} song(s)",
-  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@librarySongsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "fabNewPlaylist": "New playlist",
   "emptyPlaylistsHint": "No playlists yet.\nAdd songs from the player or song lists to playlists.\n\nUse the top-right menu to import and multi-select.",
   "sortByName": "By name",
@@ -832,7 +994,13 @@
   "lyricAlignRight": "Right",
   "addToPlaylistHint": "New playlist name",
   "addToPlaylistUpdatedN": "Updated {n} playlist(s)",
-  "@addToPlaylistUpdatedN": { "placeholders": { "n": { "type": "int" } } },
+  "@addToPlaylistUpdatedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "noLyrics": "No lyrics",
   "songNotFound": "Song not found",
   "pageUnknownTitle": "Unknown title",
@@ -848,24 +1016,63 @@
   "sleepTimerSheetTitle": "Stop playback later",
   "sleepTimerCancel": "Cancel sleep timer",
   "sleepTimerMinutesN": "{n} min",
-  "@sleepTimerMinutesN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerMinutesN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerCustom": "Custom duration",
   "sleepTimerCurrentN": "Current: {n} min",
-  "@sleepTimerCurrentN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerCurrentN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerLabelMinutes": "Minutes",
   "sleepTimerInvalidRange": "Enter a whole number between {min} and {max}.",
-  "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
+  "@sleepTimerInvalidRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerPlayedMinutes": "Sleep timer: played for {minutes} min",
-  "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@sleepTimerPlayedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "songPageKeepScreenAwake": "Keep screen on",
   "lyricStyleKeepScreenAwakeSub": "Stays awake while you read lyrics on this screen",
   "lyricModeEmptyHint": "Change display mode",
   "lyricModeAllLines": "Multi-line: all lines (tap for single line)",
   "lyricModeSingleLineN": "Multi-line: line {n} only (tap to cycle)",
-  "@lyricModeSingleLineN": { "placeholders": { "n": { "type": "int" } } },
+  "@lyricModeSingleLineN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sortOptionsTitle": "Sort by",
   "addToPlaylistTitle": "Add to playlist · {name}",
-  "@addToPlaylistTitle": { "placeholders": { "name": { "type": "String" } } },
+  "@addToPlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "addToPlaylistMultiHelp": "Select multiple. Uncheck to remove the song from a playlist.",
   "addToPlaylistNoPlaylistsYet": "No playlists yet. Type a name above to create one.",
   "quickEntrySettingsTitle": "Shortcuts",
@@ -877,8 +1084,12 @@
   "playlistSelectCount": "{n} of {m} selected",
   "@playlistSelectCount": {
     "placeholders": {
-      "n": { "type": "int" },
-      "m": { "type": "int" }
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
     }
   },
   "lyricStyleSyncSubtitle": "Same as the lyrics on the now playing screen",

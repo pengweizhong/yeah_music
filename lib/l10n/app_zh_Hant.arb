@@ -26,7 +26,9 @@
   "statisticsFormatsMore": "另有 {count} 種副檔名",
   "@statisticsFormatsMore": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "statisticsQualityLabel": "音質分布",
@@ -41,7 +43,9 @@
   "statisticsRecentEntriesSubtitle": "本機最多保留 {max} 筆路徑",
   "@statisticsRecentEntriesSubtitle": {
     "placeholders": {
-      "max": { "type": "int" }
+      "max": {
+        "type": "int"
+      }
     }
   },
   "statisticsPlaylistsCountLabel": "自建歌單數量",
@@ -54,14 +58,20 @@
   "statisticsDurationHM": "{hours} 小時 {minutes} 分鐘",
   "@statisticsDurationHM": {
     "placeholders": {
-      "hours": { "type": "int" },
-      "minutes": { "type": "int" }
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationMOnly": "{minutes} 分鐘",
   "@statisticsDurationMOnly": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationUnknown": "無法估算",
@@ -92,19 +102,23 @@
   "settingsAboutDialogLicense": "授權條款",
   "settingsAboutDialogPrivacy": "隱私",
   "settingsPrivacyPolicyTitle": "隱私權政策",
-  "settingsPrivacyPolicyBody": "本隱私權政策適用於 Yeah Music。Yeah Music 是一款開源免費、本機優先的音樂播放器。Yeah Music 不提供開發者自建帳號系統，不營運廣告投放服務，不整合用於廣告画像或使用者行為統計的第三方分析 SDK，也不會出售你的個人資訊。\n\n1. 本機音樂與媒體庫\n在你授權系統權限或主動選擇音樂目錄後，Yeah Music 會讀取本機音訊檔案、檔名、檔案路徑、音訊標籤、封面、歌詞、播放列表和播放記錄，用於顯示曲庫、播放音樂、編輯標籤、統計播放次數、恢復播放進度和建立歌單。這些資料預設保存在你的裝置上，Yeah Music 不會主動上傳到開發者伺服器。\n\n2. OneDrive 功能\n當你啟用 OneDrive 登入、雲端曲庫、同步、上傳或下載時，Yeah Music 會與 Microsoft OneDrive 服務通訊。存取權杖會保存在裝置的安全儲存中；曲庫索引、同步片段、上傳檔案和下載檔案只會依你的操作與 OneDrive 互動。Microsoft 服務對資料的處理以 Microsoft 的服務條款和隱私權政策為準。\n\n3. 聽歌識曲\n當你使用聽歌識曲時，Yeah Music 會錄製短音訊片段，並傳送給你選擇或設定的識別服務（如 AudD 或 ACRCloud）進行比對。識別結果可能包含歌曲名、歌手、專輯等資訊。請不要在不希望音訊被第三方服務處理的場景中使用該功能。\n\n4. 診斷日誌\n診斷日誌預設關閉。開啟後，Yeah Music 會在本機保存執行日誌；Android 還會記錄耳機線控 / 媒體按鍵事件，用於排查問題。日誌有大小上限，可在設定中查看、複製、分享或清空。分享日誌前請自行確認其中是否包含檔案路徑、檔名、錯誤資訊或其他你不希望公開的內容。\n\n5. 更新檢查與外部連結\n當你在關於頁面點擊版本號檢查更新時，Yeah Music 會存取 GitHub Release 資訊。存放庫、贊助與其他外部連結會交由瀏覽器或系統元件開啟。外部網站或第三方服務的資料處理規則由其各自的隱私權政策約束。\n\n6. 權限使用\nYeah Music 可能請求儲存 / 媒體庫、麥克風、通知、背景媒體播放、網路等權限。這些權限僅用於對應功能：播放和管理本機音樂、錄製識曲片段、顯示播放通知、處理耳機和鎖屏控制、存取 OneDrive、檢查更新等。你可以在系統設定中撤銷權限，但相關功能可能無法繼續使用。\n\n7. 資料保留與刪除\n本機曲庫索引、播放記錄、歌單、應用程式設定、OneDrive 配置和診斷日誌會保存在你的裝置上，直到你在應用程式中清理、登出帳號、關閉或清空相關功能，或解除安裝應用程式。解除安裝應用程式通常會移除應用程式私有目錄中的資料，但你主動選擇的音樂檔案、下載到公共目錄的檔案和匯出的檔案不會因此刪除。\n\n8. 兒童隱私\nYeah Music 不面向兒童提供專門服務，也不會故意收集兒童個人資訊。未成年人應在監護人同意和指導下使用涉及網路、錄音或雲端服務的功能。\n\n9. 協議變更與聯絡\nYeah Music 可能隨功能變化更新本政策。重大變更會隨應用程式更新或發行說明告知。若你對隱私或資料處理有疑問，可透過 GitHub 存放庫 https://github.com/pengweizhong/yeah_music 的 Issues 聯絡。",
+  "settingsPrivacyPolicyBody": "**本隱私權政策適用於 Yeah Music。**\n**更新日期：2026年5月11日**\n**生效日期：2026年5月11日**\n\nYeah Music 是一款開源免費、本機優先的音樂播放器。Yeah Music 不提供開發者自建帳號系統，不營運廣告投放服務，不整合用於廣告画像或使用者行為統計的第三方分析 SDK，也不會出售你的個人資訊。\n\n**1. 本機音樂與媒體庫**\n在你授權系統權限或主動選擇音樂目錄後，Yeah Music 會讀取本機音訊檔案、檔名、檔案路徑、音訊標籤、封面、歌詞、播放列表和播放記錄，用於顯示曲庫、播放音樂、編輯標籤、統計播放次數、恢復播放進度和建立歌單。這些資料預設保存在你的裝置上，Yeah Music 不會上傳到開發者伺服器。\n\n**2. OneDrive 功能**\n當你啟用 OneDrive 登入、雲端曲庫、同步、上傳或下載時，Yeah Music 會與 Microsoft OneDrive 服務通訊。存取權杖會保存在裝置的安全儲存中；曲庫索引、同步片段、上傳檔案和下載檔案只會依你的操作與 OneDrive 互動。Microsoft 服務對資料的處理以 Microsoft 的服務條款和隱私權政策為準。\n\n**3. 聽歌識曲**\n當你使用聽歌識曲時，Yeah Music 會錄製短音訊片段，並傳送給你選擇或設定的識別服務（如 AudD 或 ACRCloud）進行比對。識別結果可能包含歌曲名、歌手、專輯等資訊。請不要在不希望音訊被第三方服務處理的場景中使用該功能。\n\n**4. 診斷日誌**\n診斷日誌預設關閉。開啟後，Yeah Music 會在本機保存執行日誌；Android 還會記錄耳機線控 / 媒體按鍵事件，用於排查問題。日誌有大小上限，可在設定中查看、複製、分享或清空。分享日誌前請自行確認其中是否包含檔案路徑、檔名、錯誤資訊或其他你不希望公開的內容。\n\n**5. 更新檢查與外部連結**\n當你在關於頁面點擊版本號檢查更新時，Yeah Music 會存取 GitHub Release 資訊。存放庫、贊助與其他外部連結會交由瀏覽器或系統元件開啟。外部網站或第三方服務的資料處理規則由其各自的隱私權政策約束。\n\n**6. 權限使用**\nYeah Music 可能請求儲存 / 媒體庫、麥克風、通知、背景媒體播放、網路等權限。這些權限僅用於對應功能：播放和管理本機音樂、錄製識曲片段、顯示播放通知、處理耳機和鎖屏控制、存取 OneDrive、檢查更新等。你可以在系統設定中撤銷權限，但相關功能可能無法繼續使用。\n\n**7. 資料保留與刪除**\n本機曲庫索引、播放記錄、歌單、應用程式設定、OneDrive 配置和診斷日誌會保存在你的裝置上，直到你在應用程式中清理、登出帳號、關閉或清空相關功能，或解除安裝應用程式。解除安裝應用程式通常會移除應用程式私有目錄中的資料，但你主動選擇的音樂檔案、下載到公共目錄的檔案和匯出的檔案不會因此刪除。\n\n**8. 兒童隱私**\nYeah Music 不面向兒童提供專門服務，也不會故意收集兒童個人資訊。未成年人應在監護人同意和指導下使用涉及網路、錄音或雲端服務的功能。\n\n**9. 協議變更與聯絡**\nYeah Music 可能隨功能變化更新本政策。重大變更會隨應用程式更新或發行說明告知。若你對隱私或資料處理有疑問，可透過 GitHub 存放庫 https://github.com/pengweizhong/yeah_music 的 Issues 聯絡。",
   "settingsAboutDialogCopyright": "版權",
   "settingsAboutDialogClose": "關閉",
   "settingsAboutDialogVersionLabel": "v{version}",
   "@settingsAboutDialogVersionLabel": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogBuildLabel": "建置編號 {buildNumber}",
   "@settingsAboutDialogBuildLabel": {
     "placeholders": {
-      "buildNumber": { "type": "String" }
+      "buildNumber": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogVersionTapHint": "點一下檢查更新",
@@ -114,8 +128,12 @@
   "settingsAboutUpdateAvailableBody": "遠端版本為 v{latest}，目前為 v{current}。",
   "@settingsAboutUpdateAvailableBody": {
     "placeholders": {
-      "latest": { "type": "String" },
-      "current": { "type": "String" }
+      "latest": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutUpdateOpenReleases": "打開發行頁面",
@@ -153,7 +171,9 @@
   "diagnosticLogShareFailed": "無法分享日誌：{error}",
   "@diagnosticLogShareFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "settingsSysinfoSectionDevice": "裝置資訊",
@@ -299,8 +319,12 @@
   "oneDriveRestoreListShowing": "{shown} / {total}",
   "@oneDriveRestoreListShowing": {
     "placeholders": {
-      "shown": {"type": "int"},
-      "total": {"type": "int"}
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "oneDriveRestoreTabUnknownDevice": "未知裝置",
@@ -322,8 +346,12 @@
   "oneDriveBackupSnapshotDeviceSession": "{deviceName} · {sessionStamp}",
   "@oneDriveBackupSnapshotDeviceSession": {
     "placeholders": {
-      "deviceName": {"type": "String"},
-      "sessionStamp": {"type": "String"}
+      "deviceName": {
+        "type": "String"
+      },
+      "sessionStamp": {
+        "type": "String"
+      }
     }
   },
   "oneDriveSyncNowNeedMasterOn": "請先開啟上方的「同步到 OneDrive」。",
@@ -397,13 +425,17 @@
   "oneDriveEnqueueAddedSingle": "已將「{name}」加入下載佇列",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveEnqueueAddedMany": "已將 {count} 首加入下載佇列",
   "@oneDriveEnqueueAddedMany": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveDownloadViewQueue": "檢視佇列",
@@ -411,7 +443,13 @@
   "oneDriveTransferClearDownloadsList": "清空下載列表",
   "oneDriveTransferClearUploadsList": "清空上傳列表",
   "oneDriveError": "OneDrive 錯誤：{message}",
-  "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
+  "@oneDriveError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "oneDriveUp": "上層",
   "oneDriveCloudLibraryTitle": "OneDrive · 雲端曲庫",
   "oneDriveCloudLibrarySubtitle": "加入的資料夾會遞迴掃描出音訊清單；點曲目按需下載（自訂目錄存在則用該目錄，否則用預設快取），已下載者可離線播放。",
@@ -428,16 +466,30 @@
   "oneDriveAddSelectedFoldersAction": "新增（{count}）",
   "@oneDriveAddSelectedFoldersAction": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveAddFolderTooltip": "加入雲端曲庫",
   "oneDriveIndexingEllipsis": "正在掃描目錄…",
   "oneDriveLastIndexed": "上次掃描：{time}",
-  "@oneDriveLastIndexed": { "placeholders": { "time": { "type": "String" } } },
+  "@oneDriveLastIndexed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "oneDrivePlayAllTracks": "播放全部",
   "oneDriveTracksCount": "{count} 曲",
-  "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
+  "@oneDriveTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "oneDriveCloudSearchHint": "搜尋檔名或路徑…",
   "oneDriveNoIndexRoots": "尚未設定目錄，請先用「在網路磁碟選擇資料夾」。",
   "oneDriveLastIndexedNever": "上次掃描：—",
@@ -446,7 +498,9 @@
   "oneDriveRemoveIndexFolderMessage": "要從索引中移除「{name}」嗎？該資料夾及其子資料夾中的曲目將不再出現在列表中，需要時可重新新增。",
   "@oneDriveRemoveIndexFolderMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveRemoveIndexFolderAction": "移除",
@@ -486,7 +540,9 @@
   "cannotSaveBackground": "無法儲存背景圖（請重試或換一張）：{error}",
   "@cannotSaveBackground": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "themeWallpaperSavedRestartHint": "桌布已儲存。若畫面仍未更新，請完全關閉 App 後再重新開啟。",
@@ -497,7 +553,9 @@
   "startupFailed": "啟動失敗：{error}",
   "@startupFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeTagline": "每一次聆聽，都從這裡開始",
@@ -514,7 +572,9 @@
   "welcomeLoadError": "載入出錯。請檢查儲存權限或稍後重試。\n\n{error}",
   "@welcomeLoadError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeFakeUserSettings": "正在載入使用者設定",
@@ -541,7 +601,9 @@
   "homePullRefreshFailed": "本機載入失敗：{error}",
   "@homePullRefreshFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "homeMenuTooltip": "選單",
@@ -571,20 +633,28 @@
   "homePlayCount": "已播放 {c} 次",
   "@homePlayCount": {
     "placeholders": {
-      "c": { "type": "int" }
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homePlayCountWithBase": "{base} · 已播放 {c} 次",
   "@homePlayCountWithBase": {
     "placeholders": {
-      "base": { "type": "String" },
-      "c": { "type": "int" }
+      "base": {
+        "type": "String"
+      },
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homeGreetingLine": "{greeting}，今天想聽點什麼？",
   "@homeGreetingLine": {
     "placeholders": {
-      "greeting": { "type": "String" }
+      "greeting": {
+        "type": "String"
+      }
     }
   },
   "homeGreetingSub": "從下面接續上次，或選一張歌單開始",
@@ -599,7 +669,9 @@
   "homeTrackCount": "{n} 首",
   "@homeTrackCount": {
     "placeholders": {
-      "n": { "type": "int" }
+      "n": {
+        "type": "int"
+      }
     }
   },
   "homeAllSongs": "全部歌曲",
@@ -716,7 +788,13 @@
   "fieldNewNameHint": "新名稱",
   "folderAppBarTitle": "資料夾",
   "folderSongsCount": "{n} 首",
-  "@folderSongsCount": { "placeholders": { "n": { "type": "int" } } },
+  "@folderSongsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderInfoAlias": "資料夾別名：",
   "folderInfoPath": "資料夾路徑：",
   "folderInfoSongCount": "歌曲數量：",
@@ -725,20 +803,56 @@
   "folderReloading": "正在重新載入",
   "folderScanningWait": "正在掃描資料夾，請稍候…",
   "folderLoadOk": "成功載入 {n} 首歌曲",
-  "@folderLoadOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderLoadOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderLoadFailed": "載入失敗：{error}",
-  "@folderLoadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@folderLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderRemoveTitle": "確認移除？",
   "folderRemoveMessage": "是否移除目錄：{name}（僅移除參考，不刪磁碟上音樂檔）",
-  "@folderRemoveMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@folderRemoveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "folderDuplicateDialogTitle": "提示",
   "folderDuplicateMessage": "此資料夾已存在：{path}",
-  "@folderDuplicateMessage": { "placeholders": { "path": { "type": "String" } } },
+  "@folderDuplicateMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddOk": "成功新增 {n} 首歌曲",
-  "@folderAddOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderAddOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderAddErrorTitle": "錯誤",
   "folderAddErrorMessage": "載入資料夾失敗：{error}",
-  "@folderAddErrorMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@folderAddErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddNoSelection": "未選擇資料夾（已取消或關閉選擇框）。",
   "folderRenameDialogTitle": "重新命名資料夾",
   "playlistPageTitle": "歌單",
@@ -749,11 +863,23 @@
   "playlistDeleteMessage": "確定刪除此歌單？清單內的參考會遺失，不會刪除磁碟上的音樂檔。",
   "playlistDeleteBatchTitle": "大量刪除歌單",
   "playlistDeleteBatchMessage": "確定刪除已選的 {n} 個歌單？清單內的參考會遺失，不會刪除磁碟上的音樂檔。",
-  "@playlistDeleteBatchMessage": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistDeleteBatchMessage": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "playlistDeletedOne": "已刪除歌單",
   "importDialogBody": "歌曲以「完整檔案路徑」區分：同名、同演出者、不同檔案或不同音質會對應不同路徑，匯入後不會誤合併。\n\n• 合併匯入：與本機「歌單 id」相同的項目會合併曲目清單（路徑去重）；備份中有而本機沒有的歌單會新增。\n• 全部取代：先清空本機全部歌單，再依備份還原（請謹慎操作）。",
   "playlistCreatedOn": "建立於 {date}",
-  "@playlistCreatedOn": { "placeholders": { "date": { "type": "String" } } },
+  "@playlistCreatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "recentPlaysEmptyTitle": "還沒有播放記錄",
   "quickEntryReorderHint": "拖曳控點可調整順序。關閉「在首頁顯示」後，該入口會在首頁隱藏。",
   "quickEntryShowOnHome": "在首頁顯示",
@@ -792,10 +918,22 @@
   "imageCropFailure": "無法裁剪該圖片。",
   "exportCannot": "無法匯出此歌單",
   "exportSaved": "已匯出：{path}",
-  "@exportSaved": { "placeholders": { "path": { "type": "String" } } },
+  "@exportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "exportCancelled": "已取消匯出",
   "exportFailed": "匯出失敗：{error}",
-  "@exportFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "exportDialogTitle": "匯出歌單",
   "menuRename": "重新命名",
   "menuExportThis": "匯出本歌單…",
@@ -808,17 +946,41 @@
   "exportAll": "匯出全部",
   "importCannotRead": "無法讀取檔案（可嘗試較小備份或檢查權限）",
   "importParseError": "無法解析：{message}",
-  "@importParseError": { "placeholders": { "message": { "type": "String" } } },
+  "@importParseError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "importMerge": "合併匯入",
   "importReplaceAll": "全部取代",
   "importMerged": "已合併匯入",
   "importReplaced": "已取代匯入",
   "importFailed": "匯入失敗：{error}",
-  "@importFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "playlistsDeletedN": "已刪除 {n} 個歌單",
-  "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "librarySongsDeletedN": "已刪除 {n} 首歌曲",
-  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@librarySongsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "fabNewPlaylist": "新增歌單",
   "emptyPlaylistsHint": "尚無歌單\n在播放頁面或歌曲清單可將歌曲加入歌單\n\n可於右上角「⋮」匯入、單選／多選",
   "sortByName": "依名稱",
@@ -832,7 +994,13 @@
   "lyricAlignRight": "右",
   "addToPlaylistHint": "新歌單名稱",
   "addToPlaylistUpdatedN": "已更新歌單（{n} 個）",
-  "@addToPlaylistUpdatedN": { "placeholders": { "n": { "type": "int" } } },
+  "@addToPlaylistUpdatedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "noLyrics": "暫無歌詞",
   "songNotFound": "歌曲不存在",
   "pageUnknownTitle": "未知標題",
@@ -848,24 +1016,63 @@
   "sleepTimerSheetTitle": "定時關閉",
   "sleepTimerCancel": "取消定時關閉",
   "sleepTimerMinutesN": "{n} 分鐘",
-  "@sleepTimerMinutesN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerMinutesN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerCustom": "自訂時間",
   "sleepTimerCurrentN": "目前 {n} 分鐘",
-  "@sleepTimerCurrentN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerCurrentN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerLabelMinutes": "分鐘",
   "sleepTimerInvalidRange": "請輸入 {min}–{max} 之間的整數",
-  "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
+  "@sleepTimerInvalidRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerPlayedMinutes": "定時關閉：已播放 {minutes} 分鐘",
-  "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@sleepTimerPlayedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "songPageKeepScreenAwake": "播放頁螢幕恆亮",
   "lyricStyleKeepScreenAwakeSub": "在播放頁查看歌詞時不自動鎖屏",
   "lyricModeEmptyHint": "切換顯示模式",
   "lyricModeAllLines": "多行歌詞：全部行（點一下改單行）",
   "lyricModeSingleLineN": "多行歌詞：僅第 {n} 行（再點可切換）",
-  "@lyricModeSingleLineN": { "placeholders": { "n": { "type": "int" } } },
+  "@lyricModeSingleLineN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sortOptionsTitle": "排序方式",
   "addToPlaylistTitle": "加入歌單 · {name}",
-  "@addToPlaylistTitle": { "placeholders": { "name": { "type": "String" } } },
+  "@addToPlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "addToPlaylistMultiHelp": "可複選；取消勾選將從對應歌單移除此曲",
   "addToPlaylistNoPlaylistsYet": "尚無歌單，請先輸入名稱並建立",
   "quickEntrySettingsTitle": "捷徑",
@@ -877,8 +1084,12 @@
   "playlistSelectCount": "已選 {n} / {m}",
   "@playlistSelectCount": {
     "placeholders": {
-      "n": { "type": "int" },
-      "m": { "type": "int" }
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
     }
   },
   "lyricStyleSyncSubtitle": "與目前播放頁歌詞同步",

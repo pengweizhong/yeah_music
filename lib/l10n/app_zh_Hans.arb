@@ -26,7 +26,9 @@
   "statisticsFormatsMore": "另有 {count} 种扩展名",
   "@statisticsFormatsMore": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "statisticsQualityLabel": "音质分布",
@@ -41,7 +43,9 @@
   "statisticsRecentEntriesSubtitle": "本地最多保留 {max} 条路径",
   "@statisticsRecentEntriesSubtitle": {
     "placeholders": {
-      "max": { "type": "int" }
+      "max": {
+        "type": "int"
+      }
     }
   },
   "statisticsPlaylistsCountLabel": "自建歌单数量",
@@ -54,14 +58,20 @@
   "statisticsDurationHM": "{hours} 小时 {minutes} 分钟",
   "@statisticsDurationHM": {
     "placeholders": {
-      "hours": { "type": "int" },
-      "minutes": { "type": "int" }
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationMOnly": "{minutes} 分钟",
   "@statisticsDurationMOnly": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "statisticsDurationUnknown": "无法估算",
@@ -92,19 +102,23 @@
   "settingsAboutDialogLicense": "许可证",
   "settingsAboutDialogPrivacy": "隐私",
   "settingsPrivacyPolicyTitle": "隐私协议",
-  "settingsPrivacyPolicyBody": "本隐私协议适用于 Yeah Music。Yeah Music 是一款开源免费的本地优先音乐播放器。Yeah Music 不提供开发者自建账号系统，不运营广告投放服务，不集成用于广告画像或用户行为统计的第三方分析 SDK，也不会出售你的个人信息。\n\n1. 本地音乐与媒体库\n在你授权系统权限或主动选择音乐目录后，Yeah Music 会读取本机音频文件、文件名、文件路径、音频标签、封面、歌词、播放列表和播放记录，用于展示曲库、播放音乐、编辑标签、统计播放次数、恢复播放进度和生成歌单。这些数据默认保存在你的设备上，Yeah Music 不会主动上传到开发者服务器。\n\n2. OneDrive 功能\n当你启用 OneDrive 登录、云端曲库、同步、上传或下载时，Yeah Music 会与 Microsoft OneDrive 服务通信。访问令牌会保存在设备安全存储中；曲库索引、同步片段、上传文件和下载文件只会根据你的操作与 OneDrive 交互。Microsoft 服务对数据的处理以 Microsoft 的服务条款和隐私政策为准。\n\n3. 听歌识曲\n当你使用听歌识曲时，Yeah Music 会录制短音频片段，并发送给你选择或配置的识别服务（如 AudD 或 ACRCloud）进行匹配。识别结果可能包含歌曲名、歌手、专辑等信息。请不要在不希望音频被第三方服务处理的场景中使用该功能。\n\n4. 诊断日志\n诊断日志默认关闭。开启后，Yeah Music 会在本机保存运行日志；Android 还会记录耳机线控 / 媒体按键事件，用于排查问题。日志有大小上限，可在设置中查看、复制、分享或清空。分享日志前请自行确认其中是否包含文件路径、文件名、错误信息或其他你不希望公开的内容。\n\n5. 更新检查与外部链接\n当你在关于页面点击版本号检查更新时，Yeah Music 会访问 GitHub Release 信息。仓库、赞助与其他外部链接会交由浏览器或系统组件打开。外部网站或第三方服务的数据处理规则由其各自的隐私政策约束。\n\n6. 权限使用\nYeah Music 可能请求存储 / 媒体库、麦克风、通知、后台媒体播放、网络等权限。这些权限仅用于对应功能：播放和管理本地音乐、录制识曲片段、显示播放通知、处理耳机和锁屏控制、访问 OneDrive、检查更新等。你可以在系统设置中撤销权限，但相关功能可能无法继续使用。\n\n7. 数据保留与删除\n本地曲库索引、播放记录、歌单、应用设置、OneDrive 配置和诊断日志会保存在你的设备上，直到你在应用中清理、退出账号、关闭或清空相关功能，或卸载应用。卸载应用通常会移除应用私有目录中的数据，但你主动选择的音乐文件、下载到公共目录的文件和导出的文件不会因此删除。\n\n8. 儿童隐私\nYeah Music 不面向儿童提供专门服务，也不会故意收集儿童个人信息。未成年人应在监护人同意和指导下使用涉及网络、录音或云服务的功能。\n\n9. 协议变更与联系\nYeah Music 可能随功能变化更新本协议。重大变更会随应用更新或发布说明告知。若你对隐私或数据处理有疑问，可通过 GitHub 仓库 https://github.com/pengweizhong/yeah_music 的 Issues 联系。",
+  "settingsPrivacyPolicyBody": "**本隐私协议适用于 Yeah Music。**\n**更新日期：2026年5月11日**\n**生效日期：2026年5月11日**\n\nYeah Music 是一款开源免费的本地优先音乐播放器。Yeah Music 不提供开发者自建账号系统，不运营广告投放服务，不集成用于广告画像或用户行为统计的第三方分析 SDK，也不会出售你的个人信息。\n\n**1. 本地音乐与媒体库**\n在你授权系统权限或主动选择音乐目录后，Yeah Music 会读取本机音频文件、文件名、文件路径、音频标签、封面、歌词、播放列表和播放记录，用于展示曲库、播放音乐、编辑标签、统计播放次数、恢复播放进度和生成歌单。这些数据默认保存在你的设备上，Yeah Music 不会上传到开发者服务器。\n\n**2. OneDrive 功能**\n当你启用 OneDrive 登录、云端曲库、同步、上传或下载时，Yeah Music 会与 Microsoft OneDrive 服务通信。访问令牌会保存在设备安全存储中；曲库索引、同步片段、上传文件和下载文件只会根据你的操作与 OneDrive 交互。Microsoft 服务对数据的处理以 Microsoft 的服务条款和隐私政策为准。\n\n**3. 听歌识曲**\n当你使用听歌识曲时，Yeah Music 会录制短音频片段，并发送给你选择或配置的识别服务（如 AudD 或 ACRCloud）进行匹配。识别结果可能包含歌曲名、歌手、专辑等信息。请不要在不希望音频被第三方服务处理的场景中使用该功能。\n\n**4. 诊断日志**\n诊断日志默认关闭。开启后，Yeah Music 会在本机保存运行日志；Android 还会记录耳机线控 / 媒体按键事件，用于排查问题。日志有大小上限，可在设置中查看、复制、分享或清空。分享日志前请自行确认其中是否包含文件路径、文件名、错误信息或其他你不希望公开的内容。\n\n**5. 更新检查与外部链接**\n当你在关于页面点击版本号检查更新时，Yeah Music 会访问 GitHub Release 信息。仓库、赞助与其他外部链接会交由浏览器或系统组件打开。外部网站或第三方服务的数据处理规则由其各自的隐私政策约束。\n\n**6. 权限使用**\nYeah Music 可能请求存储 / 媒体库、麦克风、通知、后台媒体播放、网络等权限。这些权限仅用于对应功能：播放和管理本地音乐、录制识曲片段、显示播放通知、处理耳机和锁屏控制、访问 OneDrive、检查更新等。你可以在系统设置中撤销权限，但相关功能可能无法继续使用。\n\n**7. 数据保留与删除**\n本地曲库索引、播放记录、歌单、应用设置、OneDrive 配置和诊断日志会保存在你的设备上，直到你在应用中清理、退出账号、关闭或清空相关功能，或卸载应用。卸载应用通常会移除应用私有目录中的数据，但你主动选择的音乐文件、下载到公共目录的文件和导出的文件不会因此删除。\n\n**8. 儿童隐私**\nYeah Music 不面向儿童提供专门服务，也不会故意收集儿童个人信息。未成年人应在监护人同意和指导下使用涉及网络、录音或云服务的功能。\n\n**9. 协议变更与联系**\nYeah Music 可能随功能变化更新本协议。重大变更会随应用更新或发布说明告知。若你对隐私或数据处理有疑问，可通过 GitHub 仓库 https://github.com/pengweizhong/yeah_music 的 Issues 联系。",
   "settingsAboutDialogCopyright": "版权",
   "settingsAboutDialogClose": "关闭",
   "settingsAboutDialogVersionLabel": "v{version}",
   "@settingsAboutDialogVersionLabel": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogBuildLabel": "构建号 {buildNumber}",
   "@settingsAboutDialogBuildLabel": {
     "placeholders": {
-      "buildNumber": { "type": "String" }
+      "buildNumber": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutDialogVersionTapHint": "点击检查更新",
@@ -114,8 +128,12 @@
   "settingsAboutUpdateAvailableBody": "远程版本为 v{latest}，当前为 v{current}。",
   "@settingsAboutUpdateAvailableBody": {
     "placeholders": {
-      "latest": { "type": "String" },
-      "current": { "type": "String" }
+      "latest": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
     }
   },
   "settingsAboutUpdateOpenReleases": "打开发行页面",
@@ -153,7 +171,9 @@
   "diagnosticLogShareFailed": "无法分享日志：{error}",
   "@diagnosticLogShareFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "settingsSysinfoSectionDevice": "设备信息",
@@ -299,8 +319,12 @@
   "oneDriveRestoreListShowing": "{shown} / {total}",
   "@oneDriveRestoreListShowing": {
     "placeholders": {
-      "shown": {"type": "int"},
-      "total": {"type": "int"}
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "oneDriveRestoreTabUnknownDevice": "未知设备",
@@ -322,8 +346,12 @@
   "oneDriveBackupSnapshotDeviceSession": "{deviceName} · {sessionStamp}",
   "@oneDriveBackupSnapshotDeviceSession": {
     "placeholders": {
-      "deviceName": {"type": "String"},
-      "sessionStamp": {"type": "String"}
+      "deviceName": {
+        "type": "String"
+      },
+      "sessionStamp": {
+        "type": "String"
+      }
     }
   },
   "oneDriveSyncNowNeedMasterOn": "请先开启上方的「同步到 OneDrive」。",
@@ -397,13 +425,17 @@
   "oneDriveEnqueueAddedSingle": "已将「{name}」添加到下载队列",
   "@oneDriveEnqueueAddedSingle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveEnqueueAddedMany": "已将 {count} 首添加到下载队列",
   "@oneDriveEnqueueAddedMany": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveDownloadViewQueue": "查看队列",
@@ -411,7 +443,13 @@
   "oneDriveTransferClearDownloadsList": "清空下载列表",
   "oneDriveTransferClearUploadsList": "清空上传列表",
   "oneDriveError": "OneDrive 错误：{message}",
-  "@oneDriveError": { "placeholders": { "message": { "type": "String" } } },
+  "@oneDriveError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "oneDriveUp": "上级",
   "oneDriveCloudLibraryTitle": "OneDrive · 云端曲库",
   "oneDriveCloudLibrarySubtitle": "添加的文件夹会递归扫描出音频列表；点曲目按需下载（自定义目录存在则用该目录，否则用默认缓存），已下载的可离线播放。",
@@ -428,16 +466,30 @@
   "oneDriveAddSelectedFoldersAction": "添加（{count}）",
   "@oneDriveAddSelectedFoldersAction": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "oneDriveAddFolderTooltip": "加入云端曲库",
   "oneDriveIndexingEllipsis": "正在扫描目录…",
   "oneDriveLastIndexed": "上次扫描：{time}",
-  "@oneDriveLastIndexed": { "placeholders": { "time": { "type": "String" } } },
+  "@oneDriveLastIndexed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "oneDrivePlayAllTracks": "播放全部",
   "oneDriveTracksCount": "{count} 首",
-  "@oneDriveTracksCount": { "placeholders": { "count": { "type": "int" } } },
+  "@oneDriveTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "oneDriveCloudSearchHint": "搜索文件名或路径…",
   "oneDriveNoIndexRoots": "尚未配置目录，请先「在网盘中选择文件夹」。",
   "oneDriveLastIndexedNever": "上次扫描：—",
@@ -446,7 +498,9 @@
   "oneDriveRemoveIndexFolderMessage": "要从索引中移除「{name}」吗？该文件夹及其子文件夹中的曲目将不再出现在列表中，需要时可重新添加。",
   "@oneDriveRemoveIndexFolderMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "oneDriveRemoveIndexFolderAction": "移除",
@@ -486,7 +540,9 @@
   "cannotSaveBackground": "无法保存背景图（请重试或换一张）：{error}",
   "@cannotSaveBackground": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "themeWallpaperSavedRestartHint": "壁纸已保存。若界面仍未更新，请完全退出应用后重新打开。",
@@ -497,7 +553,9 @@
   "startupFailed": "启动失败：{error}",
   "@startupFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeTagline": "每一次聆听，都从这里开始",
@@ -514,7 +572,9 @@
   "welcomeLoadError": "加载出错了。请检查存储权限或稍后重试。\n\n{error}",
   "@welcomeLoadError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "welcomeFakeUserSettings": "正在加载用户设置",
@@ -541,7 +601,9 @@
   "homePullRefreshFailed": "本机载入失败：{error}",
   "@homePullRefreshFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "homeMenuTooltip": "菜单",
@@ -571,20 +633,28 @@
   "homePlayCount": "已播放 {c} 次",
   "@homePlayCount": {
     "placeholders": {
-      "c": { "type": "int" }
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homePlayCountWithBase": "{base} · 已播放 {c} 次",
   "@homePlayCountWithBase": {
     "placeholders": {
-      "base": { "type": "String" },
-      "c": { "type": "int" }
+      "base": {
+        "type": "String"
+      },
+      "c": {
+        "type": "int"
+      }
     }
   },
   "homeGreetingLine": "{greeting}，今天想听点什么？",
   "@homeGreetingLine": {
     "placeholders": {
-      "greeting": { "type": "String" }
+      "greeting": {
+        "type": "String"
+      }
     }
   },
   "homeGreetingSub": "从下面继续上次的歌，或选一张歌单开始",
@@ -599,7 +669,9 @@
   "homeTrackCount": "{n} 首",
   "@homeTrackCount": {
     "placeholders": {
-      "n": { "type": "int" }
+      "n": {
+        "type": "int"
+      }
     }
   },
   "homeAllSongs": "全部歌曲",
@@ -716,7 +788,13 @@
   "fieldNewNameHint": "新名称",
   "folderAppBarTitle": "文件夹",
   "folderSongsCount": "{n} 首",
-  "@folderSongsCount": { "placeholders": { "n": { "type": "int" } } },
+  "@folderSongsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderInfoAlias": "文件夹别名：",
   "folderInfoPath": "文件夹路径：",
   "folderInfoSongCount": "歌曲数量：",
@@ -725,20 +803,56 @@
   "folderReloading": "正在重新加载",
   "folderScanningWait": "正在扫描文件夹，请稍候…",
   "folderLoadOk": "成功加载 {n} 首歌曲",
-  "@folderLoadOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderLoadOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderLoadFailed": "加载失败：{error}",
-  "@folderLoadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@folderLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderRemoveTitle": "确认移除？",
   "folderRemoveMessage": "是否移除目录：{name}（仅移除引用，不删磁盘上音乐文件）",
-  "@folderRemoveMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@folderRemoveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "folderDuplicateDialogTitle": "提示",
   "folderDuplicateMessage": "添加了重复的文件夹：{path}",
-  "@folderDuplicateMessage": { "placeholders": { "path": { "type": "String" } } },
+  "@folderDuplicateMessage": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddOk": "成功添加 {n} 首歌曲",
-  "@folderAddOk": { "placeholders": { "n": { "type": "int" } } },
+  "@folderAddOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "folderAddErrorTitle": "错误",
   "folderAddErrorMessage": "加载文件夹失败：{error}",
-  "@folderAddErrorMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@folderAddErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "folderAddNoSelection": "未选择文件夹（已取消或关闭选择框）。",
   "folderRenameDialogTitle": "重命名文件夹",
   "playlistPageTitle": "歌单",
@@ -749,11 +863,23 @@
   "playlistDeleteMessage": "确定删除该歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。",
   "playlistDeleteBatchTitle": "批量删除歌单",
   "playlistDeleteBatchMessage": "确定删除已选的 {n} 个歌单？歌单内引用会丢失，不会删除磁盘上的音乐文件。",
-  "@playlistDeleteBatchMessage": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistDeleteBatchMessage": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "playlistDeletedOne": "已删除歌单",
   "importDialogBody": "歌曲以「完整文件路径」区分：同名、同歌手、不同文件或不同音质会对应不同路径，导入后不会误合并。\n\n• 合并导入：与本地「歌单 id」相同的条目会合并曲目列表（路径去重）；备份中有而本地没有的歌单会新建。\n• 替换全部：先清空本地全部歌单，再按备份恢复（谨慎操作）。",
   "playlistCreatedOn": "创建于 {date}",
-  "@playlistCreatedOn": { "placeholders": { "date": { "type": "String" } } },
+  "@playlistCreatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "recentPlaysEmptyTitle": "还没有播放记录",
   "quickEntryReorderHint": "拖动手柄可调整顺序。关闭「在首页显示」后该入口在首页隐藏。",
   "quickEntryShowOnHome": "在首页显示",
@@ -792,10 +918,22 @@
   "imageCropFailure": "无法裁剪该图片。",
   "exportCannot": "无法导出该歌单",
   "exportSaved": "已导出：{path}",
-  "@exportSaved": { "placeholders": { "path": { "type": "String" } } },
+  "@exportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "exportCancelled": "已取消导出",
   "exportFailed": "导出失败：{error}",
-  "@exportFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "exportDialogTitle": "导出歌单",
   "menuRename": "重命名",
   "menuExportThis": "导出本歌单…",
@@ -808,17 +946,41 @@
   "exportAll": "导出全部",
   "importCannotRead": "无法读取文件（可尝试较小备份或检查权限）",
   "importParseError": "无法解析：{message}",
-  "@importParseError": { "placeholders": { "message": { "type": "String" } } },
+  "@importParseError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "importMerge": "合并导入",
   "importReplaceAll": "替换全部",
   "importMerged": "已合并导入",
   "importReplaced": "已替换导入",
   "importFailed": "导入失败：{error}",
-  "@importFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "playlistsDeletedN": "已删除 {n} 个歌单",
-  "@playlistsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@playlistsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "librarySongsDeletedN": "已删除 {n} 首歌曲",
-  "@librarySongsDeletedN": { "placeholders": { "n": { "type": "int" } } },
+  "@librarySongsDeletedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "fabNewPlaylist": "新建歌单",
   "emptyPlaylistsHint": "还没有歌单\n在播放页或歌曲列表可将歌曲加入歌单\n\n可在右上角「⋮」中导入、单选/多选",
   "sortByName": "按名称",
@@ -832,7 +994,13 @@
   "lyricAlignRight": "右",
   "addToPlaylistHint": "新建歌单名称",
   "addToPlaylistUpdatedN": "已更新歌单（{n} 个）",
-  "@addToPlaylistUpdatedN": { "placeholders": { "n": { "type": "int" } } },
+  "@addToPlaylistUpdatedN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "noLyrics": "暂无歌词",
   "songNotFound": "歌曲不存在",
   "pageUnknownTitle": "未知标题",
@@ -848,24 +1016,63 @@
   "sleepTimerSheetTitle": "定时关闭",
   "sleepTimerCancel": "取消定时关闭",
   "sleepTimerMinutesN": "{n} 分钟",
-  "@sleepTimerMinutesN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerMinutesN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerCustom": "自定义时间",
   "sleepTimerCurrentN": "当前 {n} 分钟",
-  "@sleepTimerCurrentN": { "placeholders": { "n": { "type": "int" } } },
+  "@sleepTimerCurrentN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerLabelMinutes": "分钟",
   "sleepTimerInvalidRange": "请输入 {min}–{max} 之间的整数",
-  "@sleepTimerInvalidRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
+  "@sleepTimerInvalidRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerPlayedMinutes": "定时关闭：已播放 {minutes} 分钟",
-  "@sleepTimerPlayedMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@sleepTimerPlayedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "songPageKeepScreenAwake": "播放页屏幕常亮",
   "lyricStyleKeepScreenAwakeSub": "在播放页查看歌词时不自动熄屏",
   "lyricModeEmptyHint": "切换显示模式",
   "lyricModeAllLines": "多行歌词：全部行（点击为单行）",
   "lyricModeSingleLineN": "多行歌词：仅第 {n} 行（继续点击切换）",
-  "@lyricModeSingleLineN": { "placeholders": { "n": { "type": "int" } } },
+  "@lyricModeSingleLineN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sortOptionsTitle": "排序方式",
   "addToPlaylistTitle": "加入歌单 · {name}",
-  "@addToPlaylistTitle": { "placeholders": { "name": { "type": "String" } } },
+  "@addToPlaylistTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "addToPlaylistMultiHelp": "可多选；取消勾选将从对应歌单移除该歌曲",
   "addToPlaylistNoPlaylistsYet": "暂无歌单，请先输入名称并创建",
   "quickEntrySettingsTitle": "快捷入口",
@@ -877,8 +1084,12 @@
   "playlistSelectCount": "已选 {n} / {m}",
   "@playlistSelectCount": {
     "placeholders": {
-      "n": { "type": "int" },
-      "m": { "type": "int" }
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
     }
   },
   "lyricStyleSyncSubtitle": "与当前播放页歌词同步",
