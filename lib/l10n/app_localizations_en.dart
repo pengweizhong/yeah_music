@@ -342,12 +342,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'View, copy, and share headset control diagnostics';
 
   @override
+  String get diagnosticLogEnableTitle => 'Enable diagnostic logging';
+
+  @override
+  String get diagnosticLogEnableSubtitle =>
+      'Off by default. When enabled, app logs are saved locally; Android also records headset/media-button events.';
+
+  @override
   String get diagnosticLogDescription =>
-      'This log records Android headset/media-button events for troubleshooting double/triple press controls.';
+      'Diagnostic logging helps troubleshoot playback, platform integration, and headset controls. It is capped on disk and can be cleared here.';
 
   @override
   String get diagnosticLogEmpty =>
-      'No diagnostic log yet. Try pressing the headset button, then return here and refresh.';
+      'No diagnostic log yet. Enable logging, reproduce the issue, then return here and refresh.';
 
   @override
   String get diagnosticLogRefresh => 'Refresh';

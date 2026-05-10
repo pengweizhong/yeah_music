@@ -330,12 +330,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diagnosticLogSubtitle => 'ヘッドセット操作の診断情報を表示・コピー・共有';
 
   @override
+  String get diagnosticLogEnableTitle => '診断ログを有効にする';
+
+  @override
+  String get diagnosticLogEnableSubtitle =>
+      '既定ではオフです。有効にするとアプリログを端末内に保存し、Android ではヘッドセット／メディアボタンイベントも記録します。';
+
+  @override
   String get diagnosticLogDescription =>
-      'Android のヘッドセット／メディアボタンイベントを記録し、ダブル／トリプルクリック制御の調査に使います。';
+      '診断ログは再生、プラットフォーム連携、ヘッドセット操作の調査に使います。保存量には上限があり、ここで消去できます。';
 
   @override
   String get diagnosticLogEmpty =>
-      '診断ログはまだありません。ヘッドセットボタンを押してから、ここに戻って更新してください。';
+      '診断ログはまだありません。ログを有効にして問題を再現し、ここに戻って更新してください。';
 
   @override
   String get diagnosticLogRefresh => '更新';

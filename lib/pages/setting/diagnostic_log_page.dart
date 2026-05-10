@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/logging/diagnostic_log_store.dart';
 import 'package:yeah_music/platform/wire_remote_native.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
@@ -22,6 +23,7 @@ class DiagnosticLogPage extends StatefulWidget {
 
 class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
   bool _loading = true;
+  bool _enabled = false;
   String _log = '';
 
   @override
@@ -32,12 +34,26 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
 
   Future<void> _reload() async {
     setState(() => _loading = true);
-    final log = await WireRemoteNative.readDiagnosticsLog();
+    final enabled = await DiagnosticLogStore.isEnabled();
+    final appLog = await DiagnosticLogStore.read();
+    final nativeLog = await WireRemoteNative.readDiagnosticsLog();
     if (!mounted) return;
     setState(() {
-      _log = log.trimRight();
+      _enabled = enabled;
+      _log = [
+        if (appLog.trim().isNotEmpty) appLog.trimRight(),
+        if (nativeLog.trim().isNotEmpty) nativeLog.trimRight(),
+      ].join('\n');
       _loading = false;
     });
+  }
+
+  Future<void> _setEnabled(bool enabled) async {
+    setState(() => _enabled = enabled);
+    await DiagnosticLogStore.setEnabled(enabled);
+    await WireRemoteNative.setDiagnosticsEnabled(enabled);
+    if (!mounted) return;
+    await _reload();
   }
 
   Future<void> _copy() async {
@@ -68,6 +84,7 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
 
   Future<void> _clear() async {
     final l10n = AppLocalizations.of(context);
+    await DiagnosticLogStore.clear();
     await WireRemoteNative.clearDiagnosticsLog();
     if (!mounted) return;
     setState(() => _log = '');
@@ -119,20 +136,6 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                 ? Center(
                     child: CircularProgressIndicator(color: context.gradFg()),
                   )
-                : _log.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        l10n.diagnosticLogEmpty,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: context.gradFg(0.55),
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  )
                 : ListView(
                     padding: EdgeInsets.fromLTRB(
                       16,
@@ -141,6 +144,24 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                       24 + MediaQuery.paddingOf(context).bottom,
                     ),
                     children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _enabled,
+                        onChanged: _setEnabled,
+                        title: Text(
+                          l10n.diagnosticLogEnableTitle,
+                          style: TextStyle(color: context.gradFg()),
+                        ),
+                        subtitle: Text(
+                          l10n.diagnosticLogEnableSubtitle,
+                          style: TextStyle(
+                            color: context.gradFg(0.6),
+                            fontSize: 13,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Text(
                         l10n.diagnosticLogDescription,
                         style: TextStyle(
@@ -150,15 +171,28 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      SelectableText(
-                        _log,
-                        style: TextStyle(
-                          color: context.gradFg(0.9),
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          height: 1.35,
+                      if (_log.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Text(
+                            l10n.diagnosticLogEmpty,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: context.gradFg(0.55),
+                              height: 1.4,
+                            ),
+                          ),
+                        )
+                      else
+                        SelectableText(
+                          _log,
+                          style: TextStyle(
+                            color: context.gradFg(0.9),
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                            height: 1.35,
+                          ),
                         ),
-                      ),
                     ],
                   ),
             bottomNavigationBar: const MiniPlayer(),

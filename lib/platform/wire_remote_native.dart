@@ -40,6 +40,13 @@ class WireRemoteNative {
     } catch (_) {}
   }
 
+  static Future<void> setDiagnosticsEnabled(bool enabled) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod<void>('setDiagnosticsEnabled', enabled);
+    } catch (_) {}
+  }
+
   /// 注册：线控连击 [onHeadsetGesture]、独立媒体键 [onMediaDiscrete]（`next` / `previous`）。
   static void attachRemoteHandlers({
     required Future<void> Function(int clickCount) onHeadsetGesture,

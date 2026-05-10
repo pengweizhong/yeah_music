@@ -11,6 +11,9 @@ object WireRemoteDiagnostics {
     @Volatile
     private var appContext: Context? = null
 
+    @Volatile
+    var enabled: Boolean = false
+
     fun init(context: Context) {
         appContext = context.applicationContext
     }
@@ -22,6 +25,7 @@ object WireRemoteDiagnostics {
 
     @Synchronized
     fun append(message: String) {
+        if (!enabled) return
         val file = logFile() ?: return
         try {
             if (file.exists() && file.length() > MAX_BYTES) {

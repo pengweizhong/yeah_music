@@ -1,5 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
+import 'package:yeah_music/logging/diagnostic_log_store.dart';
+
+class _DiagnosticLogOutput extends LogOutput {
+  @override
+  void output(OutputEvent event) {
+    unawaited(DiagnosticLogStore.appendLines(event.lines));
+  }
+}
 
 /// 全应用统一 [Logger]。
 ///
@@ -22,8 +32,6 @@ final Logger appLog = Logger(
           lineLength: 100,
           printEmojis: false,
         )
-      : SimplePrinter(
-          printTime: true,
-          colors: false,
-        ),
+      : SimplePrinter(printTime: true, colors: false),
+  output: MultiOutput([ConsoleOutput(), _DiagnosticLogOutput()]),
 );

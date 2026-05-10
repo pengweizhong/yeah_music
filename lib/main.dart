@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/config/app_product_info.dart';
+import 'package:yeah_music/logging/diagnostic_log_store.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
@@ -43,6 +44,7 @@ import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 import 'package:yeah_music/services/android_media_session_bridge.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
+import 'package:yeah_music/platform/wire_remote_native.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 
 Future<void> main(List<String> args) async {
@@ -413,6 +415,11 @@ class _YeahMusicAppState extends State<YeahMusicApp>
             );
             unawaited(
               WireRemoteGestureHandler.syncNativeFromController(shortcuts),
+            );
+            unawaited(
+              DiagnosticLogStore.isEnabled().then(
+                WireRemoteNative.setDiagnosticsEnabled,
+              ),
             );
             unawaited(ensureAndroidPostNotificationsPermissionIfNeeded());
           });

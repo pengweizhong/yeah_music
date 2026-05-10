@@ -326,11 +326,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticLogSubtitle => '查看、复制和分享耳机线控诊断信息';
 
   @override
-  String get diagnosticLogDescription =>
-      '这里记录 Android 耳机线控 / 媒体按键事件，用于排查双击、三击控制问题。';
+  String get diagnosticLogEnableTitle => '启用诊断日志';
 
   @override
-  String get diagnosticLogEmpty => '暂无诊断日志。请先按几次耳机线控，再回到这里刷新。';
+  String get diagnosticLogEnableSubtitle =>
+      '默认关闭。开启后会在本机保存应用日志；Android 还会记录耳机线控 / 媒体按键事件。';
+
+  @override
+  String get diagnosticLogDescription =>
+      '诊断日志用于排查播放、平台集成和耳机线控问题。日志有磁盘上限，可在此清空。';
+
+  @override
+  String get diagnosticLogEmpty => '暂无诊断日志。请先启用日志并复现问题，再回到这里刷新。';
 
   @override
   String get diagnosticLogRefresh => '刷新';
@@ -3070,11 +3077,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get diagnosticLogSubtitle => '查看、复制和分享耳机线控诊断信息';
 
   @override
-  String get diagnosticLogDescription =>
-      '这里记录 Android 耳机线控 / 媒体按键事件，用于排查双击、三击控制问题。';
+  String get diagnosticLogEnableTitle => '启用诊断日志';
 
   @override
-  String get diagnosticLogEmpty => '暂无诊断日志。请先按几次耳机线控，再回到这里刷新。';
+  String get diagnosticLogEnableSubtitle =>
+      '默认关闭。开启后会在本机保存应用日志；Android 还会记录耳机线控 / 媒体按键事件。';
+
+  @override
+  String get diagnosticLogDescription =>
+      '诊断日志用于排查播放、平台集成和耳机线控问题。日志有磁盘上限，可在此清空。';
+
+  @override
+  String get diagnosticLogEmpty => '暂无诊断日志。请先启用日志并复现问题，再回到这里刷新。';
 
   @override
   String get diagnosticLogRefresh => '刷新';
@@ -5814,11 +5828,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diagnosticLogSubtitle => '查看、複製和分享耳機線控診斷資訊';
 
   @override
-  String get diagnosticLogDescription =>
-      '這裡記錄 Android 耳機線控 / 媒體按鍵事件，用於排查雙擊、三擊控制問題。';
+  String get diagnosticLogEnableTitle => '啟用診斷日誌';
 
   @override
-  String get diagnosticLogEmpty => '暫無診斷日誌。請先按幾次耳機線控，再回到這裡重新整理。';
+  String get diagnosticLogEnableSubtitle =>
+      '預設關閉。開啟後會在本機保存應用程式日誌；Android 還會記錄耳機線控 / 媒體按鍵事件。';
+
+  @override
+  String get diagnosticLogDescription =>
+      '診斷日誌用於排查播放、平台整合和耳機線控問題。日誌有磁碟上限，可在此清空。';
+
+  @override
+  String get diagnosticLogEmpty => '暫無診斷日誌。請先啟用日誌並重現問題，再回到這裡重新整理。';
 
   @override
   String get diagnosticLogRefresh => '重新整理';

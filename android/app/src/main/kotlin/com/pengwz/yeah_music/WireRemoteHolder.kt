@@ -49,6 +49,10 @@ object WireRemoteHolder {
                     WireRemoteDiagnostics.append(message)
                     result.success(null)
                 }
+                "setDiagnosticsEnabled" -> {
+                    WireRemoteDiagnostics.enabled = call.arguments as? Boolean ?: false
+                    result.success(null)
+                }
                 "clearDiagnosticsLog" -> {
                     WireRemoteDiagnostics.clear()
                     result.success(null)

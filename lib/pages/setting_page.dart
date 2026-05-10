@@ -345,6 +345,7 @@ class SettingPage extends StatelessWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.only(bottom: bottomPad),
                   children: [
+                    // 背景主题：进入主题、颜色、壁纸相关设置。
                     ListTile(
                       title: Text(
                         l10n.settingsBackgroundTheme,
@@ -367,6 +368,7 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    // 语言：切换应用界面语言。
                     ListTile(
                       title: Text(
                         l10n.settingsLanguage,
@@ -395,6 +397,7 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    // 首页问候：编辑首页问候副标题轮播内容。
                     ListTile(
                       title: Text(
                         l10n.settingsHomeGreetingTitle,
@@ -421,6 +424,7 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    // OneDrive：账号、云端曲库、同步和下载目录设置。
                     ListTile(
                       title: Text(
                         l10n.settingsOneDrive,
@@ -452,9 +456,13 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    // 播放快捷键：桌面快捷键与 Android 线控设置分组。
                     const PlaybackShortcutsSettingsSection(),
+                    // Android 媒体会话：锁屏、蓝牙、车机与歌词同步设置。
                     const _AndroidCarLyricsSettingsSection(),
+                    // 耳机线控：Android 单击、双击、三击和媒体键映射。
                     const WireRemoteControlSection(),
+                    // 诊断日志：查看、复制、分享和清空本机诊断日志。
                     ListTile(
                       title: Text(
                         l10n.diagnosticLogTitle,
@@ -480,8 +488,11 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    // 桌面歌词：Linux / macOS / Windows 悬浮歌词与菜单栏歌词设置。
                     const _DesktopLyricsSettingsSection(),
+                    // 缓存管理：清理应用缓存与部分 Hive 缓存（暂未在设置页展示）。
                     // const _CacheManagementSection(),
+                    // 赞助与支持：GitHub Star、项目链接和支持说明。
                     ListTile(
                       title: Text(
                         l10n.settingsSponsorTitle,
@@ -507,6 +518,7 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
+                    // 关于：应用信息、版本和更新检查。
                     ListTile(
                       title: Text(
                         l10n.settingsAbout,
@@ -524,6 +536,7 @@ class SettingPage extends StatelessWidget {
                         ApplicationUtils.showAboutDialog(context);
                       },
                     ),
+                    // 系统信息：设备信息、磁盘空间和目录占用。
                     ExpansionTile(
                       leading: Icon(
                         Icons.info_outline,
