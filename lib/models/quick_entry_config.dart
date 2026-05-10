@@ -22,17 +22,29 @@ class QuickEntryConfig {
   static const idSongRecognizer = 'song_recognizer';
 
   /// 规范顺序：默认首页从左到右；[normalizeInPlace] 补全缺失 id 时也按此顺序追加。
+  ///
+  /// 调整首页快捷入口默认顺序时，直接移动下面这些 id 即可。
   static const allIds = [
+    /// 本地曲库。
     idLibrary,
+    /// OneDrive 云端曲库。
     idCloudLibrary,
+    /// OneDrive 已缓存 / 已下载歌曲。
     idOneDriveCachePlaylist,
+    /// OneDrive 传输队列（下载 / 上传任务）。
     idOneDriveTransferQueue,
-    idRecent,
-    idMostPlayed,
-    idPlaylists,
-    idOneDrive,
-    idDiscover,
+    /// 听歌识曲。
     idSongRecognizer,
+    /// 最近播放。
+    idRecent,
+    /// 最常播放。
+    idMostPlayed,
+    /// 用户歌单。
+    idPlaylists,
+    /// 发现页。
+    idDiscover,
+    /// OneDrive 文件浏览入口。
+    idOneDrive,
   ];
 
   /// 全部门口的排列顺序（含被隐藏的，便于管理页排序）

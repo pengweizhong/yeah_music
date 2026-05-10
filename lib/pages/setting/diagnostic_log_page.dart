@@ -22,6 +22,8 @@ class DiagnosticLogPage extends StatefulWidget {
 }
 
 class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
+  static const _loadTimeout = Duration(seconds: 3);
+
   bool _loading = true;
   bool _enabled = false;
   String _log = '';
@@ -34,9 +36,29 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
 
   Future<void> _reload() async {
     setState(() => _loading = true);
-    final enabled = await DiagnosticLogStore.isEnabled();
-    final appLog = await DiagnosticLogStore.read();
-    final nativeLog = await WireRemoteNative.readDiagnosticsLog();
+    var enabled = _enabled;
+    var appLog = '';
+    var nativeLog = '';
+
+    try {
+      final values = await Future.wait<Object>([
+        DiagnosticLogStore.isEnabled().timeout(
+          _loadTimeout,
+          onTimeout: () => _enabled,
+        ),
+        DiagnosticLogStore.read().timeout(_loadTimeout, onTimeout: () => ''),
+        WireRemoteNative.readDiagnosticsLog().timeout(
+          _loadTimeout,
+          onTimeout: () => '',
+        ),
+      ]);
+      enabled = values[0] as bool;
+      appLog = values[1] as String;
+      nativeLog = values[2] as String;
+    } catch (_) {
+      // 日志页不能因为平台通道或文件读取异常一直停在加载态。
+    }
+
     if (!mounted) return;
     setState(() {
       _enabled = enabled;
