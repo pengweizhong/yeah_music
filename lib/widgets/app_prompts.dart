@@ -97,12 +97,17 @@ void showAppSnackBar(
   Duration duration = const Duration(seconds: 3),
   SnackBarAction? action,
 }) {
-  final messenger = (context.mounted
-          ? ScaffoldMessenger.maybeOf(context)
-          : null) ??
+  final messenger =
+      (context.mounted ? ScaffoldMessenger.maybeOf(context) : null) ??
       appScaffoldMessengerKey.currentState;
   if (messenger == null) return;
-  _presentAppSnackBar(messenger, message, kind: kind, duration: duration, action: action);
+  _presentAppSnackBar(
+    messenger,
+    message,
+    kind: kind,
+    duration: duration,
+    action: action,
+  );
 }
 
 /// 无页面 [BuildContext] 时使用根 [ScaffoldMessenger]（与 [showAppSnackBar] 样式一致）。
@@ -114,7 +119,13 @@ void showAppSnackBarGlobal(
 }) {
   final messenger = appScaffoldMessengerKey.currentState;
   if (messenger == null) return;
-  _presentAppSnackBar(messenger, message, kind: kind, duration: duration, action: action);
+  _presentAppSnackBar(
+    messenger,
+    message,
+    kind: kind,
+    duration: duration,
+    action: action,
+  );
 }
 
 String playbackFailedSnackMessageResolved(BuildContext? context) {
@@ -131,7 +142,8 @@ String playbackFailedSnackMessageResolved(BuildContext? context) {
 /// 解码失败、文件缺失或格式不支持等导致未能开始播放时的全局提示。
 void reportPlaybackFailureToUser([BuildContext? context]) {
   final msg = playbackFailedSnackMessageResolved(context);
-  final messenger = (context != null && context.mounted
+  final messenger =
+      (context != null && context.mounted
           ? ScaffoldMessenger.maybeOf(context)
           : null) ??
       appScaffoldMessengerKey.currentState;
@@ -586,8 +598,7 @@ Future<void> _showAboutUpdateCheckFinishedDialog({
       builder: (ctx) {
         final scheme = Theme.of(ctx).colorScheme;
         final accent = success ? scheme.primary : scheme.error;
-        final icon =
-            success ? Icons.check_circle_outline : Icons.error_outline;
+        final icon = success ? Icons.check_circle_outline : Icons.error_outline;
         final sub = subtitle;
         return Padding(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
@@ -672,9 +683,9 @@ Future<void> _handleAboutDialogVersionTap(BuildContext dialogContext) async {
           title: l10n.settingsAboutUpdateAlreadyLatest,
         );
       case GithubUpdateCheckNewVersion(
-          :final latestVersion,
-          :final releasePageUrl,
-        ):
+        :final latestVersion,
+        :final releasePageUrl,
+      ):
         if (!dialogContext.mounted) return;
         final go = await showAppConfirmDialog(
           context: dialogContext,
@@ -787,7 +798,8 @@ void showAppAboutDialog(BuildContext context) {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => unawaited(_handleAboutDialogVersionTap(ctx)),
+                        onTap: () =>
+                            unawaited(_handleAboutDialogVersionTap(ctx)),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -826,7 +838,9 @@ void showAppAboutDialog(BuildContext context) {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  l10n.settingsAboutDialogBuildLabel(AppProductInfo.buildNumber),
+                  l10n.settingsAboutDialogBuildLabel(
+                    AppProductInfo.buildNumber,
+                  ),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: muted),
                 ),
@@ -854,6 +868,21 @@ void showAppAboutDialog(BuildContext context) {
                   'GPL-3.0',
                 ),
                 const SizedBox(height: 12),
+                _aboutDialogActionRow(
+                  ctx,
+                  scheme,
+                  Icons.privacy_tip_outlined,
+                  l10n.settingsAboutDialogPrivacy,
+                  l10n.settingsPrivacyPolicyTitle,
+                  () {
+                    showAppScrollMessageDialog(
+                      context: ctx,
+                      title: l10n.settingsPrivacyPolicyTitle,
+                      body: l10n.settingsPrivacyPolicyBody,
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
                 _aboutDialogInfoRow(
                   scheme,
                   Icons.copyright,
@@ -870,6 +899,53 @@ void showAppAboutDialog(BuildContext context) {
           ),
         );
       },
+    ),
+  );
+}
+
+Widget _aboutDialogActionRow(
+  BuildContext context,
+  ColorScheme scheme,
+  IconData icon,
+  String label,
+  String value,
+  VoidCallback onTap,
+) {
+  final onSurface = scheme.onSurface;
+  final muted = scheme.onSurfaceVariant;
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: muted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontSize: 12, color: muted)),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: muted, size: 22),
+          ],
+        ),
+      ),
     ),
   );
 }

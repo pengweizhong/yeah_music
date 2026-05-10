@@ -510,6 +510,24 @@ abstract class AppLocalizations {
   /// **'License'**
   String get settingsAboutDialogLicense;
 
+  /// No description provided for @settingsAboutDialogPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsAboutDialogPrivacy;
+
+  /// No description provided for @settingsPrivacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicyTitle;
+
+  /// No description provided for @settingsPrivacyPolicyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This Privacy Policy applies to Yeah Music. Yeah Music is an open-source, free, local-first music player. Yeah Music does not provide a developer-operated account system, does not run advertising services, does not integrate third-party analytics SDKs for advertising profiles or user behavior tracking, and does not sell your personal information.\n\n1. Local music and media library\nAfter you grant system permissions or choose music folders, Yeah Music reads local audio files, file names, file paths, audio tags, artwork, lyrics, playlists, and playback history to show your library, play music, edit tags, count plays, restore playback position, and build playlists. By default, this data stays on your device and is not uploaded by Yeah Music to a developer-operated server.\n\n2. OneDrive features\nWhen you enable OneDrive sign-in, cloud library, sync, upload, or download, Yeah Music communicates with Microsoft OneDrive. Access tokens are stored in secure device storage. Library indexes, sync slices, uploaded files, and downloaded files are exchanged with OneDrive only according to your actions. Microsoft services are governed by Microsoft\'s own terms and privacy policy.\n\n3. Music recognition\nWhen you use music recognition, Yeah Music records a short audio sample and sends it to the recognition provider you choose or configure, such as AudD or ACRCloud. Recognition results may include song title, artist, album, and related metadata. Do not use this feature in situations where you do not want audio to be processed by a third-party service.\n\n4. Diagnostic logs\nDiagnostic logging is off by default. When enabled, Yeah Music stores runtime logs locally. On Android it also records headset/media-button events for troubleshooting. Logs are size-limited and can be viewed, copied, shared, or cleared in Settings. Before sharing logs, please check whether they contain file paths, file names, error details, or other information you do not want to disclose.\n\n5. Update checks and external links\nWhen you tap the version in About to check for updates, Yeah Music accesses GitHub Release information. Repository, sponsor, and other external links open in your browser or system handler. External websites and third-party services process data under their own privacy policies.\n\n6. Permissions\nYeah Music may request storage/media library, microphone, notification, background media playback, and network permissions. These are used only for their related features, such as playing and managing local music, recording recognition samples, showing media notifications, handling headset or lock-screen controls, accessing OneDrive, and checking for updates. You can revoke permissions in system settings, but related features may stop working.\n\n7. Data retention and deletion\nLocal library indexes, playback history, playlists, app settings, OneDrive configuration, and diagnostic logs are stored on your device until you clear them in the app, sign out, disable or clear related features, or uninstall the app. Uninstalling the app usually removes data in the app-private directory, but music files you selected, files downloaded to public folders, and files you exported are not deleted by uninstalling.\n\n8. Children\'s privacy\nYeah Music is not directed to children and does not knowingly collect children\'s personal information. Minors should use features involving network access, recording, or cloud services with guardian consent and guidance.\n\n9. Changes and contact\nYeah Music may update this policy as features change. Major changes may be communicated through app updates or release notes. If you have questions about privacy or data handling, contact via GitHub Issues at https://github.com/pengweizhong/yeah_music.'**
+  String get settingsPrivacyPolicyBody;
+
   /// No description provided for @settingsAboutDialogCopyright.
   ///
   /// In en, this message translates to:
