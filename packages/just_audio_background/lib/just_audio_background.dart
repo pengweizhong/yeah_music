@@ -16,6 +16,9 @@ late JustAudioPlatform _platform;
 /// Yeah Music：控制是否向系统会话同步歌词（通知「词」按钮）。
 Future<void> Function()? _yeahAndroidLyricsSyncToggleHandler;
 
+/// Yeah Music：后台/锁屏媒体键点击处理；返回 true 表示已消费，不再走默认 play/pause/next/previous。
+Future<bool> Function(String kind)? _yeahAndroidMediaButtonClickHandler;
+
 /// 通知自定义动作名，须与 [MediaControl.custom] 的 [name] 一致。
 const String kYeahToggleSystemLyricsAction = 'yeah_toggle_system_lyrics';
 
@@ -79,6 +82,15 @@ class JustAudioBackground {
       androidBrowsableRootExtras: androidBrowsableRootExtras,
       onAndroidLyricsSyncToggle: onAndroidLyricsSyncToggle,
     );
+  }
+
+  /// 注册 Android 后台/锁屏媒体键点击处理。
+  ///
+  /// [kind] 为 `media`、`next` 或 `previous`。
+  static void setAndroidMediaButtonClickHandler(
+    Future<bool> Function(String kind)? handler,
+  ) {
+    _yeahAndroidMediaButtonClickHandler = handler;
   }
 }
 
@@ -490,6 +502,22 @@ class _PlayerAudioHandler extends BaseAudioHandler
       return null;
     }
     return super.customAction(name, extras);
+  }
+
+  @override
+  Future<void> click([MediaButton button = MediaButton.media]) async {
+    final handler = _yeahAndroidMediaButtonClickHandler;
+    if (handler != null) {
+      final kind = switch (button) {
+        MediaButton.media => 'media',
+        MediaButton.next => 'next',
+        MediaButton.previous => 'previous',
+      };
+      try {
+        if (await handler(kind)) return;
+      } catch (_) {}
+    }
+    await super.click(button);
   }
 
   Future<LoadResponse> customLoad(LoadRequest request) async {

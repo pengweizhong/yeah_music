@@ -28,6 +28,7 @@ object WireRemoteHolder {
         hookCount = 0
         val m = messenger ?: return@Runnable
         if (n > 0) {
+            WireRemoteDiagnostics.append("headsetGesture flush count=$n")
             MethodChannel(m, CHANNEL).invokeMethod("headsetGesture", n)
         }
     }
@@ -39,6 +40,17 @@ object WireRemoteHolder {
                 "configure" -> {
                     val args = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
                     enabled = args["enabled"] as? Boolean ?: true
+                    WireRemoteDiagnostics.append("configure enabled=$enabled")
+                    result.success(null)
+                }
+                "readDiagnosticsLog" -> result.success(WireRemoteDiagnostics.read())
+                "appendDiagnosticsLog" -> {
+                    val message = call.arguments?.toString() ?: ""
+                    WireRemoteDiagnostics.append(message)
+                    result.success(null)
+                }
+                "clearDiagnosticsLog" -> {
+                    WireRemoteDiagnostics.clear()
                     result.success(null)
                 }
                 else -> result.notImplemented()
@@ -64,6 +76,7 @@ object WireRemoteHolder {
     fun onMediaDiscreteKey(kind: String): Boolean {
         if (!enabled) return false
         val m = messenger ?: return false
+        WireRemoteDiagnostics.append("mediaDiscrete kind=$kind")
         MethodChannel(m, CHANNEL).invokeMethod("mediaDiscrete", kind)
         return true
     }
@@ -110,6 +123,7 @@ object WireRemoteHolder {
         if (repeatCount > 0) return false
         hookCount++
         if (hookCount > 3) hookCount = 3
+        WireRemoteDiagnostics.append("headsetHook down count=$hookCount")
         handler.removeCallbacks(flushRunnable)
         handler.postDelayed(flushRunnable, GAP_MS)
         return true

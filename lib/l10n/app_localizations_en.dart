@@ -335,6 +335,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSponsorLaunchFailed => 'Could not open link';
 
   @override
+  String get diagnosticLogTitle => 'Diagnostic log';
+
+  @override
+  String get diagnosticLogSubtitle =>
+      'View, copy, and share headset control diagnostics';
+
+  @override
+  String get diagnosticLogDescription =>
+      'This log records Android headset/media-button events for troubleshooting double/triple press controls.';
+
+  @override
+  String get diagnosticLogEmpty =>
+      'No diagnostic log yet. Try pressing the headset button, then return here and refresh.';
+
+  @override
+  String get diagnosticLogRefresh => 'Refresh';
+
+  @override
+  String get diagnosticLogCopy => 'Copy';
+
+  @override
+  String get diagnosticLogCopied => 'Copied to clipboard';
+
+  @override
+  String get diagnosticLogShare => 'Share';
+
+  @override
+  String get diagnosticLogClear => 'Clear';
+
+  @override
+  String get diagnosticLogCleared => 'Log cleared';
+
+  @override
+  String diagnosticLogShareFailed(String error) {
+    return 'Could not share log: $error';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => 'Device';
 
   @override

@@ -134,6 +134,22 @@
   "settingsSponsorCopyLink": "Copy link",
   "settingsSponsorLinkCopied": "Link copied",
   "settingsSponsorLaunchFailed": "Could not open link",
+  "diagnosticLogTitle": "Diagnostic log",
+  "diagnosticLogSubtitle": "View, copy, and share headset control diagnostics",
+  "diagnosticLogDescription": "This log records Android headset/media-button events for troubleshooting double/triple press controls.",
+  "diagnosticLogEmpty": "No diagnostic log yet. Try pressing the headset button, then return here and refresh.",
+  "diagnosticLogRefresh": "Refresh",
+  "diagnosticLogCopy": "Copy",
+  "diagnosticLogCopied": "Copied to clipboard",
+  "diagnosticLogShare": "Share",
+  "diagnosticLogClear": "Clear",
+  "diagnosticLogCleared": "Log cleared",
+  "diagnosticLogShareFailed": "Could not share log: {error}",
+  "@diagnosticLogShareFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "Device",
   "settingsSysinfoSectionStorage": "Storage",
   "settingsSysinfoPlatformLabel": "Platform",

@@ -320,6 +320,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSponsorLaunchFailed => '无法打开链接';
 
   @override
+  String get diagnosticLogTitle => '诊断日志';
+
+  @override
+  String get diagnosticLogSubtitle => '查看、复制和分享耳机线控诊断信息';
+
+  @override
+  String get diagnosticLogDescription =>
+      '这里记录 Android 耳机线控 / 媒体按键事件，用于排查双击、三击控制问题。';
+
+  @override
+  String get diagnosticLogEmpty => '暂无诊断日志。请先按几次耳机线控，再回到这里刷新。';
+
+  @override
+  String get diagnosticLogRefresh => '刷新';
+
+  @override
+  String get diagnosticLogCopy => '复制';
+
+  @override
+  String get diagnosticLogCopied => '已复制到剪贴板';
+
+  @override
+  String get diagnosticLogShare => '分享';
+
+  @override
+  String get diagnosticLogClear => '清空';
+
+  @override
+  String get diagnosticLogCleared => '日志已清空';
+
+  @override
+  String diagnosticLogShareFailed(String error) {
+    return '无法分享日志：$error';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => '设备信息';
 
   @override
@@ -3028,6 +3064,42 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsSponsorLaunchFailed => '无法打开链接';
 
   @override
+  String get diagnosticLogTitle => '诊断日志';
+
+  @override
+  String get diagnosticLogSubtitle => '查看、复制和分享耳机线控诊断信息';
+
+  @override
+  String get diagnosticLogDescription =>
+      '这里记录 Android 耳机线控 / 媒体按键事件，用于排查双击、三击控制问题。';
+
+  @override
+  String get diagnosticLogEmpty => '暂无诊断日志。请先按几次耳机线控，再回到这里刷新。';
+
+  @override
+  String get diagnosticLogRefresh => '刷新';
+
+  @override
+  String get diagnosticLogCopy => '复制';
+
+  @override
+  String get diagnosticLogCopied => '已复制到剪贴板';
+
+  @override
+  String get diagnosticLogShare => '分享';
+
+  @override
+  String get diagnosticLogClear => '清空';
+
+  @override
+  String get diagnosticLogCleared => '日志已清空';
+
+  @override
+  String diagnosticLogShareFailed(String error) {
+    return '无法分享日志：$error';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => '设备信息';
 
   @override
@@ -5734,6 +5806,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsSponsorLaunchFailed => '無法開啟連結';
+
+  @override
+  String get diagnosticLogTitle => '診斷日誌';
+
+  @override
+  String get diagnosticLogSubtitle => '查看、複製和分享耳機線控診斷資訊';
+
+  @override
+  String get diagnosticLogDescription =>
+      '這裡記錄 Android 耳機線控 / 媒體按鍵事件，用於排查雙擊、三擊控制問題。';
+
+  @override
+  String get diagnosticLogEmpty => '暫無診斷日誌。請先按幾次耳機線控，再回到這裡重新整理。';
+
+  @override
+  String get diagnosticLogRefresh => '重新整理';
+
+  @override
+  String get diagnosticLogCopy => '複製';
+
+  @override
+  String get diagnosticLogCopied => '已複製到剪貼簿';
+
+  @override
+  String get diagnosticLogShare => '分享';
+
+  @override
+  String get diagnosticLogClear => '清空';
+
+  @override
+  String get diagnosticLogCleared => '日誌已清空';
+
+  @override
+  String diagnosticLogShareFailed(String error) {
+    return '無法分享日誌：$error';
+  }
 
   @override
   String get settingsSysinfoSectionDevice => '裝置資訊';

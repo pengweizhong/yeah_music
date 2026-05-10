@@ -684,6 +684,72 @@ abstract class AppLocalizations {
   /// **'Could not open link'**
   String get settingsSponsorLaunchFailed;
 
+  /// No description provided for @diagnosticLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostic log'**
+  String get diagnosticLogTitle;
+
+  /// No description provided for @diagnosticLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View, copy, and share headset control diagnostics'**
+  String get diagnosticLogSubtitle;
+
+  /// No description provided for @diagnosticLogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This log records Android headset/media-button events for troubleshooting double/triple press controls.'**
+  String get diagnosticLogDescription;
+
+  /// No description provided for @diagnosticLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No diagnostic log yet. Try pressing the headset button, then return here and refresh.'**
+  String get diagnosticLogEmpty;
+
+  /// No description provided for @diagnosticLogRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get diagnosticLogRefresh;
+
+  /// No description provided for @diagnosticLogCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get diagnosticLogCopy;
+
+  /// No description provided for @diagnosticLogCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get diagnosticLogCopied;
+
+  /// No description provided for @diagnosticLogShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get diagnosticLogShare;
+
+  /// No description provided for @diagnosticLogClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get diagnosticLogClear;
+
+  /// No description provided for @diagnosticLogCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Log cleared'**
+  String get diagnosticLogCleared;
+
+  /// No description provided for @diagnosticLogShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share log: {error}'**
+  String diagnosticLogShareFailed(String error);
+
   /// No description provided for @settingsSysinfoSectionDevice.
   ///
   /// In en, this message translates to:

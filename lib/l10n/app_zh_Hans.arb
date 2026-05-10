@@ -135,6 +135,22 @@
   "settingsSponsorCopyLink": "复制链接",
   "settingsSponsorLinkCopied": "已复制链接",
   "settingsSponsorLaunchFailed": "无法打开链接",
+  "diagnosticLogTitle": "诊断日志",
+  "diagnosticLogSubtitle": "查看、复制和分享耳机线控诊断信息",
+  "diagnosticLogDescription": "这里记录 Android 耳机线控 / 媒体按键事件，用于排查双击、三击控制问题。",
+  "diagnosticLogEmpty": "暂无诊断日志。请先按几次耳机线控，再回到这里刷新。",
+  "diagnosticLogRefresh": "刷新",
+  "diagnosticLogCopy": "复制",
+  "diagnosticLogCopied": "已复制到剪贴板",
+  "diagnosticLogShare": "分享",
+  "diagnosticLogClear": "清空",
+  "diagnosticLogCleared": "日志已清空",
+  "diagnosticLogShareFailed": "无法分享日志：{error}",
+  "@diagnosticLogShareFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "设备信息",
   "settingsSysinfoSectionStorage": "存储空间",
   "settingsSysinfoPlatformLabel": "运行平台",

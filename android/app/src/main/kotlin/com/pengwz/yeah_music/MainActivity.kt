@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
-import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.engine.FlutterEngine
 
 /// 供 OAuth 自定义 scheme（如 OneDrive）从浏览器返回时把 Intent 交给 AppAuth，
@@ -16,6 +15,8 @@ class MainActivity : AudioServiceFragmentActivity() {
         DiskSpaceChannel.register(flutterEngine.dartExecutor.binaryMessenger)
         MusicTagEditorBridge.register(this, flutterEngine)
         OpenWithChannel.register(this, flutterEngine.dartExecutor.binaryMessenger)
+        WireRemoteDiagnostics.init(this)
+        WireRemoteHolder.attach(flutterEngine.dartExecutor.binaryMessenger)
     }
 
     override fun onResume() {
@@ -28,11 +29,6 @@ class MainActivity : AudioServiceFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         OpenWithChannel.captureViewIntent(intent)
-        try {
-            val engine = AudioServicePlugin.getFlutterEngine(this)
-            WireRemoteHolder.attach(engine.dartExecutor.binaryMessenger)
-        } catch (_: Throwable) {
-        }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

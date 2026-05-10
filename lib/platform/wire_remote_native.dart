@@ -16,6 +16,30 @@ class WireRemoteNative {
     } catch (_) {}
   }
 
+  static Future<String> readDiagnosticsLog() async {
+    if (kIsWeb || !Platform.isAndroid) return '';
+    try {
+      final raw = await _channel.invokeMethod<String>('readDiagnosticsLog');
+      return raw ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  static Future<void> clearDiagnosticsLog() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod<void>('clearDiagnosticsLog');
+    } catch (_) {}
+  }
+
+  static Future<void> appendDiagnosticsLog(String message) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod<void>('appendDiagnosticsLog', message);
+    } catch (_) {}
+  }
+
   /// 注册：线控连击 [onHeadsetGesture]、独立媒体键 [onMediaDiscrete]（`next` / `previous`）。
   static void attachRemoteHandlers({
     required Future<void> Function(int clickCount) onHeadsetGesture,

@@ -14,6 +14,7 @@ import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/constants.dart';
+import 'package:yeah_music/pages/setting/diagnostic_log_page.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
 import 'package:yeah_music/pages/setting/home_greeting_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
@@ -454,6 +455,31 @@ class SettingPage extends StatelessWidget {
                     const PlaybackShortcutsSettingsSection(),
                     const _AndroidCarLyricsSettingsSection(),
                     const WireRemoteControlSection(),
+                    ListTile(
+                      title: Text(
+                        l10n.diagnosticLogTitle,
+                        style: TextStyle(color: context.gradFg()),
+                      ),
+                      subtitle: Text(
+                        l10n.diagnosticLogSubtitle,
+                        style: TextStyle(
+                          color: context.gradFg(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: Icon(
+                        Icons.bug_report_outlined,
+                        color: context.gradFg(),
+                      ),
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) => const DiagnosticLogPage(),
+                          ),
+                        );
+                      },
+                    ),
                     const _DesktopLyricsSettingsSection(),
                     // const _CacheManagementSection(),
                     ListTile(
@@ -534,7 +560,8 @@ class _CacheManagementSection extends StatefulWidget {
   const _CacheManagementSection();
 
   @override
-  State<_CacheManagementSection> createState() => _CacheManagementSectionState();
+  State<_CacheManagementSection> createState() =>
+      _CacheManagementSectionState();
 }
 
 class _CacheManagementSectionState extends State<_CacheManagementSection> {
@@ -578,11 +605,7 @@ class _CacheManagementSectionState extends State<_CacheManagementSection> {
       if (!mounted) return;
       await _reloadSize();
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        t.clearDone,
-        kind: AppSnackKind.success,
-      );
+      showAppSnackBar(context, t.clearDone, kind: AppSnackKind.success);
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(context, t.clearFailed('$e'), kind: AppSnackKind.error);
@@ -603,10 +626,7 @@ class _CacheManagementSectionState extends State<_CacheManagementSection> {
         : t.currentSize(_formatBytes(_cacheBytes));
     return ListTile(
       title: Text(t.title, style: TextStyle(color: fg)),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: fgMuted, fontSize: 13),
-      ),
+      subtitle: Text(subtitle, style: TextStyle(color: fgMuted, fontSize: 13)),
       leading: Icon(Icons.cleaning_services_outlined, color: fg),
       trailing: _clearing
           ? const SizedBox(
@@ -672,8 +692,7 @@ class _CacheTexts {
         clearAction: '清理',
         clearDone: '快取已清理（部分設定需重新啟動後才會完全生效）',
         currentSize: (size) => '目前可清理快取：$size',
-        dialogBody: (size) =>
-            '目前可清理快取約 $size，確定立即清理嗎？\n\n注意：這會清空本機設定與快取資料。',
+        dialogBody: (size) => '目前可清理快取約 $size，確定立即清理嗎？\n\n注意：這會清空本機設定與快取資料。',
         clearFailed: (err) => '快取清理失敗：$err',
       );
     }

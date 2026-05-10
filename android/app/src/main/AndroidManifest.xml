@@ -75,7 +75,7 @@
             </intent-filter>
         </service>
         <receiver
-            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
+            android:name=".WireRemoteMediaButtonReceiver"
             android:exported="true"
             tools:ignore="Instantiatable">
             <intent-filter>

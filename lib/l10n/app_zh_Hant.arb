@@ -135,6 +135,22 @@
   "settingsSponsorCopyLink": "複製連結",
   "settingsSponsorLinkCopied": "已複製連結",
   "settingsSponsorLaunchFailed": "無法開啟連結",
+  "diagnosticLogTitle": "診斷日誌",
+  "diagnosticLogSubtitle": "查看、複製和分享耳機線控診斷資訊",
+  "diagnosticLogDescription": "這裡記錄 Android 耳機線控 / 媒體按鍵事件，用於排查雙擊、三擊控制問題。",
+  "diagnosticLogEmpty": "暫無診斷日誌。請先按幾次耳機線控，再回到這裡重新整理。",
+  "diagnosticLogRefresh": "重新整理",
+  "diagnosticLogCopy": "複製",
+  "diagnosticLogCopied": "已複製到剪貼簿",
+  "diagnosticLogShare": "分享",
+  "diagnosticLogClear": "清空",
+  "diagnosticLogCleared": "日誌已清空",
+  "diagnosticLogShareFailed": "無法分享日誌：{error}",
+  "@diagnosticLogShareFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "裝置資訊",
   "settingsSysinfoSectionStorage": "儲存空間",
   "settingsSysinfoPlatformLabel": "執行平台",

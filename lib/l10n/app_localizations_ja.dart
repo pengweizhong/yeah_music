@@ -324,6 +324,43 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsSponsorLaunchFailed => 'リンクを開けませんでした';
 
   @override
+  String get diagnosticLogTitle => '診断ログ';
+
+  @override
+  String get diagnosticLogSubtitle => 'ヘッドセット操作の診断情報を表示・コピー・共有';
+
+  @override
+  String get diagnosticLogDescription =>
+      'Android のヘッドセット／メディアボタンイベントを記録し、ダブル／トリプルクリック制御の調査に使います。';
+
+  @override
+  String get diagnosticLogEmpty =>
+      '診断ログはまだありません。ヘッドセットボタンを押してから、ここに戻って更新してください。';
+
+  @override
+  String get diagnosticLogRefresh => '更新';
+
+  @override
+  String get diagnosticLogCopy => 'コピー';
+
+  @override
+  String get diagnosticLogCopied => 'クリップボードにコピーしました';
+
+  @override
+  String get diagnosticLogShare => '共有';
+
+  @override
+  String get diagnosticLogClear => '消去';
+
+  @override
+  String get diagnosticLogCleared => 'ログを消去しました';
+
+  @override
+  String diagnosticLogShareFailed(String error) {
+    return 'ログを共有できませんでした：$error';
+  }
+
+  @override
   String get settingsSysinfoSectionDevice => '端末情報';
 
   @override

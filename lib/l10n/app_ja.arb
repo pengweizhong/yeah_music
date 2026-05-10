@@ -135,6 +135,22 @@
   "settingsSponsorCopyLink": "リンクをコピー",
   "settingsSponsorLinkCopied": "コピーしました",
   "settingsSponsorLaunchFailed": "リンクを開けませんでした",
+  "diagnosticLogTitle": "診断ログ",
+  "diagnosticLogSubtitle": "ヘッドセット操作の診断情報を表示・コピー・共有",
+  "diagnosticLogDescription": "Android のヘッドセット／メディアボタンイベントを記録し、ダブル／トリプルクリック制御の調査に使います。",
+  "diagnosticLogEmpty": "診断ログはまだありません。ヘッドセットボタンを押してから、ここに戻って更新してください。",
+  "diagnosticLogRefresh": "更新",
+  "diagnosticLogCopy": "コピー",
+  "diagnosticLogCopied": "クリップボードにコピーしました",
+  "diagnosticLogShare": "共有",
+  "diagnosticLogClear": "消去",
+  "diagnosticLogCleared": "ログを消去しました",
+  "diagnosticLogShareFailed": "ログを共有できませんでした：{error}",
+  "@diagnosticLogShareFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "settingsSysinfoSectionDevice": "端末情報",
   "settingsSysinfoSectionStorage": "ストレージ",
   "settingsSysinfoPlatformLabel": "実行プラットフォーム",

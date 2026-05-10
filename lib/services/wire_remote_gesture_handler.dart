@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -12,10 +15,16 @@ class WireRemoteGestureHandler {
   WireRemoteGestureHandler._();
 
   static bool _initialized = false;
+  static int _backgroundMediaClickCount = 0;
+  static Timer? _backgroundMediaClickTimer;
+  static const Duration _backgroundClickGap = Duration(milliseconds: 700);
 
   static void ensureInitialized() {
     if (_initialized) return;
     _initialized = true;
+    JustAudioBackground.setAndroidMediaButtonClickHandler(
+      _onAndroidMediaButtonClick,
+    );
     WireRemoteNative.attachRemoteHandlers(
       onHeadsetGesture: _onHeadsetGesture,
       onMediaDiscrete: _onMediaDiscrete,
@@ -36,6 +45,73 @@ class WireRemoteGestureHandler {
     if (!cfg.enabled) return;
     final action = cfg.actionForClickCount(clickCount);
     await _dispatch(ctx, action);
+  }
+
+  /// 后台/锁屏媒体键会先进入 audio_service 的 AudioHandler.click。
+  ///
+  /// 返回 true 表示自定义线控已消费，避免每次点击都被默认处理成播放/暂停。
+  static Future<bool> _onAndroidMediaButtonClick(String kind) async {
+    await WireRemoteNative.appendDiagnosticsLog(
+      'audio_service click kind=$kind',
+    );
+    final ctx = appScaffoldMessengerKey.currentContext;
+    if (ctx == null || !ctx.mounted) {
+      await WireRemoteNative.appendDiagnosticsLog(
+        'audio_service click ignored: no Flutter context',
+      );
+      return false;
+    }
+    final ctrl = Provider.of<PlaybackShortcutController>(ctx, listen: false);
+    final cfg = ctrl.wireRemote;
+    if (!cfg.enabled) {
+      await WireRemoteNative.appendDiagnosticsLog(
+        'audio_service click ignored: wire remote disabled',
+      );
+      return false;
+    }
+
+    switch (kind) {
+      case 'next':
+        await WireRemoteNative.appendDiagnosticsLog(
+          'audio_service dispatch mediaNextKeyAction=${cfg.mediaNextKeyAction.name}',
+        );
+        if (!ctx.mounted) return true;
+        await _dispatch(ctx, cfg.mediaNextKeyAction);
+        return true;
+      case 'previous':
+        await WireRemoteNative.appendDiagnosticsLog(
+          'audio_service dispatch mediaPreviousKeyAction=${cfg.mediaPreviousKeyAction.name}',
+        );
+        if (!ctx.mounted) return true;
+        await _dispatch(ctx, cfg.mediaPreviousKeyAction);
+        return true;
+      case 'media':
+        _backgroundMediaClickCount++;
+        if (_backgroundMediaClickCount > 3) _backgroundMediaClickCount = 3;
+        await WireRemoteNative.appendDiagnosticsLog(
+          'audio_service media click count=$_backgroundMediaClickCount',
+        );
+        _backgroundMediaClickTimer?.cancel();
+        _backgroundMediaClickTimer = Timer(_backgroundClickGap, () {
+          unawaited(_flushAndroidBackgroundMediaClicks());
+        });
+        return true;
+      default:
+        await WireRemoteNative.appendDiagnosticsLog(
+          'audio_service click ignored: unknown kind=$kind',
+        );
+        return false;
+    }
+  }
+
+  static Future<void> _flushAndroidBackgroundMediaClicks() async {
+    final count = _backgroundMediaClickCount;
+    _backgroundMediaClickCount = 0;
+    if (count <= 0) return;
+    await WireRemoteNative.appendDiagnosticsLog(
+      'audio_service headsetGesture flush count=$count',
+    );
+    await _onHeadsetGesture(count);
   }
 
   /// 蓝牙耳机等：`next` / `previous`。
