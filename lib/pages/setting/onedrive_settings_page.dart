@@ -335,7 +335,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                         color: Colors.white70,
                       ),
                       title: Text(
-                        l10n.oneDriveDownloadQueueTitle,
+                        l10n.oneDriveTransferQueueTitle,
                         style: const TextStyle(color: Colors.white),
                       ),
                       subtitle: Text(
