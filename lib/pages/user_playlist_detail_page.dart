@@ -6,6 +6,7 @@ import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
@@ -307,15 +308,9 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
         kind: AppSnackKind.success,
         action: SnackBarAction(
           label: l10n.libraryBatchOpenQueue,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(
-                  initialTab: OneDriveTransferQueueTab.upload,
-                ),
-              ),
-            );
-          },
+          onPressed: () => openOneDriveTransferQueue(
+            initialTab: OneDriveTransferQueueTab.upload,
+          ),
         ),
       );
     } on StateError catch (e) {
@@ -746,9 +741,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                     key: ValueKey<String>(
                                       '${pl.id}_${index}_${normSongPath(song.path)}',
                                     ),
-                                    direction: _batchSelect
-                                        ? DismissDirection.none
-                                        : DismissDirection.endToStart,
+                                    direction: DismissDirection.none,
                                     background: Container(
                                       alignment: Alignment.centerRight,
                                       padding: const EdgeInsets.only(right: 20),

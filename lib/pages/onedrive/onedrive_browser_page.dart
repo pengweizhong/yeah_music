@@ -11,6 +11,7 @@ import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/widgets/onedrive_bulk_download_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
@@ -129,9 +130,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
 
   void _popWithSelectedFolders() {
     final list = _selectedFoldersForIndex.entries
-        .map(
-          (e) => OneDriveFolderPickResult(itemId: e.key, name: e.value),
-        )
+        .map((e) => OneDriveFolderPickResult(itemId: e.key, name: e.value))
         .toList();
     Navigator.pop(context, list);
   }
@@ -174,14 +173,7 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
       kind: AppSnackKind.success,
       action: SnackBarAction(
         label: l10n.oneDriveDownloadViewQueue,
-        onPressed: () {
-          Navigator.push<void>(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => const OneDriveDownloadQueuePage(),
-            ),
-          );
-        },
+        onPressed: openOneDriveTransferQueue,
       ),
     );
   }
@@ -230,253 +222,261 @@ class _OneDriveBrowserPageState extends State<OneDriveBrowserPage> {
               if (_stack.isNotEmpty) _popFolderOrExit();
             },
             child: Scaffold(
-            extendBodyBehindAppBar: true,
-            extendBody: true,
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              title: widget.pickFolderForIndex
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _stack.isEmpty
-                              ? l10n.oneDriveBrowserTitle
-                              : _stack.map((e) => e.title).join(' / '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _folderPickHint(l10n),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.62),
-                            fontSize: 11,
-                            height: 1.25,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Text(
-                      _stack.isEmpty
-                          ? l10n.oneDriveBrowserTitle
-                          : _stack.map((e) => e.title).join(' / '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+              extendBodyBehindAppBar: true,
+              extendBody: true,
               backgroundColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              shadowColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              flexibleSpace: FrostedGlassPanel.pinnedSection(
-                child: const SizedBox.shrink(),
-              ),
-              iconTheme: const IconThemeData(color: Colors.white),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: _popFolderOrExit,
-              ),
-              actions: [
-                IconButton(
-                  tooltip: l10n.oneDriveBrowserRefreshTooltip,
-                  icon: const Icon(Icons.refresh_rounded),
-                  onPressed:
-                      _loading ? null : () => _refreshBrowseClearListingCacheAndReload(),
-                ),
-                if (!widget.pickFolderForIndex)
-                  IconButton(
-                    tooltip: l10n.oneDriveDownloadQueueTooltip,
-                    icon: const Icon(Icons.download_for_offline_rounded),
-                    onPressed: () {
-                      Navigator.push<void>(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const OneDriveDownloadQueuePage(),
+              appBar: AppBar(
+                title: widget.pickFolderForIndex
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _stack.isEmpty
+                                ? l10n.oneDriveBrowserTitle
+                                : _stack.map((e) => e.title).join(' / '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _folderPickHint(l10n),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.62),
+                              fontSize: 11,
+                              height: 1.25,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        _stack.isEmpty
+                            ? l10n.oneDriveBrowserTitle
+                            : _stack.map((e) => e.title).join(' / '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
                         ),
-                      );
-                    },
-                  ),
-                if (_multiPick)
-                  TextButton(
-                    onPressed: _selectedFoldersForIndex.isEmpty || _loading
-                        ? null
-                        : _popWithSelectedFolders,
-                    child: Text(
-                      l10n.oneDriveAddSelectedFoldersAction(
-                        _selectedFoldersForIndex.length,
                       ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                if (widget.pickFolderForIndex &&
-                    !_multiPick &&
-                    _stack.isNotEmpty)
-                  TextButton(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                shadowColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                flexibleSpace: FrostedGlassPanel.pinnedSection(
+                  child: const SizedBox.shrink(),
+                ),
+                iconTheme: const IconThemeData(color: Colors.white),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: _popFolderOrExit,
+                ),
+                actions: [
+                  IconButton(
+                    tooltip: l10n.oneDriveBrowserRefreshTooltip,
+                    icon: const Icon(Icons.refresh_rounded),
                     onPressed: _loading
                         ? null
-                        : () {
-                            final frame = _stack.last;
-                            final id = frame.parentItemId;
-                            if (id == null) return;
-                            Navigator.pop(
-                              context,
-                              OneDriveFolderPickResult(
-                                itemId: id,
-                                name: frame.title,
-                              ),
-                            );
-                          },
-                    child: Text(
-                      l10n.oneDriveUseCurrentFolder,
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                        : () => _refreshBrowseClearListingCacheAndReload(),
                   ),
-                if (_multiPick && _stack.isNotEmpty)
-                  TextButton(
-                    onPressed: _loading ? null : _includeOpenFolderInSelection,
-                    child: Text(
-                      l10n.oneDriveIncludeOpenFolderInSelection,
-                      style: const TextStyle(color: Colors.white),
+                  if (!widget.pickFolderForIndex)
+                    IconButton(
+                      tooltip: l10n.oneDriveDownloadQueueTooltip,
+                      icon: const Icon(Icons.download_for_offline_rounded),
+                      onPressed: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const OneDriveDownloadQueuePage(),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                if (!widget.pickFolderForIndex &&
-                    _items.any(
-                      (e) =>
-                          !e.isFolder && OneDriveConfig.isAudioFileName(e.name),
-                    ))
-                  TextButton(
-                    onPressed: _loading ? null : _playAllInFolder,
-                    child: Text(
-                      l10n.oneDrivePlayAll,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-              ],
-            ),
-            body: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white54),
-                  )
-                : _error != null
-                ? Center(
-                    child: Text(
-                      l10n.oneDriveError(_error!),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  )
-                : _items.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.oneDriveEmptyFolder,
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                  )
-                : Builder(
-                    builder: (ctx) => ListView.separated(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        songPlaylistUnderlapTopInset(ctx) + 8,
-                        16,
-                        100,
+                  if (_multiPick)
+                    TextButton(
+                      onPressed: _selectedFoldersForIndex.isEmpty || _loading
+                          ? null
+                          : _popWithSelectedFolders,
+                      child: Text(
+                        l10n.oneDriveAddSelectedFoldersAction(
+                          _selectedFoldersForIndex.length,
+                        ),
+                        style: const TextStyle(color: Colors.white),
                       ),
-                      itemCount: _items.length,
-                      separatorBuilder: (_, _) =>
-                          const Divider(height: 1, color: Color(0x22FFFFFF)),
-                      itemBuilder: (context, i) {
-                        final it = _items[i];
-                        if (it.isFolder && _multiPick) {
-                          final checked =
-                              _selectedFoldersForIndex.containsKey(it.id);
-                          return ListTile(
-                            leading: Checkbox(
-                              value: checked,
-                              onChanged: _loading
+                    ),
+                  if (widget.pickFolderForIndex &&
+                      !_multiPick &&
+                      _stack.isNotEmpty)
+                    TextButton(
+                      onPressed: _loading
+                          ? null
+                          : () {
+                              final frame = _stack.last;
+                              final id = frame.parentItemId;
+                              if (id == null) return;
+                              Navigator.pop(
+                                context,
+                                OneDriveFolderPickResult(
+                                  itemId: id,
+                                  name: frame.title,
+                                ),
+                              );
+                            },
+                      child: Text(
+                        l10n.oneDriveUseCurrentFolder,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  if (_multiPick && _stack.isNotEmpty)
+                    TextButton(
+                      onPressed: _loading
+                          ? null
+                          : _includeOpenFolderInSelection,
+                      child: Text(
+                        l10n.oneDriveIncludeOpenFolderInSelection,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  if (!widget.pickFolderForIndex &&
+                      _items.any(
+                        (e) =>
+                            !e.isFolder &&
+                            OneDriveConfig.isAudioFileName(e.name),
+                      ))
+                    TextButton(
+                      onPressed: _loading ? null : _playAllInFolder,
+                      child: Text(
+                        l10n.oneDrivePlayAll,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                ],
+              ),
+              body: _loading
+                  ? const Center(
+                      child: CircularProgressIndicator(color: Colors.white54),
+                    )
+                  : _error != null
+                  ? Center(
+                      child: Text(
+                        l10n.oneDriveError(_error!),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    )
+                  : _items.isEmpty
+                  ? Center(
+                      child: Text(
+                        l10n.oneDriveEmptyFolder,
+                        style: const TextStyle(color: Colors.white60),
+                      ),
+                    )
+                  : Builder(
+                      builder: (ctx) => ListView.separated(
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          songPlaylistUnderlapTopInset(ctx) + 8,
+                          16,
+                          100,
+                        ),
+                        itemCount: _items.length,
+                        separatorBuilder: (_, _) =>
+                            const Divider(height: 1, color: Color(0x22FFFFFF)),
+                        itemBuilder: (context, i) {
+                          final it = _items[i];
+                          if (it.isFolder && _multiPick) {
+                            final checked = _selectedFoldersForIndex
+                                .containsKey(it.id);
+                            return ListTile(
+                              leading: Checkbox(
+                                value: checked,
+                                onChanged: _loading
+                                    ? null
+                                    : (_) => _toggleFolderPickSelection(it),
+                                side: const BorderSide(color: _checkboxOnDark),
+                                activeColor: const Color(0xFF0078D4),
+                              ),
+                              title: Text(
+                                it.name,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Color(0xFFB0BEC5),
+                                ),
+                                onPressed: _loading
+                                    ? null
+                                    : () => _navigateIntoFolder(it),
+                              ),
+                              onTap: _loading
                                   ? null
-                                  : (_) => _toggleFolderPickSelection(it),
-                              side: const BorderSide(color: _checkboxOnDark),
-                              activeColor: const Color(0xFF0078D4),
+                                  : () => _toggleFolderPickSelection(it),
+                            );
+                          }
+                          return ListTile(
+                            leading: Icon(
+                              it.isFolder
+                                  ? Icons.folder_rounded
+                                  : Icons.audio_file_rounded,
+                              color: it.isFolder
+                                  ? const Color(0xFFFFB74D)
+                                  : const Color(0xFF4FC3F7),
                             ),
                             title: Text(
                               it.name,
                               style: const TextStyle(color: Colors.white),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.chevron_right_rounded,
-                                color: Color(0xFFB0BEC5),
-                              ),
-                              onPressed:
-                                  _loading ? null : () => _navigateIntoFolder(it),
-                            ),
-                            onTap: _loading
-                                ? null
-                                : () => _toggleFolderPickSelection(it),
-                          );
-                        }
-                        return ListTile(
-                          leading: Icon(
-                            it.isFolder
-                                ? Icons.folder_rounded
-                                : Icons.audio_file_rounded,
-                            color: it.isFolder
-                                ? const Color(0xFFFFB74D)
-                                : const Color(0xFF4FC3F7),
-                          ),
-                          title: Text(
-                            it.name,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          trailing: it.isFolder && widget.pickFolderForIndex
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.playlist_add,
-                                    color: Color(0xFFB0BEC5),
-                                  ),
-                                  tooltip: l10n.oneDriveAddFolderTooltip,
-                                  onPressed: () {
-                                    Navigator.pop(
-                                      context,
-                                      OneDriveFolderPickResult(
-                                        itemId: it.id,
-                                        name: it.name,
-                                      ),
-                                    );
-                                  },
-                                )
-                              : null,
-                          onTap: () {
-                            if (it.isFolder) {
-                              setState(() {
-                                _stack.add(
-                                  _NavFrame(
-                                    parentItemId: it.id,
-                                    title: it.name,
-                                  ),
-                                );
-                              });
-                              _reload();
-                            } else {
-                              if (widget.pickFolderForIndex) {
-                                return;
+                            trailing: it.isFolder && widget.pickFolderForIndex
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.playlist_add,
+                                      color: Color(0xFFB0BEC5),
+                                    ),
+                                    tooltip: l10n.oneDriveAddFolderTooltip,
+                                    onPressed: () {
+                                      Navigator.pop(
+                                        context,
+                                        OneDriveFolderPickResult(
+                                          itemId: it.id,
+                                          name: it.name,
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : null,
+                            onTap: () {
+                              if (it.isFolder) {
+                                setState(() {
+                                  _stack.add(
+                                    _NavFrame(
+                                      parentItemId: it.id,
+                                      title: it.name,
+                                    ),
+                                  );
+                                });
+                                _reload();
+                              } else {
+                                if (widget.pickFolderForIndex) {
+                                  return;
+                                }
+                                _playFile(it);
                               }
-                              _playFile(it);
-                            }
-                          },
-                        );
-                      },
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-            bottomNavigationBar: const MiniPlayer(),
-          ),
+              bottomNavigationBar: const MiniPlayer(),
+            ),
           ),
         );
       },

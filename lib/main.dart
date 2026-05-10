@@ -79,18 +79,21 @@ Future<void> main(List<String> args) async {
   appLog.i('应用正在启动');
 
   AppStartupClock.ensureStarted();
-  VisibilityDetectorController.instance.updateInterval =
-      const Duration(milliseconds: 166);
+  VisibilityDetectorController.instance.updateInterval = const Duration(
+    milliseconds: 166,
+  );
   PaintingBinding.instance.imageCache
     ..maximumSize = 500
     ..maximumSizeBytes = 200 << 20;
 
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF050608),
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color(0xFF050608),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
   runApp(
     MultiProvider(
@@ -415,6 +418,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
           });
         }
         return MaterialApp(
+          navigatorKey: appNavigatorKey,
           scaffoldMessengerKey: appScaffoldMessengerKey,
           navigatorObservers: <NavigatorObserver>[appRouteObserver],
           debugShowCheckedModeBanner: false,
@@ -444,4 +448,3 @@ class _YeahMusicAppState extends State<YeahMusicApp>
     );
   }
 }
-

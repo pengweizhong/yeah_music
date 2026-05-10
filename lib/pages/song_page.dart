@@ -32,6 +32,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
@@ -1180,15 +1181,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         kind: AppSnackKind.success,
         action: SnackBarAction(
           label: l10n.libraryBatchOpenQueue,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(
-                  initialTab: OneDriveTransferQueueTab.upload,
-                ),
-              ),
-            );
-          },
+          onPressed: () => openOneDriveTransferQueue(
+            initialTab: OneDriveTransferQueueTab.upload,
+          ),
         ),
       );
     } on StateError catch (e) {

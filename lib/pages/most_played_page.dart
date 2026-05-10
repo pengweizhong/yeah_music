@@ -16,6 +16,7 @@ import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
@@ -42,6 +43,7 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
 
   List<({String path, int count})> _topRaw = [];
   bool _loading = true;
+
   /// `true`：播放次数多到少（默认）；`false`：少到多。
   bool _sortPlayCountDescending = true;
 
@@ -107,8 +109,7 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
   }
 
   Future<void> _load() async {
-    final raw =
-        await RecentPlayService.getTopByPlayCount(limit: 0);
+    final raw = await RecentPlayService.getTopByPlayCount(limit: 0);
     if (mounted) {
       setState(() {
         _topRaw = raw;
@@ -251,15 +252,9 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
         kind: AppSnackKind.success,
         action: SnackBarAction(
           label: l10n.libraryBatchOpenQueue,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(
-                  initialTab: OneDriveTransferQueueTab.upload,
-                ),
-              ),
-            );
-          },
+          onPressed: () => openOneDriveTransferQueue(
+            initialTab: OneDriveTransferQueueTab.upload,
+          ),
         ),
       );
     } on StateError catch (e) {
@@ -268,8 +263,8 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
       final text = msg.contains('not signed')
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
-              ? l10n.libraryBatchUploadNeedCloudFolder
-              : '$e';
+          ? l10n.libraryBatchUploadNeedCloudFolder
+          : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
@@ -418,10 +413,12 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
                 tooltip: l10n.homeSearchTooltip,
                 onPressed: () {
                   final playList = context.read<PlayListProvider>();
-                  final ranked =
-                      playList.resolveTopPlayedFromPathCounts(_sortedTopRaw());
-                  final queue =
-                      ranked.map((e) => e.song).toList(growable: false);
+                  final ranked = playList.resolveTopPlayedFromPathCounts(
+                    _sortedTopRaw(),
+                  );
+                  final queue = ranked
+                      .map((e) => e.song)
+                      .toList(growable: false);
                   _openSearch(context, queue, playList, l10n);
                 },
               ),
@@ -446,10 +443,12 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
                       ),
                     );
                   }
-                  final ranked =
-                      playList.resolveTopPlayedFromPathCounts(_sortedTopRaw());
-                  final songs =
-                      ranked.map((e) => e.song).toList(growable: false);
+                  final ranked = playList.resolveTopPlayedFromPathCounts(
+                    _sortedTopRaw(),
+                  );
+                  final songs = ranked
+                      .map((e) => e.song)
+                      .toList(growable: false);
 
                   if (songs.isNotEmpty &&
                       !_didInitialScrollToCurrent &&
@@ -529,8 +528,9 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
                             ),
                             const SizedBox(height: 8),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 28),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 28,
+                              ),
                               child: Text(
                                 l10n.homeMostPlayedEmpty,
                                 textAlign: TextAlign.center,

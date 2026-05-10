@@ -16,6 +16,7 @@ import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/scroll_list_to_current_song.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
@@ -151,7 +152,10 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
     return out;
   }
 
-  Future<void> _confirmBatchDelete(BuildContext context, List<Song> ordered) async {
+  Future<void> _confirmBatchDelete(
+    BuildContext context,
+    List<Song> ordered,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
@@ -233,15 +237,9 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
         kind: AppSnackKind.success,
         action: SnackBarAction(
           label: l10n.libraryBatchOpenQueue,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(
-                  initialTab: OneDriveTransferQueueTab.upload,
-                ),
-              ),
-            );
-          },
+          onPressed: () => openOneDriveTransferQueue(
+            initialTab: OneDriveTransferQueueTab.upload,
+          ),
         ),
       );
     } on StateError catch (e) {
@@ -250,8 +248,8 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
       final text = msg.contains('not signed')
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
-              ? l10n.libraryBatchUploadNeedCloudFolder
-              : '$e';
+          ? l10n.libraryBatchUploadNeedCloudFolder
+          : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
@@ -385,8 +383,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                 tooltip: l10n.homeSearchTooltip,
                 onPressed: () {
                   final playList = context.read<PlayListProvider>();
-                  final items =
-                      playList.resolveRecentSongsFromPaths(_paths);
+                  final items = playList.resolveRecentSongsFromPaths(_paths);
                   _openSearch(context, items, playList, l10n);
                 },
               ),
@@ -410,8 +407,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                       ),
                     );
                   }
-                  final items =
-                      playList.resolveRecentSongsFromPaths(_paths);
+                  final items = playList.resolveRecentSongsFromPaths(_paths);
                   if (items.isNotEmpty &&
                       !_didInitialScrollToCurrent &&
                       !_initialScrollInFlight &&
@@ -481,8 +477,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                             songs: items,
                             listBottomInsetExtra: _batchSelect ? 64 : 0,
                             itemExtent: kSongPlaylistRowExtent,
-                            itemBuilder:
-                                (context, song, index, isCurrent) {
+                            itemBuilder: (context, song, index, isCurrent) {
                               return CompactSongListRow(
                                 key: ValueKey<String>(
                                   'recent_${index}_${normSongPath(song.path)}',
@@ -522,9 +517,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                                     return;
                                   }
                                   if (isCurrent) {
-                                    await toggleCurrentRowPlayback(
-                                      playList,
-                                    );
+                                    await toggleCurrentRowPlayback(playList);
                                     return;
                                   }
                                   if (!context.mounted) return;
@@ -533,8 +526,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
                                     index,
                                     recordRecent: false,
                                     bumpPlayCount: true,
-                                    session:
-                                        PlaybackSessionSurface.recentList,
+                                    session: PlaybackSessionSurface.recentList,
                                   );
                                 },
                               );

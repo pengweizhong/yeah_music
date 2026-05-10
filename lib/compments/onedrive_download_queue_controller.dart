@@ -20,8 +20,8 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
   OneDriveDownloadQueueController({
     required OneDriveController oneDrive,
     PlayListProvider? playListRef,
-  })  : _od = oneDrive,
-        _playListRef = playListRef;
+  }) : _od = oneDrive,
+       _playListRef = playListRef;
 
   final OneDriveController _od;
 
@@ -87,7 +87,8 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
             t.status == OneDriveDownloadStatus.downloading,
       );
 
-  bool get canResumeDownloads => !_stopRequested && workerRunning && sessionPaused;
+  bool get canResumeDownloads =>
+      !_stopRequested && workerRunning && sessionPaused;
 
   /// Worker 未运行时：存在「已取消」或「失败」任务时可点此重新排队并开始传输。
   bool get canResumeStaleTasks =>
@@ -262,8 +263,9 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
               ? DateTime.fromMillisecondsSinceEpoch(sdMillis.toInt())
               : null,
           uploadLocalPath: isUploadPersisted ? uploadPath : null,
-          uploadParentItemId:
-              isUploadPersisted ? ((m['uploadParentItemId'] as String?) ?? id) : null,
+          uploadParentItemId: isUploadPersisted
+              ? ((m['uploadParentItemId'] as String?) ?? id)
+              : null,
           uploadRemoteFileName: isUploadPersisted
               ? ((m['uploadRemoteFileName'] as String?) ?? name)
               : null,
@@ -296,7 +298,9 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
           task.status = OneDriveDownloadStatus.pending;
         }
         final err = m['error'] as String?;
-        if (err != null && err.isNotEmpty && task.status == OneDriveDownloadStatus.failed) {
+        if (err != null &&
+            err.isNotEmpty &&
+            task.status == OneDriveDownloadStatus.failed) {
           task.error = err;
         }
         restored.add(task);
@@ -321,7 +325,9 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     _persistTimer?.cancel();
     _persistTimer = Timer(const Duration(milliseconds: 450), () async {
       try {
-        await SettingsService.saveOneDriveDownloadQueueHistory(_tasksToPersistMaps());
+        await SettingsService.saveOneDriveDownloadQueueHistory(
+          _tasksToPersistMaps(),
+        );
       } catch (_) {}
     });
   }
@@ -377,7 +383,9 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       }
     }
     notifyListeners();
-    await SettingsService.saveOneDriveDownloadQueueHistory(_tasksToPersistMaps());
+    await SettingsService.saveOneDriveDownloadQueueHistory(
+      _tasksToPersistMaps(),
+    );
     _ensureWorkerRunning();
   }
 
@@ -393,7 +401,46 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       }
     }
     notifyListeners();
-    await SettingsService.saveOneDriveDownloadQueueHistory(_tasksToPersistMaps());
+    await SettingsService.saveOneDriveDownloadQueueHistory(
+      _tasksToPersistMaps(),
+    );
+    _ensureWorkerRunning();
+  }
+
+  /// 移除单条任务；若移除的是待传输 / 传输中的任务，会短暂停止 worker 后恢复其余待处理任务。
+  Future<void> removeTask(OneDriveDownloadTask task) async {
+    if (!_tasks.contains(task)) return;
+    final statusBeforeAbort = <OneDriveDownloadTask, OneDriveDownloadStatus>{
+      for (final t in _tasks) t: t.status,
+    };
+    final shouldAbortWorker =
+        _workerRunning &&
+        (task.status == OneDriveDownloadStatus.pending ||
+            task.status == OneDriveDownloadStatus.downloading);
+
+    if (shouldAbortWorker) {
+      await _abortRunningWorkerIfNeeded();
+    }
+
+    resetStopFlags();
+    final removed = _tasks.remove(task);
+    if (!removed) return;
+
+    for (final t in _tasks) {
+      final oldStatus = statusBeforeAbort[t];
+      final cancelledByAbort =
+          t.status == OneDriveDownloadStatus.cancelled &&
+          (oldStatus == OneDriveDownloadStatus.pending ||
+              oldStatus == OneDriveDownloadStatus.downloading);
+      if (cancelledByAbort) {
+        _taskBackToPending(t);
+      }
+    }
+
+    notifyListeners();
+    await SettingsService.saveOneDriveDownloadQueueHistory(
+      _tasksToPersistMaps(),
+    );
     _ensureWorkerRunning();
   }
 
@@ -484,12 +531,11 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     if (!_od.signedIn) {
       throw StateError('not signed in');
     }
-    final parentExplicit =
-        (_od.musicUploadFolderId ?? _od.cloudAppDataFolderId)?.trim();
-    final parentResolved =
-        (parentExplicit != null && parentExplicit.isNotEmpty)
-            ? parentExplicit
-            : await _od.ensureDefaultMusicUploadFolder();
+    final parentExplicit = (_od.musicUploadFolderId ?? _od.cloudAppDataFolderId)
+        ?.trim();
+    final parentResolved = (parentExplicit != null && parentExplicit.isNotEmpty)
+        ? parentExplicit
+        : await _od.ensureDefaultMusicUploadFolder();
     final parentId = parentResolved?.trim();
     if (parentId == null || parentId.isEmpty) {
       throw StateError('onedrive upload folder unset');
@@ -528,7 +574,9 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     _ensureWorkerRunning();
   }
 
-  Future<List<Song>> runBatchFromCloudTracks(List<OneDriveCloudTrack> tracks) async {
+  Future<List<Song>> runBatchFromCloudTracks(
+    List<OneDriveCloudTrack> tracks,
+  ) async {
     await _abortRunningWorkerIfNeeded();
     final batchTasks = <OneDriveDownloadTask>[];
     for (final t in tracks) {
@@ -603,7 +651,9 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     return _songsFromTasks(batchTasks);
   }
 
-  Future<void> _waitForTasksTerminal(List<OneDriveDownloadTask> batchTasks) async {
+  Future<void> _waitForTasksTerminal(
+    List<OneDriveDownloadTask> batchTasks,
+  ) async {
     while (batchTasks.any((t) => !t.isTerminal) && !_stopRequested) {
       await Future<void>.delayed(const Duration(milliseconds: 40));
     }

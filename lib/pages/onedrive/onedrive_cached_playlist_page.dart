@@ -15,6 +15,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
@@ -35,7 +36,8 @@ class OneDriveCachedPlaylistPage extends StatefulWidget {
       _OneDriveCachedPlaylistPageState();
 }
 
-class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage> {
+class _OneDriveCachedPlaylistPageState
+    extends State<OneDriveCachedPlaylistPage> {
   final ScrollController _listScrollController = ScrollController();
 
   List<Song>? _songs;
@@ -69,8 +71,7 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     } catch (_) {}
   }
 
-  Future<void> _saveSort() =>
-      saveSongSortPreferences(_sortType, _isAscending);
+  Future<void> _saveSort() => saveSongSortPreferences(_sortType, _isAscending);
 
   void _exitBatchSelect() {
     setState(() {
@@ -108,7 +109,10 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     return out;
   }
 
-  Future<void> _confirmBatchDelete(BuildContext context, List<Song> ordered) async {
+  Future<void> _confirmBatchDelete(
+    BuildContext context,
+    List<Song> ordered,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
@@ -153,7 +157,10 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     }
   }
 
-  Future<void> _batchAddToPlaylists(BuildContext context, List<Song> ordered) async {
+  Future<void> _batchAddToPlaylists(
+    BuildContext context,
+    List<Song> ordered,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedSongsInListOrder(ordered);
     if (selected.isEmpty) {
@@ -166,7 +173,10 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
     }
   }
 
-  Future<void> _batchUploadOneDrive(BuildContext context, List<Song> ordered) async {
+  Future<void> _batchUploadOneDrive(
+    BuildContext context,
+    List<Song> ordered,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final od = context.read<OneDriveDownloadQueueController>();
     final selected = _selectedSongsInListOrder(ordered);
@@ -184,15 +194,9 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
         kind: AppSnackKind.success,
         action: SnackBarAction(
           label: l10n.libraryBatchOpenQueue,
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const OneDriveDownloadQueuePage(
-                  initialTab: OneDriveTransferQueueTab.upload,
-                ),
-              ),
-            );
-          },
+          onPressed: () => openOneDriveTransferQueue(
+            initialTab: OneDriveTransferQueueTab.upload,
+          ),
         ),
       );
     } on StateError catch (e) {
@@ -201,8 +205,8 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
       final text = msg.contains('not signed')
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
-              ? l10n.libraryBatchUploadNeedCloudFolder
-              : '$e';
+          ? l10n.libraryBatchUploadNeedCloudFolder
+          : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
       if (context.mounted) {
@@ -392,8 +396,7 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
                 builder: (ctx) {
                   final raw = _songs;
                   final enabled = raw != null && raw.isNotEmpty;
-                  final ordered =
-                      enabled ? _orderedSongs(raw) : const <Song>[];
+                  final ordered = enabled ? _orderedSongs(raw) : const <Song>[];
                   return IconButton(
                     tooltip: l10n.homeSearchTooltip,
                     icon: const Icon(Icons.search, color: Colors.white),
@@ -548,8 +551,9 @@ class _OneDriveCachedPlaylistPageState extends State<OneDriveCachedPlaylistPage>
                   showAddToPlaylist: false,
                   onMoreMenuTap: () => _openCachedSongMore(context, song),
                   selectionMode: _batchSelect,
-                  isSelected:
-                      _selectedNormPaths.contains(normSongPath(song.path)),
+                  isSelected: _selectedNormPaths.contains(
+                    normSongPath(song.path),
+                  ),
                   onSelectionTap: () => _toggleBatchPath(song.path),
                   onLongPress: () {
                     setState(() {

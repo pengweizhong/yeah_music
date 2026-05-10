@@ -13,6 +13,7 @@ import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/cloud_track_list_utils.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/widgets/cloud_track_search_delegate.dart';
 import 'package:yeah_music/widgets/cloud_track_sort_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
@@ -68,7 +69,9 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     });
   }
 
-  List<OneDriveCloudTrack> _selectedInListOrder(List<OneDriveCloudTrack> ordered) {
+  List<OneDriveCloudTrack> _selectedInListOrder(
+    List<OneDriveCloudTrack> ordered,
+  ) {
     final out = <OneDriveCloudTrack>[];
     for (final t in ordered) {
       if (_selectedItemIds.contains(t.itemId)) out.add(t);
@@ -77,7 +80,9 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
   }
 
   Future<void> _batchEnqueueDownload(
-      BuildContext context, List<OneDriveCloudTrack> ordered) async {
+    BuildContext context,
+    List<OneDriveCloudTrack> ordered,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final selected = _selectedInListOrder(ordered);
     if (selected.isEmpty) {
@@ -85,8 +90,8 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       return;
     }
     await context.read<OneDriveDownloadQueueController>().enqueueCloudTracks(
-          selected,
-        );
+      selected,
+    );
     if (!context.mounted) return;
     _exitBatchSelect();
     showAppSnackBar(
@@ -95,14 +100,7 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       kind: AppSnackKind.success,
       action: SnackBarAction(
         label: l10n.oneDriveDownloadViewQueue,
-        onPressed: () {
-          Navigator.push<void>(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => const OneDriveDownloadQueuePage(),
-            ),
-          );
-        },
+        onPressed: openOneDriveTransferQueue,
       ),
     );
   }
@@ -406,8 +404,9 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
                 ),
                 itemBuilder: (ctx, i) {
                   final folder = od.indexFolders[i];
-                  final label =
-                      folder.label.isEmpty ? folder.itemId : folder.label;
+                  final label = folder.label.isEmpty
+                      ? folder.itemId
+                      : folder.label;
                   return ListTile(
                     dense: true,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
@@ -430,12 +429,8 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
                       ),
                       onPressed: od.cloudIndexBuilding
                           ? null
-                          : () => _confirmRemoveFolder(
-                                context,
-                                l10n,
-                                od,
-                                folder,
-                              ),
+                          : () =>
+                                _confirmRemoveFolder(context, l10n, od, folder),
                     ),
                   );
                 },
@@ -447,15 +442,15 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
   }
 
   Future<void> _browseAdd(BuildContext context, OneDriveController od) async {
-    final picked =
-        await Navigator.of(context).push<List<OneDriveFolderPickResult>>(
-      MaterialPageRoute(
-        builder: (_) => const OneDriveBrowserPage(
-          pickFolderForIndex: true,
-          pickMultipleIndexFolders: true,
-        ),
-      ),
-    );
+    final picked = await Navigator.of(context)
+        .push<List<OneDriveFolderPickResult>>(
+          MaterialPageRoute(
+            builder: (_) => const OneDriveBrowserPage(
+              pickFolderForIndex: true,
+              pickMultipleIndexFolders: true,
+            ),
+          ),
+        );
     if (!context.mounted || picked == null || picked.isEmpty) return;
     for (final p in picked) {
       await od.addIndexFolder(p.itemId, p.name);
@@ -490,14 +485,7 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       kind: AppSnackKind.success,
       action: SnackBarAction(
         label: l10n.oneDriveDownloadViewQueue,
-        onPressed: () {
-          Navigator.push<void>(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => const OneDriveDownloadQueuePage(),
-            ),
-          );
-        },
+        onPressed: openOneDriveTransferQueue,
       ),
     );
   }
@@ -520,130 +508,136 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
           child: theme.buildThemedBackground(
             context: context,
             child: Scaffold(
-            extendBodyBehindAppBar: true,
-            extendBody: true,
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              leading: _batchSelect
-                  ? IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _exitBatchSelect,
-                    )
-                  : null,
-              title: Text(
-                _batchSelect
-                    ? '${_selectedItemIds.length}'
-                    : l10n.oneDriveCloudLibraryTitle,
-                style: const TextStyle(color: Colors.white),
-              ),
+              extendBodyBehindAppBar: true,
+              extendBody: true,
               backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-              systemOverlayStyle: SystemUiOverlayStyle.light,
-              actions: [
-                if (_batchSelect)
-                  TextButton(
-                    onPressed: _exitBatchSelect,
-                    child: Text(
-                      l10n.libraryBatchDone,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  )
-                else ...[
-                IconButton(
-                  tooltip: l10n.oneDriveDownloadQueueTooltip,
-                  icon: const Icon(Icons.download_for_offline_rounded),
-                  onPressed: od.signedIn
-                      ? () {
-                          Navigator.push<void>(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const OneDriveDownloadQueuePage(),
-                            ),
-                          );
-                        }
-                      : null,
+              appBar: AppBar(
+                leading: _batchSelect
+                    ? IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: _exitBatchSelect,
+                      )
+                    : null,
+                title: Text(
+                  _batchSelect
+                      ? '${_selectedItemIds.length}'
+                      : l10n.oneDriveCloudLibraryTitle,
+                  style: const TextStyle(color: Colors.white),
                 ),
-                IconButton(
-                  tooltip: l10n.tooltipMore,
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    color: Colors.white,
-                  ),
-                  onPressed: od.signedIn
-                      ? () => _showCloudLibraryMoreSheet(context, od, l10n)
-                      : null,
-                ),
-                IconButton(
-                  tooltip: l10n.homeSearchTooltip,
-                  icon: const Icon(Icons.search_rounded),
-                  onPressed:
-                      od.signedIn &&
-                          od.cloudTracks.isNotEmpty &&
-                          !od.cloudIndexBuilding
-                      ? () => _openSearch(context, l10n, od)
-                      : null,
-                ),
-                IconButton(
-                  tooltip: l10n.tooltipSort,
-                  icon: const Icon(Icons.sort_rounded),
-                  onPressed:
-                      od.signedIn &&
-                          od.cloudTracks.isNotEmpty &&
-                          !od.cloudIndexBuilding
-                      ? () => _showSortSheet(context)
-                      : null,
-                ),
-                ],
-              ],
-            ),
-            body: Builder(
-              builder: (ctx) => Column(
-                children: [
-                  if (od.cloudIndexBuilding)
-                    const LinearProgressIndicator(
-                      minHeight: 2,
-                      backgroundColor: Color(0x22FFFFFF),
-                      color: Color(0xFF64B5F6),
-                    ),
-                  if (od.cloudIndexError != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: const IconThemeData(color: Colors.white),
+                systemOverlayStyle: SystemUiOverlayStyle.light,
+                actions: [
+                  if (_batchSelect)
+                    TextButton(
+                      onPressed: _exitBatchSelect,
                       child: Text(
-                        l10n.oneDriveError(od.cloudIndexError!),
-                        style: const TextStyle(
-                          color: Color(0xFFFFAB91),
-                          fontSize: 13,
+                        l10n.libraryBatchDone,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    )
+                  else ...[
+                    IconButton(
+                      tooltip: l10n.oneDriveDownloadQueueTooltip,
+                      icon: const Icon(Icons.download_for_offline_rounded),
+                      onPressed: od.signedIn
+                          ? () {
+                              Navigator.push<void>(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const OneDriveDownloadQueuePage(),
+                                ),
+                              );
+                            }
+                          : null,
+                    ),
+                    IconButton(
+                      tooltip: l10n.tooltipMore,
+                      icon: const Icon(
+                        Icons.more_vert_rounded,
+                        color: Colors.white,
+                      ),
+                      onPressed: od.signedIn
+                          ? () => _showCloudLibraryMoreSheet(context, od, l10n)
+                          : null,
+                    ),
+                    IconButton(
+                      tooltip: l10n.homeSearchTooltip,
+                      icon: const Icon(Icons.search_rounded),
+                      onPressed:
+                          od.signedIn &&
+                              od.cloudTracks.isNotEmpty &&
+                              !od.cloudIndexBuilding
+                          ? () => _openSearch(context, l10n, od)
+                          : null,
+                    ),
+                    IconButton(
+                      tooltip: l10n.tooltipSort,
+                      icon: const Icon(Icons.sort_rounded),
+                      onPressed:
+                          od.signedIn &&
+                              od.cloudTracks.isNotEmpty &&
+                              !od.cloudIndexBuilding
+                          ? () => _showSortSheet(context)
+                          : null,
+                    ),
+                  ],
+                ],
+              ),
+              body: Builder(
+                builder: (ctx) => Column(
+                  children: [
+                    if (od.cloudIndexBuilding)
+                      const LinearProgressIndicator(
+                        minHeight: 2,
+                        backgroundColor: Color(0x22FFFFFF),
+                        color: Color(0xFF64B5F6),
+                      ),
+                    if (od.cloudIndexError != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: Text(
+                          l10n.oneDriveError(od.cloudIndexError!),
+                          style: const TextStyle(
+                            color: Color(0xFFFFAB91),
+                            fontSize: 13,
+                          ),
                         ),
                       ),
+                    _buildPinnedCloudLibraryHeader(
+                      ctx,
+                      l10n: l10n,
+                      od: od,
+                      tracks: tracks,
+                      localeTag: localeTag,
                     ),
-                  _buildPinnedCloudLibraryHeader(
-                    ctx,
-                    l10n: l10n,
-                    od: od,
-                    tracks: tracks,
-                    localeTag: localeTag,
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _buildBodyList(
-                              context, theme, od, l10n, tracks),
-                        ),
-                        if (_batchSelect &&
-                            tracks.isNotEmpty &&
-                            !od.cloudIndexBuilding)
-                          _cloudBatchActionBar(context, l10n, tracks),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _buildBodyList(
+                              context,
+                              theme,
+                              od,
+                              l10n,
+                              tracks,
+                            ),
+                          ),
+                          if (_batchSelect &&
+                              tracks.isNotEmpty &&
+                              !od.cloudIndexBuilding)
+                            _cloudBatchActionBar(context, l10n, tracks),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              bottomNavigationBar: const MiniPlayer(),
             ),
-            bottomNavigationBar: const MiniPlayer(),
-          ),
           ),
         );
       },
@@ -690,12 +684,7 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
       );
     }
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(
-        8,
-        0,
-        8,
-        120 + (_batchSelect ? 56 : 0),
-      ),
+      padding: EdgeInsets.fromLTRB(8, 0, 8, 120 + (_batchSelect ? 56 : 0)),
       itemCount: tracks.length,
       separatorBuilder: (_, _) =>
           const Divider(height: 1, color: Color(0x22FFFFFF)),
