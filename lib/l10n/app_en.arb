@@ -532,6 +532,7 @@
   "homeEntryDiscover": "Discover",
   "homeEntryCloudLibrary": "Cloud library",
   "homeEntryOneDriveCachePlaylist": "Cached playlist",
+  "homeEntryOneDriveTransferQueue": "Transfer queue",
   "homeSectionQuickEntry": "Shortcuts",
   "homeActionManage": "Manage",
   "homeSectionMyPlaylists": "My playlists",

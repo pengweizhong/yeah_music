@@ -2661,6 +2661,12 @@ abstract class AppLocalizations {
   /// **'Cached playlist'**
   String get homeEntryOneDriveCachePlaylist;
 
+  /// No description provided for @homeEntryOneDriveTransferQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer queue'**
+  String get homeEntryOneDriveTransferQueue;
+
   /// No description provided for @homeSectionQuickEntry.
   ///
   /// In en, this message translates to:

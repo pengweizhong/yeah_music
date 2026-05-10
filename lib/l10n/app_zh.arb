@@ -533,6 +533,7 @@
   "homeEntryDiscover": "发现",
   "homeEntryCloudLibrary": "云端曲库",
   "homeEntryOneDriveCachePlaylist": "缓存歌单",
+  "homeEntryOneDriveTransferQueue": "传输队列",
   "homeSectionQuickEntry": "快捷入口",
   "homeActionManage": "管理",
   "homeSectionMyPlaylists": "我的歌单",

@@ -50,6 +50,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return l10n.homeEntryOneDrive;
       case QuickEntryConfig.idOneDriveCachePlaylist:
         return l10n.homeEntryOneDriveCachePlaylist;
+      case QuickEntryConfig.idOneDriveTransferQueue:
+        return l10n.homeEntryOneDriveTransferQueue;
       case QuickEntryConfig.idSongRecognizer:
         return l10n.homeEntrySongRecognizer;
       default:
@@ -75,6 +77,8 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
         return Icons.cloud_rounded;
       case QuickEntryConfig.idOneDriveCachePlaylist:
         return Icons.download_done_rounded;
+      case QuickEntryConfig.idOneDriveTransferQueue:
+        return Icons.sync_alt_rounded;
       case QuickEntryConfig.idSongRecognizer:
         return Icons.mic_rounded;
       default:
@@ -83,7 +87,10 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
   }
 
   Future<void> _saveAndPop() async {
-    final c = QuickEntryConfig(order: List<String>.from(_order), hidden: Set<String>.from(_hidden));
+    final c = QuickEntryConfig(
+      order: List<String>.from(_order),
+      hidden: Set<String>.from(_hidden),
+    );
     c.normalizeInPlace();
     await SettingsService.saveQuickEntryConfig(c);
     if (!mounted) return;
@@ -221,7 +228,9 @@ class _QuickEntrySettingsPageState extends State<QuickEntrySettingsPage> {
                                     padding: const EdgeInsets.only(left: 4),
                                     child: Icon(
                                       Icons.drag_handle_rounded,
-                                      color: Colors.white.withValues(alpha: 0.4),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
                                     ),
                                   ),
                                 ),

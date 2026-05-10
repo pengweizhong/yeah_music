@@ -1391,6 +1391,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeEntryOneDriveCachePlaylist => 'キャッシュのプレイリスト';
 
   @override
+  String get homeEntryOneDriveTransferQueue => '転送キュー';
+
+  @override
   String get homeSectionQuickEntry => 'ショートカット';
 
   @override

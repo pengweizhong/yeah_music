@@ -1,0 +1,438 @@
+// import 'dart:convert';
+// import 'dart:io';
+// import 'dart:isolate';
+// import 'dart:typed_data';
+// import 'dart:math' as math;
+//
+// import 'package:audio_metadata_reader/audio_metadata_reader.dart'
+//     show AudioMetadata, Picture, PictureType, readMetadata;
+// import 'package:charset/charset.dart';
+// import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'package:image/image.dart' as img;
+// import 'package:path/path.dart' as p;
+// import 'package:yeah_music/logging/app_log.dart';
+// import 'package:yeah_music/utils/wav_metadata_reader.dart';
+//
+// import '../models/song.dart';
+//
+// /// 读取内嵌元数据；WAV 使用项目内修复实现（库内 RIFF 解析易错位导致标签全空）。
+// AudioMetadata readEmbeddedAudioMetadata(
+//   File file, {
+//   bool getImage = false,
+// }) {
+//   if (pathLooksLikeWav(file.path)) {
+//     try {
+//       return readWavMetadataYep(file, getImage: getImage);
+//     } catch (e, st) {
+//       appLog.w(
+//         'WAV 元数据解析失败，回退 audio_metadata_reader: ${file.path}',
+//         error: e,
+//         stackTrace: st,
+//       );
+//     }
+//   }
+//   final metadata = readMetadata(file, getImage: getImage);
+//   final fixedLyrics = _repairPossiblyTruncatedEmbeddedLyrics(
+//     file: file,
+//     currentLyrics: metadata.lyrics,
+//   );
+//   if (fixedLyrics != null && fixedLyrics.trim().isNotEmpty) {
+//     metadata.lyrics = fixedLyrics;
+//   }
+//   return metadata;
+// }
+//
+// /// 与详情页 [_pickCoverBytes] 一致：优先封面图类型块再退回首张。
+// Uint8List? pickEmbeddedCoverBytesFromPictures(
+//   List<Picture>? pictures, {
+//   required bool embedTooLargeOkToDiscard,
+//   int? maxEmbeddedArtBytes,
+// }) {
+//   if (pictures == null || pictures.isEmpty) return null;
+//   Picture? front;
+//   for (final pic in pictures) {
+//     if (pic.pictureType == PictureType.coverFront && pic.bytes.isNotEmpty) {
+//       front = pic;
+//       break;
+//     }
+//   }
+//   final raw = front?.bytes ?? pictures.first.bytes;
+//   if (raw.isEmpty) return null;
+//   final limit = maxEmbeddedArtBytes;
+//   final tooBig = limit != null && raw.length > limit;
+//   if (tooBig) {
+//     // 大封面优先压缩到目标上限，避免直接丢图导致 UI 回退占位图。
+//     final compressed = _compressCoverToByteLimit(raw, limit!);
+//     if (compressed != null && compressed.isNotEmpty) return compressed;
+//     return embedTooLargeOkToDiscard ? null : raw;
+//   }
+//   return raw;
+// }
+//
+// Uint8List? _compressCoverToByteLimit(Uint8List input, int targetMaxBytes) {
+//   if (input.length <= targetMaxBytes) return input;
+//   final decoded = img.decodeImage(input);
+//   if (decoded == null) return null;
+//
+//   img.Image working = decoded;
+//   const jpegQualities = <int>[88, 80, 72, 64, 56, 48, 40, 32, 24];
+//   final minEdge = 240;
+//
+//   // 优先保持分辨率，逐步降低 JPEG 质量；仍超限时再逐轮缩尺寸。
+//   for (var round = 0; round < 6; round++) {
+//     for (final q in jpegQualities) {
+//       final jpg = Uint8List.fromList(img.encodeJpg(working, quality: q));
+//       if (jpg.length <= targetMaxBytes) return jpg;
+//     }
+//     final w = working.width;
+//     final h = working.height;
+//     if (w <= minEdge || h <= minEdge) break;
+//     final scaledW = math.max(minEdge, (w * 0.85).round());
+//     final scaledH = math.max(minEdge, (h * 0.85).round());
+//     if (scaledW == w && scaledH == h) break;
+//     working = img.copyResize(
+//       working,
+//       width: scaledW,
+//       height: scaledH,
+//       interpolation: img.Interpolation.average,
+//     );
+//   }
+//
+//   // 兜底：返回最小体积版本，至少保证“有封面可显示”。
+//   final fallback = Uint8List.fromList(img.encodeJpg(working, quality: 20));
+//   return fallback;
+// }
+//
+// class FileUtils {
+//   /// 读取音频元数据。
+//   ///
+//   /// - [loadEmbeddedAlbumArt]：若为 false（适合「整文件夹批量入库」），不解析内嵌大图，内存与 Hive 体积极大下降；
+//   ///   列表等处可走 [SongLibraryMetadataHydrator] 后台补全封面与歌词等，或由 [ApplicationUtils.getImageCoverProvider] 占位。
+//   /// - [storeLyricsWithTrack]：若为 false，不写入歌词（长文本占内存且扫描阶段不需要）。
+//   /// - [maxEmbeddedArtBytes]：非 null 时，首帧内嵌图超过该字节则不写入封面（避免 FLAC 巨幅图撑爆内存/Hive）。
+//   ///   因此同一格式下也可能出现「有的 FLAC 有封面、有的没有」（图源过大或被标签工具写成非首块等）。
+//   ///   不传则不对大小做裁剪（单次全量入库等场景）。
+//   static Future<void> loadSongMeta(
+//     Song song, {
+//     bool loadEmbeddedAlbumArt = true,
+//     bool storeLyricsWithTrack = true,
+//     int? maxEmbeddedArtBytes,
+//   }) async {
+//     String filename = song.path.split('/').last;
+//     File file = File(song.path);
+//     late final AudioMetadata metadata;
+//     var resolvedEmbedImages = loadEmbeddedAlbumArt;
+//     Future<AudioMetadata> readMeta(bool image) async {
+//       if (!kIsWeb && image) {
+//         final path = song.path;
+//         return Isolate.run(() {
+//           final f = File(path);
+//           return readEmbeddedAudioMetadata(f, getImage: true);
+//         });
+//       }
+//       return readEmbeddedAudioMetadata(file, getImage: image);
+//     }
+//
+//     Future<AudioMetadata> readMetaNoImage() async {
+//       if (!kIsWeb) {
+//         final path = song.path;
+//         return Isolate.run(() {
+//           final f = File(path);
+//           return readEmbeddedAudioMetadata(f, getImage: false);
+//         });
+//       }
+//       return readEmbeddedAudioMetadata(file, getImage: false);
+//     }
+//
+//     try {
+//       if (resolvedEmbedImages) {
+//         metadata = await readMeta(true);
+//       } else {
+//         metadata = await readMeta(false);
+//       }
+//     } catch (e, st) {
+//       if (loadEmbeddedAlbumArt) {
+//         appLog.w('readMetadata 失败，尝试跳过内嵌图: $filename', error: e);
+//         try {
+//           metadata = await readMetaNoImage();
+//           resolvedEmbedImages = false;
+//         } catch (e2) {
+//           song.title = filename;
+//           final msg = e2.toString();
+//           final short =
+//               msg.length > 140 ? '${msg.substring(0, 140)}…' : msg;
+//           appLog.w(
+//             '读取歌曲元信息失败（文件损坏或不完整）: $filename — $short',
+//           );
+//           return;
+//         }
+//       } else {
+//         song.title = filename;
+//         appLog.e('读取歌曲元信息失败', error: e, stackTrace: st);
+//         return;
+//       }
+//     }
+//     String decodedTitle = decodeString(metadata.title ?? filename);
+//     if (embeddedDisplayTextLooksCorrupt(decodedTitle)) {
+//       decodedTitle = p.basenameWithoutExtension(song.path);
+//     }
+//     song.title = decodedTitle;
+//
+//     song.album = _metaFieldOrEmpty(metadata.album);
+//     song.artist = _metaFieldOrEmpty(metadata.artist);
+//     song.duration = metadata.duration;
+//     song.year = metadata.year;
+//     song.trackNumber = metadata.trackNumber;
+//     song.discNumber = metadata.discNumber;
+//     song.sampleRate = metadata.sampleRate;
+//     song.bitrate = metadata.bitrate;
+//     song.lyrics = storeLyricsWithTrack ? metadata.lyrics : null;
+//     song.pictures = resolvedEmbedImages ? metadata.pictures : null;
+//     if (resolvedEmbedImages &&
+//         song.pictures != null &&
+//         song.pictures!.isNotEmpty) {
+//       final raw = pickEmbeddedCoverBytesFromPictures(
+//         song.pictures,
+//         embedTooLargeOkToDiscard: true,
+//         maxEmbeddedArtBytes: maxEmbeddedArtBytes,
+//       );
+//       song.imageBytes = raw;
+//       if (song.imageBytes == null && loadEmbeddedAlbumArt) {
+//         song.pictures = null;
+//       }
+//     } else {
+//       song.imageBytes = null;
+//     }
+//     await loadFileStat(song);
+//   }
+//
+//   static Future<void> loadFileStat(Song song) async {
+//     File file = File(song.path);
+//     // 获取文件状态信息
+//     final stat = await file.stat();
+//     song.createDateTime = stat.changed;
+//     song.updateDateTime = stat.modified;
+//   }
+//
+//   static String _metaFieldOrEmpty(String? raw) {
+//     final s = decodeString(raw ?? '');
+//     return embeddedDisplayTextLooksCorrupt(s) ? '' : s;
+//   }
+//
+//   /// 规范化展示用字符串：
+//   /// - Unicode 字面量（含中文）若无法 `latin1.encode` 则直接返回；
+//   /// - Latin‑1 可逆时再试 UTF‑8 / GBK / 误解码拉回，多套结果按可读性打分择优。
+//   static String decodeString(String? raw) {
+//     if (raw == null) return '';
+//     final t = raw.trim();
+//     if (t.isEmpty) return '';
+//
+//     List<int>? bytes;
+//     try {
+//       bytes = latin1.encode(t);
+//     } catch (_) {
+//       return t;
+//     }
+//
+//     final candidates = <String>{t};
+//     try {
+//       candidates.add(utf8.decode(bytes, allowMalformed: false).trim());
+//     } catch (_) {}
+//     try {
+//       candidates.add(gbk.decode(bytes).trim());
+//     } catch (_) {}
+//     final recovered = recoverLabelFromLatin1Misread(bytes).trim();
+//     if (recovered.isNotEmpty) {
+//       candidates.add(recovered);
+//     }
+//
+//     String best = '';
+//     var bestScore = -999999;
+//     if (!looksLikeGbkOfUtf8Garbage(t) && !containsUnicodeReplacementChar(t)) {
+//       best = t;
+//       bestScore = tagEmbeddingTextScoreForUi(t);
+//     }
+//     for (final s in candidates) {
+//       final x = s.trim();
+//       if (x.isEmpty) continue;
+//       if (looksLikeGbkOfUtf8Garbage(x)) continue;
+//       if (containsUnicodeReplacementChar(x)) continue;
+//       final sc = tagEmbeddingTextScoreForUi(x);
+//       if (sc > bestScore ||
+//           (sc == bestScore && x.length > best.length)) {
+//         bestScore = sc;
+//         best = x;
+//       }
+//     }
+//     if (best.isEmpty) best = t;
+//     return normalizeLatin1MisreadUtf8(best);
+//   }
+//
+//   // 歌词解析请使用 `lib/utils/lyrics_utils.dart`（支持同一时间戳多行/多语言）
+//
+//   // /// 打开文件夹
+//   // static Future<void> openFolder(String folderPath) async {
+//   //   if (Platform.isWindows) {
+//   //     // Windows
+//   //     await Process.run('explorer', [folderPath]);
+//   //   } else if (Platform.isMacOS) {
+//   //     // macOS
+//   //     await Process.run('open', [folderPath]);
+//   //   } else if (Platform.isLinux) {
+//   //     // Linux
+//   //     await Process.run('xdg-open', [folderPath]);
+//   //   } else {
+//   //     throw UnsupportedError('This platform is not supported');
+//   //   }
+//   // }
+// }
+//
+// String? _repairPossiblyTruncatedEmbeddedLyrics({
+//   required File file,
+//   required String? currentLyrics,
+// }) {
+//   final ext = p.extension(file.path).toLowerCase();
+//   final now = currentLyrics?.trim() ?? '';
+//
+//   try {
+//     final bytes = file.readAsBytesSync();
+//     if (bytes.isEmpty) return currentLyrics;
+//     final chunks = <String>[];
+//     if (ext == '.mp3') {
+//       extractUsLtFromId3Haystack(bytes, chunks);
+//     } else if (ext == '.flac') {
+//       chunks.addAll(_extractLyricsFromFlacVorbisComment(bytes));
+//     }
+//     if (chunks.isEmpty) return currentLyrics;
+//     final best = _pickBestLyricsCandidate(chunks);
+//     if (best == null || best.trim().isEmpty) return currentLyrics;
+//     final fromReaderScore = _lyricsCandidateScore(now);
+//     final fromContainerScore = _lyricsCandidateScore(best.trim());
+//     if (fromContainerScore > fromReaderScore + 20) return best.trim();
+//   } catch (_) {}
+//   return currentLyrics;
+// }
+//
+// List<String> _extractLyricsFromFlacVorbisComment(Uint8List bytes) {
+//   final out = <String>[];
+//   if (bytes.length < 8) return out;
+//   if (!(bytes[0] == 0x66 && bytes[1] == 0x4c && bytes[2] == 0x61 && bytes[3] == 0x43)) {
+//     return out;
+//   }
+//   var offset = 4;
+//   while (offset + 4 <= bytes.length) {
+//     final header = bytes[offset];
+//     final isLast = (header & 0x80) != 0;
+//     final blockType = header & 0x7f;
+//     final blockLen =
+//         (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
+//     offset += 4;
+//     if (offset + blockLen > bytes.length) break;
+//     if (blockType == 4) {
+//       final block = Uint8List.sublistView(bytes, offset, offset + blockLen);
+//       out.addAll(_parseVorbisLyricsComments(block));
+//     }
+//     offset += blockLen;
+//     if (isLast) break;
+//   }
+//   return out;
+// }
+//
+// List<String> _parseVorbisLyricsComments(Uint8List block) {
+//   final out = <String>[];
+//   if (block.length < 8) return out;
+//   var off = 0;
+//   final vendorLen = _le32(block, off);
+//   off += 4;
+//   if (vendorLen < 0 || off + vendorLen > block.length) return out;
+//   off += vendorLen;
+//   if (off + 4 > block.length) return out;
+//   final commentCount = _le32(block, off);
+//   off += 4;
+//   for (var i = 0; i < commentCount; i++) {
+//     if (off + 4 > block.length) break;
+//     final len = _le32(block, off);
+//     off += 4;
+//     if (len < 0 || off + len > block.length) break;
+//     final raw = utf8.decode(Uint8List.sublistView(block, off, off + len), allowMalformed: true);
+//     off += len;
+//     final eq = raw.indexOf('=');
+//     if (eq <= 0) continue;
+//     final key = raw.substring(0, eq).trim().toUpperCase();
+//     final value = raw.substring(eq + 1).trim();
+//     if (value.isEmpty) continue;
+//     if (key == 'LYRICS' || key == 'UNSYNCEDLYRICS' || key == 'LYRIC' || key == 'LRC') {
+//       out.add(value);
+//     }
+//   }
+//   return out;
+// }
+//
+// int _le32(Uint8List b, int o) {
+//   if (o + 4 > b.length) return -1;
+//   return b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24);
+// }
+//
+// bool _looksLikeTruncatedOrHeaderOnlyLyrics(String lyrics) {
+//   if (lyrics.isEmpty) return true;
+//   final lines = lyrics
+//       .split(RegExp(r'\r\n|\r|\n'))
+//       .map((e) => e.trim())
+//       .where((e) => e.isNotEmpty)
+//       .toList();
+//   if (lines.isEmpty) return true;
+//
+//   final timedCount = RegExp(r'^\[\d{1,3}:[0-5]?\d(?:\.\d{1,3})?]').allMatches(lyrics).length;
+//   if (timedCount > 0) return false;
+//
+//   final headerCount = lines
+//       .where((l) => RegExp(r'^\[[A-Za-z][A-Za-z0-9_-]{0,31}:[^\]]*]$').hasMatch(l))
+//       .length;
+//   // 只有少量头信息、没有时间轴，基本可判为“读到了开头但正文没拿到”。
+//   if (headerCount >= 2 && lines.length <= 8) return true;
+//
+//   // 常见被截断特征：URL/标签行未闭合。
+//   if (lyrics.contains('[re:') && !lyrics.contains(']')) return true;
+//   if (lyrics.contains('https://') && !lyrics.contains('\n[')) return true;
+//   return false;
+// }
+//
+// String? _pickBestLyricsCandidate(List<String> chunks) {
+//   String? best;
+//   var bestScore = -1 << 30;
+//   for (final c in chunks) {
+//     final t = c.trim();
+//     if (t.isEmpty) continue;
+//     final timed = RegExp(r'^\[\d{1,3}:[0-5]?\d(?:\.\d{1,3})?]', multiLine: true)
+//         .allMatches(t)
+//         .length;
+//     final headers =
+//         RegExp(r'^\[[A-Za-z][A-Za-z0-9_-]{0,31}:[^\]]*]$', multiLine: true)
+//             .allMatches(t)
+//             .length;
+//     var score = t.length + timed * 120 + headers * 8;
+//     if (timed == 0 && headers > 0) score -= 200;
+//     if (_looksLikeTruncatedOrHeaderOnlyLyrics(t)) score -= 300;
+//     if (score > bestScore) {
+//       bestScore = score;
+//       best = t;
+//     }
+//   }
+//   return best;
+// }
+//
+// int _lyricsCandidateScore(String lyrics) {
+//   final t = lyrics.trim();
+//   if (t.isEmpty) return -100000;
+//   final timed = RegExp(r'^\[\d{1,3}:[0-5]?\d(?:\.\d{1,3})?]', multiLine: true)
+//       .allMatches(t)
+//       .length;
+//   final headers =
+//       RegExp(r'^\[[A-Za-z][A-Za-z0-9_-]{0,31}:[^\]]*]$', multiLine: true)
+//           .allMatches(t)
+//           .length;
+//   var score = t.length + timed * 120 + headers * 8;
+//   if (timed == 0 && headers > 0) score -= 200;
+//   if (_looksLikeTruncatedOrHeaderOnlyLyrics(t)) score -= 300;
+//   return score;
+// }

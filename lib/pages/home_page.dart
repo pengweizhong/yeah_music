@@ -25,6 +25,7 @@ import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cached_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/quick_entry_settings_page.dart';
@@ -73,6 +74,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool _recentReady = false;
   PlayListProvider? _play;
   QuickEntryConfig _quickEntry = QuickEntryConfig.defaultConfig();
+
   /// 首页问候卡片第二行展示文案（内置默认 + 用户自定义轮询）。
   String? _greetingSubLine;
   bool _advanceSubtitleAfterPausedResume = false;
@@ -86,7 +88,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         unawaited(_loadQuickEntryConfig());
       }
     };
-    SettingsService.quickEntryStorageRevision.addListener(_quickEntryRevListener);
+    SettingsService.quickEntryStorageRevision.addListener(
+      _quickEntryRevListener,
+    );
     WidgetsBinding.instance.addObserver(this);
     final pre = widget.initial;
     if (pre != null) {
@@ -124,7 +128,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    SettingsService.quickEntryStorageRevision.removeListener(_quickEntryRevListener);
+    SettingsService.quickEntryStorageRevision.removeListener(
+      _quickEntryRevListener,
+    );
     WidgetsBinding.instance.removeObserver(this);
     _play?.removeListener(_onPlayListChange);
     _homeScrollController.dispose();
@@ -187,11 +193,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             userPlaylists: context.read<UserPlaylistProvider>(),
           );
         } catch (e, st) {
-          appLog.e(
-            '曲库合并（PlayListProvider）初始化失败',
-            error: e,
-            stackTrace: st,
-          );
+          appLog.e('曲库合并（PlayListProvider）初始化失败', error: e, stackTrace: st);
         }
         if (mounted) setState(() {});
       }());
@@ -222,8 +224,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _loadRecentPaths() async {
     // 多取一些路径，避免前几条在「临时歌单队列」中无法解析时整区空白
-    final p =
-        await RecentPlayService.getPaths(limit: RecentPlayService.maxStoredRecentPaths);
+    final p = await RecentPlayService.getPaths(
+      limit: RecentPlayService.maxStoredRecentPaths,
+    );
     final top = await RecentPlayService.getTopByPlayCount(limit: 40);
     if (!mounted) return;
     setState(() {
@@ -278,36 +281,28 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const PlayListPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const PlayListPage()),
     );
   }
 
   void _goStoragePlaylists() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const StoragePlayListPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const StoragePlayListPage()),
     );
   }
 
   void _goRecentPlays() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const RecentPlaysPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const RecentPlaysPage()),
     );
   }
 
   void _goMostPlayed() {
     Navigator.push<void>(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => const MostPlayedPage(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const MostPlayedPage()),
     );
   }
 
@@ -354,6 +349,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       context,
       MaterialPageRoute<void>(
         builder: (context) => const OneDriveCachedPlaylistPage(),
+      ),
+    );
+  }
+
+  void _goOneDriveTransferQueue() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => const OneDriveDownloadQueuePage(
+          initialTab: OneDriveTransferQueueTab.download,
+        ),
       ),
     );
   }
@@ -426,42 +432,41 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   _mostPlayedRaw,
                   maxSongs: 8,
                 );
-                final showMini = play.initialized &&
+                final showMini =
+                    play.initialized &&
                     play.currentSong != null &&
                     play.playList.isNotEmpty;
-                final miniBottom =
-                    showMini ? MiniPlayer.barHeight : 0.0;
+                final miniBottom = showMini ? MiniPlayer.barHeight : 0.0;
                 return SizedBox.expand(
                   child: _HomeScrollBody(
-                        scrollController: _homeScrollController,
-                        quickEntry: _quickEntry,
-                        safeBottom:
-                            MediaQuery.paddingOf(context).bottom +
-                                8 +
-                                miniBottom,
-                        greeting: _greeting(context),
-                        greetingSub: _greetingSubLine ??
-                            AppLocalizations.of(context).homeGreetingSub,
-                        play: play,
-                        user: user,
-                        recentSongs: recentSongs,
-                        mostPlayedItems: mostPlayedItems,
-                        mostPlayedRaw: _mostPlayedRaw,
-                        showRecentList: _recentReady,
-                        onOpenLibrary: () => _goLibrary(),
-                        onOpenSearch: () => _goLibrary(openSearch: true),
-                        onOpenStorage: _goStoragePlaylists,
-                        onOpenRecent: _goRecentPlays,
-                        onOpenMostPlayed: _goMostPlayed,
-                        onOpenCloudLibrary: _goCloudLibrary,
-                        onOpenOneDrive: _goOneDrive,
-                        onOpenOneDriveCachedPlaylist:
-                            _goOneDriveCachedPlaylist,
-                        onOpenMusicRecognition: _goMusicRecognition,
-                        onManageQuickEntry: _goQuickEntrySettings,
-                        onOpenUserPlaylist: _goUserPlaylist,
-                        songSubtitle: _songSecondaryLine,
-                      ),
+                    scrollController: _homeScrollController,
+                    quickEntry: _quickEntry,
+                    safeBottom:
+                        MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
+                    greeting: _greeting(context),
+                    greetingSub:
+                        _greetingSubLine ??
+                        AppLocalizations.of(context).homeGreetingSub,
+                    play: play,
+                    user: user,
+                    recentSongs: recentSongs,
+                    mostPlayedItems: mostPlayedItems,
+                    mostPlayedRaw: _mostPlayedRaw,
+                    showRecentList: _recentReady,
+                    onOpenLibrary: () => _goLibrary(),
+                    onOpenSearch: () => _goLibrary(openSearch: true),
+                    onOpenStorage: _goStoragePlaylists,
+                    onOpenRecent: _goRecentPlays,
+                    onOpenMostPlayed: _goMostPlayed,
+                    onOpenCloudLibrary: _goCloudLibrary,
+                    onOpenOneDrive: _goOneDrive,
+                    onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
+                    onOpenOneDriveTransferQueue: _goOneDriveTransferQueue,
+                    onOpenMusicRecognition: _goMusicRecognition,
+                    onManageQuickEntry: _goQuickEntrySettings,
+                    onOpenUserPlaylist: _goUserPlaylist,
+                    songSubtitle: _songSecondaryLine,
+                  ),
                 );
               },
             ),
@@ -508,6 +513,7 @@ class _HomeScrollBody extends StatefulWidget {
     required this.onOpenCloudLibrary,
     required this.onOpenOneDrive,
     required this.onOpenOneDriveCachedPlaylist,
+    required this.onOpenOneDriveTransferQueue,
     required this.onOpenMusicRecognition,
     required this.onManageQuickEntry,
     required this.onOpenUserPlaylist,
@@ -533,6 +539,7 @@ class _HomeScrollBody extends StatefulWidget {
   final VoidCallback onOpenCloudLibrary;
   final VoidCallback onOpenOneDrive;
   final VoidCallback onOpenOneDriveCachedPlaylist;
+  final VoidCallback onOpenOneDriveTransferQueue;
   final VoidCallback onOpenMusicRecognition;
   final VoidCallback onManageQuickEntry;
   final void Function(String playlistId) onOpenUserPlaylist;
@@ -550,10 +557,12 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
 
   /// [SliverLayoutBuilder] 测得的吸顶分节条在内容中的起点（「最近」一栏）
   double? _recentPlaysSectionStartScroll;
+
   /// 滚过此 offset 后，吸顶条从「最近」切换为「最多」（= [SliverLayoutBuilder] 在「最多」**流式**分节标题前测得的 `precedingScrollExtent`）
   double? _mostPlayedBarSwitchAt;
   double _lastRecentPrecedingLogged = -1.0;
   double _lastMostPlayedSectionPreceding = -1.0;
+
   /// 与 [ScrollController] 同步，在短暂无 [hasClients] 的帧中仍用上次 offset 判断吸顶，避免上滑时状态卡在「最多」
   double _lastScrollOffset = 0.0;
 
@@ -706,6 +715,16 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
             ),
           );
           break;
+        case QuickEntryConfig.idOneDriveTransferQueue:
+          entries.add(
+            _QuickItem(
+              l10n.homeEntryOneDriveTransferQueue,
+              Icons.sync_alt_rounded,
+              const Color(0xFF26A69A),
+              widget.onOpenOneDriveTransferQueue,
+            ),
+          );
+          break;
         case QuickEntryConfig.idSongRecognizer:
           entries.add(
             _QuickItem(
@@ -771,136 +790,131 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
           parent: BouncingScrollPhysics(),
         ),
         slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 0),
-            child: _GreetingBlock(
-              greeting: widget.greeting,
-              subtitle: widget.greetingSub,
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: _gapM)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _SearchPill(onTap: widget.onOpenSearch),
-          ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: _gapL)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _buildContinue(context),
-          ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: _gapL + 4)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _SectionTitle(
-              title: l10n.homeSectionQuickEntry,
-              actionLabel: l10n.homeActionManage,
-              onAction: widget.onManageQuickEntry,
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: _gapS)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _hPad),
-            child: _buildQuickEntryRow(),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(left: _hPad, right: 8, top: _gapL + 4),
-            child: _SectionTitle(
-              title: l10n.homeSectionMyPlaylists,
-              actionLabel: l10n.homeActionManage,
-              onAction: widget.onOpenStorage,
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: _gapS)),
-        SliverToBoxAdapter(
-          child: _PlaylistCarousels(
-            play: widget.play,
-            user: widget.user,
-            onOpenAllSongs: widget.onOpenLibrary,
-            onOpenPlaylist: widget.onOpenUserPlaylist,
-            onCreate: widget.onOpenStorage,
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: SizedBox(height: _gapL + 4),
-        ),
-        SliverLayoutBuilder(
-          builder: (context, constraints) {
-            _onRecentSectionLayoutStart(constraints.precedingScrollExtent);
-            return const SliverToBoxAdapter(child: SizedBox.shrink());
-          },
-        ),
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _RecentAndMostPinnedHeaderDelegate(
-            onOpenRecent: widget.onOpenRecent,
-            onOpenMostPlayed: widget.onOpenMostPlayed,
-            horizontalPadding: _hPad,
-            showMost: showMostInBar,
-            useFrosted: useFrostedMerged,
-          ),
-        ),
-        if (!widget.play.initialized)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Center(
+              padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 0),
+              child: _GreetingBlock(
+                greeting: widget.greeting,
+                subtitle: widget.greetingSub,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapM)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _SearchPill(onTap: widget.onOpenSearch),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapL)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _buildContinue(context),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapL + 4)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _SectionTitle(
+                title: l10n.homeSectionQuickEntry,
+                actionLabel: l10n.homeActionManage,
+                onAction: widget.onManageQuickEntry,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapS)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _hPad),
+              child: _buildQuickEntryRow(),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: _hPad,
+                right: 8,
+                top: _gapL + 4,
+              ),
+              child: _SectionTitle(
+                title: l10n.homeSectionMyPlaylists,
+                actionLabel: l10n.homeActionManage,
+                onAction: widget.onOpenStorage,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapS)),
+          SliverToBoxAdapter(
+            child: _PlaylistCarousels(
+              play: widget.play,
+              user: widget.user,
+              onOpenAllSongs: widget.onOpenLibrary,
+              onOpenPlaylist: widget.onOpenUserPlaylist,
+              onCreate: widget.onOpenStorage,
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: _gapL + 4)),
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              _onRecentSectionLayoutStart(constraints.precedingScrollExtent);
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            },
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _RecentAndMostPinnedHeaderDelegate(
+              onOpenRecent: widget.onOpenRecent,
+              onOpenMostPlayed: widget.onOpenMostPlayed,
+              horizontalPadding: _hPad,
+              showMost: showMostInBar,
+              useFrosted: useFrostedMerged,
+            ),
+          ),
+          if (!widget.play.initialized)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Center(
+                  child: Text(
+                    l10n.homeLoadingLibrary,
+                    style: TextStyle(color: context.gradFg(0.5), fontSize: 14),
+                  ),
+                ),
+              ),
+            )
+          else if (!widget.showRecentList)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: context.gradFg(0.38),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else if (widget.recentSongs.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 0),
                 child: Text(
-                  l10n.homeLoadingLibrary,
-                  style: TextStyle(
-                    color: context.gradFg(0.5),
-                    fontSize: 14,
-                  ),
+                  l10n.homeRecentEmpty,
+                  style: TextStyle(color: context.gradFg(0.45), fontSize: 14),
                 ),
               ),
-            ),
-          )
-        else if (!widget.showRecentList)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    color: context.gradFg(0.38),
-                    strokeWidth: 2,
-                  ),
-                ),
-              ),
-            ),
-          )
-        else if (widget.recentSongs.isEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 0),
-              child: Text(
-                l10n.homeRecentEmpty,
-                style: TextStyle(
-                  color: context.gradFg(0.45),
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          )
-        else
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(_hPad, _gapS - 2, _hPad, 0),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) {
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(_hPad, _gapS - 2, _hPad, 0),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, i) {
                   final song = widget.recentSongs[i];
                   final isCurrent = widget.play.currentSong?.path == song.path;
                   return Padding(
@@ -925,62 +939,54 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                       },
                     ),
                   );
-                },
-                childCount: widget.recentSongs.length,
+                }, childCount: widget.recentSongs.length),
               ),
             ),
-          ),
-        if (widget.play.initialized && widget.showRecentList) ...[
-          SliverToBoxAdapter(child: SizedBox(height: _gapL)),
-          SliverLayoutBuilder(
-            builder: (context, constraints) {
-              _onMostPlayedSectionStartLayout(
-                constraints.precedingScrollExtent,
-              );
-              return const SliverToBoxAdapter(child: SizedBox.shrink());
-            },
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-              child: _SectionTitle(
-                title: l10n.homeSectionMostPlayed,
-                actionLabel: l10n.homeActionAll,
-                onAction: widget.onOpenMostPlayed,
-              ),
+          if (widget.play.initialized && widget.showRecentList) ...[
+            SliverToBoxAdapter(child: SizedBox(height: _gapL)),
+            SliverLayoutBuilder(
+              builder: (context, constraints) {
+                _onMostPlayedSectionStartLayout(
+                  constraints.precedingScrollExtent,
+                );
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              },
             ),
-          ),
-          SliverToBoxAdapter(child: SizedBox(height: _gapS)),
-          if (widget.mostPlayedItems.isEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-                child: Text(
-                  widget.mostPlayedRaw.isNotEmpty
-                      ? l10n.homeMostPlayedPathMismatch
-                      : l10n.homeMostPlayedEmpty,
-                  style: TextStyle(
-                    color: context.gradFg(0.45),
-                    fontSize: 14,
-                  ),
+                child: _SectionTitle(
+                  title: l10n.homeSectionMostPlayed,
+                  actionLabel: l10n.homeActionAll,
+                  onAction: widget.onOpenMostPlayed,
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: _gapS)),
+            if (widget.mostPlayedItems.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+                  child: Text(
+                    widget.mostPlayedRaw.isNotEmpty
+                        ? l10n.homeMostPlayedPathMismatch
+                        : l10n.homeMostPlayedEmpty,
+                    style: TextStyle(color: context.gradFg(0.45), fontSize: 14),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(_hPad, 0, _hPad, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, i) {
                     final item = widget.mostPlayedItems[i];
                     final song = item.song;
                     final c = item.playCount;
                     final isCurrent =
                         widget.play.currentSong?.path == song.path;
                     return Padding(
-                      key: ValueKey<String>(
-                        'home_most_${song.path}_$c',
-                      ),
+                      key: ValueKey<String>('home_most_${song.path}_$c'),
                       padding: const EdgeInsets.only(bottom: 6),
                       child: RecentPlayListRow(
                         song: song,
@@ -1005,14 +1011,12 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                         },
                       ),
                     );
-                  },
-                  childCount: widget.mostPlayedItems.length,
+                  }, childCount: widget.mostPlayedItems.length),
                 ),
               ),
-            ),
+          ],
+          SliverToBoxAdapter(child: SizedBox(height: bottomPad)),
         ],
-        SliverToBoxAdapter(child: SizedBox(height: bottomPad)),
-      ],
       ),
     );
   }
@@ -1030,7 +1034,8 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
 }
 
 /// 吸顶分节条：在「最近 / 最多」间切换（同一高度），滚过「最多」列表上沿前吸顶 50 的位置后由 [showMost] 显示「最多播放」，**不再**叠两条吸顶栏。
-class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+class _RecentAndMostPinnedHeaderDelegate
+    extends SliverPersistentHeaderDelegate {
   const _RecentAndMostPinnedHeaderDelegate({
     required this.onOpenRecent,
     required this.onOpenMostPlayed,
@@ -1080,16 +1085,11 @@ class _RecentAndMostPinnedHeaderDelegate extends SliverPersistentHeaderDelegate 
     if (useFrosted) {
       return FrostedGlassPanel.pinnedSection(child: child);
     }
-    return ColoredBox(
-      color: Colors.transparent,
-      child: child,
-    );
+    return ColoredBox(color: Colors.transparent, child: child);
   }
 
   @override
-  bool shouldRebuild(
-    covariant _RecentAndMostPinnedHeaderDelegate oldDelegate,
-  ) {
+  bool shouldRebuild(covariant _RecentAndMostPinnedHeaderDelegate oldDelegate) {
     return oldDelegate.onOpenRecent != onOpenRecent ||
         oldDelegate.onOpenMostPlayed != onOpenMostPlayed ||
         oldDelegate.horizontalPadding != horizontalPadding ||
@@ -1202,10 +1202,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: context.gradFg(0.35),
-              ),
+              Icon(Icons.chevron_right_rounded, color: context.gradFg(0.35)),
             ],
           ),
         ),
@@ -1256,10 +1253,9 @@ class _PlaylistCarousels extends StatelessWidget {
     final allN = play.initialized ? play.libraryMergedSongs.length : 0;
     final allSubtitle = !play.initialized
         ? l10n.homeAllSongsLoading
-        : (allN == 0
-            ? l10n.homeScanMusicFolder
-            : l10n.homeTrackCount(allN));
-    final libCover = user.homeLibraryCoverStyle ??
+        : (allN == 0 ? l10n.homeScanMusicFolder : l10n.homeTrackCount(allN));
+    final libCover =
+        user.homeLibraryCoverStyle ??
         UserPlaylistCoverStyle.gradient(
           const Color(0xFF1565C0),
           const Color(0xFF0D47A1),
@@ -1299,8 +1295,7 @@ class _PlaylistCarousels extends StatelessWidget {
       rowChildren.add(
         _MixCard(
           title: p.name,
-          subtitle:
-              n == 0 ? l10n.homeEmptyPlaylist : l10n.homeTrackCount(n),
+          subtitle: n == 0 ? l10n.homeEmptyPlaylist : l10n.homeTrackCount(n),
           decoration: playlistCoverCardDecoration(
             coverStyle: p.coverStyle,
             fallbackGradientIndex: pi,
@@ -1380,9 +1375,7 @@ class _GreetingBlock extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.gradBorder(0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: context.gradBorder(0.1),
-        ),
+        border: Border.all(color: context.gradBorder(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1433,25 +1426,16 @@ class _SearchPill extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradBorder(0.10),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: context.gradBorder(0.12),
-            ),
+            border: Border.all(color: context.gradBorder(0.12)),
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.search_rounded,
-                color: context.gradFg(0.45),
-                size: 22,
-              ),
+              Icon(Icons.search_rounded, color: context.gradFg(0.45), size: 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   l10n.homeSearchHint,
-                  style: TextStyle(
-                    color: context.gradFg(0.45),
-                    fontSize: 15,
-                  ),
+                  style: TextStyle(color: context.gradFg(0.45), fontSize: 15),
                 ),
               ),
             ],
@@ -1463,11 +1447,7 @@ class _SearchPill extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
-    required this.title,
-    this.actionLabel,
-    this.onAction,
-  });
+  const _SectionTitle({required this.title, this.actionLabel, this.onAction});
   final String title;
   final String? actionLabel;
   final VoidCallback? onAction;
@@ -1549,7 +1529,9 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
   void initState() {
     super.initState();
     _syncBytesFromSong();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateCoverIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _hydrateCoverIfNeeded(),
+    );
   }
 
   @override
@@ -1561,7 +1543,9 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
         _dragFraction = null;
         _syncBytesFromSong();
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateCoverIfNeeded());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _hydrateCoverIfNeeded(),
+      );
     }
   }
 
@@ -1591,10 +1575,12 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
     final l10n = AppLocalizations.of(context);
     final useCover = _coverBytes != null && _coverBytes!.isNotEmpty;
 
-    final badgeFill =
-        useCover ? Colors.white.withValues(alpha: 0.22) : context.gradBorder(0.2);
-    final progressBg =
-        useCover ? Colors.white.withValues(alpha: 0.28) : context.gradBorder(0.25);
+    final badgeFill = useCover
+        ? Colors.white.withValues(alpha: 0.22)
+        : context.gradBorder(0.2);
+    final progressBg = useCover
+        ? Colors.white.withValues(alpha: 0.28)
+        : context.gradBorder(0.25);
 
     final fg = context.gradFg();
     final dur = widget.duration;
@@ -1604,7 +1590,10 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
       final drag = _dragFraction;
       if (drag != null) return drag.clamp(0.0, 1.0);
       if (!canSeek) return 0.0;
-      return (widget.position.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0);
+      return (widget.position.inMilliseconds / dur.inMilliseconds).clamp(
+        0.0,
+        1.0,
+      );
     }
 
     final titleBlock = InkWell(
@@ -1665,10 +1654,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
             widget.subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: context.gradFg(0.8),
-              fontSize: 14,
-            ),
+            style: TextStyle(color: context.gradFg(0.8), fontSize: 14),
           ),
         ],
       ),
@@ -1692,17 +1678,17 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
       inactiveBaseColor: progressBg,
       enabled: canSeek,
       height: 28,
-      onChanged: canSeek
-          ? (v) => setState(() => _dragFraction = v)
-          : null,
+      onChanged: canSeek ? (v) => setState(() => _dragFraction = v) : null,
       onChangeStart: canSeek
           ? () {
               final d = widget.duration;
               if (d == null || d.inMilliseconds <= 0) return;
               setState(() {
                 _dragFraction =
-                    (widget.position.inMilliseconds / d.inMilliseconds)
-                        .clamp(0.0, 1.0);
+                    (widget.position.inMilliseconds / d.inMilliseconds).clamp(
+                      0.0,
+                      1.0,
+                    );
               });
             }
           : null,
@@ -1711,8 +1697,10 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
               setState(() => _dragFraction = null);
               final d = widget.duration;
               if (d != null && d.inMilliseconds > 0) {
-                final ms =
-                    (v * d.inMilliseconds).round().clamp(0, d.inMilliseconds);
+                final ms = (v * d.inMilliseconds).round().clamp(
+                  0,
+                  d.inMilliseconds,
+                );
                 await MusicService().seek(Duration(milliseconds: ms));
               }
               if (mounted) setState(() {});
@@ -1723,11 +1711,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
     final cardBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
-      children: [
-        titleBlock,
-        const SizedBox(height: 16),
-        progressWave,
-      ],
+      children: [titleBlock, const SizedBox(height: 16), progressWave],
     );
 
     return Material(
@@ -1759,7 +1743,9 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 if (mounted) _onCoverDecodeFailed();
                               });
-                              return const ColoredBox(color: Colors.transparent);
+                              return const ColoredBox(
+                                color: Colors.transparent,
+                              );
                             },
                           ),
                           DecoratedBox(
@@ -1778,10 +1764,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
                       )
                     : ColoredBox(color: context.gradBorder(0.08)),
               ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: cardBody,
-              ),
+              Padding(padding: const EdgeInsets.all(18), child: cardBody),
             ],
           ),
         ),
@@ -1804,11 +1787,11 @@ class _HomeHorizontalScrollBehavior extends MaterialScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 }
 
 /// 快捷入口：每项为正方形；边长在 [_sideMin]～[_sideMax] 内随窗口平滑变化；排不下时横滑且单屏约 3 个。
@@ -1820,6 +1803,7 @@ class _QuickEntryStrip extends StatelessWidget {
   static const double _gap = 10;
   static const double _sideMin = 88;
   static const double _sideMax = _kHomePlaylistMixCardWidth - 4;
+
   /// 极窄窗口下滚动时的下限，避免算不出布局。
   static const double _sideAbsMin = 48;
 
@@ -1869,11 +1853,7 @@ class _QuickEntryStrip extends StatelessWidget {
         if (!scroll) {
           return Align(
             alignment: Alignment.centerLeft,
-            child: SizedBox(
-              width: contentW,
-              height: side,
-              child: row,
-            ),
+            child: SizedBox(width: contentW, height: side, child: row),
           );
         }
 
@@ -1921,9 +1901,7 @@ class _QuickEntryTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.gradBorder(0.16),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: context.gradBorder(0.18),
-            ),
+            border: Border.all(color: context.gradBorder(0.18)),
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(pad, pad, pad, pad * 0.85),
@@ -2035,4 +2013,3 @@ class _MixCard extends StatelessWidget {
     );
   }
 }
-

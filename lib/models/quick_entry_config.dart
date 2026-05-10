@@ -11,15 +11,22 @@ class QuickEntryConfig {
   static const idDiscover = 'discover';
   static const idCloudLibrary = 'cloud_library';
   static const idOneDrive = 'onedrive';
+
   /// OneDrive 点播下载到本地的曲目汇总（默认缓存目录与用户下载目录）。
   static const idOneDriveCachePlaylist = 'onedrive_cache_playlist';
+
+  /// OneDrive 传输队列（下载 / 上传任务）。
+  static const idOneDriveTransferQueue = 'onedrive_transfer_queue';
+
   /// 听歌识曲（麦克风 + AudD）
   static const idSongRecognizer = 'song_recognizer';
+
   /// 规范顺序：默认首页从左到右；[normalizeInPlace] 补全缺失 id 时也按此顺序追加。
   static const allIds = [
     idLibrary,
     idCloudLibrary,
     idOneDriveCachePlaylist,
+    idOneDriveTransferQueue,
     idRecent,
     idMostPlayed,
     idPlaylists,
@@ -33,10 +40,7 @@ class QuickEntryConfig {
   final Set<String> hidden;
 
   factory QuickEntryConfig.defaultConfig() {
-    return QuickEntryConfig(
-      order: List<String>.from(allIds),
-      hidden: {},
-    );
+    return QuickEntryConfig(order: List<String>.from(allIds), hidden: {});
   }
 
   /// 去重、补全、清理非法 [hidden]（可在外存盘前再调一次）

@@ -1368,6 +1368,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeEntryOneDriveCachePlaylist => '缓存歌单';
 
   @override
+  String get homeEntryOneDriveTransferQueue => '传输队列';
+
+  @override
   String get homeSectionQuickEntry => '快捷入口';
 
   @override
@@ -4071,6 +4074,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get homeEntryOneDriveCachePlaylist => '缓存歌单';
+
+  @override
+  String get homeEntryOneDriveTransferQueue => '传输队列';
 
   @override
   String get homeSectionQuickEntry => '快捷入口';
@@ -6777,6 +6783,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeEntryOneDriveCachePlaylist => '快取歌單';
+
+  @override
+  String get homeEntryOneDriveTransferQueue => '傳輸佇列';
 
   @override
   String get homeSectionQuickEntry => '捷徑';
