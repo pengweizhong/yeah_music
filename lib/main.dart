@@ -284,6 +284,7 @@ class YeahMusicApp extends StatefulWidget {
 class _YeahMusicAppState extends State<YeahMusicApp>
     with WidgetsBindingObserver {
   static bool _androidWireRemoteInited = false;
+  static bool _diagnosticPrefsPrimed = false;
 
   Timer? _oneDriveAutoSyncTimer;
 
@@ -405,6 +406,18 @@ class _YeahMusicAppState extends State<YeahMusicApp>
   Widget build(BuildContext context) {
     return Consumer2<AppThemeModeProvider, AppLocaleProvider>(
       builder: (context, appearance, locale, _) {
+        if (!_diagnosticPrefsPrimed) {
+          _diagnosticPrefsPrimed = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            unawaited(
+              DiagnosticLogStore.loadEnabledFromPrefs().then((enabled) {
+                if (!kIsWeb && Platform.isAndroid) {
+                  unawaited(WireRemoteNative.setDiagnosticsEnabled(enabled));
+                }
+              }),
+            );
+          });
+        }
         if (!_androidWireRemoteInited && !kIsWeb && Platform.isAndroid) {
           _androidWireRemoteInited = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -415,11 +428,6 @@ class _YeahMusicAppState extends State<YeahMusicApp>
             );
             unawaited(
               WireRemoteGestureHandler.syncNativeFromController(shortcuts),
-            );
-            unawaited(
-              DiagnosticLogStore.isEnabled().then(
-                WireRemoteNative.setDiagnosticsEnabled,
-              ),
             );
             unawaited(ensureAndroidPostNotificationsPermissionIfNeeded());
           });

@@ -41,20 +41,17 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
     var nativeLog = '';
 
     try {
-      final values = await Future.wait<Object>([
-        DiagnosticLogStore.isEnabled().timeout(
-          _loadTimeout,
-          onTimeout: () => _enabled,
-        ),
+      // 开关必须与磁盘一致：单独 await，避免与其它 Future 并行时被 timeout 误判成 false。
+      enabled = await DiagnosticLogStore.loadEnabledFromPrefs();
+      final rest = await Future.wait<Object>([
         DiagnosticLogStore.read().timeout(_loadTimeout, onTimeout: () => ''),
         WireRemoteNative.readDiagnosticsLog().timeout(
           _loadTimeout,
           onTimeout: () => '',
         ),
       ]);
-      enabled = values[0] as bool;
-      appLog = values[1] as String;
-      nativeLog = values[2] as String;
+      appLog = rest[0] as String;
+      nativeLog = rest[1] as String;
     } catch (_) {
       // 日志页不能因为平台通道或文件读取异常一直停在加载态。
     }
@@ -72,7 +69,11 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
 
   Future<void> _setEnabled(bool enabled) async {
     setState(() => _enabled = enabled);
-    await DiagnosticLogStore.setEnabled(enabled);
+    final ok = await DiagnosticLogStore.setEnabled(enabled);
+    if (!ok && mounted) {
+      setState(() => _enabled = !enabled);
+      return;
+    }
     await WireRemoteNative.setDiagnosticsEnabled(enabled);
     if (!mounted) return;
     await _reload();
