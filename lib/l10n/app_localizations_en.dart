@@ -18,6 +18,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuSongList => 'Songs';
 
   @override
+  String get menuArtists => 'Artists';
+
+  @override
+  String get artistsUnknownArtist => 'Unknown artist';
+
+  @override
+  String get artistsSearchHint => 'Search artists';
+
+  @override
+  String get albumsSearchHint => 'Search albums';
+
+  @override
+  String get menuAlbums => 'Albums';
+
+  @override
+  String get albumsUnknownAlbum => 'Unknown album';
+
+  @override
   String get menuPlaylists => 'Playlists';
 
   @override

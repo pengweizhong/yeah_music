@@ -18,6 +18,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuSongList => '曲库';
 
   @override
+  String get menuArtists => 'アーティスト';
+
+  @override
+  String get artistsUnknownArtist => '不明なアーティスト';
+
+  @override
+  String get artistsSearchHint => 'アーティストを検索';
+
+  @override
+  String get albumsSearchHint => 'アルバムを検索';
+
+  @override
+  String get menuAlbums => 'アルバム';
+
+  @override
+  String get albumsUnknownAlbum => '不明なアルバム';
+
+  @override
   String get menuPlaylists => 'プレイリスト';
 
   @override

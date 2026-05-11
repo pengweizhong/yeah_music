@@ -272,7 +272,7 @@ object MusicTagEditorBridge {
         }
     }
 
-    /// 外部编辑器保存后通知系统刷新媒体索引（与椒盐流程中「回播放器后再入库」类似，减轻第三方二次校验失败 Toast）。
+    /// 外部编辑器保存后通知系统刷新媒体索引
     private fun scanAudioFile(activity: Activity, absolutePath: String) {
         val f = File(absolutePath.trim())
         if (!f.exists()) return

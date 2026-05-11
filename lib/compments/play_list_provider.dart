@@ -39,6 +39,27 @@ const String _kHiveLastPlaybackUserPlaylistIdKey = 'last_playback_user_playlist_
 const String _kHiveLastPlaybackRecordRecentKey = 'last_playback_record_recent';
 const String _kHiveLastPlaybackBumpPlayCountKey = 'last_playback_bump_play_count';
 
+/// Hive：艺术家 / 专辑等子队列的曲目路径顺序（与 [PlaybackSessionSurface.libraryByArtist] 等配合）。
+const String _kHiveLastOverridePathsKey = 'last_playback_override_paths';
+
+List<String> _parseOverridePathListFromHive(dynamic raw) {
+  if (raw is! List) return [];
+  return raw.map((e) => '$e'.trim()).where((p) => p.isNotEmpty).toList();
+}
+
+List<Song> _resolveSongsFromOrderedPaths(List<String> paths, List<Song> merged) {
+  final byKey = <String, Song>{};
+  for (final s in merged) {
+    byKey[_libraryPathKey(s.path)] = s;
+  }
+  final out = <Song>[];
+  for (final path in paths) {
+    final s = byKey[_libraryPathKey(path)];
+    if (s != null) out.add(s);
+  }
+  return out;
+}
+
 /// 与 Hive、曲库中歌曲路径做匹配时统一（避免 `\`/`/` 或大小写不一致导致无法解析）
 String _libraryPathKey(String path) {
   final t = path.trim();
@@ -140,6 +161,14 @@ class PlayListProvider extends ChangeNotifier {
   /// 是否为「从最多播放列表」发起（在 [MostPlayedPage] 滚屏）
   bool get playbackSessionIsMostPlayedList =>
       _playbackSessionSurface == PlaybackSessionSurface.mostPlayedList;
+
+  /// 是否为「从艺术家下列表」发起（艺术家分组页的曲目列表）
+  bool get playbackSessionIsLibraryByArtist =>
+      _playbackSessionSurface == PlaybackSessionSurface.libraryByArtist;
+
+  /// 是否为「从专辑下列表」发起（专辑分组页的曲目列表）
+  bool get playbackSessionIsLibraryByAlbum =>
+      _playbackSessionSurface == PlaybackSessionSurface.libraryByAlbum;
 
   /// 是否为「从指定用户歌单」发起（在对应 [UserPlaylistDetailPage] 滚屏）
   bool playbackSessionIsUserPlaylist(String playlistId) =>
@@ -944,6 +973,26 @@ class PlayListProvider extends ChangeNotifier {
         _applyPlaybackSession(surface);
       }
 
+      if (surface == PlaybackSessionSurface.libraryByArtist ||
+          surface == PlaybackSessionSurface.libraryByAlbum) {
+        final paths = _parseOverridePathListFromHive(
+          box.get(_kHiveLastOverridePathsKey),
+        );
+        final merged = libraryMergedSongs;
+        final resolved = _resolveSongsFromOrderedPaths(paths, merged);
+        if (resolved.isNotEmpty) {
+          _playbackQueueOverride = resolved;
+          _applyPlaybackSession(surface);
+          _applyRestoredIndexFromPathOrLegacyIndex(pathRaw, savedIndex);
+          appLog.d(
+            '已恢复子队列播放（${surface.name}）→ ${resolved.length} 首',
+          );
+          return;
+        }
+        surface = PlaybackSessionSurface.library;
+        _applyPlaybackSession(PlaybackSessionSurface.library);
+      }
+
       if (surface == PlaybackSessionSurface.library) {
         final merged = libraryMergedSongs;
         if (merged.isNotEmpty) {
@@ -1014,6 +1063,15 @@ class PlayListProvider extends ChangeNotifier {
       }
       await box.put(_kHiveLastPlaybackRecordRecentKey, _statsRecordRecent);
       await box.put(_kHiveLastPlaybackBumpPlayCountKey, _statsBumpPlayCount);
+      if (_playbackSessionSurface == PlaybackSessionSurface.libraryByArtist ||
+          _playbackSessionSurface == PlaybackSessionSurface.libraryByAlbum) {
+        await box.put(
+          _kHiveLastOverridePathsKey,
+          list.map((s) => s.path).toList(),
+        );
+      } else {
+        await box.delete(_kHiveLastOverridePathsKey);
+      }
     } catch (e) {
       appLog.e('保存上次播放快照失败', error: e);
     }

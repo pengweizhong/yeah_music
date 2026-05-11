@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/pages/albums_page.dart';
+import 'package:yeah_music/pages/artists_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/setting_page.dart';
 import 'package:yeah_music/pages/statistics_page.dart';
@@ -115,6 +117,32 @@ class _MenuPageState extends State<MenuPage> {
                             context,
                             MaterialPageRoute<void>(
                               builder: (_) => const PlayListPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.person_outline_rounded,
+                        label: l10n.menuArtists,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const ArtistsBrowserPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      _menuTile(
+                        context: context,
+                        icon: Icons.album_outlined,
+                        label: l10n.menuAlbums,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const AlbumsBrowserPage(),
                             ),
                           );
                         },

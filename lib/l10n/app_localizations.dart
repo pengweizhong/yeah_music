@@ -120,6 +120,42 @@ abstract class AppLocalizations {
   /// **'Songs'**
   String get menuSongList;
 
+  /// No description provided for @menuArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get menuArtists;
+
+  /// No description provided for @artistsUnknownArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown artist'**
+  String get artistsUnknownArtist;
+
+  /// No description provided for @artistsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search artists'**
+  String get artistsSearchHint;
+
+  /// No description provided for @albumsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search albums'**
+  String get albumsSearchHint;
+
+  /// No description provided for @menuAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get menuAlbums;
+
+  /// No description provided for @albumsUnknownAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown album'**
+  String get albumsUnknownAlbum;
+
   /// No description provided for @menuPlaylists.
   ///
   /// In en, this message translates to:

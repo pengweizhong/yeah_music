@@ -62,7 +62,6 @@ class SongLibraryMetadataHydrator {
   }
 
   /// 列表展示经 [ResizeImage] 已降采样；过小会丢弃内嵌图导致大量「无封面」。
-  /// 椒盐等项目常保留 ~2MiB 量级 FLAC 内嵌 PNG；调高仍由 UI 缩放，大图主要占内存瞬时峰值。
   static const int maxEmbeddedArtBytes = 1920 * 1024;
 
   /// 若 [Song] 已与缓存一致则返回 false；否则写入并返回 true（便于列表仅在真有变更时 [setState]）。

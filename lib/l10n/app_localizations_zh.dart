@@ -18,6 +18,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuSongList => '歌曲列表';
 
   @override
+  String get menuArtists => '艺术家';
+
+  @override
+  String get artistsUnknownArtist => '未知艺术家';
+
+  @override
+  String get artistsSearchHint => '搜索艺术家';
+
+  @override
+  String get albumsSearchHint => '搜索专辑';
+
+  @override
+  String get menuAlbums => '专辑';
+
+  @override
+  String get albumsUnknownAlbum => '未知专辑';
+
+  @override
   String get menuPlaylists => '歌单';
 
   @override
@@ -2779,6 +2797,24 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get menuSongList => '歌曲列表';
 
   @override
+  String get menuArtists => '艺术家';
+
+  @override
+  String get artistsUnknownArtist => '未知艺术家';
+
+  @override
+  String get artistsSearchHint => '搜索艺术家';
+
+  @override
+  String get albumsSearchHint => '搜索专辑';
+
+  @override
+  String get menuAlbums => '专辑';
+
+  @override
+  String get albumsUnknownAlbum => '未知专辑';
+
+  @override
   String get menuPlaylists => '歌单';
 
   @override
@@ -5538,6 +5574,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get menuSongList => '歌曲列表';
+
+  @override
+  String get menuArtists => '藝人';
+
+  @override
+  String get artistsUnknownArtist => '未知藝人';
+
+  @override
+  String get artistsSearchHint => '搜尋藝人';
+
+  @override
+  String get albumsSearchHint => '搜尋專輯';
+
+  @override
+  String get menuAlbums => '專輯';
+
+  @override
+  String get albumsUnknownAlbum => '未知專輯';
 
   @override
   String get menuPlaylists => '歌單';

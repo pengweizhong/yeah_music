@@ -9,6 +9,12 @@ enum PlaybackSessionSurface {
   /// 最多播放全屏列表等（顺序为播放次数排行）
   mostPlayedList,
 
+  /// 某艺术家下列出的该歌手曲目队列
+  libraryByArtist,
+
+  /// 某专辑下列出的该专辑曲目队列
+  libraryByAlbum,
+
   /// 某用户歌单
   userPlaylist,
 

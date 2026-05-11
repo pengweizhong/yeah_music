@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/pages/albums_page.dart';
+import 'package:yeah_music/pages/artists_page.dart';
 import 'package:yeah_music/pages/playlist_page.dart';
 import 'package:yeah_music/pages/setting/folder_page_setting.dart';
 import 'package:yeah_music/pages/setting_page.dart';
@@ -107,6 +109,16 @@ class MacosMainSidebar extends StatelessWidget {
               label: Text(l10n.menuSongList),
             ),
             NavigationRailDestination(
+              icon: const Icon(Icons.person_outline_rounded),
+              selectedIcon: const Icon(Icons.person_rounded),
+              label: Text(l10n.menuArtists),
+            ),
+            NavigationRailDestination(
+              icon: const Icon(Icons.album_outlined),
+              selectedIcon: const Icon(Icons.album_rounded),
+              label: Text(l10n.menuAlbums),
+            ),
+            NavigationRailDestination(
               icon: const Icon(Icons.folder_copy_outlined),
               selectedIcon: const Icon(Icons.folder_copy_rounded),
               label: Text(l10n.menuPlaylists),
@@ -133,14 +145,25 @@ class MacosMainSidebar extends StatelessWidget {
                 break;
               case 1:
                 _push(context, const PlayListPage());
+                break;
               case 2:
-                _push(context, const StoragePlayListPage());
+                _push(context, const ArtistsBrowserPage());
+                break;
               case 3:
-                _push(context, FolderPageSettings());
+                _push(context, const AlbumsBrowserPage());
+                break;
               case 4:
-                _push(context, const StatisticsPage());
+                _push(context, const StoragePlayListPage());
+                break;
               case 5:
+                _push(context, FolderPageSettings());
+                break;
+              case 6:
+                _push(context, const StatisticsPage());
+                break;
+              case 7:
                 _push(context, SettingPage());
+                break;
             }
           },
         ),

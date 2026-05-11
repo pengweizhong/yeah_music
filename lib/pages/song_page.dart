@@ -188,6 +188,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         final keepNonLibrary =
             playListProvider.playbackSessionIsRecentList ||
             playListProvider.playbackSessionIsMostPlayedList ||
+            playListProvider.playbackSessionIsLibraryByArtist ||
+            playListProvider.playbackSessionIsLibraryByAlbum ||
             playListProvider.playbackSessionIsUserPlaylistKind ||
             playListProvider.playbackSessionIsAdHoc;
         if (!keepNonLibrary) {
