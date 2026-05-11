@@ -3,9 +3,11 @@ import 'dart:ui' show ImageFilter;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
+import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/playback_shortcut_controller.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -702,6 +704,22 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
           userPlaylistProvider: userPl,
           sel: choice,
         );
+        if (!context.mounted) return;
+        if (choice.restorePlaylists) {
+          final pl = context.read<PlayListProvider>();
+          final folder = context.read<FolderProvider>();
+          if (!pl.initialized) {
+            await pl.init(
+              folder,
+              oneDrive: od,
+              userPlaylists: userPl,
+            );
+          } else {
+            await pl.refreshOneDriveLibraryOverlay(od);
+          }
+          if (!context.mounted) return;
+          await userPl.remapAllPlaylistPathsFromLibrary(pl.libraryMergedSongs);
+        }
         if (!context.mounted) return;
         await _reloadAfterCloudRestore(context);
       } on StateError catch (e) {

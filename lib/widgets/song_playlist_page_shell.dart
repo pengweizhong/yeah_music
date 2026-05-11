@@ -136,8 +136,10 @@ class SongPlaylistSongListView extends StatelessWidget {
     final bottomPad =
         songPlaylistListBottomPadding(context) + listBottomInsetExtra;
     final effectiveItemExtent = effectiveSongPlaylistRowExtent(itemExtent);
-    return Consumer<PlayListProvider>(
-      builder: (context, playList, _) {
+    final playList = context.read<PlayListProvider>();
+    return Selector<PlayListProvider, String>(
+      selector: (_, p) => normSongPath(p.currentSong?.path ?? ''),
+      builder: (context, currentPathNorm, _) {
         Widget listCore = ListView.builder(
           controller: scrollController,
           physics: physics,
@@ -147,9 +149,8 @@ class SongPlaylistSongListView extends StatelessWidget {
           itemCount: songs.length,
           itemBuilder: (context, index) {
             final song = songs[index];
-            final cur = playList.currentSong;
-            final isRowCurrent =
-                cur != null && songPathsEqual(song.path, cur.path);
+            final isRowCurrent = currentPathNorm.isNotEmpty &&
+                normSongPath(song.path) == currentPathNorm;
             return itemBuilder(context, song, index, isRowCurrent);
           },
         );

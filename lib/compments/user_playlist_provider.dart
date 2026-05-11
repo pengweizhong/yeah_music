@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/file_utils.dart';
@@ -161,7 +162,7 @@ Song? _pickUniqueByTitleNormAgainstLibrary(String storedPath, List<Song> all) {
   return hit;
 }
 
-/// 歌单内已失效路径 → 在 [librarySongs] 中重绑：先文件名，再曲库内嵌标题+艺人（含从文件名拆分的两种顺序）。
+/// 歌单内已失效路径 → 在 [librarySongs] 中重绑：先文件名（含 OneDrive 点播 `{id}_远端名.ext` 的远端名别名），再曲库内嵌标题+艺人（含从文件名拆分的两种顺序）。
 Song? _remapStalePlaylistPathToLibrarySong(
   String storedPath,
   _PlaylistPathRemapIndexes idx,
@@ -169,7 +170,13 @@ Song? _remapStalePlaylistPathToLibrarySong(
   final base = p.basename(storedPath).toLowerCase();
   if (base.isEmpty) return null;
 
-  final byBase = idx.byBasenameLower[base];
+  var byBase = idx.byBasenameLower[base];
+  if (byBase == null || byBase.isEmpty) {
+    final fromOd = OneDriveConfig.cacheBasenameRemoteSuffixLower(base);
+    if (fromOd != null) {
+      byBase = idx.byBasenameLower[fromOd];
+    }
+  }
   if (byBase != null && byBase.isNotEmpty) {
     if (byBase.length == 1) return byBase.single;
     final narrowed = _pickUniqueByStemAgainstBasenamePool(byBase, storedPath);
@@ -203,12 +210,26 @@ class _PlaylistPathRemapIndexes {
     final byNormPath = <String, Song>{};
     final byBasenameLower = <String, List<Song>>{};
     final byTitleArtistKey = <String, List<Song>>{};
+    void addBasenameKey(String key, Song song) {
+      if (key.isEmpty) return;
+      final list = byBasenameLower.putIfAbsent(key, () => []);
+      final nk = normSongPath(song.path);
+      for (final e in list) {
+        if (normSongPath(e.path) == nk) return;
+      }
+      list.add(song);
+    }
+
     for (final s in librarySongs) {
       final nk = normSongPath(s.path);
       if (nk.isEmpty) continue;
       byNormPath.putIfAbsent(nk, () => s);
       final b = p.basename(s.path).toLowerCase();
-      byBasenameLower.putIfAbsent(b, () => []).add(s);
+      addBasenameKey(b, s);
+      final od = OneDriveConfig.cacheBasenameRemoteSuffixLower(b);
+      if (od != null) {
+        addBasenameKey(od, s);
+      }
       final tk = _titleArtistMatchKey(
         _effectiveSongTitleForPlaylistMatch(s),
         s.artist?.trim() ?? '',
@@ -333,6 +354,10 @@ class UserPlaylistProvider extends ChangeNotifier {
   String? _homeLibraryDisplayName;
   bool _initialized = false;
 
+  /// 歌单详情 [songsForPlaylistWithDiskFallback] 跨路由缓存；键含 [PlayListProvider.libraryMergeEpoch]，
+  /// 合并曲库失效后会自动换 key 重算。
+  final Map<String, Future<List<Song>>> _playlistDetailResolveFutures = {};
+
   List<UserPlaylist> get playlists => List.unmodifiable(_playlists);
 
   bool get initialized => _initialized;
@@ -390,6 +415,31 @@ class UserPlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 使 [resolvedPlaylistSongsForDetailCached] 缓存失效；[playlistId] 为 null 时清空全部。
+  void evictPlaylistDetailResolveCache([String? playlistId]) {
+    if (playlistId == null) {
+      _playlistDetailResolveFutures.clear();
+      return;
+    }
+    final prefix = '$playlistId\x1e';
+    _playlistDetailResolveFutures.removeWhere((k, _) => k.startsWith(prefix));
+  }
+
+  void _pruneStalePlaylistDetailResolveFutures(
+    String playlistId,
+    int mergeEpoch,
+    String pathSig,
+  ) {
+    _playlistDetailResolveFutures.removeWhere((k, _) {
+      if (!k.startsWith('$playlistId\x1e')) return false;
+      final parts = k.split('\x1e');
+      if (parts.length < 3) return false;
+      final ep = int.tryParse(parts[1]) ?? -1;
+      final sig = parts.sublist(2).join('\x1e');
+      return sig == pathSig && ep != mergeEpoch;
+    });
+  }
+
   /// 从 Hive 重新载入用户歌单与首页横滑顺序（下拉刷新与其它持久化同步）。
   Future<void> reloadFromHive() async {
     final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
@@ -406,6 +456,7 @@ class UserPlaylistProvider extends ChangeNotifier {
     _homeCarouselOrderKeys = _parseCarouselOrderRaw(box.get(_carouselOrderKey));
     _loadHomeLibrarySlotFromBox(box);
     _initialized = true;
+    _playlistDetailResolveFutures.clear();
     notifyListeners();
   }
 
@@ -700,6 +751,7 @@ class UserPlaylistProvider extends ChangeNotifier {
     if (playlist != null) {
       _deleteCoverImageFileIfAny(playlist.coverStyle);
     }
+    evictPlaylistDetailResolveCache(playlistId);
     _playlists.removeWhere((playlist) => playlist.id == playlistId);
     _homeCarouselOrderKeys.removeWhere((k) => k == playlistId);
     await _save();
@@ -711,6 +763,7 @@ class UserPlaylistProvider extends ChangeNotifier {
   Future<void> deletePlaylists(Iterable<String> playlistIds) async {
     final idSet = playlistIds.toSet();
     if (idSet.isEmpty) return;
+    evictPlaylistDetailResolveCache();
     for (final playlist in _playlists) {
       if (idSet.contains(playlist.id)) {
         _deleteCoverImageFileIfAny(playlist.coverStyle);
@@ -745,6 +798,7 @@ class UserPlaylistProvider extends ChangeNotifier {
         playlist.songPaths.removeWhere((p) => normSongPath(p) == sn);
       }
     }
+    evictPlaylistDetailResolveCache();
     await _save();
     notifyListeners();
   }
@@ -756,6 +810,9 @@ class UserPlaylistProvider extends ChangeNotifier {
       if (!has) {
         playlist.songPaths.add(song.path);
       }
+    }
+    for (final id in playlistIds) {
+      evictPlaylistDetailResolveCache(id);
     }
     await _save();
     notifyListeners();
@@ -799,6 +856,7 @@ class UserPlaylistProvider extends ChangeNotifier {
         playlist.songPaths.removeWhere((p) => norms.contains(normSongPath(p)));
       }
     }
+    evictPlaylistDetailResolveCache();
     await _save();
     notifyListeners();
   }
@@ -808,6 +866,7 @@ class UserPlaylistProvider extends ChangeNotifier {
     if (playlist == null) return;
     final n = normSongPath(song.path);
     playlist.songPaths.removeWhere((p) => normSongPath(p) == n);
+    evictPlaylistDetailResolveCache(playlistId);
     await _save();
     notifyListeners();
   }
@@ -826,6 +885,7 @@ class UserPlaylistProvider extends ChangeNotifier {
       if (playlist.songPaths.length != before) changed = true;
     }
     if (!changed) return;
+    evictPlaylistDetailResolveCache();
     await _save();
     notifyListeners();
   }
@@ -845,8 +905,29 @@ class UserPlaylistProvider extends ChangeNotifier {
       }
     }
     if (!changed) return;
+    evictPlaylistDetailResolveCache();
     await _save();
     notifyListeners();
+  }
+
+  /// 与 [songsForPlaylistWithDiskFallback] 相同解析，但在「歌单 id + 路径签名 + 合并曲库世代」不变时
+  /// 复用同一 [Future]，避免每次进入详情页重复全量读盘校验（例如 70 首歌本机均存在仍每次 await 70 次）。
+  Future<List<Song>> resolvedPlaylistSongsForDetailCached({
+    required UserPlaylist playlist,
+    required int libraryMergeEpoch,
+    required List<Song> libraryMergedSongs,
+  }) {
+    final pathSig = playlist.songPaths.join('\x1e');
+    _pruneStalePlaylistDetailResolveFutures(
+      playlist.id,
+      libraryMergeEpoch,
+      pathSig,
+    );
+    final key = '${playlist.id}\x1e$libraryMergeEpoch\x1e$pathSig';
+    return _playlistDetailResolveFutures.putIfAbsent(
+      key,
+      () => songsForPlaylistWithDiskFallback(playlist, libraryMergedSongs),
+    );
   }
 
   Map<String, Song> _indexLibraryByNormPath(List<Song> allSongs) {
@@ -872,9 +953,12 @@ class UserPlaylistProvider extends ChangeNotifier {
   /// 缓存未及时并入 [PlayListProvider]、仅首页等处以 [UserPlaylist.songPaths] 计数等情形）。
   ///
   /// 不在此做「失效路径 → 曲库重绑」：避免每次进入歌单详情都扫描、写 Hive。批量重绑仅在
-  /// [remapAllPlaylistPathsFromLibrary]（[PlayListProvider.init] 曲库就绪后调用一次）中执行。
+  /// OneDrive 云端恢复歌单后由 [remapAllPlaylistPathsFromLibrary] 触发。
   ///
   /// 曲库与本机均无有效文件时仍追加占位 [Song]（标题为路径文件名），与 [songPaths] 条数一致，便于用户手动从歌单移除。
+  ///
+  /// 合并曲库命中时仍会校验 [Song.path] 在本机是否存在：恢复歌单后曲库索引可能仍指向已删文件，此时与未命中一样
+  /// 使用 [playlistEntryMissingOnDevice] 占位行（列表标题呈 error 色）。
   Future<List<Song>> songsForPlaylistWithDiskFallback(
     UserPlaylist playlist,
     List<Song> librarySongs,
@@ -887,6 +971,17 @@ class UserPlaylistProvider extends ChangeNotifier {
       final k = normSongPath(trimmed);
       final fromLib = byNormPath[k];
       if (fromLib != null) {
+        if (!kIsWeb) {
+          try {
+            if (!await File(fromLib.path).exists()) {
+              out.add(_userPlaylistMissingFileStubSong(trimmed));
+              continue;
+            }
+          } catch (_) {
+            out.add(_userPlaylistMissingFileStubSong(trimmed));
+            continue;
+          }
+        }
         out.add(fromLib);
         continue;
       }
@@ -910,10 +1005,10 @@ class UserPlaylistProvider extends ChangeNotifier {
     return out;
   }
 
-  /// 曲库初始化后批量修正歌单内「路径失效但曲库仍有同一首歌」的条目并持久化，便于导出/OneDrive。
+  /// 批量修正歌单内「路径失效但曲库仍有同一首歌」的条目并持久化（便于导出/本机路径迁移）。
   ///
-  /// 由 [PlayListProvider.init] 在加载文件夹与 OneDrive 叠加、且 [UserPlaylistProvider.init] 完成后调用**一次**；
-  /// 不在进入歌单详情时重复触发。匹配规则见 [_remapStalePlaylistPathToLibrarySong]。
+  /// 仅在 **OneDrive 从云端恢复歌单** 后由设置页在刷新合并曲库后调用；不在冷启动或进入歌单详情时触发。
+  /// 匹配规则见 [_remapStalePlaylistPathToLibrarySong]。
   Future<void> remapAllPlaylistPathsFromLibrary(List<Song> librarySongs) async {
     if (kIsWeb || !_initialized || librarySongs.isEmpty) return;
     final idx = _PlaylistPathRemapIndexes.build(librarySongs);
@@ -941,6 +1036,7 @@ class UserPlaylistProvider extends ChangeNotifier {
       }
     }
     if (changed) {
+      evictPlaylistDetailResolveCache();
       await _save();
       notifyListeners();
     }
@@ -1316,6 +1412,7 @@ class UserPlaylistProvider extends ChangeNotifier {
     required bool replaceAll,
     Map<String, String>? playlistCoverFilesAbsolute,
   }) async {
+    evictPlaylistDetailResolveCache();
     final rawList = doc['playlists'] as List<dynamic>;
     final coverAssets = _playlistCoverImagesFromBackupDoc(doc);
     final parsed = <UserPlaylist>[];

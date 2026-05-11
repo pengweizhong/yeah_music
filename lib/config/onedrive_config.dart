@@ -74,4 +74,20 @@ abstract final class OneDriveConfig {
     if (u <= 0 || u >= fileBasename.length - 1) return false;
     return isAudioFileName(fileBasename.substring(u + 1));
   }
+
+  /// 点播落地文件名 `{id}_{safeRemote.ext}`（小写）中，可视为「远端文件名」参与歌单路径重绑的尾部。
+  ///
+  /// 首段须至少 6 字符且为 `[A-Za-z0-9_-]+`，避免把 `my_song.mp3` 误判为带前缀缓存名。
+  /// 与 [OneDriveController._localFileForPlayback] 的 `{itemId}_$safe` 约定一致。
+  static String? cacheBasenameRemoteSuffixLower(String fileBasenameLower) {
+    final b = fileBasenameLower.trim();
+    if (b.isEmpty) return null;
+    final u = b.indexOf('_');
+    if (u < 6 || u >= b.length - 1) return null;
+    final prefix = b.substring(0, u);
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(prefix)) return null;
+    final suffix = b.substring(u + 1);
+    if (!isAudioFileName(suffix)) return null;
+    return suffix;
+  }
 }

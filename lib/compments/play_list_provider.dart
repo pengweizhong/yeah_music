@@ -133,6 +133,11 @@ class PlayListProvider extends ChangeNotifier {
   /// 避免此前 [libraryMergedSongs] getter 每次都 [expand]+[toList] 分配新列表导致长列表/UI 卡顿。
   List<Song>? _cachedMergedLibrary;
 
+  /// 每次合并曲库缓存失效并重算索引时自增；供 UI [Selector] 窄依赖，避免绑整棵 [PlayListProvider]。
+  int _libraryMergeEpoch = 0;
+
+  int get libraryMergeEpoch => _libraryMergeEpoch;
+
   /// OneDrive 点播落地扫描结果（与文件夹曲目按路径去重后并入 [libraryMergedSongs] / [playList]）
   List<Song>? _onedriveCachedSongs;
 
@@ -307,6 +312,7 @@ class PlayListProvider extends ChangeNotifier {
 
   /// 合并曲库缓存失效时：按解码器当前在播路径重算 [_currentIndex]，避免列表合并顺序变化后「在播 A、UI 指向 B」。
   void _invalidateMergedLibraryCacheSyncingCurrentIndex() {
+    _libraryMergeEpoch++;
     _clearPlayListCache();
     _relocateCurrentIndexToMatchPlayingMedia();
   }
@@ -633,9 +639,7 @@ class PlayListProvider extends ChangeNotifier {
       await userPlaylists.init();
     }
 
-    if (userPlaylists != null) {
-      await userPlaylists.remapAllPlaylistPathsFromLibrary(libraryMergedSongs);
-    }
+    // 歌单「失效路径 → 曲库重绑」不在此批量执行；仅在 OneDrive 从云端恢复歌单后由设置页触发，避免冷启动与每次进歌单详情时全量扫描、写 Hive。
 
     // 加载上次播放
     await _restoreLastPlayedSnapshot(userPlaylists: userPlaylists);

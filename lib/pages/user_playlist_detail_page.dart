@@ -54,13 +54,11 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   SongListSortType _sortType = SongListSortType.name;
   bool _isAscending = true;
 
-  /// 与排序 / 歌单 path 组合一致时复用，避免 [Consumer2] 频繁重建时全量 [sortSongsCopy]
+  /// 与排序 / 歌单 path 组合一致时复用，避免上层频繁重建时全量 [sortSongsCopy]
   String? _memoOrderKey;
   List<Song>? _memoOrderedSongs;
 
-  /// [UserPlaylist.songPaths] 签名不变时复用同一解析 [Future]（含刷新 overlay + 读盘兜底）
-  String? _songsResolveKey;
-  Future<List<Song>>? _songsResolveFuture;
+  /// 曲目解析结果由 [UserPlaylistProvider.resolvedPlaylistSongsForDetailCached] 跨进入缓存。
 
   Future<List<Song>> _songsFuture(
     BuildContext context,
@@ -68,13 +66,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     PlayListProvider playList,
     UserPlaylistProvider userPl,
   ) {
-    final key = '${pl.id}\x1e${pl.songPaths.join('\x1e')}';
-    if (_songsResolveKey == key && _songsResolveFuture != null) {
-      return _songsResolveFuture!;
-    }
-    _songsResolveKey = key;
-    _songsResolveFuture = _loadResolvedSongs(context, pl, playList, userPl);
-    return _songsResolveFuture!;
+    return _loadResolvedSongs(context, pl, playList, userPl);
   }
 
   Future<List<Song>> _loadResolvedSongs(
@@ -94,11 +86,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       );
     }
     if (!context.mounted) return [];
-    await playList.refreshOneDriveLibraryOverlay(od);
-    if (!context.mounted) return [];
-    return userPl.songsForPlaylistWithDiskFallback(
-      pl,
-      playList.libraryMergedSongs,
+    // 合并曲库已在 [PlayListProvider.init] / 下载完成等处刷新；此处不再每次进页全量扫 OneDrive 缓存，避免列表整表重算与全局 notify。
+    // 须走带磁盘存在性校验的解析；详情页在 Provider 内按「歌单 id + 路径签名 + 合并曲库世代」跨进入复用 Future。
+    return userPl.resolvedPlaylistSongsForDetailCached(
+      playlist: pl,
+      libraryMergeEpoch: playList.libraryMergeEpoch,
+      libraryMergedSongs: playList.libraryMergedSongs,
     );
   }
 
@@ -179,11 +172,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
 
   void _invalidateResolvedSongsCache() {
     if (!mounted) return;
+    context
+        .read<UserPlaylistProvider>()
+        .evictPlaylistDetailResolveCache(widget.playlistId);
     setState(() {
       _memoOrderKey = null;
       _memoOrderedSongs = null;
-      _songsResolveKey = null;
-      _songsResolveFuture = null;
     });
   }
 
@@ -486,9 +480,24 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserPlaylistProvider, PlayListProvider>(
-      builder: (context, userPl, playList, _) {
-        final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Selector<UserPlaylistProvider, String>(
+      selector: (_, u) {
+        for (final p in u.playlists) {
+          if (p.id == widget.playlistId) {
+            return '${p.name}\x1e${p.songPaths.length}\x1e${p.songPaths.join('\x1e')}';
+          }
+        }
+        return '';
+      },
+      builder: (context, userRev, _) {
+        if (userRev.isEmpty) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.playlistNotFound)),
+            body: Center(child: Text(l10n.playlistNotFoundMessage)),
+          );
+        }
+        final userPl = context.read<UserPlaylistProvider>();
         UserPlaylist? playlist;
         for (final p in userPl.playlists) {
           if (p.id == widget.playlistId) {
@@ -508,100 +517,75 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
           for (var i = 0; i < pl.songPaths.length; i++) pl.songPaths[i]: i,
         };
 
-        return FutureBuilder<List<Song>>(
-          future: _songsFuture(context, pl, playList, userPl),
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return SongPlaylistThemedScaffold(
-                appBar: AppBar(
-                  title: Text(
-                    pl.name,
-                    style: TextStyle(color: context.gradFg(0.96)),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  iconTheme: IconThemeData(color: context.gradFg()),
-                ),
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              );
-            }
-            if (snap.hasError) {
-              return SongPlaylistThemedScaffold(
-                appBar: AppBar(
-                  title: Text(
-                    pl.name,
-                    style: TextStyle(color: context.gradFg(0.96)),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  iconTheme: IconThemeData(color: context.gradFg()),
-                ),
-                body: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      '${snap.error}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: context.gradFg(0.86)),
+        return Selector<PlayListProvider, (bool, int)>(
+          selector: (_, p) => (p.initialized, p.libraryMergeEpoch),
+          builder: (context, (bool, int) _, _) {
+            final playList = context.read<PlayListProvider>();
+            return FutureBuilder<List<Song>>(
+              future: _songsFuture(context, pl, playList, userPl),
+              builder: (context, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return SongPlaylistThemedScaffold(
+                    appBar: AppBar(
+                      title: Text(
+                        pl.name,
+                        style: TextStyle(color: context.gradFg(0.96)),
+                      ),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      iconTheme: IconThemeData(color: context.gradFg()),
                     ),
-                  ),
-                ),
-              );
-            }
+                    body: Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  );
+                }
+                if (snap.hasError) {
+                  return SongPlaylistThemedScaffold(
+                    appBar: AppBar(
+                      title: Text(
+                        pl.name,
+                        style: TextStyle(color: context.gradFg(0.96)),
+                      ),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      iconTheme: IconThemeData(color: context.gradFg()),
+                    ),
+                    body: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          '${snap.error}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: context.gradFg(0.86)),
+                        ),
+                      ),
+                    ),
+                  );
+                }
 
-            final rawSongs = snap.data ?? [];
-            final orderKey =
-                '${pl.songPaths.join('\x1e')}|$_sortType|$_isAscending|${pl.id}';
-            final List<Song> orderedSongs;
-            if (_memoOrderKey == orderKey && _memoOrderedSongs != null) {
-              orderedSongs = _memoOrderedSongs!;
-            } else {
-              orderedSongs = sortSongsCopy(
-                rawSongs,
-                _sortType,
-                _isAscending,
-                pathAddIndex: pathAddIndex,
-              );
-              _memoOrderKey = orderKey;
-              _memoOrderedSongs = orderedSongs;
-            }
+                final rawSongs = snap.data ?? [];
+                final orderKey =
+                    '${pl.songPaths.join('\x1e')}|$_sortType|$_isAscending|${pl.id}';
+                final List<Song> orderedSongs;
+                if (_memoOrderKey == orderKey && _memoOrderedSongs != null) {
+                  orderedSongs = _memoOrderedSongs!;
+                } else {
+                  orderedSongs = sortSongsCopy(
+                    rawSongs,
+                    _sortType,
+                    _isAscending,
+                    pathAddIndex: pathAddIndex,
+                  );
+                  _memoOrderKey = orderKey;
+                  _memoOrderedSongs = orderedSongs;
+                }
 
-            _lastOrderedSongs = orderedSongs;
-            final current = playList.currentSong;
-            if (current == null) {
-              _lastAutoScrollPathNorm = null;
-              _autoscrollInFlight = false;
-            } else if (orderedSongs.isNotEmpty) {
-              final n = normSongPath(current.path);
-              if (n != _lastAutoScrollPathNorm && !_autoscrollInFlight) {
-                _autoscrollInFlight = true;
-                scheduleScrollListToCurrentSong(
-                  context: context,
-                  controller: _listScrollController,
-                  songs: orderedSongs,
-                  itemExtent: effectiveSongPlaylistRowExtent(),
-                  playList: playList,
-                  scrollToTopWhenCurrentMissingFromList: true,
-                  onScrollApplied: (path) {
-                    if (!mounted) return;
-                    setState(() {
-                      _lastAutoScrollPathNorm = path;
-                      _autoscrollInFlight = false;
-                    });
-                  },
-                  onScrollFailed: () {
-                    if (!mounted) return;
-                    setState(() => _autoscrollInFlight = false);
-                  },
-                );
-              }
-            }
+                _lastOrderedSongs = orderedSongs;
 
-            return PopScope(
+                final scrollableBody = PopScope(
               canPop: !_batchSelect,
               onPopInvokedWithResult: (didPop, _) {
                 if (!didPop && _batchSelect) {
@@ -754,8 +738,6 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                     onDismissed: (_) {
                                       _memoOrderKey = null;
                                       _memoOrderedSongs = null;
-                                      _songsResolveKey = null;
-                                      _songsResolveFuture = null;
                                       userPl.removeSongFromPlaylist(
                                         pl.id,
                                         song,
@@ -830,8 +812,48 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                               ),
                           ],
                         ),
-                ),
-              ),
+                      ),
+                    ),
+                );
+
+                return Selector<PlayListProvider, String>(
+                  selector: (_, p) =>
+                      normSongPath(p.currentSong?.path ?? ''),
+                  builder: (context, head, child) {
+                    final playListProv = context.read<PlayListProvider>();
+                    if (head.isEmpty) {
+                      _lastAutoScrollPathNorm = null;
+                      _autoscrollInFlight = false;
+                    } else if (orderedSongs.isNotEmpty) {
+                      if (head != _lastAutoScrollPathNorm &&
+                          !_autoscrollInFlight) {
+                        _autoscrollInFlight = true;
+                        scheduleScrollListToCurrentSong(
+                          context: context,
+                          controller: _listScrollController,
+                          songs: orderedSongs,
+                          itemExtent: effectiveSongPlaylistRowExtent(),
+                          playList: playListProv,
+                          scrollToTopWhenCurrentMissingFromList: true,
+                          onScrollApplied: (path) {
+                            if (!mounted) return;
+                            setState(() {
+                              _lastAutoScrollPathNorm = path;
+                              _autoscrollInFlight = false;
+                            });
+                          },
+                          onScrollFailed: () {
+                            if (!mounted) return;
+                            setState(() => _autoscrollInFlight = false);
+                          },
+                        );
+                      }
+                    }
+                    return child!;
+                  },
+                  child: scrollableBody,
+                );
+              },
             );
           },
         );
