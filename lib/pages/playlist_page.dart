@@ -720,24 +720,30 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                                     constraints: BoxConstraints(
                                       minHeight: constraints.maxHeight,
                                     ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.music_note,
-                                          size: 64,
-                                          color: context.gradFg(0.28),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          l10n.songsListEmpty,
-                                          style: TextStyle(
-                                            color: context.gradFg(0.52),
-                                            fontSize: 16,
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.music_note,
+                                            size: 64,
+                                            color: context.gradFg(0.28),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            l10n.songsListEmpty,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: context.gradFg(0.52),
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
