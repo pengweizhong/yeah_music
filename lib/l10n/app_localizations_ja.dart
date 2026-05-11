@@ -1914,6 +1914,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get libraryReloadPullNoFolders => '先に「音楽ソース」でフォルダを追加してください。';
+
+  @override
   String get folderRemoveTitle => 'このフォルダを外しますか？';
 
   @override

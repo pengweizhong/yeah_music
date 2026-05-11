@@ -824,6 +824,7 @@
       }
     }
   },
+  "libraryReloadPullNoFolders": "请先在「音乐源」中添加目录。",
   "folderRemoveTitle": "确认移除？",
   "folderRemoveMessage": "是否移除目录：{name}（仅移除引用，不删磁盘上音乐文件）",
   "@folderRemoveMessage": {

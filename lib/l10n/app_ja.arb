@@ -824,6 +824,7 @@
       }
     }
   },
+  "libraryReloadPullNoFolders": "先に「音楽ソース」でフォルダを追加してください。",
   "folderRemoveTitle": "このフォルダを外しますか？",
   "folderRemoveMessage": "「{name}」をライブラリから外しますか？（ディスク上のファイルは削除されません）",
   "@folderRemoveMessage": {

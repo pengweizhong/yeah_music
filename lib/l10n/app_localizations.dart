@@ -3639,6 +3639,12 @@ abstract class AppLocalizations {
   /// **'Failed to load: {error}'**
   String folderLoadFailed(String error);
 
+  /// No description provided for @libraryReloadPullNoFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a media folder in Music source first.'**
+  String get libraryReloadPullNoFolders;
+
   /// No description provided for @folderRemoveTitle.
   ///
   /// In en, this message translates to:

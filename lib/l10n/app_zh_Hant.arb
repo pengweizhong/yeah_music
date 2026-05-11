@@ -824,6 +824,7 @@
       }
     }
   },
+  "libraryReloadPullNoFolders": "請先在「音樂來源」中新增資料夾。",
   "folderRemoveTitle": "確認移除？",
   "folderRemoveMessage": "是否移除目錄：{name}（僅移除參考，不刪磁碟上音樂檔）",
   "@folderRemoveMessage": {

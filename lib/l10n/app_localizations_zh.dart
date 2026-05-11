@@ -1888,6 +1888,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get libraryReloadPullNoFolders => '请先在「音乐源」中添加目录。';
+
+  @override
   String get folderRemoveTitle => '确认移除？';
 
   @override
@@ -4665,6 +4668,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String folderLoadFailed(String error) {
     return '加载失败：$error';
   }
+
+  @override
+  String get libraryReloadPullNoFolders => '请先在「音乐源」中添加目录。';
 
   @override
   String get folderRemoveTitle => '确认移除？';
@@ -7445,6 +7451,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String folderLoadFailed(String error) {
     return '載入失敗：$error';
   }
+
+  @override
+  String get libraryReloadPullNoFolders => '請先在「音樂來源」中新增資料夾。';
 
   @override
   String get folderRemoveTitle => '確認移除？';

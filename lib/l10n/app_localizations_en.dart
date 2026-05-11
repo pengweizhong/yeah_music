@@ -1985,6 +1985,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get libraryReloadPullNoFolders =>
+      'Add a media folder in Music source first.';
+
+  @override
   String get folderRemoveTitle => 'Remove this folder?';
 
   @override

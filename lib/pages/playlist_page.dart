@@ -394,6 +394,54 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     }
   }
 
+  /// 全部歌曲页顶部下拉：重新扫描并加载所有「音乐源」目录（与设置页单目录刷新逻辑一致）。
+  Future<void> _reloadAllLibraryFolders() async {
+    if (_batchSelect || !mounted) return;
+    final folderProvider = context.read<FolderProvider>();
+    final playListProvider = context.read<PlayListProvider>();
+    final l10n = AppLocalizations.of(context);
+    final folders = folderProvider.folders;
+    if (folders.isEmpty) {
+      showAppSnackBar(
+        context,
+        l10n.libraryReloadPullNoFolders,
+        kind: AppSnackKind.neutral,
+      );
+      return;
+    }
+
+    try {
+      for (final folder in folders) {
+        await folderProvider.flushSongToFolder(folder, true);
+        playListProvider.flushPlaylist(folder);
+      }
+      if (!mounted) return;
+      setState(() {
+        _frozenPathKeys = null;
+        _lastAutoScrollPathNorm = null;
+        _autoscrollInFlight = false;
+      });
+      if (!mounted) return;
+      final n = playListProvider.libraryMergedSongs.length;
+      showAppSnackBar(
+        context,
+        l10n.folderLoadOk(n),
+        kind: AppSnackKind.success,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e, st) {
+      appLog.e('library pull reload failed', error: e, stackTrace: st);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          l10n.folderLoadFailed('$e'),
+          kind: AppSnackKind.error,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    }
+  }
+
   Widget _libraryBatchActionBar(BuildContext context, AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
@@ -535,6 +583,12 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
           }
         }
         final l10n = AppLocalizations.of(context);
+        final theme = Theme.of(context);
+        final light = theme.brightness == Brightness.light;
+        final refreshIndColor = light
+            ? theme.colorScheme.primary
+            : Colors.white;
+        final refreshIndBg = light ? Colors.white : Colors.black54;
         return PopScope(
           canPop: !_batchSelect,
           onPopInvokedWithResult: (didPop, _) {
@@ -653,24 +707,41 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                 children: [
                   Expanded(
                     child: _filteredSongs.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.music_note,
-                                  size: 64,
-                                  color: context.gradFg(0.28),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.songsListEmpty,
-                                  style: TextStyle(
-                                    color: context.gradFg(0.52),
-                                    fontSize: 16,
+                        ? RefreshIndicator(
+                            onRefresh: _reloadAllLibraryFolders,
+                            color: refreshIndColor,
+                            backgroundColor: refreshIndBg,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                return SingleChildScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: constraints.maxHeight,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.music_note,
+                                          size: 64,
+                                          color: context.gradFg(0.28),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          l10n.songsListEmpty,
+                                          style: TextStyle(
+                                            color: context.gradFg(0.52),
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
                           )
                         : SongPlaylistSongListView(
@@ -678,6 +749,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                             songs: _filteredSongs,
                             locateFabOnlyWhenLibrarySession: true,
                             listBottomInsetExtra: _batchSelect ? 64 : 0,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            onRefresh: _reloadAllLibraryFolders,
+                            refreshIndicatorColor: refreshIndColor,
+                            refreshIndicatorBackgroundColor: refreshIndBg,
                             itemBuilder: (context, song, index, isRowCurrent) {
                               return CompactSongListRow(
                                 key: ValueKey<String>(

@@ -824,6 +824,7 @@
       }
     }
   },
+  "libraryReloadPullNoFolders": "Add a media folder in Music source first.",
   "folderRemoveTitle": "Remove this folder?",
   "folderRemoveMessage": "Remove {name} from the library? Music files on disk are not deleted.",
   "@folderRemoveMessage": {
