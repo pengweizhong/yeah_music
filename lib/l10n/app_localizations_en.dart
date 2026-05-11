@@ -1694,6 +1694,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get songPageMoreSheetTitle => 'More actions';
 
   @override
+  String get songPageMoreSoundEffects => 'Sound effects';
+
+  @override
+  String get songPageMoreSoundEffectsSubtitle => 'EQ presets (Android)';
+
+  @override
+  String get playbackSoundPresetSheetTitle => 'Sound effects';
+
+  @override
+  String get playbackSoundPresetUnsupportedBody =>
+      'Hardware EQ is only applied on Android while audio is playing. On other platforms you can still pick a preset; it will apply the next time you play on a supported device.';
+
+  @override
+  String get playbackSoundPresetStandard => 'Original';
+
+  @override
+  String get playbackSoundPresetPureVocals => 'Vocal clarity';
+
+  @override
+  String get playbackSoundPresetSpatialWide => '3D wide';
+
+  @override
+  String get playbackSoundPresetRock => 'Rock';
+
+  @override
+  String get playbackSoundPresetPop => 'Pop';
+
+  @override
+  String get playbackSoundPresetElectronic => 'Electronic';
+
+  @override
+  String get playbackSoundPresetClassical => 'Classical';
+
+  @override
+  String get playbackSoundPresetJazz => 'Jazz';
+
+  @override
+  String get playbackSoundPresetLiveStage => 'Live stage';
+
+  @override
+  String get playbackSoundPresetCozyRoom => 'Room (bath-like)';
+
+  @override
+  String get playbackSoundPresetPodcast => 'Podcast & voice';
+
+  @override
+  String get playbackSoundPresetMetal => 'Metal';
+
+  @override
+  String get playbackSoundPresetHipHop => 'Hip-hop';
+
+  @override
+  String get playbackSoundPresetLoFi => 'Lo-fi';
+
+  @override
+  String get playbackSoundPresetNight => 'Night listening';
+
+  @override
+  String get playbackSoundPresetBassBoost => 'Bass boost';
+
+  @override
+  String get playbackSoundPresetCustom => 'Custom';
+
+  @override
+  String get playbackSoundCustomTileSubtitle =>
+      'Adjust each frequency band (Android)';
+
+  @override
+  String get playbackSoundCustomSheetTitle => 'Custom equalizer';
+
+  @override
+  String get playbackSoundCustomReset => 'Flat (reset)';
+
+  @override
+  String get playbackSoundCustomSaveApply => 'Save & apply';
+
+  @override
+  String get playbackSoundCustomLoadError =>
+      'Could not load the equalizer. Start playback, then open this screen again.';
+
+  @override
   String get songPageMoreQueryMetadata => 'View audio metadata';
 
   @override

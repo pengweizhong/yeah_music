@@ -21,6 +21,7 @@ import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
+import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/music_service.dart';
@@ -47,6 +48,7 @@ import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
+import 'package:yeah_music/widgets/playback_sound_preset_sheet.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
@@ -1567,6 +1569,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                               _showTimerSheet(navigatorContext, provider);
                             });
                           },
+                        ),
+                        _SongMoreSoundEffectsListTile(
+                          sheetContext: sheetContext,
+                          navigatorContext: navigatorContext,
+                          parentMounted: () => mounted,
                         ),
                         ListTile(
                           leading: const Icon(Icons.info_outline_rounded),
@@ -3505,6 +3512,76 @@ class _DesktopHoverMagnifyCoverState extends State<_DesktopHoverMagnifyCover> {
         alignment: Alignment.center,
         child: widget.child,
       ),
+    );
+  }
+}
+
+/// 播放页「更多」里音效一行：标题带当前预设名，并在 [SettingsService.playbackSoundPresetRevision] 变化时刷新。
+class _SongMoreSoundEffectsListTile extends StatefulWidget {
+  const _SongMoreSoundEffectsListTile({
+    required this.sheetContext,
+    required this.navigatorContext,
+    required this.parentMounted,
+  });
+
+  final BuildContext sheetContext;
+  final BuildContext navigatorContext;
+  final bool Function() parentMounted;
+
+  @override
+  State<_SongMoreSoundEffectsListTile> createState() =>
+      _SongMoreSoundEffectsListTileState();
+}
+
+class _SongMoreSoundEffectsListTileState extends State<_SongMoreSoundEffectsListTile> {
+  Future<PlaybackSoundPreset>? _presetFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _presetFuture = SettingsService.loadPlaybackSoundPreset();
+    SettingsService.playbackSoundPresetRevision.addListener(_onPresetRevision);
+  }
+
+  @override
+  void dispose() {
+    SettingsService.playbackSoundPresetRevision.removeListener(
+      _onPresetRevision,
+    );
+    super.dispose();
+  }
+
+  void _onPresetRevision() {
+    if (mounted) {
+      setState(() {
+        _presetFuture = SettingsService.loadPlaybackSoundPreset();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(widget.sheetContext);
+    return FutureBuilder<PlaybackSoundPreset>(
+      future: _presetFuture,
+      builder: (context, snap) {
+        final preset = snap.data;
+        final titleText = preset == null
+            ? l10n.songPageMoreSoundEffects
+            : '${l10n.songPageMoreSoundEffects}（${playbackSoundPresetTitle(preset, l10n)}）';
+        return ListTile(
+          leading: const Icon(Icons.equalizer_rounded),
+          title: Text(titleText),
+          subtitle: Text(l10n.songPageMoreSoundEffectsSubtitle),
+          onTap: () {
+            Navigator.pop(widget.sheetContext);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!widget.parentMounted()) return;
+              showPlaybackSoundPresetSheet(widget.navigatorContext);
+            });
+          },
+        );
+      },
     );
   }
 }

@@ -152,6 +152,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
     }
     if (!mounted) return;
     MusicService.attachListeningTimeTracker();
+    MusicService.attachAndroidSoundPresetSessionListener();
     _disposePreHiveResources();
     appLog.i('应用启动成功');
   }

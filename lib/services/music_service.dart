@@ -17,6 +17,7 @@ import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
+import 'package:yeah_music/services/playback_sound_effect_service.dart';
 
 int _coverContentFingerprint(List<int> bytes) {
   final len = bytes.length;
@@ -31,7 +32,55 @@ int _coverContentFingerprint(List<int> bytes) {
 }
 
 class MusicService {
-  static final _player = AudioPlayer();
+  static AndroidLoudnessEnhancer? _androidLoudnessEnhancer;
+  static AndroidEqualizer? _androidEqualizer;
+
+  static final AudioPlayer _player = _createAudioPlayer();
+
+  static AudioPlayer _createAudioPlayer() {
+    if (Platform.isAndroid) {
+      _androidLoudnessEnhancer = AndroidLoudnessEnhancer();
+      _androidEqualizer = AndroidEqualizer();
+      return AudioPlayer(
+        /// 硬件 offload 走解码旁路时，系统均衡器往往不生效；显式关闭以保证 EQ 可听。
+        androidAudioOffloadPreferences: const AndroidAudioOffloadPreferences(
+          audioOffloadMode: AndroidAudioOffloadMode.disabled,
+        ),
+        audioPipeline: AudioPipeline(
+          androidAudioEffects: [
+            _androidLoudnessEnhancer!,
+            _androidEqualizer!,
+          ],
+        ),
+      );
+    }
+    return AudioPlayer();
+  }
+
+  static StreamSubscription<int?>? _androidSoundPresetSessionSub;
+  static Timer? _androidSoundPresetSessionDebounce;
+
+  /// ExoPlayer 在 [androidAudioSessionId] 变化时会重建原生 Equalizer；须再次套用 Hive 中的预设。
+  static void attachAndroidSoundPresetSessionListener() {
+    if (!Platform.isAndroid) return;
+    if (_androidSoundPresetSessionSub != null) return;
+    _androidSoundPresetSessionSub =
+        _player.androidAudioSessionIdStream.listen((_) {
+      _androidSoundPresetSessionDebounce?.cancel();
+      _androidSoundPresetSessionDebounce =
+          Timer(const Duration(milliseconds: 160), () {
+        unawaited(reapplyStoredAndroidSoundPreset());
+      });
+    });
+  }
+
+  /// Android 硬件均衡器（与 [_player] pipeline 绑定）；非 Android 为 null。
+  static AndroidEqualizer? get androidEqualizer => _androidEqualizer;
+
+  /// Android 响度增强（与 [_player] pipeline 绑定）；非 Android 为 null。
+  static AndroidLoudnessEnhancer? get androidLoudnessEnhancer =>
+      _androidLoudnessEnhancer;
+
   static bool isPlaying = false;
 
   /// [MediaMetadataCompat.METADATA_KEY_COMPOSER]，部分国产系统控制中心/流体云会读此字段作第三行或歌词。
@@ -110,6 +159,24 @@ class MusicService {
 
   static void _invalidateAndroidQueueReuse() {
     _lastAndroidQueueRef = null;
+  }
+
+  /// 在换源或切轨后按设置重新应用 Android 音效预设。
+  static Future<void> reapplyStoredAndroidSoundPreset() async {
+    if (!Platform.isAndroid) return;
+    final eq = _androidEqualizer;
+    final loud = _androidLoudnessEnhancer;
+    if (eq == null || loud == null) return;
+    try {
+      final preset = await SettingsService.loadPlaybackSoundPreset();
+      await PlaybackSoundEffectService.applyPreset(
+        preset,
+        equalizer: eq,
+        loudness: loud,
+      );
+    } catch (e) {
+      appLog.d('reapplyStoredAndroidSoundPreset: $e');
+    }
   }
 
   /// 按当前播放列表与索引开始播放。
@@ -192,6 +259,11 @@ class MusicService {
           unawaited(
             pushAndroidNotificationForSong(song, abortIfStaleGeneration: g),
           );
+          unawaited(
+            Future<void>.delayed(const Duration(milliseconds: 48), () {
+              return reapplyStoredAndroidSoundPreset();
+            }),
+          );
         }
         return true;
       } catch (e) {
@@ -252,6 +324,7 @@ class MusicService {
           unawaited(
             pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
           );
+          unawaited(reapplyStoredAndroidSoundPreset());
         }
         return true;
       } catch (e) {
@@ -301,6 +374,11 @@ class MusicService {
           final s = queue[idx];
           unawaited(
             pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
+          );
+          unawaited(
+            Future<void>.delayed(const Duration(milliseconds: 48), () {
+              return reapplyStoredAndroidSoundPreset();
+            }),
           );
         }
         return true;
@@ -536,6 +614,10 @@ class MusicService {
     }
     await _listeningPlayingSub?.cancel();
     _listeningPlayingSub = null;
+    _androidSoundPresetSessionDebounce?.cancel();
+    _androidSoundPresetSessionDebounce = null;
+    await _androidSoundPresetSessionSub?.cancel();
+    _androidSoundPresetSessionSub = null;
     return _player.dispose();
   }
 

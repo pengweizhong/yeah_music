@@ -1626,6 +1626,86 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songPageMoreSheetTitle => 'その他の操作';
 
   @override
+  String get songPageMoreSoundEffects => 'サウンドエフェクト';
+
+  @override
+  String get songPageMoreSoundEffectsSubtitle => 'EQプリセット（Android）';
+
+  @override
+  String get playbackSoundPresetSheetTitle => 'サウンドエフェクト';
+
+  @override
+  String get playbackSoundPresetUnsupportedBody =>
+      'ハードウェアEQはAndroidで再生中のみ適用されます。その他のOSではプリセットを選んで保存でき、対応端末で再生すると反映されます。';
+
+  @override
+  String get playbackSoundPresetStandard => 'オリジナル';
+
+  @override
+  String get playbackSoundPresetPureVocals => 'ボーカル強調';
+
+  @override
+  String get playbackSoundPresetSpatialWide => '3Dワイド';
+
+  @override
+  String get playbackSoundPresetRock => 'ロック';
+
+  @override
+  String get playbackSoundPresetPop => 'ポップ';
+
+  @override
+  String get playbackSoundPresetElectronic => 'エレクトロ';
+
+  @override
+  String get playbackSoundPresetClassical => 'クラシック';
+
+  @override
+  String get playbackSoundPresetJazz => 'ジャズ';
+
+  @override
+  String get playbackSoundPresetLiveStage => 'ライブ会場';
+
+  @override
+  String get playbackSoundPresetCozyRoom => '室内・浴室感';
+
+  @override
+  String get playbackSoundPresetPodcast => 'ポッドキャスト・声';
+
+  @override
+  String get playbackSoundPresetMetal => 'メタル';
+
+  @override
+  String get playbackSoundPresetHipHop => 'ヒップホップ';
+
+  @override
+  String get playbackSoundPresetLoFi => 'Lo-Fi';
+
+  @override
+  String get playbackSoundPresetNight => '夜間リスニング';
+
+  @override
+  String get playbackSoundPresetBassBoost => '低音ブースト';
+
+  @override
+  String get playbackSoundPresetCustom => 'カスタム';
+
+  @override
+  String get playbackSoundCustomTileSubtitle => 'バンドごとに調整（Android）';
+
+  @override
+  String get playbackSoundCustomSheetTitle => 'カスタムイコライザー';
+
+  @override
+  String get playbackSoundCustomReset => 'フラットに戻す';
+
+  @override
+  String get playbackSoundCustomSaveApply => '保存して適用';
+
+  @override
+  String get playbackSoundCustomLoadError =>
+      'イコライザーを読み込めません。再生を開始してから再度開いてください。';
+
+  @override
   String get songPageMoreQueryMetadata => 'メタデータを表示';
 
   @override

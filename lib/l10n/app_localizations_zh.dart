@@ -1601,6 +1601,85 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songPageMoreSheetTitle => '更多操作';
 
   @override
+  String get songPageMoreSoundEffects => '音效';
+
+  @override
+  String get songPageMoreSoundEffectsSubtitle => '均衡器预设（Android）';
+
+  @override
+  String get playbackSoundPresetSheetTitle => '音效设置';
+
+  @override
+  String get playbackSoundPresetUnsupportedBody =>
+      '硬件均衡器仅在 Android 且正在播放时生效；其它平台可先保存预设，在支持的设备上播放时会自动应用。';
+
+  @override
+  String get playbackSoundPresetStandard => '标准 · 原声';
+
+  @override
+  String get playbackSoundPresetPureVocals => '纯净人声';
+
+  @override
+  String get playbackSoundPresetSpatialWide => '3D丽音';
+
+  @override
+  String get playbackSoundPresetRock => '摇滚';
+
+  @override
+  String get playbackSoundPresetPop => '流行';
+
+  @override
+  String get playbackSoundPresetElectronic => '电子';
+
+  @override
+  String get playbackSoundPresetClassical => '古典';
+
+  @override
+  String get playbackSoundPresetJazz => '爵士';
+
+  @override
+  String get playbackSoundPresetLiveStage => '音乐现场';
+
+  @override
+  String get playbackSoundPresetCozyRoom => '室内 · 浴室感';
+
+  @override
+  String get playbackSoundPresetPodcast => '播客人声';
+
+  @override
+  String get playbackSoundPresetMetal => '金属';
+
+  @override
+  String get playbackSoundPresetHipHop => '嘻哈';
+
+  @override
+  String get playbackSoundPresetLoFi => 'Lo-Fi';
+
+  @override
+  String get playbackSoundPresetNight => '夜间聆听';
+
+  @override
+  String get playbackSoundPresetBassBoost => '低音增强';
+
+  @override
+  String get playbackSoundPresetCustom => '自定义';
+
+  @override
+  String get playbackSoundCustomTileSubtitle => '分频段调节增益（Android）';
+
+  @override
+  String get playbackSoundCustomSheetTitle => '自定义均衡器';
+
+  @override
+  String get playbackSoundCustomReset => '平直（重置）';
+
+  @override
+  String get playbackSoundCustomSaveApply => '保存并应用';
+
+  @override
+  String get playbackSoundCustomLoadError => '无法加载均衡器。请先开始播放音乐，再打开本页。';
+
+  @override
   String get songPageMoreQueryMetadata => '查询歌曲元信息';
 
   @override
@@ -4387,6 +4466,85 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get songPageMoreSheetTitle => '更多操作';
+
+  @override
+  String get songPageMoreSoundEffects => '音效';
+
+  @override
+  String get songPageMoreSoundEffectsSubtitle => '均衡器预设（Android）';
+
+  @override
+  String get playbackSoundPresetSheetTitle => '音效设置';
+
+  @override
+  String get playbackSoundPresetUnsupportedBody =>
+      '硬件均衡器仅在 Android 且正在播放时生效；其它平台可先保存预设，在支持的设备上播放时会自动应用。';
+
+  @override
+  String get playbackSoundPresetStandard => '标准 · 原声';
+
+  @override
+  String get playbackSoundPresetPureVocals => '纯净人声';
+
+  @override
+  String get playbackSoundPresetSpatialWide => '3D丽音';
+
+  @override
+  String get playbackSoundPresetRock => '摇滚';
+
+  @override
+  String get playbackSoundPresetPop => '流行';
+
+  @override
+  String get playbackSoundPresetElectronic => '电子';
+
+  @override
+  String get playbackSoundPresetClassical => '古典';
+
+  @override
+  String get playbackSoundPresetJazz => '爵士';
+
+  @override
+  String get playbackSoundPresetLiveStage => '音乐现场';
+
+  @override
+  String get playbackSoundPresetCozyRoom => '室内 · 浴室感';
+
+  @override
+  String get playbackSoundPresetPodcast => '播客人声';
+
+  @override
+  String get playbackSoundPresetMetal => '金属';
+
+  @override
+  String get playbackSoundPresetHipHop => '嘻哈';
+
+  @override
+  String get playbackSoundPresetLoFi => 'Lo-Fi';
+
+  @override
+  String get playbackSoundPresetNight => '夜间聆听';
+
+  @override
+  String get playbackSoundPresetBassBoost => '低音增强';
+
+  @override
+  String get playbackSoundPresetCustom => '自定义';
+
+  @override
+  String get playbackSoundCustomTileSubtitle => '分频段调节增益（Android）';
+
+  @override
+  String get playbackSoundCustomSheetTitle => '自定义均衡器';
+
+  @override
+  String get playbackSoundCustomReset => '平直（重置）';
+
+  @override
+  String get playbackSoundCustomSaveApply => '保存并应用';
+
+  @override
+  String get playbackSoundCustomLoadError => '无法加载均衡器。请先开始播放音乐，再打开本页。';
 
   @override
   String get songPageMoreQueryMetadata => '查询歌曲元信息';
@@ -7176,6 +7334,85 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get songPageMoreSheetTitle => '更多操作';
+
+  @override
+  String get songPageMoreSoundEffects => '音效';
+
+  @override
+  String get songPageMoreSoundEffectsSubtitle => '等化器預設（Android）';
+
+  @override
+  String get playbackSoundPresetSheetTitle => '音效設定';
+
+  @override
+  String get playbackSoundPresetUnsupportedBody =>
+      '硬體等化器僅在 Android 且正在播放時生效；其它平台可先儲存預設，在支援的裝置上播放時會自動套用。';
+
+  @override
+  String get playbackSoundPresetStandard => '標準 · 原聲';
+
+  @override
+  String get playbackSoundPresetPureVocals => '純淨人聲';
+
+  @override
+  String get playbackSoundPresetSpatialWide => '3D麗音';
+
+  @override
+  String get playbackSoundPresetRock => '搖滾';
+
+  @override
+  String get playbackSoundPresetPop => '流行';
+
+  @override
+  String get playbackSoundPresetElectronic => '電子';
+
+  @override
+  String get playbackSoundPresetClassical => '古典';
+
+  @override
+  String get playbackSoundPresetJazz => '爵士';
+
+  @override
+  String get playbackSoundPresetLiveStage => '音樂現場';
+
+  @override
+  String get playbackSoundPresetCozyRoom => '室內 · 浴室感';
+
+  @override
+  String get playbackSoundPresetPodcast => '播客人聲';
+
+  @override
+  String get playbackSoundPresetMetal => '金屬';
+
+  @override
+  String get playbackSoundPresetHipHop => '嘻哈';
+
+  @override
+  String get playbackSoundPresetLoFi => 'Lo-Fi';
+
+  @override
+  String get playbackSoundPresetNight => '夜間聆聽';
+
+  @override
+  String get playbackSoundPresetBassBoost => '低音增強';
+
+  @override
+  String get playbackSoundPresetCustom => '自訂';
+
+  @override
+  String get playbackSoundCustomTileSubtitle => '分頻段調節增益（Android）';
+
+  @override
+  String get playbackSoundCustomSheetTitle => '自訂等化器';
+
+  @override
+  String get playbackSoundCustomReset => '平直（重設）';
+
+  @override
+  String get playbackSoundCustomSaveApply => '儲存並套用';
+
+  @override
+  String get playbackSoundCustomLoadError => '無法載入等化器。請先開始播放音樂，再開啟本頁。';
 
   @override
   String get songPageMoreQueryMetadata => '查詢歌曲元資訊';

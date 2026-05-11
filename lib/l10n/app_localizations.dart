@@ -3099,6 +3099,162 @@ abstract class AppLocalizations {
   /// **'More actions'**
   String get songPageMoreSheetTitle;
 
+  /// No description provided for @songPageMoreSoundEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects'**
+  String get songPageMoreSoundEffects;
+
+  /// No description provided for @songPageMoreSoundEffectsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EQ presets (Android)'**
+  String get songPageMoreSoundEffectsSubtitle;
+
+  /// No description provided for @playbackSoundPresetSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects'**
+  String get playbackSoundPresetSheetTitle;
+
+  /// No description provided for @playbackSoundPresetUnsupportedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware EQ is only applied on Android while audio is playing. On other platforms you can still pick a preset; it will apply the next time you play on a supported device.'**
+  String get playbackSoundPresetUnsupportedBody;
+
+  /// No description provided for @playbackSoundPresetStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get playbackSoundPresetStandard;
+
+  /// No description provided for @playbackSoundPresetPureVocals.
+  ///
+  /// In en, this message translates to:
+  /// **'Vocal clarity'**
+  String get playbackSoundPresetPureVocals;
+
+  /// No description provided for @playbackSoundPresetSpatialWide.
+  ///
+  /// In en, this message translates to:
+  /// **'3D wide'**
+  String get playbackSoundPresetSpatialWide;
+
+  /// No description provided for @playbackSoundPresetRock.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock'**
+  String get playbackSoundPresetRock;
+
+  /// No description provided for @playbackSoundPresetPop.
+  ///
+  /// In en, this message translates to:
+  /// **'Pop'**
+  String get playbackSoundPresetPop;
+
+  /// No description provided for @playbackSoundPresetElectronic.
+  ///
+  /// In en, this message translates to:
+  /// **'Electronic'**
+  String get playbackSoundPresetElectronic;
+
+  /// No description provided for @playbackSoundPresetClassical.
+  ///
+  /// In en, this message translates to:
+  /// **'Classical'**
+  String get playbackSoundPresetClassical;
+
+  /// No description provided for @playbackSoundPresetJazz.
+  ///
+  /// In en, this message translates to:
+  /// **'Jazz'**
+  String get playbackSoundPresetJazz;
+
+  /// No description provided for @playbackSoundPresetLiveStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Live stage'**
+  String get playbackSoundPresetLiveStage;
+
+  /// No description provided for @playbackSoundPresetCozyRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room (bath-like)'**
+  String get playbackSoundPresetCozyRoom;
+
+  /// No description provided for @playbackSoundPresetPodcast.
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast & voice'**
+  String get playbackSoundPresetPodcast;
+
+  /// No description provided for @playbackSoundPresetMetal.
+  ///
+  /// In en, this message translates to:
+  /// **'Metal'**
+  String get playbackSoundPresetMetal;
+
+  /// No description provided for @playbackSoundPresetHipHop.
+  ///
+  /// In en, this message translates to:
+  /// **'Hip-hop'**
+  String get playbackSoundPresetHipHop;
+
+  /// No description provided for @playbackSoundPresetLoFi.
+  ///
+  /// In en, this message translates to:
+  /// **'Lo-fi'**
+  String get playbackSoundPresetLoFi;
+
+  /// No description provided for @playbackSoundPresetNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Night listening'**
+  String get playbackSoundPresetNight;
+
+  /// No description provided for @playbackSoundPresetBassBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Bass boost'**
+  String get playbackSoundPresetBassBoost;
+
+  /// No description provided for @playbackSoundPresetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get playbackSoundPresetCustom;
+
+  /// No description provided for @playbackSoundCustomTileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust each frequency band (Android)'**
+  String get playbackSoundCustomTileSubtitle;
+
+  /// No description provided for @playbackSoundCustomSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom equalizer'**
+  String get playbackSoundCustomSheetTitle;
+
+  /// No description provided for @playbackSoundCustomReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat (reset)'**
+  String get playbackSoundCustomReset;
+
+  /// No description provided for @playbackSoundCustomSaveApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & apply'**
+  String get playbackSoundCustomSaveApply;
+
+  /// No description provided for @playbackSoundCustomLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the equalizer. Start playback, then open this screen again.'**
+  String get playbackSoundCustomLoadError;
+
   /// No description provided for @songPageMoreQueryMetadata.
   ///
   /// In en, this message translates to:

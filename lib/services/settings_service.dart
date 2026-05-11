@@ -11,6 +11,7 @@ import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/models/playback_mode.dart';
+import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song_recognition_entry.dart';
@@ -28,6 +29,10 @@ class SettingsService {
 
   /// [hiveKeysCloudSliceLyricsUi] 中任一键写入 Hive 或云端恢复后自增；[SongPage] 等监听。
   static final ValueNotifier<int> lyricsUiStorageRevision = ValueNotifier<int>(0);
+
+  /// [savePlaybackSoundPreset] 写入 Hive 后自增；播放页「更多」音效标题监听。
+  static final ValueNotifier<int> playbackSoundPresetRevision =
+      ValueNotifier<int>(0);
 
   static const String _lyricSettingsKey = 'lyric_settings';
   static const String _playbackModeKey = 'playback_mode';
@@ -89,6 +94,13 @@ class SettingsService {
 
   /// 播放页是否保持屏幕常亮。
   static const String _songPageKeepScreenAwakeKey = 'song_page_keep_screen_awake';
+
+  /// Android 播放音效预设 id（与 [PlaybackSoundPreset.storageId] 一致）。
+  static const String _playbackSoundPresetKey = 'playback_sound_preset_v1';
+
+  /// [PlaybackSoundPreset.custom] 时各频段增益（dB），与设备均衡器 band 顺序一致。
+  static const String _playbackSoundCustomEqDbKey =
+      'playback_sound_custom_eq_db_v1';
 
   /// 首页问候卡片第二行：用户自定义条目（不含内置默认句）。
   static const String _homeGreetingCustomSubsKey =
@@ -1062,6 +1074,60 @@ class SettingsService {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_songPageKeepScreenAwakeKey, value);
+      } catch (_) {}
+    }
+  }
+
+  static Future<PlaybackSoundPreset> loadPlaybackSoundPreset() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_playbackSoundPresetKey);
+      if (raw is String && raw.isNotEmpty) {
+        return PlaybackSoundPreset.fromStorageId(raw);
+      }
+    } catch (_) {}
+    return PlaybackSoundPreset.standard;
+  }
+
+  static Future<void> savePlaybackSoundPreset(PlaybackSoundPreset preset) async {
+    var ok = false;
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_playbackSoundPresetKey, preset.storageId);
+      ok = true;
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_playbackSoundPresetKey, preset.storageId);
+        ok = true;
+      } catch (_) {}
+    }
+    if (ok) playbackSoundPresetRevision.value++;
+  }
+
+  static Future<List<double>> loadPlaybackSoundCustomBandGainsDb() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final raw = box.get(_playbackSoundCustomEqDbKey);
+      if (raw is List) {
+        return raw.map((e) => (e as num).toDouble()).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<void> savePlaybackSoundCustomBandGainsDb(
+    List<double> gainsDb,
+  ) async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_playbackSoundCustomEqDbKey, gainsDb);
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_playbackSoundCustomEqDbKey, gainsDb);
       } catch (_) {}
     }
   }
