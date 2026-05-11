@@ -79,6 +79,9 @@ class Song extends HiveObject {
   @HiveField(9)
   DateTime? updateDateTime;
 
+  /// 仅内存：自建歌单解析时路径不在合并曲库且本机无该文件（占位行）；不入 Hive。
+  bool playlistEntryMissingOnDevice = false;
+
   Song(this.path);
 
   @override

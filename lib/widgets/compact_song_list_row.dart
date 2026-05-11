@@ -81,6 +81,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
   void _hydrateAfterLayout() {
     if (!mounted) return;
     final song = widget.song;
+    if (song.playlistEntryMissingOnDevice) return;
     final fut = _ongoingHydrate ??=
         SongLibraryMetadataHydrator.hydrateIfNeeded(song).whenComplete(() {
       _ongoingHydrate = null;
@@ -100,9 +101,16 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final primary = Theme.of(context).colorScheme.primary;
-    final titleColor =
-        widget.isCurrent ? primary : context.gradFg();
+    final scheme = Theme.of(context).colorScheme;
+    final primary = scheme.primary;
+    final Color resolvedTitleColor;
+    if (widget.song.playlistEntryMissingOnDevice) {
+      resolvedTitleColor = scheme.error;
+    } else if (widget.isCurrent) {
+      resolvedTitleColor = primary;
+    } else {
+      resolvedTitleColor = context.gradFg();
+    }
     final subtitleColor = widget.isCurrent
         ? primary.withValues(alpha: 0.82)
         : context.gradFgMuted();
@@ -182,7 +190,7 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                         SongListMarqueeWhenCurrentLine(
                           text: titleStr,
                           style: TextStyle(
-                            color: titleColor,
+                            color: resolvedTitleColor,
                             fontSize: 16,
                             height: isLinuxDesktop ? 1.04 : null,
                             fontWeight: widget.isCurrent

@@ -85,6 +85,154 @@ List<String> _mergePathsExistingFirst(List<String> existing, List<String> incomi
   return out;
 }
 
+String _normPlaylistMatchToken(String s) {
+  return s.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
+}
+
+String _effectiveSongTitleForPlaylistMatch(Song song) {
+  final t = song.title?.trim();
+  if (t != null && t.isNotEmpty) return t;
+  return p.basenameWithoutExtension(song.path);
+}
+
+String _titleArtistMatchKey(String title, String artist) {
+  return '${_normPlaylistMatchToken(title)}\x1f${_normPlaylistMatchToken(artist)}';
+}
+
+/// 从「无扩展名文件名」猜测 (title, artist) 的两种键：常见 `艺人 - 歌名` 与 `歌名 - 艺人`。
+List<String> _stemTitleArtistMatchKeys(String storedPath) {
+  final stem = p.basenameWithoutExtension(storedPath);
+  final out = <String>[];
+  void addKey(String title, String artist) {
+    final k = _titleArtistMatchKey(title, artist);
+    if (!out.contains(k)) out.add(k);
+  }
+
+  const seps = [' — ', ' – ', ' - '];
+  for (final sep in seps) {
+    final i = stem.indexOf(sep);
+    if (i <= 0 || i + sep.length >= stem.length) continue;
+    final left = stem.substring(0, i).trim();
+    final right = stem.substring(i + sep.length).trim();
+    if (left.isEmpty || right.isEmpty) continue;
+    addKey(right, left);
+    addKey(left, right);
+    return out;
+  }
+
+  addKey(stem, '');
+  return out;
+}
+
+Song? _pickUniqueByTitleArtistKeysInPool(
+  Iterable<Song> pool,
+  List<String> keys,
+) {
+  Song? hit;
+  for (final s in pool) {
+    final k = _titleArtistMatchKey(
+      _effectiveSongTitleForPlaylistMatch(s),
+      s.artist?.trim() ?? '',
+    );
+    if (!keys.contains(k)) continue;
+    if (hit != null) return null;
+    hit = s;
+  }
+  return hit;
+}
+
+Song? _pickUniqueByStemAgainstBasenamePool(List<Song> pool, String storedPath) {
+  final keys = _stemTitleArtistMatchKeys(storedPath);
+  return _pickUniqueByTitleArtistKeysInPool(pool, keys);
+}
+
+Song? _pickUniqueByTitleNormAgainstLibrary(String storedPath, List<Song> all) {
+  final stem = p.basenameWithoutExtension(storedPath);
+  final want = _normPlaylistMatchToken(stem);
+  if (want.isEmpty) return null;
+  Song? hit;
+  for (final s in all) {
+    if (_normPlaylistMatchToken(_effectiveSongTitleForPlaylistMatch(s)) != want) {
+      continue;
+    }
+    if (hit != null) return null;
+    hit = s;
+  }
+  return hit;
+}
+
+/// 歌单内已失效路径 → 在 [librarySongs] 中重绑：先文件名，再曲库内嵌标题+艺人（含从文件名拆分的两种顺序）。
+Song? _remapStalePlaylistPathToLibrarySong(
+  String storedPath,
+  _PlaylistPathRemapIndexes idx,
+) {
+  final base = p.basename(storedPath).toLowerCase();
+  if (base.isEmpty) return null;
+
+  final byBase = idx.byBasenameLower[base];
+  if (byBase != null && byBase.isNotEmpty) {
+    if (byBase.length == 1) return byBase.single;
+    final narrowed = _pickUniqueByStemAgainstBasenamePool(byBase, storedPath);
+    if (narrowed != null) return narrowed;
+    return null;
+  }
+
+  final stemKeys = _stemTitleArtistMatchKeys(storedPath);
+  for (final key in stemKeys) {
+    final xs = idx.byTitleArtistKey[key];
+    if (xs != null && xs.length == 1) return xs.single;
+  }
+
+  return _pickUniqueByTitleNormAgainstLibrary(storedPath, idx.allSongs);
+}
+
+class _PlaylistPathRemapIndexes {
+  _PlaylistPathRemapIndexes({
+    required this.byNormPath,
+    required this.byBasenameLower,
+    required this.byTitleArtistKey,
+    required this.allSongs,
+  });
+
+  final Map<String, Song> byNormPath;
+  final Map<String, List<Song>> byBasenameLower;
+  final Map<String, List<Song>> byTitleArtistKey;
+  final List<Song> allSongs;
+
+  static _PlaylistPathRemapIndexes build(List<Song> librarySongs) {
+    final byNormPath = <String, Song>{};
+    final byBasenameLower = <String, List<Song>>{};
+    final byTitleArtistKey = <String, List<Song>>{};
+    for (final s in librarySongs) {
+      final nk = normSongPath(s.path);
+      if (nk.isEmpty) continue;
+      byNormPath.putIfAbsent(nk, () => s);
+      final b = p.basename(s.path).toLowerCase();
+      byBasenameLower.putIfAbsent(b, () => []).add(s);
+      final tk = _titleArtistMatchKey(
+        _effectiveSongTitleForPlaylistMatch(s),
+        s.artist?.trim() ?? '',
+      );
+      byTitleArtistKey.putIfAbsent(tk, () => []).add(s);
+    }
+    return _PlaylistPathRemapIndexes(
+      byNormPath: byNormPath,
+      byBasenameLower: byBasenameLower,
+      byTitleArtistKey: byTitleArtistKey,
+      allSongs: librarySongs,
+    );
+  }
+}
+
+/// 歌单路径不在曲库且本机无文件时，仍用于列表展示以便用户辨认并「从歌单移除」；[Song.title] 为路径上的文件名。
+Song _userPlaylistMissingFileStubSong(String storedPath) {
+  final pStr = storedPath.trim();
+  final s = Song(pStr);
+  s.title = p.basename(pStr);
+  s.playlistEntryMissingOnDevice = true;
+  return s;
+}
+
 /// 导入文件中若多条记录 id 相同则合并路径
 List<UserPlaylist> _coalesceImportedPlaylists(List<UserPlaylist> items) {
   final map = <String, UserPlaylist>{};
@@ -722,6 +870,11 @@ class UserPlaylistProvider extends ChangeNotifier {
 
   /// 与 [songsForPlaylist] 相同顺序；先匹配 [librarySongs]，未命中且路径在本机仍存在时读盘加载（覆盖 OneDrive
   /// 缓存未及时并入 [PlayListProvider]、仅首页等处以 [UserPlaylist.songPaths] 计数等情形）。
+  ///
+  /// 不在此做「失效路径 → 曲库重绑」：避免每次进入歌单详情都扫描、写 Hive。批量重绑仅在
+  /// [remapAllPlaylistPathsFromLibrary]（[PlayListProvider.init] 曲库就绪后调用一次）中执行。
+  ///
+  /// 曲库与本机均无有效文件时仍追加占位 [Song]（标题为路径文件名），与 [songPaths] 条数一致，便于用户手动从歌单移除。
   Future<List<Song>> songsForPlaylistWithDiskFallback(
     UserPlaylist playlist,
     List<Song> librarySongs,
@@ -737,17 +890,60 @@ class UserPlaylistProvider extends ChangeNotifier {
         out.add(fromLib);
         continue;
       }
-      if (kIsWeb) continue;
+      if (kIsWeb) {
+        out.add(_userPlaylistMissingFileStubSong(trimmed));
+        continue;
+      }
       try {
         final f = File(trimmed);
         if (await f.exists()) {
           final s = Song(trimmed);
           await FileUtils.loadSongMeta(s, loadEmbeddedAlbumArt: false);
           out.add(s);
+        } else {
+          out.add(_userPlaylistMissingFileStubSong(trimmed));
         }
-      } catch (_) {}
+      } catch (_) {
+        out.add(_userPlaylistMissingFileStubSong(trimmed));
+      }
     }
     return out;
+  }
+
+  /// 曲库初始化后批量修正歌单内「路径失效但曲库仍有同一首歌」的条目并持久化，便于导出/OneDrive。
+  ///
+  /// 由 [PlayListProvider.init] 在加载文件夹与 OneDrive 叠加、且 [UserPlaylistProvider.init] 完成后调用**一次**；
+  /// 不在进入歌单详情时重复触发。匹配规则见 [_remapStalePlaylistPathToLibrarySong]。
+  Future<void> remapAllPlaylistPathsFromLibrary(List<Song> librarySongs) async {
+    if (kIsWeb || !_initialized || librarySongs.isEmpty) return;
+    final idx = _PlaylistPathRemapIndexes.build(librarySongs);
+    var changed = false;
+    for (final pl in _playlists) {
+      for (var i = 0; i < pl.songPaths.length; i++) {
+        final trimmed = pl.songPaths[i].trim();
+        if (trimmed.isEmpty) continue;
+        if (idx.byNormPath.containsKey(normSongPath(trimmed))) continue;
+        var existsOk = false;
+        try {
+          existsOk = await File(trimmed).exists();
+        } catch (_) {
+          existsOk = false;
+        }
+        if (existsOk) continue;
+        final hit = _remapStalePlaylistPathToLibrarySong(trimmed, idx);
+        if (hit == null) continue;
+        final newPath = hit.path.trim();
+        if (newPath.isEmpty || normSongPath(newPath) == normSongPath(trimmed)) {
+          continue;
+        }
+        pl.songPaths[i] = newPath;
+        changed = true;
+      }
+    }
+    if (changed) {
+      await _save();
+      notifyListeners();
+    }
   }
 
   UserPlaylist? _playlistById(String playlistId) {

@@ -633,6 +633,10 @@ class PlayListProvider extends ChangeNotifier {
       await userPlaylists.init();
     }
 
+    if (userPlaylists != null) {
+      await userPlaylists.remapAllPlaylistPathsFromLibrary(libraryMergedSongs);
+    }
+
     // 加载上次播放
     await _restoreLastPlayedSnapshot(userPlaylists: userPlaylists);
 
