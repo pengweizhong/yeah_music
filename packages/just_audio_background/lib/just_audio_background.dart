@@ -19,6 +19,9 @@ Future<void> Function()? _yeahAndroidLyricsSyncToggleHandler;
 /// Yeah Music：后台/锁屏媒体键点击处理；返回 true 表示已消费，不再走默认 play/pause/next/previous。
 Future<bool> Function(String kind)? _yeahAndroidMediaButtonClickHandler;
 
+/// Yeah Music：暂停 / 通知栏切歌前 800ms 线性淡出（由宿主注入 [MusicService.fadeOutVolumeWhilePlaying]）。
+Future<void> Function()? _yeahFadeOutVolumeHandler;
+
 /// 通知自定义动作名，须与 [MediaControl.custom] 的 [name] 一致。
 const String kYeahToggleSystemLyricsAction = 'yeah_toggle_system_lyrics';
 
@@ -91,6 +94,11 @@ class JustAudioBackground {
     Future<bool> Function(String kind)? handler,
   ) {
     _yeahAndroidMediaButtonClickHandler = handler;
+  }
+
+  /// 注入「当前正在播放时」线性淡出逻辑，供通知栏暂停 / 上一首 / 下一首与宿主一致。
+  static void setFadeOutVolumeHandler(Future<void> Function()? handler) {
+    _yeahFadeOutVolumeHandler = handler;
   }
 }
 
@@ -535,6 +543,35 @@ class _PlayerAudioHandler extends BaseAudioHandler
   Future<SetVolumeResponse> customSetVolume(SetVolumeRequest request) async =>
       await (await _player).setVolume(request);
 
+  static const Duration _kYeahFadeOutTotal = Duration(milliseconds: 800);
+  static const int _kYeahFadeOutSteps = 40;
+
+  Future<void> _yeahFadeOutVolumeIfPlaying() async {
+    if (!_playing) return;
+    final h = _yeahFadeOutVolumeHandler;
+    if (h != null) {
+      try {
+        await h();
+      } catch (_) {}
+      return;
+    }
+    final p = await _player;
+    final stepMs = (_kYeahFadeOutTotal.inMilliseconds / _kYeahFadeOutSteps)
+        .floor()
+        .clamp(1, 1000);
+    for (var i = 1; i <= _kYeahFadeOutSteps; i++) {
+      if (!_playing) return;
+      final v = 1.0 - i / _kYeahFadeOutSteps;
+      try {
+        await p.setVolume(SetVolumeRequest(volume: v));
+      } catch (_) {}
+      await Future<void>.delayed(Duration(milliseconds: stepMs));
+    }
+    try {
+      await p.setVolume(SetVolumeRequest(volume: 0.0));
+    } catch (_) {}
+  }
+
   Future<SetSpeedResponse> customSetSpeed(SetSpeedRequest request) async =>
       await (await _player).setSpeed(request);
 
@@ -704,14 +741,22 @@ class _PlayerAudioHandler extends BaseAudioHandler
   @override
   Future<void> skipToNext() async {
     if (hasNext) {
+      await _yeahFadeOutVolumeIfPlaying();
       await skipToQueueItem(nextIndex!);
+      try {
+        await (await _player).setVolume(SetVolumeRequest(volume: 1.0));
+      } catch (_) {}
     }
   }
 
   @override
   Future<void> skipToPrevious() async {
     if (hasPrevious) {
+      await _yeahFadeOutVolumeIfPlaying();
       await skipToQueueItem(previousIndex!);
+      try {
+        await (await _player).setVolume(SetVolumeRequest(volume: 1.0));
+      } catch (_) {}
     }
   }
 
@@ -730,10 +775,14 @@ class _PlayerAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> pause() async {
+    await _yeahFadeOutVolumeIfPlaying();
     _updatePosition();
     customEvent.add(_PlayingEvent(_playing = false));
     _broadcastState();
     await (await _player).pause(PauseRequest());
+    try {
+      await (await _player).setVolume(SetVolumeRequest(volume: 1.0));
+    } catch (_) {}
   }
 
   void _updatePosition() {

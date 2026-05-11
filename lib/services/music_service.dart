@@ -83,6 +83,44 @@ class MusicService {
 
   static bool isPlaying = false;
 
+  /// 暂停 / 切歌前线性淡出总时长（与宿主通知栏 handler 一致）。
+  static const Duration _kFadeOutDuration = Duration(milliseconds: 800);
+  static const int _kFadeOutSteps = 40;
+  static int _volumeFadeGeneration = 0;
+
+  /// 取消进行中的淡出（新一次 [play]/[resume]/换源 时调用）。
+  static void abortVolumeFade() {
+    _volumeFadeGeneration++;
+  }
+
+  /// 正在播放时把 [AudioPlayer] 音量在 [_kFadeOutDuration] 内线性收到 0；与 [abortVolumeFade] 代数配合可打断。
+  static Future<void> fadeOutVolumeWhilePlaying() async {
+    if (!_player.playing) return;
+    final gen = ++_volumeFadeGeneration;
+    double start;
+    try {
+      start = _player.volume.clamp(0.0, 1.0);
+    } catch (_) {
+      start = 1.0;
+    }
+    if (start <= 0) return;
+    final stepMs = (_kFadeOutDuration.inMilliseconds / _kFadeOutSteps)
+        .floor()
+        .clamp(1, 1000);
+    for (var i = 1; i <= _kFadeOutSteps; i++) {
+      if (gen != _volumeFadeGeneration) return;
+      final v = start * (1.0 - i / _kFadeOutSteps);
+      try {
+        await _player.setVolume(v);
+      } catch (_) {}
+      await Future<void>.delayed(Duration(milliseconds: stepMs));
+    }
+    if (gen != _volumeFadeGeneration) return;
+    try {
+      await _player.setVolume(0.0);
+    } catch (_) {}
+  }
+
   /// [MediaMetadataCompat.METADATA_KEY_COMPOSER]，部分国产系统控制中心/流体云会读此字段作第三行或歌词。
   static const String androidComposerMetadataKey =
       'android.media.metadata.COMPOSER';
@@ -194,6 +232,7 @@ class MusicService {
     required int currentIndex,
     bool useAndroidConcatQueue = true,
   }) async {
+    abortVolumeFade();
     if (queue.isEmpty) return false;
     final i = currentIndex.clamp(0, queue.length - 1);
     final useFullPlayerQueue =
@@ -313,6 +352,7 @@ class MusicService {
             normSongPath(actualPath) != normSongPath(expectedPath)) {
           throw StateError('sequence path mismatch at current index');
         }
+        await _player.setVolume(1.0);
         await _player.seek(Duration.zero, index: idx);
         _player.play();
         isPlaying = _player.playing;
@@ -571,13 +611,20 @@ class MusicService {
     // playSong((currentIndex! - 1) % playlist.length);
   }
 
-  void play() {
+  Future<void> play() async {
+    abortVolumeFade();
+    try {
+      await _player.setVolume(1.0);
+    } catch (_) {}
     _player.play();
     isPlaying = _player.playing;
   }
 
-  Future<void> pause() async {
+  Future<void> pause({bool fadeOut = true}) async {
     try {
+      if (fadeOut && _player.playing) {
+        await fadeOutVolumeWhilePlaying();
+      }
       await _player.pause();
     } finally {
       isPlaying = false;
@@ -587,7 +634,11 @@ class MusicService {
     }
   }
 
-  void resume() {
+  Future<void> resume() async {
+    abortVolumeFade();
+    try {
+      await _player.setVolume(1.0);
+    } catch (_) {}
     _player.play();
     isPlaying = _player.playing;
   }
@@ -607,6 +658,10 @@ class MusicService {
   Future<void> setLoopMode(LoopMode mode) async => _player.setLoopMode(mode);
 
   Future<void> dispose() async {
+    abortVolumeFade();
+    try {
+      await _player.setVolume(1.0);
+    } catch (_) {}
     _listeningPeriodicFlushTimer?.cancel();
     _listeningPeriodicFlushTimer = null;
     if (_listeningWallAnchor != null) {
@@ -626,6 +681,7 @@ class MusicService {
   }
 
   Future<void> stop() async {
+    abortVolumeFade();
     try {
       isPlaying = false;
       androidCarQueueActive = false;

@@ -1243,6 +1243,8 @@ class PlayListProvider extends ChangeNotifier {
     final list = playList;
     if (list.isEmpty || steps <= 0) return;
 
+    await MusicService.fadeOutVolumeWhilePlaying();
+
     switch (_playbackMode) {
       case PlaybackMode.playOnce:
         return;
@@ -1271,6 +1273,8 @@ class PlayListProvider extends ChangeNotifier {
   Future<void> _applyPlayPrevSteps(int steps) async {
     final list = playList;
     if (list.isEmpty || steps <= 0) return;
+
+    await MusicService.fadeOutVolumeWhilePlaying();
 
     switch (_playbackMode) {
       case PlaybackMode.singleLoop:

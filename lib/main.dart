@@ -63,6 +63,9 @@ Future<void> main(List<String> args) async {
       onAndroidLyricsSyncToggle:
           AndroidMediaSessionBridge.toggleLyricsSyncFromNotification,
     );
+    JustAudioBackground.setFadeOutVolumeHandler(
+      MusicService.fadeOutVolumeWhilePlaying,
+    );
   }
 
   if (!kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
