@@ -42,6 +42,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuMusicSource => '音乐源';
 
   @override
+  String get songPageTheaterNowPlaying => '正在播放';
+
+  @override
+  String get songPageTheaterUpNext => '即将播放';
+
+  @override
   String get menuStatistics => '统计';
 
   @override
@@ -2824,6 +2830,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get menuMusicSource => '音乐源';
 
   @override
+  String get songPageTheaterNowPlaying => '正在播放';
+
+  @override
+  String get songPageTheaterUpNext => '即将播放';
+
+  @override
   String get menuStatistics => '统计';
 
   @override
@@ -5604,6 +5616,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get menuMusicSource => '音樂來源';
+
+  @override
+  String get songPageTheaterNowPlaying => '正在播放';
+
+  @override
+  String get songPageTheaterUpNext => '接下來';
 
   @override
   String get menuStatistics => '統計';

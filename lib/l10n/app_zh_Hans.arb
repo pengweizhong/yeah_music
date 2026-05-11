@@ -11,6 +11,8 @@
   "albumsUnknownAlbum": "未知专辑",
   "menuPlaylists": "歌单",
   "menuMusicSource": "音乐源",
+  "songPageTheaterNowPlaying": "正在播放",
+  "songPageTheaterUpNext": "即将播放",
   "menuStatistics": "统计",
   "menuSettings": "设置",
   "statisticsTitle": "统计",

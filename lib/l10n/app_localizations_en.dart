@@ -42,6 +42,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuMusicSource => 'Media folders';
 
   @override
+  String get songPageTheaterNowPlaying => 'Now playing';
+
+  @override
+  String get songPageTheaterUpNext => 'Up next';
+
+  @override
   String get menuStatistics => 'Statistics';
 
   @override

@@ -58,8 +58,8 @@ class MiniPlayer extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => SongPage(
                           index: playListProvider.currentIndex,
-                          // 与 [SongPage]、[last_song_page] 一致：0 封面 / 1 全屏歌词 / 2 分屏
-                          initialPage: savedPage.clamp(0, 2),
+                          // 与 [SongPage]、[last_song_page] 一致；分屏/剧院仅桌面端存在
+                          initialPage: songPageClampInitialIndex(savedPage),
                         ),
                       ),
                     );
@@ -125,8 +125,9 @@ class MiniPlayer extends StatelessWidget {
                               await MusicService().pause();
                             } else {
                               if (!MusicService.canUseResumeToPlay) {
-                                await playListProvider
-                                    .playAt(playListProvider.currentIndex);
+                                await playListProvider.playAt(
+                                  playListProvider.currentIndex,
+                                );
                               } else {
                                 MusicService().resume();
                               }

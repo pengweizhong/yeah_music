@@ -11,6 +11,8 @@
   "albumsUnknownAlbum": "不明なアルバム",
   "menuPlaylists": "プレイリスト",
   "menuMusicSource": "音楽フォルダ",
+  "songPageTheaterNowPlaying": "再生中",
+  "songPageTheaterUpNext": "次の曲",
   "menuStatistics": "統計",
   "menuSettings": "設定",
   "statisticsTitle": "統計",

@@ -168,6 +168,18 @@ abstract class AppLocalizations {
   /// **'Media folders'**
   String get menuMusicSource;
 
+  /// No description provided for @songPageTheaterNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get songPageTheaterNowPlaying;
+
+  /// No description provided for @songPageTheaterUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get songPageTheaterUpNext;
+
   /// No description provided for @menuStatistics.
   ///
   /// In en, this message translates to:

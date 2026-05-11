@@ -42,6 +42,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuMusicSource => '音楽フォルダ';
 
   @override
+  String get songPageTheaterNowPlaying => '再生中';
+
+  @override
+  String get songPageTheaterUpNext => '次の曲';
+
+  @override
   String get menuStatistics => '統計';
 
   @override

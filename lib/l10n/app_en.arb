@@ -11,6 +11,8 @@
   "albumsUnknownAlbum": "Unknown album",
   "menuPlaylists": "Playlists",
   "menuMusicSource": "Media folders",
+  "songPageTheaterNowPlaying": "Now playing",
+  "songPageTheaterUpNext": "Up next",
   "menuStatistics": "Statistics",
   "menuSettings": "Settings",
   "statisticsTitle": "Statistics",

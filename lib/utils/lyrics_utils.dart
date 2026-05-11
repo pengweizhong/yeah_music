@@ -2,8 +2,16 @@ import 'package:yeah_music/models/lyric_entry.dart';
 
 /// 歌词解析工具类
 class LyricsUtils {
+  /// 标准 LRC：`[mm:ss]`、`[mm:ss.ff]`（分:秒.毫秒/厘秒片段）。
+  ///
+  /// 另兼容不规范的 **点分** `[mm.ss]`、`[mm.ss.f]`：中间为 `.` 时表示仍为 **分·秒**，
+  /// 第三段若仅为 `0` / `00` 等与 `[mm:ss]` 等价（后缀 `.0` 无额外精度）。
+  static final RegExp _lrcTimestampLine = RegExp(
+    r'\[(\d{2})([:.])(\d{2})(?:\.(\d{1,3}))?\]\s*(.*)',
+  );
+
   /// 解析LRC格式歌词
-  /// 支持格式：[mm:ss.ff] 或 [mm:ss] 或纯文本
+  /// 支持格式：`[mm:ss.ff]`、`[mm:ss]`、`[mm.ss]`、`[mm.ss.f]` 或纯文本
   ///
   /// 多语言/翻译歌词常见形式：同一时间戳出现多行文本：
   /// [00:10.00]日文
@@ -16,13 +24,11 @@ class LyricsUtils {
       return entries;
     }
 
-    // 检查是否为LRC格式（包含时间戳）
-    final lrcRegex = RegExp(r'\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]\s*(.*)');
     bool isLrcFormat = false;
 
-    // 先检查是否包含LRC格式的时间戳
+    // 先检查是否包含 LRC 时间戳（冒号或点分，避免把 [ti:xxx] 等误判为时间轴）
     for (final line in rawLyrics.split('\n')) {
-      if (lrcRegex.hasMatch(line.trim())) {
+      if (_lrcTimestampLine.hasMatch(line.trim())) {
         isLrcFormat = true;
         break;
       }
@@ -36,7 +42,7 @@ class LyricsUtils {
         final trimmedLine = line.trim();
         if (trimmedLine.isEmpty) continue;
 
-        final matches = lrcRegex.allMatches(trimmedLine);
+        final matches = _lrcTimestampLine.allMatches(trimmedLine);
         if (matches.isEmpty) {
           // 可能是标签：[ar:], [ti:], [by:] 等，直接忽略
           continue;
@@ -47,12 +53,14 @@ class LyricsUtils {
         String? text;
         for (final match in matches) {
           final minutes = int.parse(match.group(1)!);
-          final seconds = int.parse(match.group(2)!);
-          final milliseconds = match.group(3) != null
-              ? int.parse(match.group(3)!.padRight(3, '0').substring(0, 3))
+          final seconds = int.parse(match.group(3)!);
+          final fracRaw = match.group(4);
+          // 与历史实现一致：将 1～3 位片段 pad 成毫秒字段再取前三位
+          final milliseconds = fracRaw != null && fracRaw.isNotEmpty
+              ? int.parse(fracRaw.padRight(3, '0').substring(0, 3))
               : 0;
 
-          text ??= (match.group(4)?.trim() ?? '');
+          text ??= (match.group(5)?.trim() ?? '');
           if (text.isEmpty) continue;
 
           final timestamp = Duration(
@@ -84,7 +92,10 @@ class LyricsUtils {
   }
 
   /// 根据当前播放时间找到对应的歌词行索引
-  static int findCurrentLyricIndex(List<LyricEntry> lyrics, Duration currentPosition) {
+  static int findCurrentLyricIndex(
+    List<LyricEntry> lyrics,
+    Duration currentPosition,
+  ) {
     if (lyrics.isEmpty) return -1;
 
     // 纯文本歌词：无时间戳，外部单行展示（系统通知等）固定用第一行

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -25,6 +27,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/song_metadata_reload_utils.dart';
+import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -41,6 +44,7 @@ import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
+import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
@@ -53,6 +57,18 @@ import 'package:yeah_music/widgets/song_metadata_dialog.dart'
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
     show AudioMetadata;
+
+/// macOS / Windows / Linux 下提供分屏(2) 与宽屏剧院(3)；移动端仅 0–1。
+bool songPageShowsDesktopExtraPanels() {
+  if (kIsWeb) return false;
+  return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+}
+
+/// 与 Hive [last_song_page]、路由 [SongPage.initialPage] 对齐（桌面 0–3，移动 0–1）。
+int songPageClampInitialIndex(int page) {
+  final max = songPageShowsDesktopExtraPanels() ? 3 : 1;
+  return page.clamp(0, max);
+}
 
 class SongPage extends StatefulWidget {
   int index;
@@ -80,8 +96,26 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   /// 分屏页右侧歌词列表独立滚动，与全屏 [ListView] 解耦
   late ScrollController _splitLyricScrollController;
 
-  /// 分屏页歌词行 [GlobalKey]，与 [_lyricKeys] 一一对应、仅供分屏列表 [ensureVisible]
+  /// 分屏页歌词行 [GlobalKey]，与 [_lyricKeys] 一一对应；对齐时用 [ScrollPosition.ensureVisible] 勿用 [Scrollable.ensureVisible]
   List<GlobalKey> _lyricKeysSplit = [];
+
+  /// 第四页「宽屏剧院」右侧歌词列表
+  late ScrollController _desktopTheaterLyricScrollController;
+  List<GlobalKey> _lyricKeysDesktop = [];
+
+  /// 第四页剧院左侧「队列封面轨」纵向滚动
+  late ScrollController _desktopTheaterCoverScrollController;
+
+  /// 当前播放封面行：封面轨纵向对齐用 [ScrollPosition]，勿用 [Scrollable.ensureVisible]（会带动外层 PageView）
+  final GlobalKey _theaterCoverCurrentSlotKey = GlobalKey();
+
+  /// 最近一次封面轨布局参数（用于 [_flushTheaterCoverScrollAlignmentNow]）
+  double? _theaterCoverLastSideMain;
+  double? _theaterCoverLastSideSmall;
+
+  /// 上次已对齐到中心的播放索引；与 [_theaterCoverEnterPageAlignPending] 配合避免打断用户手动滚动
+  int? _lastTheaterCoverAlignedIndex;
+  bool _theaterCoverEnterPageAlignPending = false;
 
   /// 与当前已加载歌词对应的曲目路径（build 中用于检测切歌，需与 [ _lyricsHydratedForPath ] 同步）
   String? _lyricsBoundSongPath;
@@ -104,7 +138,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   Duration _seekPreview = Duration.zero;
 
   late final PageController _pageController;
-  int _currentPage = 0; // 0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
+  // 0=封皮，1=全屏歌词，2=分屏，3=宽屏剧院（沉浸式：无底部全局控制条）
+  int _currentPage = 0;
   bool _pageStateLoaded = false; // 标记页面状态是否已加载
 
   /// 播放页保持屏幕常亮（偏好持久化于 Hive）
@@ -128,10 +163,14 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     SettingsService.lyricsUiStorageRevision.addListener(_lyricsUiRevListener);
     _scrollController = ScrollController();
     _settings = LyricSettings(); // 初始化默认设置
-    final initialPage = widget.initialPage.clamp(0, 2);
-    _currentPage = initialPage;
-    _pageController = PageController(initialPage: initialPage);
+    final desktop = songPageShowsDesktopExtraPanels();
+    final pinned = widget.initialPage.clamp(0, desktop ? 3 : 1);
+    // 与路由 / Hive 一致：上次在剧院(3)则直接打开剧院，勿先落在分屏(2)再 jump，避免闪一下第三页
+    _currentPage = pinned;
+    _pageController = PageController(initialPage: pinned);
     _splitLyricScrollController = ScrollController();
+    _desktopTheaterLyricScrollController = ScrollController();
+    _desktopTheaterCoverScrollController = ScrollController();
     _loadSettings();
     _listenToPlayer();
     unawaited(_loadKeepAwakePreference());
@@ -218,34 +257,38 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       _initLyrics();
       _updateDuration();
       _loadPlaybackMode();
-      // 加载上次的页面状态（封皮或歌词）
-      _loadPageState();
+      // 加载上次的页面状态（封皮 / 歌词 / 分屏 / 宽屏剧院）
+      await _loadPageState();
     });
   }
 
-  /// 加载页面状态（封皮或歌词）
+  /// 加载页面状态（封皮 / 歌词 / 分屏 / 宽屏剧院）
   Future<void> _loadPageState() async {
-    if (_pageStateLoaded) return; // 避免重复加载
+    if (_pageStateLoaded) return;
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       final savedPage = box.get('last_song_page', defaultValue: 0) as int?;
-      if (savedPage != null && savedPage >= 0 && savedPage <= 2) {
-        _pageStateLoaded = true;
-        if (savedPage == _currentPage) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _pageController.hasClients) {
-            _pageController.jumpToPage(savedPage);
-            setState(() {
-              _currentPage = savedPage;
-            });
+      _pageStateLoaded = true;
+      if (savedPage == null || savedPage < 0 || savedPage > 3) return;
+      if (!mounted) return;
+
+      final done = Completer<void>();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          if (!mounted || !_pageController.hasClients) return;
+          final max = songPageShowsDesktopExtraPanels() ? 3 : 1;
+          final target = savedPage.clamp(0, max);
+          if (target != _currentPage) {
+            _pageController.jumpToPage(target);
+            setState(() => _currentPage = target);
           }
-        });
-      } else {
-        _pageStateLoaded = true;
-      }
+        } finally {
+          if (!done.isCompleted) done.complete();
+        }
+      });
+      await done.future;
     } catch (e) {
       _pageStateLoaded = true;
-      // 忽略错误，使用默认值
     }
   }
 
@@ -369,6 +412,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     _durationSubscription?.cancel();
     _scrollController.dispose();
     _splitLyricScrollController.dispose();
+    _desktopTheaterLyricScrollController.dispose();
+    _desktopTheaterCoverScrollController.dispose();
     _pageController.dispose();
     _scrollTimer?.cancel();
     // 延迟保存设置，避免在dispose时访问已关闭的box
@@ -379,6 +424,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
   /// 与曲库重新加载元信息时内嵌封面大小上限一致。
   static const int _songMetaReloadMaxEmbeddedArtBytes = 512 * 1024;
+
+  /// 剧院左侧封面 [ListView] 纵向内边距（与 [_flushTheaterCoverScrollAlignmentNow] 算偏移一致）
+  static const double _kTheaterCoverListPadY = 10;
 
   /// 外部编辑器或应用内标签编辑改写磁盘文件后，刷新 Hive / UI / 媒体通知。
   /// 亦用于「更多 → 重新加载元信息」：凡引用该路径的 [Song] 实例（目录列表、合并曲库、当前队列）均 [FileUtils.loadSongMeta] 并 [Song.save]。
@@ -456,6 +504,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       _splitLyricScrollController = ScrollController(
         initialScrollOffset: initialOffset,
       );
+      _desktopTheaterLyricScrollController.dispose();
+      _desktopTheaterLyricScrollController = ScrollController(
+        initialScrollOffset: initialOffset,
+      );
 
       setState(() {
         _lyricsBoundSongPath = song.path;
@@ -467,6 +519,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           (_) => GlobalKey(),
         );
         _lyricKeysSplit = List<GlobalKey>.generate(
+          _lyrics.length,
+          (_) => GlobalKey(),
+        );
+        _lyricKeysDesktop = List<GlobalKey>.generate(
           _lyrics.length,
           (_) => GlobalKey(),
         );
@@ -483,7 +539,20 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       // 再一帧瞬时微调行高误差/未建全的 item
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _lyrics.isEmpty) return;
-        if (_currentLyricIndex >= 0) {
+        if (_currentLyricIndex < 0) return;
+        if (_currentPage == 2) {
+          _scrollSplitToCurrentLyric(
+            _currentLyricIndex,
+            force: true,
+            instant: true,
+          );
+        } else if (_currentPage == 3) {
+          _scrollDesktopTheaterToCurrentLyric(
+            _currentLyricIndex,
+            force: true,
+            instant: true,
+          );
+        } else {
           _scrollToCurrentLyric(_currentLyricIndex, force: true, instant: true);
         }
       });
@@ -492,12 +561,15 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       _scrollController = ScrollController();
       _splitLyricScrollController.dispose();
       _splitLyricScrollController = ScrollController();
+      _desktopTheaterLyricScrollController.dispose();
+      _desktopTheaterLyricScrollController = ScrollController();
       setState(() {
         _lyricsBoundSongPath = song.path;
         _lyricsHydratedForPath = song.path;
         _lyrics = [];
         _lyricKeys = [];
         _lyricKeysSplit = [];
+        _lyricKeysDesktop = [];
         _currentLyricIndex = -1;
       });
     }
@@ -519,10 +591,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         if (!_isSeeking && !_isJumpingPosition) {
           final target = _lastSeekTarget;
           final ignoreUntil = _ignoreStalePositionUntil;
+          // 仅丢弃 seek 后仍明显落后于目标的陈旧位置，避免 abs 误拦合法进度导致进度条卡住
           if (target != null &&
               ignoreUntil != null &&
               DateTime.now().isBefore(ignoreUntil) &&
-              (position - target).abs() > const Duration(seconds: 2)) {
+              position + const Duration(seconds: 2) < target) {
             return;
           }
           if (ignoreUntil != null && !DateTime.now().isBefore(ignoreUntil)) {
@@ -606,17 +679,32 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       _scrollSplitToCurrentLyric(index, force: force, instant: instant);
       return;
     }
+    if (_currentPage == 3) {
+      _scrollDesktopTheaterToCurrentLyric(
+        index,
+        force: force,
+        instant: instant,
+      );
+      return;
+    }
     if (!_scrollController.hasClients) return;
     if (index >= _lyricKeys.length) return;
 
     final ctx = _lyricKeys[index].currentContext;
     if (ctx != null) {
-      Scrollable.ensureVisible(
-        ctx,
-        alignment: 0.5,
-        duration: instant ? Duration.zero : const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+      final ro = ctx.findRenderObject();
+      if (ro != null &&
+          ro.attached &&
+          _scrollController.hasClients) {
+        unawaited(
+          _scrollController.position.ensureVisible(
+            ro,
+            alignment: 0.5,
+            duration: instant ? Duration.zero : const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          ),
+        );
+      }
       return;
     }
 
@@ -650,12 +738,17 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final builtCtx = _lyricKeys[index].currentContext;
-      if (builtCtx != null) {
-        Scrollable.ensureVisible(
-          builtCtx,
-          alignment: 0.5,
-          duration: instant ? Duration.zero : const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
+      final builtRo = builtCtx?.findRenderObject();
+      if (builtRo != null &&
+          builtRo.attached &&
+          _scrollController.hasClients) {
+        unawaited(
+          _scrollController.position.ensureVisible(
+            builtRo,
+            alignment: 0.5,
+            duration: instant ? Duration.zero : const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+          ),
         );
       }
     });
@@ -673,12 +766,19 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
     final ctx = _lyricKeysSplit[index].currentContext;
     if (ctx != null) {
-      Scrollable.ensureVisible(
-        ctx,
-        alignment: 0.5,
-        duration: instant ? Duration.zero : const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+      final ro = ctx.findRenderObject();
+      if (ro != null &&
+          ro.attached &&
+          _splitLyricScrollController.hasClients) {
+        unawaited(
+          _splitLyricScrollController.position.ensureVisible(
+            ro,
+            alignment: 0.5,
+            duration: instant ? Duration.zero : const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          ),
+        );
+      }
       return;
     }
 
@@ -712,12 +812,95 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final builtCtx = _lyricKeysSplit[index].currentContext;
-      if (builtCtx != null) {
-        Scrollable.ensureVisible(
-          builtCtx,
-          alignment: 0.5,
-          duration: instant ? Duration.zero : const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
+      final builtRo = builtCtx?.findRenderObject();
+      if (builtRo != null &&
+          builtRo.attached &&
+          _splitLyricScrollController.hasClients) {
+        unawaited(
+          _splitLyricScrollController.position.ensureVisible(
+            builtRo,
+            alignment: 0.5,
+            duration: instant ? Duration.zero : const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+          ),
+        );
+      }
+    });
+  }
+
+  /// 第四页剧院布局：右侧歌词列表滚动对齐（与 [_scrollSplitToCurrentLyric] 同策略）。
+  void _scrollDesktopTheaterToCurrentLyric(
+    int index, {
+    bool force = false,
+    bool instant = false,
+  }) {
+    if (_isManualScrolling && !force) return;
+    if (!_desktopTheaterLyricScrollController.hasClients) return;
+    if (index < 0 || index >= _lyricKeysDesktop.length) return;
+
+    final ctx = _lyricKeysDesktop[index].currentContext;
+    if (ctx != null) {
+      final ro = ctx.findRenderObject();
+      if (ro != null &&
+          ro.attached &&
+          _desktopTheaterLyricScrollController.hasClients) {
+        unawaited(
+          _desktopTheaterLyricScrollController.position.ensureVisible(
+            ro,
+            alignment: 0.5,
+            duration: instant ? Duration.zero : const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          ),
+        );
+      }
+      return;
+    }
+
+    final pos = _desktopTheaterLyricScrollController.position;
+    final maxExtent = pos.maxScrollExtent;
+    if (maxExtent <= 0 || _lyrics.length <= 1) {
+      if (instant) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollDesktopTheaterToCurrentLyric(
+              index,
+              force: force,
+              instant: instant,
+            );
+          }
+        });
+      }
+      return;
+    }
+
+    final estimatedOffset = (maxExtent * (index / (_lyrics.length - 1))).clamp(
+      pos.minScrollExtent,
+      maxExtent,
+    );
+    if (instant) {
+      _desktopTheaterLyricScrollController.jumpTo(estimatedOffset);
+    } else {
+      _desktopTheaterLyricScrollController.animateTo(
+        estimatedOffset,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final builtCtx = _lyricKeysDesktop[index].currentContext;
+      final builtRo = builtCtx?.findRenderObject();
+      if (builtRo != null &&
+          builtRo.attached &&
+          _desktopTheaterLyricScrollController.hasClients) {
+        unawaited(
+          _desktopTheaterLyricScrollController.position.ensureVisible(
+            builtRo,
+            alignment: 0.5,
+            duration: instant ? Duration.zero : const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+          ),
         );
       }
     });
@@ -738,6 +921,14 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     } else if (_currentPage == 1) {
       if (_currentLyricIndex < _lyricKeys.length) {
         _scrollToCurrentLyric(_currentLyricIndex, force: true, instant: false);
+      }
+    } else if (_currentPage == 3) {
+      if (_currentLyricIndex < _lyricKeysDesktop.length) {
+        _scrollDesktopTheaterToCurrentLyric(
+          _currentLyricIndex,
+          force: true,
+          instant: false,
+        );
       }
     }
   }
@@ -1647,10 +1838,23 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       setState(() {});
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted &&
-            requestId == _seekRequestId &&
-            _currentLyricIndex >= 0 &&
-            _currentLyricIndex < _lyricKeys.length) {
+        if (!mounted || requestId != _seekRequestId || _currentLyricIndex < 0) {
+          return;
+        }
+        if (_currentPage == 2 && _currentLyricIndex < _lyricKeysSplit.length) {
+          _scrollSplitToCurrentLyric(
+            _currentLyricIndex,
+            force: true,
+            instant: false,
+          );
+        } else if (_currentPage == 3 &&
+            _currentLyricIndex < _lyricKeysDesktop.length) {
+          _scrollDesktopTheaterToCurrentLyric(
+            _currentLyricIndex,
+            force: true,
+            instant: false,
+          );
+        } else if (_currentLyricIndex < _lyricKeys.length) {
           _scrollToCurrentLyric(_currentLyricIndex, force: true);
         }
       });
@@ -1849,7 +2053,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     required int pageIndexForFab,
   }) {
     final l10n = AppLocalizations.of(context);
-    return ScrollToCurrentLocateLayer(
+    final layer = ScrollToCurrentLocateLayer(
       onManualScroll: _onUserScroll,
       isManual: _isManualScrolling,
       canLocate: _currentLyricIndex >= 0 && _currentPage == pageIndexForFab,
@@ -1876,6 +2080,745 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           },
         ),
       ),
+    );
+    // 分屏页：纵向滚动通知不向上冒泡。
+    if (pageIndexForFab == 2) {
+      return NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification n) {
+          if (n.metrics.axis == Axis.vertical) {
+            return true;
+          }
+          return false;
+        },
+        child: layer,
+      );
+    }
+    return layer;
+  }
+
+  /// 剧院「即将播放」：插播队列在前，再接播放列表中当前索引之后的曲目（按路径去重）。
+  List<Song> _desktopTheaterUpNextRows(PlayListProvider p) {
+    final seen = <String>{};
+    final out = <Song>[];
+    for (final s in p.pendingPlayAfterCurrentSongs) {
+      final key = s.path.trim();
+      if (key.isEmpty || !seen.add(key)) continue;
+      out.add(s);
+    }
+    if (p.playList.isEmpty) return out;
+    final ci = p.currentIndex.clamp(0, p.playList.length - 1);
+    for (var i = ci + 1; i < p.playList.length; i++) {
+      final s = p.playList[i];
+      final key = s.path.trim();
+      if (key.isEmpty || !seen.add(key)) continue;
+      out.add(s);
+    }
+    return out;
+  }
+
+  void _scheduleTheaterCoverScrollAlignment() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _flushTheaterCoverScrollAlignmentNow();
+    });
+  }
+
+  /// 剧院左侧封面轨：与歌词「定位到当前」一致，点按后结束手动态并滚回当前封面。
+  void _locateTheaterCoverToCurrent() {
+    if (!songPageShowsDesktopExtraPanels() || _currentPage != 3) return;
+    if (!mounted) return;
+    _scrollTimer?.cancel();
+    setState(() {
+      _isManualScrolling = false;
+    });
+    _theaterCoverEnterPageAlignPending = true;
+    _scheduleTheaterCoverScrollAlignment();
+  }
+
+  /// 与 [_buildLyricsScrollStack] 内 [ScrollToCurrentLocateLayer.canLocate] 对齐：剧院页且队列非空。
+  bool _theaterCoverLocateCanExecute(PlayListProvider p) {
+    return songPageShowsDesktopExtraPanels() &&
+        _currentPage == 3 &&
+        p.playList.isNotEmpty;
+  }
+
+  void _flushTheaterCoverScrollAlignmentNow([int depth = 0]) {
+    if (!mounted || depth > 14) return;
+    if (_currentPage != 3) return;
+
+    final p = Provider.of<PlayListProvider>(context, listen: false);
+    final list = p.playList;
+    if (list.isEmpty) return;
+    final ci = p.currentIndex.clamp(0, list.length - 1);
+
+    final force = _theaterCoverEnterPageAlignPending;
+    final indexMoved = _lastTheaterCoverAlignedIndex != ci;
+    if (!force && !indexMoved) return;
+
+    void apply() {
+      if (!mounted) return;
+
+      // 不可使用 [Scrollable.ensureVisible]：会沿祖先链滚动「每一个」Scrollable，
+      // 包含外层横向 [PageView]，导致第四页切歌时出现闪到第三页再回来的现象。
+      // 仅通过封面轨 [ScrollController] 做纵向对齐即可。
+      final sm = _theaterCoverLastSideMain;
+      final ss = _theaterCoverLastSideSmall;
+      final c = _desktopTheaterCoverScrollController;
+      if (!c.hasClients || !c.position.hasContentDimensions) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _flushTheaterCoverScrollAlignmentNow(depth + 1),
+        );
+        return;
+      }
+      if (sm == null || ss == null) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _flushTheaterCoverScrollAlignmentNow(depth + 1),
+        );
+        return;
+      }
+
+      // 与 [_buildDesktopTheaterCoverRail] 槽高一致：当前 +22，其它 +18
+      double itemH(int i) => i == ci ? sm + 22 : ss + 18;
+      double prefix(int idx) {
+        var y = 0.0;
+        for (var j = 0; j < idx && j < list.length; j++) {
+          y += itemH(j);
+        }
+        return y;
+      }
+
+      final padY = _kTheaterCoverListPadY;
+      final viewport = c.position.viewportDimension;
+      final centerY = padY + prefix(ci) + itemH(ci) / 2;
+      final target = centerY - viewport / 2;
+      final clamped = target.clamp(0.0, c.position.maxScrollExtent);
+
+      _theaterCoverEnterPageAlignPending = false;
+      _lastTheaterCoverAlignedIndex = ci;
+
+      if (force) {
+        c.jumpTo(clamped);
+      } else {
+        unawaited(
+          c.animateTo(
+            clamped,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+          ),
+        );
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+  }
+
+  /// 第四页左侧：整队列纵向封面，当前曲为大封面并尽量置于视区中央。
+  Widget _buildDesktopTheaterCoverRail(PlayListProvider playListProvider) {
+    final list = playListProvider.playList;
+    if (list.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final ci = playListProvider.currentIndex.clamp(0, list.length - 1);
+
+    return LayoutBuilder(
+      builder: (context, bc) {
+        final w = bc.maxWidth;
+        final h = bc.maxHeight;
+        // 当前播放封面在桌面剧院至少占约一半视区高度，便于辨认
+        final sideMain = math
+            .max(
+              math.min(w - 8, h * 0.36).clamp(96.0, 260.0),
+              (h * 0.5 - 26).clamp(96.0, math.min(w - 8, 360.0)),
+            )
+            .toDouble();
+        // 队列封面：边长约比当前曲小约 1cm（逻辑像素近似，避免过小）
+        const theaterCoverSmallerThanCurrentPx = 38.0;
+        final sideSmall = (sideMain - theaterCoverSmallerThanCurrentPx)
+            .clamp(56.0, sideMain - 8)
+            .toDouble();
+        _theaterCoverLastSideMain = sideMain;
+        _theaterCoverLastSideSmall = sideSmall;
+
+        return ScrollConfiguration(
+          behavior: MaterialScrollBehavior().copyWith(
+            scrollbars: false,
+            dragDevices: const {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+            },
+          ),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (ScrollNotification n) {
+              if (_currentPage != 3 || !songPageShowsDesktopExtraPanels()) {
+                return false;
+              }
+              if (n is UserScrollNotification) {
+                _onUserScroll();
+              } else if (n is ScrollStartNotification &&
+                  n.dragDetails != null) {
+                _onUserScroll();
+              }
+              return false;
+            },
+            child: Listener(
+              onPointerSignal: (PointerSignalEvent e) {
+                if (_currentPage == 3 &&
+                    songPageShowsDesktopExtraPanels() &&
+                    e is PointerScrollEvent) {
+                  _onUserScroll();
+                }
+              },
+              child: ListView.builder(
+                controller: _desktopTheaterCoverScrollController,
+                padding: const EdgeInsets.fromLTRB(
+                  2,
+                  _kTheaterCoverListPadY,
+                  2,
+                  16,
+                ),
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                itemCount: list.length,
+                itemBuilder: (context, i) {
+                  final s = list[i];
+                  final isCur = i == ci;
+                  final hSlot = isCur ? sideMain + 22.0 : sideSmall + 18.0;
+                  final cover = isCur
+                      ? _buildCoverArt(s, side: sideMain)
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: SongListCover(
+                            song: s,
+                            size: sideSmall,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        );
+                  return Material(
+                    key: i == ci
+                        ? _theaterCoverCurrentSlotKey
+                        : ValueKey<String>('theater_cover_${s.path}'),
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: isCur
+                          ? null
+                          : () async {
+                              await playListProvider.playAt(i);
+                              if (!mounted) return;
+                              _initLyrics();
+                              _updateDuration();
+                            },
+                      borderRadius: BorderRadius.circular(22),
+                      child: SizedBox(
+                        height: hSlot,
+                        child: Center(
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 180),
+                            opacity: isCur ? 1 : 0.72,
+                            child: DecoratedBox(
+                              decoration: isCur
+                                  ? BoxDecoration(
+                                      borderRadius: BorderRadius.circular(24),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          blurRadius: 22,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    )
+                                  : const BoxDecoration(),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: isCur ? 4 : 3,
+                                ),
+                                child: _DesktopHoverMagnifyCover(child: cover),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 第四页：剧院 — 铺满当前页可用宽高（全屏时随屏拉宽），歌词无独立底板。
+  Widget _buildDesktopTheaterPage(
+    Song song,
+    Duration effectivePos,
+    PlayListProvider playListProvider, {
+    required bool skipDisabled,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxW = math.max(1.0, constraints.maxWidth);
+        final maxH = math.max(1.0, constraints.maxHeight);
+        return ClipRect(
+          child: SizedBox(
+            width: maxW,
+            height: maxH,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 28,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            // 消费横向拖动手势，避免外层 PageView 误滑到分屏再弹回
+                            onHorizontalDragStart: (_) {},
+                            onHorizontalDragUpdate: (_) {},
+                            onHorizontalDragEnd: (_) {},
+                            child: Stack(
+                              fit: StackFit.expand,
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned.fill(
+                                  child: _buildDesktopTheaterCoverRail(
+                                    playListProvider,
+                                  ),
+                                ),
+                                if (_isManualScrolling &&
+                                    _theaterCoverLocateCanExecute(
+                                      playListProvider,
+                                    ))
+                                  Positioned(
+                                    right: 10,
+                                    bottom: 16,
+                                    child: ScrollLocateToCurrentActionButton(
+                                      onPressed: _locateTheaterCoverToCurrent,
+                                      tooltip: l10n.locateToCurrentPlaying,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 32,
+                          child: _buildDesktopTheaterCenterColumn(
+                            song,
+                            effectivePos,
+                            l10n,
+                            playListProvider,
+                            skipDisabled: skipDisabled,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 1,
+                    child: _lyrics.isEmpty
+                        ? Center(
+                            child: Text(
+                              l10n.noLyrics,
+                              style: TextStyle(color: context.gradFg(0.45)),
+                            ),
+                          )
+                        : _buildLyricsScrollStack(
+                            effectivePos,
+                            controller: _desktopTheaterLyricScrollController,
+                            keys: _lyricKeysDesktop,
+                            listPadding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 20,
+                            ),
+                            pageIndexForFab: 3,
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopTheaterCenterColumn(
+    Song song,
+    Duration effectivePos,
+    AppLocalizations l10n,
+    PlayListProvider playListProvider, {
+    required bool skipDisabled,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final fg = context.gradFg;
+    final upNextRows = _desktopTheaterUpNextRows(playListProvider);
+
+    Widget circleCtrl({
+      required IconData icon,
+      required VoidCallback? onTap,
+      double size = 40,
+    }) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Icon(icon, size: size * 0.48, color: fg(0.9)),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 3,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.songPageTheaterNowPlaying,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.9,
+                      color: fg(0.55),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            AutoMarqueeSingleLineText(
+              text: song.title ?? l10n.pageUnknownTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                height: 1.15,
+                letterSpacing: -0.2,
+                color: fg(0.98),
+              ),
+              textAlign: TextAlign.start,
+            ),
+            if (song.artist != null && song.artist!.trim().isNotEmpty) ...[
+              const SizedBox(height: 6),
+              AutoMarqueeSingleLineText(
+                text: song.artist!,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.25,
+                  color: fg(0.58),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.start,
+              ),
+            ],
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Text(
+                  LyricsUtils.formatDuration(effectivePos),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: fg(0.5),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  LyricsUtils.formatDuration(_totalDuration),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: fg(0.5),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                trackHeight: 3,
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              ),
+              child: Slider(
+                value: _totalDuration.inMilliseconds > 0
+                    ? (effectivePos.inMilliseconds /
+                              _totalDuration.inMilliseconds)
+                          .clamp(0.0, 1.0)
+                    : 0.0,
+                min: 0,
+                max: 1,
+                activeColor: scheme.primary,
+                inactiveColor: fg(0.18),
+                onChangeStart: (_) {
+                  _isSeeking = true;
+                  _seekPreview = effectivePos;
+                  setState(() {});
+                },
+                onChanged: (value) {
+                  if (_totalDuration.inMilliseconds <= 0) return;
+                  final newPosition = Duration(
+                    milliseconds: (value * _totalDuration.inMilliseconds)
+                        .toInt(),
+                  );
+                  _seekPreview = newPosition;
+                  _updateCurrentLyric(_seekPreview);
+                  setState(() {});
+                },
+                onChangeEnd: (value) async {
+                  if (_totalDuration.inMilliseconds > 0) {
+                    final newPosition = Duration(
+                      milliseconds:
+                          ((value.clamp(0.0, 1.0)) *
+                                  _totalDuration.inMilliseconds)
+                              .toInt(),
+                    );
+                    await _seekTo(newPosition);
+                  } else {
+                    _isSeeking = false;
+                    setState(() {});
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: fg(0.07),
+                  border: Border.all(color: fg(0.16)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      circleCtrl(
+                        icon: Icons.skip_previous_rounded,
+                        onTap: skipDisabled
+                            ? null
+                            : () async {
+                                await playListProvider.playPrev();
+                                if (!mounted) return;
+                                _initLyrics();
+                                _updateDuration();
+                              },
+                      ),
+                      const SizedBox(width: 4),
+                      StreamBuilder<bool>(
+                        stream: MusicService.playingStream,
+                        initialData: MusicService.isPlaying,
+                        builder: (context, snapshot) {
+                          final isPlayingNow = snapshot.data ?? false;
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () async {
+                                if (isPlayingNow) {
+                                  MusicService().pause();
+                                } else {
+                                  if (MusicService.duration != null &&
+                                      _currentPosition.inMilliseconds > 0) {
+                                    MusicService().seek(_currentPosition);
+                                    MusicService().resume();
+                                  } else {
+                                    final ok = await MusicService()
+                                        .playCurrentFromPlaylist(
+                                          queue: playListProvider.playList,
+                                          currentIndex:
+                                              playListProvider.currentIndex,
+                                          useAndroidConcatQueue:
+                                              playListProvider.playbackMode !=
+                                              PlaybackMode.playOnce,
+                                        );
+                                    if (!context.mounted) return;
+                                    if (!ok) {
+                                      reportPlaybackFailureToUser(context);
+                                      return;
+                                    }
+                                    await playListProvider
+                                        .recordRecentForCurrent();
+                                  }
+                                }
+                              },
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      scheme.primary.withValues(alpha: 0.95),
+                                      scheme.primary.withValues(alpha: 0.72),
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.35,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  isPlayingNow
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  size: 28,
+                                  color: scheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                      circleCtrl(
+                        icon: Icons.skip_next_rounded,
+                        onTap: skipDisabled
+                            ? null
+                            : () async {
+                                await playListProvider.playNext();
+                                if (!mounted) return;
+                                _initLyrics();
+                                _updateDuration();
+                              },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 3,
+              height: 14,
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.songPageTheaterUpNext,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.85,
+                  color: fg(0.5),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: upNextRows.isEmpty
+              ? Center(
+                  child: Text(
+                    l10n.queueNoTracks,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.35,
+                      color: fg(0.42),
+                    ),
+                  ),
+                )
+              : ScrollConfiguration(
+                  behavior: MaterialScrollBehavior().copyWith(
+                    scrollbars: false,
+                    dragDevices: const {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                      PointerDeviceKind.trackpad,
+                    },
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(right: 2, bottom: 6),
+                    itemCount: upNextRows.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 2),
+                    itemBuilder: (context, index) {
+                      final s = upNextRows[index];
+                      final pi = playListProvider.playList.indexWhere(
+                        (e) => e.path == s.path,
+                      );
+                      return CompactSongListRow(
+                        song: s,
+                        title: songListPrimaryTitle(s),
+                        subtitle: songListSecondaryLine(s),
+                        showAddToPlaylist: false,
+                        isCurrent: false,
+                        onTap: () async {
+                          if (pi < 0) return;
+                          await playListProvider.playAt(pi);
+                          if (!mounted) return;
+                          _initLyrics();
+                          _updateDuration();
+                        },
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ],
     );
   }
 
@@ -1911,7 +2854,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                 flex: 8,
                 child: Align(
                   alignment: const Alignment(0.32, 0.0),
-                  child: _buildCoverArt(song, side: coverSide),
+                  child: _DesktopHoverMagnifyCover(
+                    child: _buildCoverArt(song, side: coverSide),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1922,13 +2867,14 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // const SizedBox(height: 6),
                       Expanded(
                         child: _lyrics.isEmpty
                             ? Center(
                                 child: Text(
                                   l10n.noLyrics,
-                                  style: TextStyle(color: context.gradFg(0.45)),
+                                  style: TextStyle(
+                                    color: context.gradFg(0.45),
+                                  ),
                                 ),
                               )
                             : _buildLyricsScrollStack(
@@ -1989,6 +2935,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             if (mounted) {
               _initLyrics();
               _updateDuration();
+              _scheduleTheaterCoverScrollAlignment();
             }
           });
         }
@@ -2055,13 +3002,12 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                     ),
                   ),
 
-                  // 封皮 / 全屏歌词 / 分屏；底部分段指示
+                  // 封皮 / 全屏歌词 / 分屏 / 剧院
                   Expanded(
                     child: Column(
                       children: [
                         Expanded(
                           child: ScrollConfiguration(
-                            // 支持鼠标滑动
                             behavior: const MaterialScrollBehavior().copyWith(
                               dragDevices: {
                                 PointerDeviceKind.touch,
@@ -2071,13 +3017,15 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             ),
                             child: PageView(
                               controller: _pageController,
-                              physics: const BouncingScrollPhysics(),
-                              // 启用页面滑动
+                              physics: PageScrollPhysics(
+                                parent: ClampingScrollPhysics(),
+                              ),
+                              // 启用页面滑动；父级用 Clamping 减轻与内层纵向滚动的牵连
                               scrollDirection: Axis.horizontal,
                               // 水平滑动
                               allowImplicitScrolling: false,
                               reverse: false,
-                              // 正常顺序：0=封皮，1=全屏歌词，2=分屏(左封皮·右歌词)
+                              // 0=封皮，1=全屏歌词，2=分屏，3=剧院（沉浸式）
                               onPageChanged: (index) {
                                 setState(() {
                                   _currentPage = index;
@@ -2108,6 +3056,22 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                     );
                                   });
                                 }
+                                if (index == 3 && _lyrics.isNotEmpty) {
+                                  _isManualScrolling = false;
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    if (!mounted) return;
+                                    _updateCurrentLyric(
+                                      _effectivePosition(),
+                                      instantScroll: true,
+                                    );
+                                  });
+                                }
+                                if (index == 3) {
+                                  _theaterCoverEnterPageAlignPending = true;
+                                  _scheduleTheaterCoverScrollAlignment();
+                                }
                               },
                               children: [
                                 // 封皮页面（第0页）：横屏可用高度小，需按宽高中较小边限制，避免 AspectRatio 溢出
@@ -2125,7 +3089,12 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                     return Center(
                                       child: Padding(
                                         padding: const EdgeInsets.all(outerPad),
-                                        child: _buildCoverArt(song, side: side),
+                                        child: _DesktopHoverMagnifyCover(
+                                          child: _buildCoverArt(
+                                            song,
+                                            side: side,
+                                          ),
+                                        ),
                                       ),
                                     );
                                   },
@@ -2163,310 +3132,342 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                         ),
                                         pageIndexForFab: 1,
                                       ),
-                                _buildSplitScreenPage(song, effectivePos),
+                                if (songPageShowsDesktopExtraPanels()) ...[
+                                  _buildSplitScreenPage(song, effectivePos),
+                                  _buildDesktopTheaterPage(
+                                    song,
+                                    effectivePos,
+                                    playListProvider,
+                                    skipDisabled: skipDisabled,
+                                  ),
+                                ],
                               ],
                             ),
                           ),
                         ),
-                        _SongPageIndicator(currentIndex: _currentPage),
+                        _SongPageIndicator(
+                          currentIndex: _currentPage,
+                          pageCount: songPageShowsDesktopExtraPanels() ? 4 : 2,
+                          onSelectPage: (i) {
+                            if (!mounted || !_pageController.hasClients) {
+                              return;
+                            }
+                            if (i == _currentPage) return;
+                            _pageController.animateToPage(
+                              i,
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
 
-                  // 横屏时剩余高度小，底部固定区总高度易超过 [Column] 可用空间；整体 scaleDown + 紧缩竖向边距
-                  LayoutBuilder(
-                    builder: (context, chromeConstraints) {
-                      return FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.bottomCenter,
-                        child: SizedBox(
-                          width: chromeConstraints.maxWidth,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: compactChrome ? 2 : 4,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          LyricsUtils.formatDuration(
-                                            effectivePos,
+                  // 第四页隐藏底部进度条、切歌与工具栏（沉浸式）；其余页保持原样
+                  if (_currentPage != 3)
+                    LayoutBuilder(
+                      builder: (context, chromeConstraints) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.bottomCenter,
+                          child: SizedBox(
+                            width: chromeConstraints.maxWidth,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: compactChrome ? 2 : 4,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            LyricsUtils.formatDuration(
+                                              effectivePos,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: context.gradFg(0.55),
+                                            ),
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: context.gradFg(0.55),
+                                          Text(
+                                            LyricsUtils.formatDuration(
+                                              _totalDuration,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: context.gradFg(0.55),
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          LyricsUtils.formatDuration(
-                                            _totalDuration,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: context.gradFg(0.55),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SliderTheme(
-                                      data: SliderTheme.of(context).copyWith(
-                                        thumbShape: const RoundSliderThumbShape(
-                                          enabledThumbRadius: 6,
-                                        ),
-                                        trackHeight: 2,
+                                        ],
                                       ),
-                                      child: Slider(
-                                        value: _totalDuration.inMilliseconds > 0
-                                            ? (effectivePos.inMilliseconds /
-                                                      _totalDuration
-                                                          .inMilliseconds)
-                                                  .clamp(0.0, 1.0)
-                                            : 0.0,
-                                        min: 0.0,
-                                        max: 1.0,
-                                        activeColor: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        inactiveColor: context.gradFg(0.25),
-                                        onChangeStart: (_) {
-                                          _isSeeking = true;
-                                          _seekPreview = effectivePos;
-                                          setState(() {});
-                                        },
-                                        onChanged: (value) {
-                                          if (_totalDuration.inMilliseconds >
-                                              0) {
-                                            final newPosition = Duration(
-                                              milliseconds:
-                                                  (value *
-                                                          _totalDuration
-                                                              .inMilliseconds)
-                                                      .toInt(),
-                                            );
-                                            _seekPreview = newPosition;
-                                            _updateCurrentLyric(_seekPreview);
+                                      SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          thumbShape:
+                                              const RoundSliderThumbShape(
+                                                enabledThumbRadius: 6,
+                                              ),
+                                          trackHeight: 2,
+                                        ),
+                                        child: Slider(
+                                          value:
+                                              _totalDuration.inMilliseconds > 0
+                                              ? (effectivePos.inMilliseconds /
+                                                        _totalDuration
+                                                            .inMilliseconds)
+                                                    .clamp(0.0, 1.0)
+                                              : 0.0,
+                                          min: 0.0,
+                                          max: 1.0,
+                                          activeColor: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          inactiveColor: context.gradFg(0.25),
+                                          onChangeStart: (_) {
+                                            _isSeeking = true;
+                                            _seekPreview = effectivePos;
                                             setState(() {});
-                                          }
-                                        },
-                                        onChangeEnd: (value) async {
-                                          if (_totalDuration.inMilliseconds >
-                                              0) {
-                                            final newPosition = Duration(
-                                              milliseconds:
-                                                  ((value.clamp(0.0, 1.0)) *
-                                                          _totalDuration
-                                                              .inMilliseconds)
-                                                      .toInt(),
-                                            );
-                                            await _seekTo(newPosition);
-                                          } else {
-                                            _isSeeking = false;
-                                            setState(() {});
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: compactChrome ? 4 : 12,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.skip_previous),
-                                      color: context.gradFg(),
-                                      iconSize: 32,
-                                      onPressed: skipDisabled
-                                          ? null
-                                          : () async {
-                                              await playListProvider.playPrev();
-                                              _initLyrics();
-                                              _updateDuration();
-                                            },
-                                    ),
-                                    const SizedBox(width: 24),
-                                    StreamBuilder<bool>(
-                                      stream: MusicService.playingStream,
-                                      initialData: MusicService.isPlaying,
-                                      builder: (context, snapshot) {
-                                        final isPlayingNow =
-                                            snapshot.data ?? false;
-                                        return GestureDetector(
-                                          onTap: () async {
-                                            if (isPlayingNow) {
-                                              MusicService().pause();
-                                            } else {
-                                              if (MusicService.duration !=
-                                                      null &&
-                                                  _currentPosition
-                                                          .inMilliseconds >
-                                                      0) {
-                                                MusicService().seek(
-                                                  _currentPosition,
-                                                );
-                                                MusicService().resume();
-                                              } else {
-                                                final ok = await MusicService()
-                                                    .playCurrentFromPlaylist(
-                                                      queue: playListProvider
-                                                          .playList,
-                                                      currentIndex:
-                                                          playListProvider
-                                                              .currentIndex,
-                                                      useAndroidConcatQueue:
-                                                          playListProvider
-                                                              .playbackMode !=
-                                                          PlaybackMode.playOnce,
-                                                    );
-                                                if (!context.mounted) return;
-                                                if (!ok) {
-                                                  reportPlaybackFailureToUser(
-                                                    context,
-                                                  );
-                                                  return;
-                                                }
-                                                await playListProvider
-                                                    .recordRecentForCurrent();
-                                              }
+                                          },
+                                          onChanged: (value) {
+                                            if (_totalDuration.inMilliseconds >
+                                                0) {
+                                              final newPosition = Duration(
+                                                milliseconds:
+                                                    (value *
+                                                            _totalDuration
+                                                                .inMilliseconds)
+                                                        .toInt(),
+                                              );
+                                              _seekPreview = newPosition;
+                                              _updateCurrentLyric(_seekPreview);
+                                              setState(() {});
                                             }
                                           },
-                                          child: Container(
-                                            width: 64,
-                                            height: 64,
-                                            alignment: Alignment.center,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: context.gradFg(0.12),
-                                              border: Border.all(
-                                                color: context.gradFg(0.38),
-                                                width: 1.25,
+                                          onChangeEnd: (value) async {
+                                            if (_totalDuration.inMilliseconds >
+                                                0) {
+                                              final newPosition = Duration(
+                                                milliseconds:
+                                                    ((value.clamp(0.0, 1.0)) *
+                                                            _totalDuration
+                                                                .inMilliseconds)
+                                                        .toInt(),
+                                              );
+                                              await _seekTo(newPosition);
+                                            } else {
+                                              _isSeeking = false;
+                                              setState(() {});
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: compactChrome ? 4 : 12,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.skip_previous),
+                                        color: context.gradFg(),
+                                        iconSize: 32,
+                                        onPressed: skipDisabled
+                                            ? null
+                                            : () async {
+                                                await playListProvider
+                                                    .playPrev();
+                                                _initLyrics();
+                                                _updateDuration();
+                                              },
+                                      ),
+                                      const SizedBox(width: 24),
+                                      StreamBuilder<bool>(
+                                        stream: MusicService.playingStream,
+                                        initialData: MusicService.isPlaying,
+                                        builder: (context, snapshot) {
+                                          final isPlayingNow =
+                                              snapshot.data ?? false;
+                                          return GestureDetector(
+                                            onTap: () async {
+                                              if (isPlayingNow) {
+                                                MusicService().pause();
+                                              } else {
+                                                if (MusicService.duration !=
+                                                        null &&
+                                                    _currentPosition
+                                                            .inMilliseconds >
+                                                        0) {
+                                                  MusicService().seek(
+                                                    _currentPosition,
+                                                  );
+                                                  MusicService().resume();
+                                                } else {
+                                                  final ok = await MusicService()
+                                                      .playCurrentFromPlaylist(
+                                                        queue: playListProvider
+                                                            .playList,
+                                                        currentIndex:
+                                                            playListProvider
+                                                                .currentIndex,
+                                                        useAndroidConcatQueue:
+                                                            playListProvider
+                                                                .playbackMode !=
+                                                            PlaybackMode
+                                                                .playOnce,
+                                                      );
+                                                  if (!context.mounted) return;
+                                                  if (!ok) {
+                                                    reportPlaybackFailureToUser(
+                                                      context,
+                                                    );
+                                                    return;
+                                                  }
+                                                  await playListProvider
+                                                      .recordRecentForCurrent();
+                                                }
+                                              }
+                                            },
+                                            child: Container(
+                                              width: 64,
+                                              height: 64,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: context.gradFg(0.12),
+                                                border: Border.all(
+                                                  color: context.gradFg(0.38),
+                                                  width: 1.25,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                isPlayingNow
+                                                    ? Icons.pause
+                                                    : Icons.play_arrow,
+                                                size: 34,
+                                                color: context.gradFg(),
                                               ),
                                             ),
-                                            child: Icon(
-                                              isPlayingNow
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              size: 34,
-                                              color: context.gradFg(),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(width: 24),
-                                    IconButton(
-                                      icon: const Icon(Icons.skip_next),
-                                      color: context.gradFg(),
-                                      iconSize: 32,
-                                      onPressed: skipDisabled
-                                          ? null
-                                          : () async {
-                                              await playListProvider.playNext();
-                                              _initLyrics();
-                                              _updateDuration();
-                                            },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.fromLTRB(
-                                  12,
-                                  compactChrome ? 4 : 8,
-                                  12,
-                                  compactChrome ? 2 : 4,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _SongToolIcon(
-                                      icon: Icons.translate_rounded,
-                                      onPressed: _showLyricStyleSheet,
-                                      tooltip: l10n.tooltipLyricStyle,
-                                    ),
-                                    _SongToolIcon(
-                                      icon: _lyricLineDisplayModeIcon(),
-                                      iconColor: _globalDisplayMode < 0
-                                          ? null
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                      onPressed: _toggleDisplayMode,
-                                      tooltip: _lyricLineDisplayModeTooltip(
-                                        l10n,
+                                          );
+                                        },
                                       ),
-                                    ),
-                                    Consumer<PlayListProvider>(
-                                      builder: (context, provider, _) {
-                                        final t = AppLocalizations.of(context);
-                                        return _SongToolIcon(
-                                          icon: _getPlaybackModeIcon(
-                                            provider.playbackMode,
-                                          ),
-                                          onPressed: () {
-                                            _showPlaybackModeSheet(
-                                              context,
-                                              provider,
-                                            );
-                                          },
-                                          tooltip: playbackModeLabel(
-                                            provider.playbackMode,
-                                            t,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _SongToolIcon(
-                                      icon: Icons.library_add_rounded,
-                                      onPressed: () {
-                                        final song =
-                                            playListProvider.currentSong;
-                                        if (song == null) return;
-                                        showAddToUserPlaylistsSheet(
-                                          context,
-                                          song,
-                                        );
-                                      },
-                                      tooltip: l10n.tooltipAddToPlaylist,
-                                    ),
-                                    _SongToolIcon(
-                                      icon: Icons.more_horiz_rounded,
-                                      onPressed: () {
-                                        _showSongMoreSheet(
-                                          context,
-                                          playListProvider,
-                                        );
-                                      },
-                                      tooltip: l10n.tooltipMore,
-                                    ),
-                                  ],
+                                      const SizedBox(width: 24),
+                                      IconButton(
+                                        icon: const Icon(Icons.skip_next),
+                                        color: context.gradFg(),
+                                        iconSize: 32,
+                                        onPressed: skipDisabled
+                                            ? null
+                                            : () async {
+                                                await playListProvider
+                                                    .playNext();
+                                                _initLyrics();
+                                                _updateDuration();
+                                              },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              SizedBox(
-                                height: MediaQuery.of(context).padding.bottom,
-                              ),
-                            ],
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    12,
+                                    compactChrome ? 4 : 8,
+                                    12,
+                                    compactChrome ? 2 : 4,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      _SongToolIcon(
+                                        icon: Icons.translate_rounded,
+                                        onPressed: _showLyricStyleSheet,
+                                        tooltip: l10n.tooltipLyricStyle,
+                                      ),
+                                      _SongToolIcon(
+                                        icon: _lyricLineDisplayModeIcon(),
+                                        iconColor: _globalDisplayMode < 0
+                                            ? null
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                        onPressed: _toggleDisplayMode,
+                                        tooltip: _lyricLineDisplayModeTooltip(
+                                          l10n,
+                                        ),
+                                      ),
+                                      Consumer<PlayListProvider>(
+                                        builder: (context, provider, _) {
+                                          final t = AppLocalizations.of(
+                                            context,
+                                          );
+                                          return _SongToolIcon(
+                                            icon: _getPlaybackModeIcon(
+                                              provider.playbackMode,
+                                            ),
+                                            onPressed: () {
+                                              _showPlaybackModeSheet(
+                                                context,
+                                                provider,
+                                              );
+                                            },
+                                            tooltip: playbackModeLabel(
+                                              provider.playbackMode,
+                                              t,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _SongToolIcon(
+                                        icon: Icons.library_add_rounded,
+                                        onPressed: () {
+                                          final song =
+                                              playListProvider.currentSong;
+                                          if (song == null) return;
+                                          showAddToUserPlaylistsSheet(
+                                            context,
+                                            song,
+                                          );
+                                        },
+                                        tooltip: l10n.tooltipAddToPlaylist,
+                                      ),
+                                      _SongToolIcon(
+                                        icon: Icons.more_horiz_rounded,
+                                        onPressed: () {
+                                          _showSongMoreSheet(
+                                            context,
+                                            playListProvider,
+                                          );
+                                        },
+                                        tooltip: l10n.tooltipMore,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: MediaQuery.of(context).padding.bottom,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    )
+                  else
+                    SizedBox(height: MediaQuery.paddingOf(context).bottom),
                 ],
               ),
             ),
@@ -2477,22 +3478,60 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   }
 }
 
-/// 播放页中间区域三页：封面 / 全屏歌词 / 分屏
-class _SongPageIndicator extends StatelessWidget {
-  const _SongPageIndicator({required this.currentIndex});
+/// 桌面端：鼠标悬停时略放大封面（封皮 / 分屏 / 剧院封面轨）。
+class _DesktopHoverMagnifyCover extends StatefulWidget {
+  const _DesktopHoverMagnifyCover({required this.child});
 
-  final int currentIndex;
+  final Widget child;
+
+  @override
+  State<_DesktopHoverMagnifyCover> createState() =>
+      _DesktopHoverMagnifyCoverState();
+}
+
+class _DesktopHoverMagnifyCoverState extends State<_DesktopHoverMagnifyCover> {
+  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
-    final idx = currentIndex.clamp(0, 2);
+    if (!songPageShowsDesktopExtraPanels()) return widget.child;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedScale(
+        scale: _hover ? 1.12 : 1.0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.center,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// 播放页中间区域页码指示（桌面 4 段 / 移动 2 段）；可点击切换（第三页禁手滑翻页时必需）。
+class _SongPageIndicator extends StatelessWidget {
+  const _SongPageIndicator({
+    required this.currentIndex,
+    required this.pageCount,
+    required this.onSelectPage,
+  });
+
+  final int currentIndex;
+  final int pageCount;
+  final ValueChanged<int> onSelectPage;
+
+  @override
+  Widget build(BuildContext context) {
+    final n = pageCount.clamp(2, 8);
+    final idx = currentIndex.clamp(0, n - 1);
     return Padding(
       padding: const EdgeInsets.only(top: 2, bottom: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(3, (i) {
+        children: List.generate(n, (i) {
           final sel = i == idx;
-          return AnimatedContainer(
+          final dot = AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -2501,6 +3540,14 @@ class _SongPageIndicator extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
               color: sel ? context.gradFg(0.88) : context.gradFg(0.28),
+            ),
+          );
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => onSelectPage(i),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: dot,
             ),
           );
         }),
