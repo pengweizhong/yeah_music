@@ -3,11 +3,20 @@ set -e
 
 # ====================== 【配置区域】======================
 APP_NAME="YeahMusic"         # 应用名
-# VERSION="1.0.0"           # 已注释，自动从 pubspec.yaml 读取
 ARCH="x86_64"                # 系统架构
 ICON_NAME="yeah_music"       # 图标名
 EXEC_NAME="yeah_music"       # 可执行文件名
 # ==========================================================
+
+# ====================== 接收命令行参数 ======================
+if [ $# -ne 1 ]; then
+    echo "❌ 用法：$0 <ONEDRIVE_CLIENT_ID>"
+    echo "示例：$0 00000000-0000-0000-0000-000000000000"
+    exit 1
+fi
+
+ONEDRIVE_CLIENT_ID="$1"
+DART_DEFINES="--dart-define=ONEDRIVE_CLIENT_ID=${ONEDRIVE_CLIENT_ID}"
 
 # 定位到项目根目录
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
@@ -18,10 +27,11 @@ cd "$PROJECT_ROOT" || exit 1
 # 读取版本号（从 pubspec.yaml）
 VERSION=$(grep 'version:' pubspec.yaml | head -n1 | awk '{print $2}' | cut -d'+' -f1)
 echo "🚀 当前版本号：$VERSION (自动从 pubspec.yaml 读取)"
+echo "🔑 ONEDRIVE_CLIENT_ID 已通过命令行传入"
 
-# 清理 + 构建
+# 清理 + 构建（带环境变量）
 flutter clean
-flutter build linux --release
+flutter build linux --release ${DART_DEFINES}
 
 # 清理旧目录
 rm -rf AppDir
