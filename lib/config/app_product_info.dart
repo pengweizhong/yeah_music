@@ -31,8 +31,8 @@ abstract final class AppProductInfo {
     _cached ??= await PackageInfo.fromPlatform();
   }
 
-  /// 语义版本，如 `1.0.0`。
-  static String get version => _cached?.version ?? '1.0.0';
+  /// 语义版本，如 `1.1.0`。
+  static String get version => _cached?.version ?? '1.1.0';
 
   /// 构建号（Android `versionCode`、iOS `CFBundleVersion` 等）。
   static String get buildNumber => _cached?.buildNumber ?? '1';
