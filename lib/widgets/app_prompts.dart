@@ -781,152 +781,168 @@ void showAppAboutDialog(BuildContext context) {
         final scheme = Theme.of(ctx).colorScheme;
         final onSurface = scheme.onSurface;
         final muted = scheme.onSurfaceVariant;
+        final dialogInset =
+            DialogTheme.of(ctx).insetPadding ??
+            const EdgeInsets.symmetric(horizontal: 40, vertical: 24);
+        final screenH = MediaQuery.sizeOf(ctx).height;
+        final safePad = MediaQuery.paddingOf(ctx).vertical;
+        // 为系统 inset 与卡片内边距留出余量，避免 maxHeight 大于可视区域再次溢出。
+        final maxScrollH =
+            (screenH * 0.72 - safePad * 0.35 - dialogInset.vertical).clamp(
+              160.0,
+              720.0,
+            );
         return Padding(
           padding: const EdgeInsets.all(24),
           child: SizedBox(
             width: double.infinity,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: AppThemedBrandingLogo(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxScrollH),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
                         width: 80,
                         height: 80,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  AppProductInfo.displayName,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: Tooltip(
-                    message: l10n.settingsAboutDialogVersionTapHint,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () =>
-                            unawaited(_handleAboutDialogVersionTap(ctx)),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.primary.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.system_update_outlined,
-                                size: 17,
-                                color: scheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.settingsAboutDialogVersionLabel(
-                                  AppProductInfo.version,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: scheme.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: AppThemedBrandingLogo(
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppProductInfo.displayName,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Tooltip(
+                        message: l10n.settingsAboutDialogVersionTapHint,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () =>
+                                unawaited(_handleAboutDialogVersionTap(ctx)),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: scheme.primary.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.system_update_outlined,
+                                    size: 17,
+                                    color: scheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.settingsAboutDialogVersionLabel(
+                                      AppProductInfo.version,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: scheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.settingsAboutDialogBuildLabel(
+                        AppProductInfo.buildNumber,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: muted),
+                    ),
+                    const SizedBox(height: 20),
+                    Divider(color: scheme.outline.withValues(alpha: 0.35)),
+                    const SizedBox(height: 12),
+                    _aboutDialogInfoRow(
+                      scheme,
+                      Icons.person_outline,
+                      l10n.settingsAboutDialogAuthor,
+                      'PengWeiZhong',
+                    ),
+                    const SizedBox(height: 12),
+                    _aboutDialogInfoRow(
+                      scheme,
+                      Icons.code,
+                      l10n.settingsAboutDialogRepo,
+                      'https://github.com/pengweizhong/yeah_music',
+                    ),
+                    const SizedBox(height: 12),
+                    _aboutDialogInfoRow(
+                      scheme,
+                      Icons.gavel,
+                      l10n.settingsAboutDialogLicense,
+                      'GPL-3.0',
+                    ),
+                    const SizedBox(height: 12),
+                    _aboutDialogActionRow(
+                      ctx,
+                      scheme,
+                      Icons.privacy_tip_outlined,
+                      l10n.settingsAboutDialogPrivacy,
+                      l10n.settingsPrivacyPolicyTitle,
+                      () {
+                        showAppScrollMessageDialog(
+                          context: ctx,
+                          title: l10n.settingsPrivacyPolicyTitle,
+                          body: l10n.settingsPrivacyPolicyBody,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _aboutDialogInfoRow(
+                      scheme,
+                      Icons.copyright,
+                      l10n.settingsAboutDialogCopyright,
+                      '©2026 PengWeiZhong',
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(l10n.settingsAboutDialogClose),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n.settingsAboutDialogBuildLabel(
-                    AppProductInfo.buildNumber,
-                  ),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: muted),
-                ),
-                const SizedBox(height: 20),
-                Divider(color: scheme.outline.withValues(alpha: 0.35)),
-                const SizedBox(height: 12),
-                _aboutDialogInfoRow(
-                  scheme,
-                  Icons.person_outline,
-                  l10n.settingsAboutDialogAuthor,
-                  'PengWeiZhong',
-                ),
-                const SizedBox(height: 12),
-                _aboutDialogInfoRow(
-                  scheme,
-                  Icons.code,
-                  l10n.settingsAboutDialogRepo,
-                  'https://github.com/pengweizhong/yeah_music',
-                ),
-                const SizedBox(height: 12),
-                _aboutDialogInfoRow(
-                  scheme,
-                  Icons.gavel,
-                  l10n.settingsAboutDialogLicense,
-                  'GPL-3.0',
-                ),
-                const SizedBox(height: 12),
-                _aboutDialogActionRow(
-                  ctx,
-                  scheme,
-                  Icons.privacy_tip_outlined,
-                  l10n.settingsAboutDialogPrivacy,
-                  l10n.settingsPrivacyPolicyTitle,
-                  () {
-                    showAppScrollMessageDialog(
-                      context: ctx,
-                      title: l10n.settingsPrivacyPolicyTitle,
-                      body: l10n.settingsPrivacyPolicyBody,
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _aboutDialogInfoRow(
-                  scheme,
-                  Icons.copyright,
-                  l10n.settingsAboutDialogCopyright,
-                  '©2026 PengWeiZhong',
-                ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(l10n.settingsAboutDialogClose),
-                ),
-              ],
+              ),
             ),
           ),
         );
