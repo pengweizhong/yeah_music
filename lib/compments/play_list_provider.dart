@@ -144,6 +144,12 @@ class PlayListProvider extends ChangeNotifier {
   /// OneDrive 点播落地扫描结果（与文件夹曲目按路径去重后并入 [libraryMergedSongs] / [playList]）
   List<Song>? _onedriveCachedSongs;
 
+  /// [init] 时注入，供 [refreshOneDriveLibraryOverlay] 在刷新 OneDrive 叠加后同步歌单独有曲目。
+  UserPlaylistProvider? _userPlaylistLibraryOverlaySource;
+
+  /// 出现在自建歌单路径中、但不在「媒体目录 ∪ OneDrive 缓存」中的本机曲目（由 [refreshUserPlaylistLibraryOverlay] 维护）。
+  List<Song> _userPlaylistExtraSongs = const [];
+
   /// 临时播放队列（例如用户歌单），非空时 [playList] 使用该列表而非曲库合并
   List<Song>? _playbackQueueOverride;
 
@@ -207,8 +213,8 @@ class PlayListProvider extends ChangeNotifier {
     _applyPlaybackSession(PlaybackSessionSurface.library);
   }
 
-  /// 媒体目录扫描结果与 OneDrive 本地缓存曲目合并（路径去重，文件夹条目优先）。
-  List<Song> _computeMergedLibrarySongs() {
+  /// 媒体目录 ∪ OneDrive 缓存（不含歌单独有叠加）。
+  List<Song> _computeFolderAndOneDriveMergedSync() {
     final base = folderPlaylistMap.values.expand((l) => l).toList();
     final extra = _onedriveCachedSongs;
     if (extra == null || extra.isEmpty) return base;
@@ -222,6 +228,44 @@ class PlayListProvider extends ChangeNotifier {
       out.add(s);
     }
     return out;
+  }
+
+  /// 媒体目录 + OneDrive + 歌单独有路径中本机存在的曲目（路径去重，文件夹条目优先）。
+  List<Song> _computeMergedLibrarySongs() {
+    final merged = _computeFolderAndOneDriveMergedSync();
+    final pExtra = _userPlaylistExtraSongs;
+    if (pExtra.isEmpty) return merged;
+    final seen = <String>{for (final s in merged) _libraryPathKey(s.path)};
+    final out = List<Song>.from(merged);
+    for (final s in pExtra) {
+      final k = _libraryPathKey(s.path);
+      if (k.isEmpty || seen.contains(k)) continue;
+      seen.add(k);
+      out.add(s);
+    }
+    return out;
+  }
+
+  /// 重新扫描各歌单路径，把「仅歌单引用、不在媒体目录与 OneDrive 缓存」的本机文件并入 [libraryMergedSongs]。
+  Future<void> refreshUserPlaylistLibraryOverlay(UserPlaylistProvider? user) async {
+    if (user == null || !user.initialized) {
+      _userPlaylistExtraSongs = const [];
+    } else {
+      try {
+        final base = _computeFolderAndOneDriveMergedSync();
+        _userPlaylistExtraSongs =
+            await user.collectSongsInPlaylistsMissingFromLibrary(base);
+      } catch (e, st) {
+        appLog.e('合并歌单独有曲目失败', error: e, stackTrace: st);
+        _userPlaylistExtraSongs = const [];
+      }
+    }
+    if (_initialized) {
+      _invalidateMergedLibraryCacheSyncingCurrentIndex();
+      notifyListeners();
+    } else {
+      _clearPlayListCache();
+    }
   }
 
   /// 文件夹扫描合并后再并入 OneDrive 缓存目录中的曲目（不受 [_playbackQueueOverride] 影响）
@@ -556,8 +600,7 @@ class PlayListProvider extends ChangeNotifier {
   /// 从 [OneDriveController.loadLocallyCachedOneDriveSongs] 刷新叠加曲目并刷新合并缓存。
   Future<void> refreshOneDriveLibraryOverlay(OneDriveController od) async {
     await _loadOneDriveOverlayFrom(od);
-    _invalidateMergedLibraryCacheSyncingCurrentIndex();
-    notifyListeners();
+    await refreshUserPlaylistLibraryOverlay(_userPlaylistLibraryOverlaySource);
   }
 
   Future<void> _loadOneDriveOverlayFrom(OneDriveController od) async {
@@ -649,16 +692,18 @@ class PlayListProvider extends ChangeNotifier {
     if (oneDrive != null) {
       await _loadOneDriveOverlayFrom(oneDrive);
     }
+    _userPlaylistLibraryOverlaySource = userPlaylists;
+    if (userPlaylists != null && !userPlaylists.initialized) {
+      await userPlaylists.init();
+    }
+    await refreshUserPlaylistLibraryOverlay(userPlaylists);
+
     _initialized = true;
 
     await _hydratePlaybackModeFromStorage();
 
     // 进程重启后不保留上一会话的「下一曲播放」插播队列（仅供当次会话）。
     _clearDeferredPlayNext();
-
-    if (userPlaylists != null && !userPlaylists.initialized) {
-      await userPlaylists.init();
-    }
 
     // 歌单「失效路径 → 曲库重绑」不在此批量执行；仅在 OneDrive 从云端恢复歌单后由设置页触发，避免冷启动与每次进歌单详情时全量扫描、写 Hive。
 
@@ -977,7 +1022,7 @@ class PlayListProvider extends ChangeNotifier {
         if (playlist != null) {
           final resolved = await userPlaylists.songsForPlaylistWithDiskFallback(
             playlist,
-            libraryMergedSongs,
+            () => libraryMergedSongs,
           );
           if (resolved.isNotEmpty) {
             _playbackQueueOverride = resolved;

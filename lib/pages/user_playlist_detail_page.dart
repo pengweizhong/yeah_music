@@ -14,6 +14,7 @@ import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
+import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -67,14 +68,12 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
     PlayListProvider playList,
     UserPlaylistProvider userPl,
   ) {
-    final key =
-        '${pl.id}\x1e${playList.libraryMergeEpoch}\x1e${pl.songPaths.join('\x1e')}';
+    final key = '${pl.id}\x1e${pl.songPaths.join('\x1e')}';
     if (_detailSongsFutureHoldKey != key || _detailSongsFutureHold == null) {
       _detailSongsFutureHoldKey = key;
       _detailSongsFutureHold = userPl.resolvedPlaylistSongsForDetailCached(
         playlist: pl,
-        libraryMergeEpoch: playList.libraryMergeEpoch,
-        libraryMergedSongs: playList.libraryMergedSongs,
+        getLibraryMergedSongs: () => playList.libraryMergedSongs,
       );
     }
     return _detailSongsFutureHold!;
@@ -140,6 +139,23 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   void initState() {
     super.initState();
     _loadSort();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final folder = context.read<FolderProvider>();
+      final play = context.read<PlayListProvider>();
+      final od = context.read<OneDriveController>();
+      final user = context.read<UserPlaylistProvider>();
+      if (!user.initialized) await user.init();
+      if (!mounted) return;
+      if (!play.initialized) {
+        try {
+          await play.init(folder, oneDrive: od, userPlaylists: user);
+        } catch (e, st) {
+          appLog.e('歌单详情: PlayListProvider 初始化失败', error: e, stackTrace: st);
+        }
+      }
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -524,13 +540,41 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
           for (var i = 0; i < pl.songPaths.length; i++) pl.songPaths[i]: i,
         };
 
-        return Selector<PlayListProvider, int>(
-          selector: (_, p) => p.libraryMergeEpoch,
-          builder: (context, mergeEpoch, _) {
-            final playList = context.read<PlayListProvider>();
-            assert(mergeEpoch >= 0, 'libraryMergeEpoch should be non-negative');
-            // 与「全部歌曲」一致：不整页挡住等 [PlayListProvider.init]；曲库未就绪时仍解析歌单路径（走磁盘兜底），
-            // 合并完成后再因 [libraryMergeEpoch] 变化刷新一次（Selector 触发）。
+        final playList = context.read<PlayListProvider>();
+        // 等曲库 [initialized] 后再解析歌单，避免合并尚未完成时用空曲库走全盘 [File.exists] 导致长时间 loading。
+        return Selector<PlayListProvider, bool>(
+          selector: (_, p) => p.initialized,
+          builder: (context, libReady, _) {
+            if (!libReady) {
+              return SongPlaylistThemedScaffold(
+                appBar: AppBar(
+                  title: Text(
+                    pl.name,
+                    style: TextStyle(color: context.gradFg(0.96)),
+                  ),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  iconTheme: IconThemeData(color: context.gradFg()),
+                ),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.homeLoadingLibrary,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: context.gradFg(0.72)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            // 不监听 [libraryMergeEpoch]：合并完成后仍复用同一 [Future]，避免世代连增时反复 loading。
             return FutureBuilder<List<Song>>(
               future: _detailSongsFutureFor(pl, playList, userPl),
               builder: (context, snap) {

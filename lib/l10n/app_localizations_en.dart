@@ -2076,6 +2076,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a media folder in Music source first.';
 
   @override
+  String get libraryReloadNoMusicDetected =>
+      'No playable music found. Add a media folder in Music source or add tracks to a playlist, and make sure files still exist.';
+
+  @override
   String get folderRemoveTitle => 'Remove this folder?';
 
   @override

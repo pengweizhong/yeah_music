@@ -3813,6 +3813,12 @@ abstract class AppLocalizations {
   /// **'Add a media folder in Music source first.'**
   String get libraryReloadPullNoFolders;
 
+  /// No description provided for @libraryReloadNoMusicDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'No playable music found. Add a media folder in Music source or add tracks to a playlist, and make sure files still exist.'**
+  String get libraryReloadNoMusicDetected;
+
   /// No description provided for @folderRemoveTitle.
   ///
   /// In en, this message translates to:

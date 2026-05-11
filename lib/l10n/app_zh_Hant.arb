@@ -853,6 +853,7 @@
     }
   },
   "libraryReloadPullNoFolders": "請先在「音樂來源」中新增資料夾。",
+  "libraryReloadNoMusicDetected": "未偵測到可播放的音樂。請新增「音樂來源」資料夾或將音訊加入自建歌單，並確認檔案仍可存取。",
   "folderRemoveTitle": "確認移除？",
   "folderRemoveMessage": "是否移除目錄：{name}（僅移除參考，不刪磁碟上音樂檔）",
   "@folderRemoveMessage": {

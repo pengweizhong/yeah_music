@@ -2003,6 +2003,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryReloadPullNoFolders => '先に「音楽ソース」でフォルダを追加してください。';
 
   @override
+  String get libraryReloadNoMusicDetected =>
+      '再生可能な曲が見つかりません。「音楽ソース」にフォルダを追加するか、プレイリストに曲を追加し、ファイルが存在するか確認してください。';
+
+  @override
   String get folderRemoveTitle => 'このフォルダを外しますか？';
 
   @override

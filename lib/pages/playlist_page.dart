@@ -394,27 +394,42 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
     }
   }
 
-  /// 全部歌曲页顶部下拉：重新扫描并加载所有「音乐源」目录（与设置页单目录刷新逻辑一致）。
+  /// 全部歌曲页顶部下拉：重新扫描「音乐源」目录，并刷新歌单独有曲目与路径对齐。
   Future<void> _reloadAllLibraryFolders() async {
     if (_batchSelect || !mounted) return;
     final folderProvider = context.read<FolderProvider>();
     final playListProvider = context.read<PlayListProvider>();
     final l10n = AppLocalizations.of(context);
+    final userPl = context.read<UserPlaylistProvider>();
+    if (!userPl.initialized) {
+      await userPl.init();
+    }
+    if (!mounted) return;
     final folders = folderProvider.folders;
-    if (folders.isEmpty) {
+    final hasPlaylistPaths =
+        userPl.playlists.any((p) => p.songPaths.isNotEmpty);
+    if (folders.isEmpty && !hasPlaylistPaths) {
       showAppSnackBar(
         context,
-        l10n.libraryReloadPullNoFolders,
+        l10n.libraryReloadNoMusicDetected,
         kind: AppSnackKind.neutral,
       );
       return;
     }
 
     try {
-      for (final folder in folders) {
-        await folderProvider.flushSongToFolder(folder, true);
-        playListProvider.flushPlaylist(folder);
+      if (folders.isNotEmpty) {
+        for (final folder in folders) {
+          await folderProvider.flushSongToFolder(folder, true);
+          playListProvider.flushPlaylist(folder);
+        }
       }
+      if (!mounted) return;
+      await playListProvider.refreshUserPlaylistLibraryOverlay(userPl);
+      if (!mounted) return;
+      await userPl.remapAllPlaylistPathsFromLibrary(
+        playListProvider.libraryMergedSongs,
+      );
       if (!mounted) return;
       setState(() {
         _frozenPathKeys = null;
@@ -423,12 +438,21 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
       });
       if (!mounted) return;
       final n = playListProvider.libraryMergedSongs.length;
-      showAppSnackBar(
-        context,
-        l10n.folderLoadOk(n),
-        kind: AppSnackKind.success,
-        duration: const Duration(seconds: 2),
-      );
+      if (n == 0) {
+        showAppSnackBar(
+          context,
+          l10n.libraryReloadNoMusicDetected,
+          kind: AppSnackKind.neutral,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        showAppSnackBar(
+          context,
+          l10n.folderLoadOk(n),
+          kind: AppSnackKind.success,
+          duration: const Duration(seconds: 2),
+        );
+      }
     } catch (e, st) {
       appLog.e('library pull reload failed', error: e, stackTrace: st);
       if (mounted) {

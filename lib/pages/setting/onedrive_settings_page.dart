@@ -1,6 +1,8 @@
+import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
@@ -22,6 +24,7 @@ import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/onedrive_sync_device.dart';
 
 enum _RestoreTabKind { thisDevice, otherDevice, legacyFlat }
@@ -706,6 +709,11 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         );
         if (!context.mounted) return;
         if (choice.restorePlaylists) {
+          // 与删除/写标签一致：合并曲库与歌单路径重绑会大量 [File] 访问，缺省时共享存储下易 errno 13。
+          if (!kIsWeb && Platform.isAndroid) {
+            await ensureAndroidManageExternalStorageAccess();
+          }
+          if (!context.mounted) return;
           final pl = context.read<PlayListProvider>();
           final folder = context.read<FolderProvider>();
           if (!pl.initialized) {

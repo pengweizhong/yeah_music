@@ -1976,6 +1976,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get libraryReloadPullNoFolders => '请先在「音乐源」中添加目录。';
 
   @override
+  String get libraryReloadNoMusicDetected =>
+      '未检测到可播放的音乐。请添加「音乐源」目录或将音频加入自建歌单，并确认文件仍可访问。';
+
+  @override
   String get folderRemoveTitle => '确认移除？';
 
   @override
@@ -4841,6 +4845,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get libraryReloadPullNoFolders => '请先在「音乐源」中添加目录。';
+
+  @override
+  String get libraryReloadNoMusicDetected =>
+      '未检测到可播放的音乐。请添加「音乐源」目录或将音频加入自建歌单，并确认文件仍可访问。';
 
   @override
   String get folderRemoveTitle => '确认移除？';
@@ -7709,6 +7717,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get libraryReloadPullNoFolders => '請先在「音樂來源」中新增資料夾。';
+
+  @override
+  String get libraryReloadNoMusicDetected =>
+      '未偵測到可播放的音樂。請新增「音樂來源」資料夾或將音訊加入自建歌單，並確認檔案仍可存取。';
 
   @override
   String get folderRemoveTitle => '確認移除？';

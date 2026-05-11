@@ -9,6 +9,7 @@ import 'package:charset/charset.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
+import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/wav_metadata_reader.dart';
 
 import '../models/song.dart';
@@ -76,6 +77,8 @@ class FileUtils {
     bool loadEmbeddedAlbumArt = true,
     bool storeLyricsWithTrack = true,
     int? maxEmbeddedArtBytes,
+    /// Android 11+ 首次读盘遇 errno 13 时尝试请求「所有文件访问」后整体重试一次（避免通知/封面补载死循环）。
+    bool storageUnlockRetryDone = false,
   }) async {
     String filename = song.path.split('/').last;
     File file = File(song.path);
@@ -110,12 +113,40 @@ class FileUtils {
         metadata = await readMeta(false);
       }
     } catch (e, st) {
+      if (!storageUnlockRetryDone &&
+          !kIsWeb &&
+          Platform.isAndroid &&
+          looksLikeAndroidStorageAccessDenied(e)) {
+        await ensureAndroidManageExternalStorageAccess();
+        await loadSongMeta(
+          song,
+          loadEmbeddedAlbumArt: loadEmbeddedAlbumArt,
+          storeLyricsWithTrack: storeLyricsWithTrack,
+          maxEmbeddedArtBytes: maxEmbeddedArtBytes,
+          storageUnlockRetryDone: true,
+        );
+        return;
+      }
       if (loadEmbeddedAlbumArt) {
         appLog.w('readMetadata 失败，尝试跳过内嵌图: $filename', error: e);
         try {
           metadata = await readMetaNoImage();
           resolvedEmbedImages = false;
         } catch (e2) {
+          if (!storageUnlockRetryDone &&
+              !kIsWeb &&
+              Platform.isAndroid &&
+              looksLikeAndroidStorageAccessDenied(e2)) {
+            await ensureAndroidManageExternalStorageAccess();
+            await loadSongMeta(
+              song,
+              loadEmbeddedAlbumArt: loadEmbeddedAlbumArt,
+              storeLyricsWithTrack: storeLyricsWithTrack,
+              maxEmbeddedArtBytes: maxEmbeddedArtBytes,
+              storageUnlockRetryDone: true,
+            );
+            return;
+          }
           song.title = filename;
           final msg = e2.toString();
           final short =

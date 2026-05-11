@@ -238,9 +238,14 @@ class _AppStartupGateState extends State<AppStartupGate> {
       providers: [
         ChangeNotifierProvider(create: (_) => PlayListProvider()),
         ChangeNotifierProvider(
-          create: (_) {
+          create: (context) {
             final p = UserPlaylistProvider();
-            p.init();
+            final pl = context.read<PlayListProvider>();
+            p.onPersistedRequestLibraryPlaylistOverlayRefresh = () async {
+              if (!pl.initialized) return;
+              await pl.refreshUserPlaylistLibraryOverlay(p);
+            };
+            unawaited(p.init());
             return p;
           },
         ),

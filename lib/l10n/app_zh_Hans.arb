@@ -853,6 +853,7 @@
     }
   },
   "libraryReloadPullNoFolders": "请先在「音乐源」中添加目录。",
+  "libraryReloadNoMusicDetected": "未检测到可播放的音乐。请添加「音乐源」目录或将音频加入自建歌单，并确认文件仍可访问。",
   "folderRemoveTitle": "确认移除？",
   "folderRemoveMessage": "是否移除目录：{name}（仅移除引用，不删磁盘上音乐文件）",
   "@folderRemoveMessage": {

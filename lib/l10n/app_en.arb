@@ -853,6 +853,7 @@
     }
   },
   "libraryReloadPullNoFolders": "Add a media folder in Music source first.",
+  "libraryReloadNoMusicDetected": "No playable music found. Add a media folder in Music source or add tracks to a playlist, and make sure files still exist.",
   "folderRemoveTitle": "Remove this folder?",
   "folderRemoveMessage": "Remove {name} from the library? Music files on disk are not deleted.",
   "@folderRemoveMessage": {
