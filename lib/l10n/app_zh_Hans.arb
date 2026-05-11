@@ -708,6 +708,7 @@
   "songPageMoreSoundEffectsSubtitle": "均衡器预设（Android）",
   "playbackSoundPresetSheetTitle": "音效设置",
   "playbackSoundPresetUnsupportedBody": "硬件均衡器仅在 Android 且正在播放时生效；其它平台可先保存预设，在支持的设备上播放时会自动应用。",
+  "playbackSoundPresetStabilityAndroidHint": "该功能尚不稳定，若出现炸音、破音，请选择「原声」。",
   "playbackSoundPresetStandard": "标准 · 原声",
   "playbackSoundPresetPureVocals": "纯净人声",
   "playbackSoundPresetSpatialWide": "3D丽音",

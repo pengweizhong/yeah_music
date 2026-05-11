@@ -1707,6 +1707,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hardware EQ is only applied on Android while audio is playing. On other platforms you can still pick a preset; it will apply the next time you play on a supported device.';
 
   @override
+  String get playbackSoundPresetStabilityAndroidHint =>
+      'This feature may still be unstable. If you hear pops or crackling, choose \"Original\" (flat).';
+
+  @override
   String get playbackSoundPresetStandard => 'Original';
 
   @override

@@ -1639,6 +1639,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'ハードウェアEQはAndroidで再生中のみ適用されます。その他のOSではプリセットを選んで保存でき、対応端末で再生すると反映されます。';
 
   @override
+  String get playbackSoundPresetStabilityAndroidHint =>
+      'この機能はまだ不安定な場合があります。パチッというノイズや割れ音が出るときは「オリジナル（フラット）」を選んでください。';
+
+  @override
   String get playbackSoundPresetStandard => 'オリジナル';
 
   @override

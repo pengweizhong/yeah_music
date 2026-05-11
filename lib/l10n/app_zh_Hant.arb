@@ -708,6 +708,7 @@
   "songPageMoreSoundEffectsSubtitle": "等化器預設（Android）",
   "playbackSoundPresetSheetTitle": "音效設定",
   "playbackSoundPresetUnsupportedBody": "硬體等化器僅在 Android 且正在播放時生效；其它平台可先儲存預設，在支援的裝置上播放時會自動套用。",
+  "playbackSoundPresetStabilityAndroidHint": "此功能尚不穩定，若出現爆音、破音，請選擇「原聲」。",
   "playbackSoundPresetStandard": "標準 · 原聲",
   "playbackSoundPresetPureVocals": "純淨人聲",
   "playbackSoundPresetSpatialWide": "3D麗音",

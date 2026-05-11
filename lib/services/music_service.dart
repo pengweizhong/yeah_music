@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
+import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -60,6 +61,21 @@ class MusicService {
   static StreamSubscription<int?>? _androidSoundPresetSessionSub;
   static Timer? _androidSoundPresetSessionDebounce;
 
+  /// 为 true 时表示正在进行「音量 0 → 解码就绪 → 套 EQ → 渐开」；此间推迟 session 触发的 [reapplyStoredAndroidSoundPreset]，避免与渐开叠用再次开关 EQ 造成偶发炸音。
+  static bool _androidGradualUnmuteInFlight = false;
+
+  static void _onAndroidSessionSoundPresetDebounceFire() {
+    _androidSoundPresetSessionDebounce = null;
+    if (_androidGradualUnmuteInFlight) {
+      _androidSoundPresetSessionDebounce = Timer(
+        const Duration(milliseconds: 180),
+        _onAndroidSessionSoundPresetDebounceFire,
+      );
+      return;
+    }
+    unawaited(reapplyStoredAndroidSoundPreset());
+  }
+
   /// ExoPlayer 在 [androidAudioSessionId] 变化时会重建原生 Equalizer；须再次套用 Hive 中的预设。
   static void attachAndroidSoundPresetSessionListener() {
     if (!Platform.isAndroid) return;
@@ -68,10 +84,128 @@ class MusicService {
         _player.androidAudioSessionIdStream.listen((_) {
       _androidSoundPresetSessionDebounce?.cancel();
       _androidSoundPresetSessionDebounce =
-          Timer(const Duration(milliseconds: 160), () {
-        unawaited(reapplyStoredAndroidSoundPreset());
+          Timer(const Duration(milliseconds: 320), () {
+        _onAndroidSessionSoundPresetDebounceFire();
       });
     });
+  }
+
+  /// 取消待执行的 session 音效重应用，避免与 [stop]/换源 内即将进行的 [reapplyStoredAndroidSoundPreset] 叠用。
+  static void cancelPendingAndroidSoundPresetSessionReapply() {
+    _androidSoundPresetSessionDebounce?.cancel();
+    _androidSoundPresetSessionDebounce = null;
+  }
+
+  /// 与 [abortVolumeFade] 独立：新一次换源后渐开音量任务代数，防止旧任务把音量拉回 1。
+  static int _androidPostSourceUnmuteGen = 0;
+
+  /// 非「原声」渐开结束后略低于 1.0，给 EQ/响度叠加热门母带留余量，减轻削顶爆音（与常见「延迟启用 EQ + 防 clipping」建议一致）。
+  static const double _kAndroidPostEqMasterHeadroom = 0.97;
+
+  /// 换源前将硬件 EQ/响度关到旁路，避免新解码首包仍走「上一曲的曲线」与滤波器状态叠出爆音。
+  static Future<void> _resetAndroidHardwareEffectsToBypass() async {
+    if (!Platform.isAndroid) return;
+    final eq = _androidEqualizer;
+    final loud = _androidLoudnessEnhancer;
+    if (eq == null || loud == null) return;
+    try {
+      await PlaybackSoundEffectService.applyHardAndroidBypassForSourceChange(
+        equalizer: eq,
+        loudness: loud,
+      );
+    } catch (e) {
+      appLog.d('_resetAndroidHardwareEffectsToBypass: $e');
+    }
+  }
+
+  /// Android：非「原声」时先 [play] 且音量为 0，待 [ProcessingState.ready] 后再经静音预热、套 EQ、再渐开音量
+  /// （对齐「延迟启用音效 / ready 后再开 Equalizer / 播放后数百毫秒再 apply」等常见做法）。
+  ///
+  /// [skipPresetReapply]：同一条原生拼接队列内仅 [seek] 换索引时 EQ 曲线已正确，只做静音等待 + 渐开音量，
+  /// 避免再次整轨关开 EQ；全量 [setAudioSource] 换源须为 false。
+  static Future<void> _androidGradualUnmuteAfterSourceStart(
+    int gen, {
+    bool skipPresetReapply = false,
+  }) async {
+    if (!Platform.isAndroid) return;
+    try {
+      final preset = await SettingsService.loadPlaybackSoundPreset();
+      if (gen != _androidPostSourceUnmuteGen) return;
+      if (preset == PlaybackSoundPreset.standard) {
+        try {
+          await _player.setVolume(1.0);
+        } catch (_) {}
+        return;
+      }
+
+      cancelPendingAndroidSoundPresetSessionReapply();
+      _androidGradualUnmuteInFlight = true;
+      try {
+        try {
+          /// 仅在 ready 时认为解码器可安全挂 EQ；completed 多为切尾态，避免误当「可开音效」。
+          await _player.playerStateStream
+              .firstWhere(
+                (ps) =>
+                    ps.playing &&
+                    ps.processingState == ProcessingState.ready,
+              )
+              .timeout(const Duration(milliseconds: 2200));
+        } catch (_) {}
+
+        if (gen != _androidPostSourceUnmuteGen) return;
+
+        /// 仍保持音量为 0：在 ready 之后再给一段静音预热，减少首包与滤波器初始化叠出爆音（约 300～500ms 量级，按路径拆分）。
+        await Future<void>.delayed(
+          Duration(
+            milliseconds: skipPresetReapply ? 340 : 220,
+          ),
+        );
+        if (gen != _androidPostSourceUnmuteGen) return;
+
+        if (!skipPresetReapply) {
+          /// 静音下解码已走稳后再写 EQ；频段分步爬升减轻与曲目起始瞬态叠出的爆音。
+          await reapplyStoredAndroidSoundPreset(smoothGainRamp: true);
+        }
+        if (gen != _androidPostSourceUnmuteGen) return;
+        await Future<void>.delayed(
+          Duration(milliseconds: skipPresetReapply ? 90 : 200),
+        );
+        if (gen != _androidPostSourceUnmuteGen) return;
+
+        if (!_player.playing) {
+          try {
+            await _player.setVolume(1.0);
+          } catch (_) {}
+          return;
+        }
+
+        const steps = 28;
+        const stepMs = 12;
+        final head = _kAndroidPostEqMasterHeadroom;
+        for (var i = 1; i <= steps; i++) {
+          if (gen != _androidPostSourceUnmuteGen) return;
+          try {
+            await _player.setVolume(
+              (head * i / steps).clamp(0.0, 1.0),
+            );
+          } catch (_) {}
+          await Future<void>.delayed(const Duration(milliseconds: stepMs));
+        }
+        if (gen != _androidPostSourceUnmuteGen) return;
+        try {
+          await _player.setVolume(head);
+        } catch (_) {}
+      } finally {
+        _androidGradualUnmuteInFlight = false;
+      }
+    } catch (e, st) {
+      appLog.d('Android 渐开音量失败(忽略): $e', error: e, stackTrace: st);
+      if (gen == _androidPostSourceUnmuteGen) {
+        try {
+          await _player.setVolume(1.0);
+        } catch (_) {}
+      }
+    }
   }
 
   /// Android 硬件均衡器（与 [_player] pipeline 绑定）；非 Android 为 null。
@@ -200,7 +334,9 @@ class MusicService {
   }
 
   /// 在换源或切轨后按设置重新应用 Android 音效预设。
-  static Future<void> reapplyStoredAndroidSoundPreset() async {
+  static Future<void> reapplyStoredAndroidSoundPreset({
+    bool smoothGainRamp = false,
+  }) async {
     if (!Platform.isAndroid) return;
     final eq = _androidEqualizer;
     final loud = _androidLoudnessEnhancer;
@@ -211,6 +347,7 @@ class MusicService {
         preset,
         equalizer: eq,
         loudness: loud,
+        smoothGainRamp: smoothGainRamp,
       );
     } catch (e) {
       appLog.d('reapplyStoredAndroidSoundPreset: $e');
@@ -273,29 +410,61 @@ class MusicService {
   Future<bool> _playSongBody(Song song) async {
     androidCarQueueActive = false;
     _invalidateAndroidQueueReuse();
+    abortVolumeFade();
     for (var attempt = 0; attempt < 3; attempt++) {
+      int? unmuteGen;
       try {
+        if (Platform.isAndroid) {
+          _androidPostSourceUnmuteGen++;
+          unmuteGen = _androidPostSourceUnmuteGen;
+        }
         if (Platform.isLinux &&
             _player.processingState == ProcessingState.completed) {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
+        cancelPendingAndroidSoundPresetSessionReapply();
         await _player.stop();
-        await _player.setVolume(1.0);
+        if (Platform.isAndroid) {
+          try {
+            await _player.setVolume(0.0);
+          } catch (_) {}
+        } else {
+          try {
+            await _player.setVolume(1.0);
+          } catch (_) {}
+        }
         if (attempt == 0) {
           await Future<void>.delayed(const Duration(milliseconds: 12));
         } else {
           await Future<void>.delayed(const Duration(milliseconds: 28));
         }
         final tag = await _tagForSong(song);
+        final androidPreset = Platform.isAndroid
+            ? await SettingsService.loadPlaybackSoundPreset()
+            : null;
         await _player.setAudioSource(_buildAudioSource(song, tag: tag));
         await _player.seek(Duration.zero);
-        // 在首帧解码流出前同步套用音效，避免 EQ enable 后短暂未定义状态与「play 后再延迟 48ms 才 reapply」叠出爆音/电音。
         if (Platform.isAndroid) {
+          await Future<void>.delayed(const Duration(milliseconds: 28));
+        }
+        /// 须在 [setAudioSource] 之后：否则 [AndroidEqualizer.parameters] 未就绪，软/原声路径会挂起整条 [_playChain] 导致无法点歌。
+        if (Platform.isAndroid &&
+            androidPreset != null &&
+            androidPreset != PlaybackSoundPreset.standard) {
+          await _resetAndroidHardwareEffectsToBypass();
+          await Future<void>.delayed(const Duration(milliseconds: 16));
+        }
+        // 「原声」仍在静音下先关效果器；非原声则推迟到 [_androidGradualUnmuteAfterSourceStart] 内解码就绪后再套 EQ。
+        if (Platform.isAndroid &&
+            androidPreset == PlaybackSoundPreset.standard) {
           await reapplyStoredAndroidSoundPreset();
         }
         // 勿 await play()：部分机型/后端上该 Future 长期不结束会卡死整条 _playChain 与 UI 触发的 playAt。
         _player.play();
         isPlaying = _player.playing;
+        if (Platform.isAndroid && unmuteGen != null) {
+          unawaited(_androidGradualUnmuteAfterSourceStart(unmuteGen));
+        }
         await Future<void>.delayed(const Duration(milliseconds: 24));
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
@@ -305,6 +474,12 @@ class MusicService {
         }
         return true;
       } catch (e) {
+        if (Platform.isAndroid) {
+          _androidPostSourceUnmuteGen++;
+          try {
+            await _player.setVolume(1.0);
+          } catch (_) {}
+        }
         final msg = e.toString();
         if (attempt == 0 && msg.contains('interrupted')) {
           appLog.d('换源被中断，重试一次: $e');
@@ -338,6 +513,8 @@ class MusicService {
         androidCarQueueActive &&
         identical(queue, _lastAndroidQueueRef)) {
       try {
+        abortVolumeFade();
+        cancelPendingAndroidSoundPresetSessionReapply();
         final seq = _player.sequence;
         if (seq.isEmpty || seq.length != queue.length) {
           throw StateError('sequence length mismatch');
@@ -351,13 +528,28 @@ class MusicService {
             normSongPath(actualPath) != normSongPath(expectedPath)) {
           throw StateError('sequence path mismatch at current index');
         }
-        await _player.setVolume(1.0);
-        await _player.seek(Duration.zero, index: idx);
-        if (Platform.isAndroid) {
-          await reapplyStoredAndroidSoundPreset();
+        final androidPreset = await SettingsService.loadPlaybackSoundPreset();
+        if (androidPreset != PlaybackSoundPreset.standard) {
+          _androidPostSourceUnmuteGen++;
+          final unmuteGen = _androidPostSourceUnmuteGen;
+          try {
+            await _player.setVolume(0.0);
+          } catch (_) {}
+          await _player.seek(Duration.zero, index: idx);
+          _player.play();
+          isPlaying = _player.playing;
+          unawaited(
+            _androidGradualUnmuteAfterSourceStart(
+              unmuteGen,
+              skipPresetReapply: true,
+            ),
+          );
+        } else {
+          await _player.setVolume(1.0);
+          await _player.seek(Duration.zero, index: idx);
+          _player.play();
+          isPlaying = _player.playing;
         }
-        _player.play();
-        isPlaying = _player.playing;
         androidCarQueueActive = true;
         _lastAndroidQueueRef = queue;
         if (Platform.isAndroid) {
@@ -375,14 +567,29 @@ class MusicService {
     }
 
     androidCarQueueActive = false;
+    abortVolumeFade();
     for (var attempt = 0; attempt < 3; attempt++) {
+      int? unmuteGen;
       try {
+        if (Platform.isAndroid) {
+          _androidPostSourceUnmuteGen++;
+          unmuteGen = _androidPostSourceUnmuteGen;
+        }
         if (Platform.isLinux &&
             _player.processingState == ProcessingState.completed) {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
+        cancelPendingAndroidSoundPresetSessionReapply();
         await _player.stop();
-        await _player.setVolume(1.0);
+        if (Platform.isAndroid) {
+          try {
+            await _player.setVolume(0.0);
+          } catch (_) {}
+        } else {
+          try {
+            await _player.setVolume(1.0);
+          } catch (_) {}
+        }
         if (attempt == 0) {
           await Future<void>.delayed(const Duration(milliseconds: 12));
         } else {
@@ -390,6 +597,9 @@ class MusicService {
         }
         final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
         final lyricStyle = await SettingsService.loadLyricSettings();
+        final androidPreset = Platform.isAndroid
+            ? await SettingsService.loadPlaybackSoundPreset()
+            : null;
         final children = <AudioSource>[];
         for (final s in queue) {
           final tag = await buildMediaItemForSong(
@@ -408,10 +618,23 @@ class MusicService {
         androidCarQueueActive = true;
         _lastAndroidQueueRef = queue;
         if (Platform.isAndroid) {
+          await Future<void>.delayed(const Duration(milliseconds: 28));
+        }
+        if (Platform.isAndroid &&
+            androidPreset != null &&
+            androidPreset != PlaybackSoundPreset.standard) {
+          await _resetAndroidHardwareEffectsToBypass();
+          await Future<void>.delayed(const Duration(milliseconds: 16));
+        }
+        if (Platform.isAndroid &&
+            androidPreset == PlaybackSoundPreset.standard) {
           await reapplyStoredAndroidSoundPreset();
         }
         _player.play();
         isPlaying = _player.playing;
+        if (Platform.isAndroid && unmuteGen != null) {
+          unawaited(_androidGradualUnmuteAfterSourceStart(unmuteGen));
+        }
         await Future<void>.delayed(const Duration(milliseconds: 24));
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
@@ -422,6 +645,12 @@ class MusicService {
         }
         return true;
       } catch (e) {
+        if (Platform.isAndroid) {
+          _androidPostSourceUnmuteGen++;
+          try {
+            await _player.setVolume(1.0);
+          } catch (_) {}
+        }
         final msg = e.toString();
         if (attempt == 0 && msg.contains('interrupted')) {
           appLog.d('队列换源被中断，重试一次: $e');
@@ -658,6 +887,10 @@ class MusicService {
 
   Future<void> dispose() async {
     abortVolumeFade();
+    if (Platform.isAndroid) {
+      _androidPostSourceUnmuteGen++;
+      _androidGradualUnmuteInFlight = false;
+    }
     try {
       await _player.setVolume(1.0);
     } catch (_) {}
@@ -681,6 +914,7 @@ class MusicService {
 
   Future<void> stop() async {
     abortVolumeFade();
+    cancelPendingAndroidSoundPresetSessionReapply();
     try {
       isPlaying = false;
       androidCarQueueActive = false;

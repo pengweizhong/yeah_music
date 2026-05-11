@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/services/settings_service.dart';
 
@@ -183,14 +184,95 @@ List<({double hz, double db})> _anchorsFor(PlaybackSoundPreset preset) {
 class PlaybackSoundEffectService {
   PlaybackSoundEffectService._();
 
+  /// 所有 EQ/响度写入串行化，避免换源、[androidAudioSessionId] 回调与 UI 改预设时多路 [setGain] 交错
+  /// 造成爆音、破音（快速切歌时尤其明显）。
+  static Future<void> _applySerialTail = Future.value();
+
+  /// 换源前旁路：不访问 [AndroidEqualizer.parameters]（播放器尚未激活时 [parameters] 会一直挂起，卡死 [MusicService] 整条 [_playChain]）。
+  /// 须与 [applyPreset] 一样走 [_applySerialTail]，避免与 UI/session 音效写入交错。
+  static Future<void> applyHardAndroidBypassForSourceChange({
+    required AndroidEqualizer? equalizer,
+    required AndroidLoudnessEnhancer? loudness,
+  }) {
+    if (equalizer == null || loudness == null) return Future.value();
+    final next = _applySerialTail.then(
+      (_) => _applyHardBypassCore(equalizer: equalizer, loudness: loudness),
+    );
+    _applySerialTail = next.catchError((Object? e, StackTrace st) {
+      appLog.d('applyHardAndroidBypassForSourceChange 失败(可忽略): $e',
+          error: e, stackTrace: st);
+    });
+    return next;
+  }
+
+  static Future<void> _applyHardBypassCore({
+    required AndroidEqualizer equalizer,
+    required AndroidLoudnessEnhancer loudness,
+  }) async {
+    await loudness.setEnabled(false);
+    await loudness.setTargetGain(0);
+    await equalizer.setEnabled(false);
+  }
+
   /// [equalizer] / [loudness] 与 [MusicService] 内 [AudioPlayer] 的 pipeline 一致。
+  ///
+  /// [smoothGainRamp]：从**当前各频段增益**插值到目标的步数更多、间隔更长（播放启动链路等应开启）；
+  /// UI 改预设、session 防抖用 false，仍会做较短插值以避免阶跃，只是更快。
   static Future<void> applyPreset(
     PlaybackSoundPreset preset, {
     required AndroidEqualizer? equalizer,
     required AndroidLoudnessEnhancer? loudness,
-  }) async {
-    if (equalizer == null || loudness == null) return;
+    bool smoothGainRamp = false,
+  }) {
+    if (equalizer == null || loudness == null) return Future.value();
+    final next = _applySerialTail.then(
+      (_) => _applyPresetCore(
+        preset,
+        equalizer: equalizer,
+        loudness: loudness,
+        smoothGainRamp: smoothGainRamp,
+      ),
+    );
+    _applySerialTail = next.catchError((Object? e, StackTrace st) {
+      appLog.d('applyPreset 串行任务失败(可忽略): $e', error: e, stackTrace: st);
+    });
+    return next;
+  }
 
+  /// 各频段从 [fromDb] 线性插值到 [toDb]，避免「先一刀切到 0 再拉目标」在硬件上产生与曲目相关的 zip 爆音。
+  static Future<void> _rampEqBandFromTo(
+    AndroidEqualizerParameters params,
+    List<double> fromDb,
+    List<double> toDb,
+    double minDb,
+    double maxDb, {
+    int steps = 18,
+    int stepDelayMs = 2,
+  }) async {
+    if (fromDb.length != toDb.length ||
+        fromDb.length != params.bands.length) {
+      return;
+    }
+    for (var s = 1; s <= steps; s++) {
+      final t = s / steps;
+      for (var i = 0; i < params.bands.length; i++) {
+        final v = fromDb[i] + (toDb[i] - fromDb[i]) * t;
+        await params.bands[i].setGain(v.clamp(minDb, maxDb));
+      }
+      if (s < steps && stepDelayMs > 0) {
+        await Future<void>.delayed(Duration(milliseconds: stepDelayMs));
+      }
+    }
+  }
+
+  static Future<void> _applyPresetCore(
+    PlaybackSoundPreset preset, {
+    required AndroidEqualizer equalizer,
+    required AndroidLoudnessEnhancer loudness,
+    bool smoothGainRamp = false,
+  }) async {
+    /// 「原声」：整机关 EQ + 响度，信号不经过硬件滤波器；开播前 [reapplyStoredAndroidSoundPreset] 走此路径。
+    /// （曾改为「EQ 常开 + 频段爬回 0dB」软旁路，会在原声下仍把均衡器接回链路，部分机型开局反而易炸音，故恢复硬旁路。）
     if (preset == PlaybackSoundPreset.standard) {
       await equalizer.setEnabled(false);
       await loudness.setTargetGain(0);
@@ -198,6 +280,7 @@ class PlaybackSoundEffectService {
       return;
     }
 
+    /// 不在中途关断 Equalizer；先关响度再保持 EQ 接通，从当前增益插值到目标，减轻阶跃爆音。
     await loudness.setEnabled(false);
     await loudness.setTargetGain(0);
 
@@ -214,34 +297,53 @@ class PlaybackSoundEffectService {
     }
     final minDb = params.minDecibels;
     final maxDb = params.maxDecibels;
+    final fromDb = params.bands.map((b) => b.gain).toList();
 
-    /// 在写入目标曲线前先把各频段置 0 dB，避免 enable 后到各 band.setGain 完成前硬件处于未定义状态，
-    /// 表现为开头约一秒内爆音、刺耳或「电音」感（尤其大动态预设）。
-    for (final band in params.bands) {
-      await band.setGain(0.0.clamp(minDb, maxDb));
-    }
-
+    final List<double> targetsDb;
     if (preset == PlaybackSoundPreset.custom) {
       final raw = await SettingsService.loadPlaybackSoundCustomBandGainsDb();
+      targetsDb = [];
       for (var i = 0; i < params.bands.length; i++) {
         var db = i < raw.length ? raw[i] : 0.0;
-        db = db.clamp(minDb, maxDb);
-        await params.bands[i].setGain(db);
+        targetsDb.add(db.clamp(minDb, maxDb));
       }
-      return;
+    } else {
+      final anchors = _anchorsFor(preset);
+      targetsDb = [];
+      for (final band in params.bands) {
+        var db = _interpolateGainDb(anchors, band.centerFrequency);
+        targetsDb.add(db.clamp(minDb, maxDb));
+      }
     }
 
-    final anchors = _anchorsFor(preset);
-    for (final band in params.bands) {
-      var db = _interpolateGainDb(anchors, band.centerFrequency);
-      db = db.clamp(minDb, maxDb);
-      await band.setGain(db);
-    }
+    final steps = smoothGainRamp ? 26 : 10;
+    final stepMs = smoothGainRamp ? 3 : 1;
+    await _rampEqBandFromTo(
+      params,
+      fromDb,
+      targetsDb,
+      minDb,
+      maxDb,
+      steps: steps,
+      stepDelayMs: stepMs,
+    );
 
     if (preset == PlaybackSoundPreset.bassBoost) {
-      /// 响度增强与 EQ 频段上限无关；约 +6 dB 上限避免过载。
-      await loudness.setTargetGain(6.0);
+      /// 响度增强在「一次 setEnabled(true)+大目标增益」时极易插入爆音；先 0 dB 接通再分步爬升。
+      await Future<void>.delayed(
+        Duration(milliseconds: smoothGainRamp ? 96 : 40),
+      );
+      await loudness.setTargetGain(0.0);
       await loudness.setEnabled(true);
+      const targetFinalDb = 4.5;
+      final loudSteps = smoothGainRamp ? 10 : 5;
+      final loudStepMs = smoothGainRamp ? 14 : 10;
+      for (var s = 1; s <= loudSteps; s++) {
+        await loudness.setTargetGain(targetFinalDb * s / loudSteps);
+        if (s < loudSteps) {
+          await Future<void>.delayed(Duration(milliseconds: loudStepMs));
+        }
+      }
     }
   }
 }

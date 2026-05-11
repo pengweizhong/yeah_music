@@ -154,6 +154,17 @@ class _PlaybackSoundPresetBodyState extends State<_PlaybackSoundPresetBody> {
                       ),
                 ),
               ),
+              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    l10n.playbackSoundPresetStabilityAndroidHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gradFg(0.58),
+                          height: 1.35,
+                        ),
+                  ),
+                ),
               if (kIsWeb || defaultTargetPlatform != TargetPlatform.android)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),

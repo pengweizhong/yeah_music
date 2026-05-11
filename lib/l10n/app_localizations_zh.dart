@@ -1614,6 +1614,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '硬件均衡器仅在 Android 且正在播放时生效；其它平台可先保存预设，在支持的设备上播放时会自动应用。';
 
   @override
+  String get playbackSoundPresetStabilityAndroidHint =>
+      '该功能尚不稳定，若出现炸音、破音，请选择「原声」。';
+
+  @override
   String get playbackSoundPresetStandard => '标准 · 原声';
 
   @override
@@ -4483,6 +4487,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String get playbackSoundPresetUnsupportedBody =>
       '硬件均衡器仅在 Android 且正在播放时生效；其它平台可先保存预设，在支持的设备上播放时会自动应用。';
+
+  @override
+  String get playbackSoundPresetStabilityAndroidHint =>
+      '该功能尚不稳定，若出现炸音、破音，请选择「原声」。';
 
   @override
   String get playbackSoundPresetStandard => '标准 · 原声';
@@ -7355,6 +7363,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get playbackSoundPresetUnsupportedBody =>
       '硬體等化器僅在 Android 且正在播放時生效；其它平台可先儲存預設，在支援的裝置上播放時會自動套用。';
+
+  @override
+  String get playbackSoundPresetStabilityAndroidHint =>
+      '此功能尚不穩定，若出現爆音、破音，請選擇「原聲」。';
 
   @override
   String get playbackSoundPresetStandard => '標準 · 原聲';

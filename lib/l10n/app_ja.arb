@@ -708,6 +708,7 @@
   "songPageMoreSoundEffectsSubtitle": "EQプリセット（Android）",
   "playbackSoundPresetSheetTitle": "サウンドエフェクト",
   "playbackSoundPresetUnsupportedBody": "ハードウェアEQはAndroidで再生中のみ適用されます。その他のOSではプリセットを選んで保存でき、対応端末で再生すると反映されます。",
+  "playbackSoundPresetStabilityAndroidHint": "この機能はまだ不安定な場合があります。パチッというノイズや割れ音が出るときは「オリジナル（フラット）」を選んでください。",
   "playbackSoundPresetStandard": "オリジナル",
   "playbackSoundPresetPureVocals": "ボーカル強調",
   "playbackSoundPresetSpatialWide": "3Dワイド",
