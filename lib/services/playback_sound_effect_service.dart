@@ -215,6 +215,12 @@ class PlaybackSoundEffectService {
     final minDb = params.minDecibels;
     final maxDb = params.maxDecibels;
 
+    /// 在写入目标曲线前先把各频段置 0 dB，避免 enable 后到各 band.setGain 完成前硬件处于未定义状态，
+    /// 表现为开头约一秒内爆音、刺耳或「电音」感（尤其大动态预设）。
+    for (final band in params.bands) {
+      await band.setGain(0.0.clamp(minDb, maxDb));
+    }
+
     if (preset == PlaybackSoundPreset.custom) {
       final raw = await SettingsService.loadPlaybackSoundCustomBandGainsDb();
       for (var i = 0; i < params.bands.length; i++) {

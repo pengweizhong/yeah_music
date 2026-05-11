@@ -289,6 +289,10 @@ class MusicService {
         final tag = await _tagForSong(song);
         await _player.setAudioSource(_buildAudioSource(song, tag: tag));
         await _player.seek(Duration.zero);
+        // 在首帧解码流出前同步套用音效，避免 EQ enable 后短暂未定义状态与「play 后再延迟 48ms 才 reapply」叠出爆音/电音。
+        if (Platform.isAndroid) {
+          await reapplyStoredAndroidSoundPreset();
+        }
         // 勿 await play()：部分机型/后端上该 Future 长期不结束会卡死整条 _playChain 与 UI 触发的 playAt。
         _player.play();
         isPlaying = _player.playing;
@@ -297,11 +301,6 @@ class MusicService {
           final g = ++_androidMediaSessionSyncGeneration;
           unawaited(
             pushAndroidNotificationForSong(song, abortIfStaleGeneration: g),
-          );
-          unawaited(
-            Future<void>.delayed(const Duration(milliseconds: 48), () {
-              return reapplyStoredAndroidSoundPreset();
-            }),
           );
         }
         return true;
@@ -354,6 +353,9 @@ class MusicService {
         }
         await _player.setVolume(1.0);
         await _player.seek(Duration.zero, index: idx);
+        if (Platform.isAndroid) {
+          await reapplyStoredAndroidSoundPreset();
+        }
         _player.play();
         isPlaying = _player.playing;
         androidCarQueueActive = true;
@@ -364,7 +366,6 @@ class MusicService {
           unawaited(
             pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
           );
-          unawaited(reapplyStoredAndroidSoundPreset());
         }
         return true;
       } catch (e) {
@@ -406,6 +407,9 @@ class MusicService {
         );
         androidCarQueueActive = true;
         _lastAndroidQueueRef = queue;
+        if (Platform.isAndroid) {
+          await reapplyStoredAndroidSoundPreset();
+        }
         _player.play();
         isPlaying = _player.playing;
         await Future<void>.delayed(const Duration(milliseconds: 24));
@@ -414,11 +418,6 @@ class MusicService {
           final s = queue[idx];
           unawaited(
             pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
-          );
-          unawaited(
-            Future<void>.delayed(const Duration(milliseconds: 48), () {
-              return reapplyStoredAndroidSoundPreset();
-            }),
           );
         }
         return true;

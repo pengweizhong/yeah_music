@@ -15,7 +15,6 @@ import 'package:yeah_music/widgets/playlist_cover_style_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
-import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
@@ -58,41 +57,32 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   String? _memoOrderKey;
   List<Song>? _memoOrderedSongs;
 
-  /// 曲目解析结果由 [UserPlaylistProvider.resolvedPlaylistSongsForDetailCached] 跨进入缓存。
+  /// [FutureBuilder.future] 必须保持**同一引用**直至歌单/曲库签名变化，否则每次父级 setState
+  /// 都会新建外层 Future，触发 `ConnectionState.waiting` 闪断与列表「刷新感」（全部歌曲页无此结构）。
+  String? _detailSongsFutureHoldKey;
+  Future<List<Song>>? _detailSongsFutureHold;
 
-  Future<List<Song>> _songsFuture(
-    BuildContext context,
+  Future<List<Song>> _detailSongsFutureFor(
     UserPlaylist pl,
     PlayListProvider playList,
     UserPlaylistProvider userPl,
   ) {
-    return _loadResolvedSongs(context, pl, playList, userPl);
-  }
-
-  Future<List<Song>> _loadResolvedSongs(
-    BuildContext context,
-    UserPlaylist pl,
-    PlayListProvider playList,
-    UserPlaylistProvider userPl,
-  ) async {
-    if (!context.mounted) return [];
-    final folder = context.read<FolderProvider>();
-    final od = context.read<OneDriveController>();
-    if (!playList.initialized) {
-      await playList.init(
-        folder,
-        oneDrive: od,
-        userPlaylists: context.read<UserPlaylistProvider>(),
+    final key =
+        '${pl.id}\x1e${playList.libraryMergeEpoch}\x1e${pl.songPaths.join('\x1e')}';
+    if (_detailSongsFutureHoldKey != key || _detailSongsFutureHold == null) {
+      _detailSongsFutureHoldKey = key;
+      _detailSongsFutureHold = userPl.resolvedPlaylistSongsForDetailCached(
+        playlist: pl,
+        libraryMergeEpoch: playList.libraryMergeEpoch,
+        libraryMergedSongs: playList.libraryMergedSongs,
       );
     }
-    if (!context.mounted) return [];
-    // 合并曲库已在 [PlayListProvider.init] / 下载完成等处刷新；此处不再每次进页全量扫 OneDrive 缓存，避免列表整表重算与全局 notify。
-    // 须走带磁盘存在性校验的解析；详情页在 Provider 内按「歌单 id + 路径签名 + 合并曲库世代」跨进入复用 Future。
-    return userPl.resolvedPlaylistSongsForDetailCached(
-      playlist: pl,
-      libraryMergeEpoch: playList.libraryMergeEpoch,
-      libraryMergedSongs: playList.libraryMergedSongs,
-    );
+    return _detailSongsFutureHold!;
+  }
+
+  void _clearDetailSongsFutureHold() {
+    _detailSongsFutureHoldKey = null;
+    _detailSongsFutureHold = null;
   }
 
   @override
@@ -128,13 +118,19 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
       scrollToTopWhenCurrentMissingFromList: true,
       onScrollApplied: (path) {
         if (!mounted) return;
+        if (_lastAutoScrollPathNorm == path) {
+          if (_autoscrollInFlight) {
+            setState(() => _autoscrollInFlight = false);
+          }
+          return;
+        }
         setState(() {
           _lastAutoScrollPathNorm = path;
           _autoscrollInFlight = false;
         });
       },
       onScrollFailed: () {
-        if (!mounted) return;
+        if (!mounted || !_autoscrollInFlight) return;
         setState(() => _autoscrollInFlight = false);
       },
     );
@@ -144,6 +140,16 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
   void initState() {
     super.initState();
     _loadSort();
+  }
+
+  @override
+  void didUpdateWidget(covariant UserPlaylistDetailPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.playlistId != widget.playlistId) {
+      _clearDetailSongsFutureHold();
+      _memoOrderKey = null;
+      _memoOrderedSongs = null;
+    }
   }
 
   @override
@@ -176,6 +182,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
         .read<UserPlaylistProvider>()
         .evictPlaylistDetailResolveCache(widget.playlistId);
     setState(() {
+      _clearDetailSongsFutureHold();
       _memoOrderKey = null;
       _memoOrderedSongs = null;
     });
@@ -517,12 +524,15 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
           for (var i = 0; i < pl.songPaths.length; i++) pl.songPaths[i]: i,
         };
 
-        return Selector<PlayListProvider, (bool, int)>(
-          selector: (_, p) => (p.initialized, p.libraryMergeEpoch),
-          builder: (context, (bool, int) _, _) {
+        return Selector<PlayListProvider, int>(
+          selector: (_, p) => p.libraryMergeEpoch,
+          builder: (context, mergeEpoch, _) {
             final playList = context.read<PlayListProvider>();
+            assert(mergeEpoch >= 0, 'libraryMergeEpoch should be non-negative');
+            // 与「全部歌曲」一致：不整页挡住等 [PlayListProvider.init]；曲库未就绪时仍解析歌单路径（走磁盘兜底），
+            // 合并完成后再因 [libraryMergeEpoch] 变化刷新一次（Selector 触发）。
             return FutureBuilder<List<Song>>(
-              future: _songsFuture(context, pl, playList, userPl),
+              future: _detailSongsFutureFor(pl, playList, userPl),
               builder: (context, snap) {
                 if (snap.connectionState != ConnectionState.done) {
                   return SongPlaylistThemedScaffold(
@@ -837,13 +847,19 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                           scrollToTopWhenCurrentMissingFromList: true,
                           onScrollApplied: (path) {
                             if (!mounted) return;
+                            if (_lastAutoScrollPathNorm == path) {
+                              if (_autoscrollInFlight) {
+                                setState(() => _autoscrollInFlight = false);
+                              }
+                              return;
+                            }
                             setState(() {
                               _lastAutoScrollPathNorm = path;
                               _autoscrollInFlight = false;
                             });
                           },
                           onScrollFailed: () {
-                            if (!mounted) return;
+                            if (!mounted || !_autoscrollInFlight) return;
                             setState(() => _autoscrollInFlight = false);
                           },
                         );

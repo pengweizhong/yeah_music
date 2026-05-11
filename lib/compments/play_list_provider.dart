@@ -73,6 +73,9 @@ class PlayListProvider extends ChangeNotifier {
 
   bool _initialized = false;
 
+  /// 并发 [init]（如首页与歌单页同时触发）合并为单次执行，避免两套 [_addPlayListAsync] 叠加重算曲库。
+  Future<void>? _initFuture;
+
   StreamSubscription<PlayerState>? _playerCompletionSubscription;
   StreamSubscription<int?>? _playerIndexSubscription;
   StreamSubscription<PlayerException>? _playerErrorSubscription;
@@ -610,15 +613,33 @@ class PlayListProvider extends ChangeNotifier {
 
   /// 从 FolderProvider 加载歌曲（优化版本，支持大量歌曲）。
   /// [oneDrive] 非 null 时会并入 OneDrive 点播落地缓存路径中的音频。
+  ///
+  /// 可安全并发 await：多路调用共享同一次内部合并，与首页「后台 init」不叠加重算。
   Future<void> init(
     FolderProvider folderProvider, {
     OneDriveController? oneDrive,
     UserPlaylistProvider? userPlaylists,
   }) async {
-    //若本身已经被初始化
-    if (_initialized) {
-      return;
+    if (_initialized) return;
+    _initFuture ??= _initOnce(
+      folderProvider,
+      oneDrive: oneDrive,
+      userPlaylists: userPlaylists,
+    );
+    try {
+      await _initFuture!;
+    } catch (_) {
+      _initFuture = null;
+      rethrow;
     }
+  }
+
+  Future<void> _initOnce(
+    FolderProvider folderProvider, {
+    OneDriveController? oneDrive,
+    UserPlaylistProvider? userPlaylists,
+  }) async {
+    if (_initialized) return;
     // 等待 FolderProvider 初始化
     if (!folderProvider.initialized) {
       await folderProvider.init();
