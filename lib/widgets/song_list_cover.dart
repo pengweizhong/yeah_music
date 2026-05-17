@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 
 /// 与深色播放主题协调的列表封面占位，避免白底在解码前露出。
 Color songListCoverPlaceholderColor() => const Color(0xFF2E2E2E);
@@ -56,9 +57,11 @@ class SongListCoverStaticShell extends StatelessWidget {
   }
 }
 
-/// 列表/迷你播放条用封面；内嵌字节由列表行等处 [SongLibraryMetadataHydrator] 补全后展示。
-/// 解码按 [Song.path] 去重缓存，同路径多处共享字节。
-class SongListCover extends StatelessWidget {
+/// 列表/迷你播放条用封面；内嵌字节由 [SongLibraryMetadataHydrator] 按需补全。
+///
+/// 冷启动时首页「继续播放」与底部 [MiniPlayer] 可能共用同一 [Song] 实例；
+/// 若仅一处 hydrate，另一处仍持有占位 [ImageProvider] 缓存，需在本组件内补全并 [setState]。
+class SongListCover extends StatefulWidget {
   const SongListCover({
     super.key,
     required this.song,
@@ -71,21 +74,65 @@ class SongListCover extends StatelessWidget {
   final BorderRadius? borderRadius;
 
   @override
+  State<SongListCover> createState() => _SongListCoverState();
+}
+
+class _SongListCoverState extends State<SongListCover> {
+  int _coverFp = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _coverFp = ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
+  }
+
+  @override
+  void didUpdateWidget(SongListCover oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextFp =
+        ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
+    if (oldWidget.song.path != widget.song.path) {
+      _coverFp = nextFp;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
+      return;
+    }
+    if (nextFp != _coverFp) {
+      ApplicationUtils.evictSongCoverProvidersForPath(widget.song.path);
+      setState(() => _coverFp = nextFp);
+    }
+  }
+
+  Future<void> _ensureCoverReady() async {
+    final before =
+        ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
+    await SongLibraryMetadataHydrator.hydrateIfNeeded(widget.song);
+    if (!mounted) return;
+    final after = ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
+    if (before != after) {
+      ApplicationUtils.evictSongCoverProvidersForPath(widget.song.path);
+    }
+    final fp = after;
+    if (fp != _coverFp) {
+      setState(() => _coverFp = fp);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final song = widget.song;
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final image = ApplicationUtils.getImageCoverProvider(
       song,
-      size: size,
+      size: widget.size,
       devicePixelRatio: dpr,
     );
 
     final img = Image(
-      key: ValueKey<String>(
-        '${song.path}#${ApplicationUtils.coverBytesFingerprint(song.imageBytes)}',
-      ),
+      key: ValueKey<String>('${song.path}#$_coverFp'),
       image: image,
-      width: size,
-      height: size,
+      width: widget.size,
+      height: widget.size,
       fit: BoxFit.cover,
       filterQuality: FilterQuality.low,
       gaplessPlayback: true,
@@ -96,7 +143,7 @@ class SongListCover extends StatelessWidget {
             child: Icon(
               Icons.music_note_rounded,
               color: Colors.white.withValues(alpha: 0.45),
-              size: size * 0.45,
+              size: widget.size * 0.45,
             ),
           ),
         );
@@ -104,10 +151,10 @@ class SongListCover extends StatelessWidget {
     );
 
     return SizedBox(
-      width: size,
-      height: size,
+      width: widget.size,
+      height: widget.size,
       child: ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.zero,
+        borderRadius: widget.borderRadius ?? BorderRadius.zero,
         child: Stack(
           fit: StackFit.expand,
           children: [

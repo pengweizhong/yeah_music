@@ -32,6 +32,9 @@ Future<void> showPlaylistCoverStyleSheet(
   );
 }
 
+/// 与主题设置页背景图预览条高度一致（见 [ThemeSettingPage] `_buildImagePicker`）。
+const double kPlaylistCoverEditorPreviewHeight = 200;
+
 const List<Color> _presetSolidColors = [
   Color(0xFF3949AB),
   Color(0xFF00897B),
@@ -262,14 +265,15 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
                 ),
                 const SizedBox(height: 12),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: AspectRatio(
-                    aspectRatio: kPlaylistCoverCropAspectRatio,
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: kPlaylistCoverEditorPreviewHeight,
+                    width: double.infinity,
                     child: DecoratedBox(
                       decoration: playlistCoverCardDecoration(
                         coverStyle: _draft,
                         fallbackGradientIndex: fb,
-                        radius: 14,
+                        radius: 8,
                       ).copyWith(boxShadow: const []),
                       child: Align(
                         alignment: Alignment.bottomLeft,
