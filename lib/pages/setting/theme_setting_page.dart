@@ -562,6 +562,21 @@ class ThemeSettingPage extends StatelessWidget {
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.low,
+                cacheWidth: 1200,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: Colors.white.withValues(alpha: 0.08),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: Colors.white.withValues(alpha: 0.45),
+                      size: 40,
+                    ),
+                  );
+                },
               ),
             ),
           const SizedBox(height: 12),

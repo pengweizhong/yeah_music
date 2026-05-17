@@ -14,6 +14,7 @@ import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
 import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
 import 'package:yeah_music/themes/user_theme_gradient_foreground_scope.dart';
+import 'package:yeah_music/utils/wallpaper_image_bytes.dart';
 import 'package:yeah_music/utils/wallpaper_readable_sampler.dart';
 
 /// 主题配置提供者
@@ -134,14 +135,12 @@ class ThemeConfigProvider extends ChangeNotifier {
     PaintingBinding.instance.imageCache.evict(FileImage(f));
   }
 
-  /// [ResizeImage(FileImage)] 等与路径绑定的解码缓存需在换壁纸后失效。
-  /// 禁止在 [notifyListeners] 触发的同步布局阶段调用 [ImageCache.clear]，部分机型会断言崩溃；
-  /// 延后到当前帧绘制结束再清空。
-  void _scheduleDeferredWallpaperImageCacheClear() {
+  /// 换壁纸后仅驱逐该路径的 [FileImage]，避免 [ImageCache.clear] 与正在解码的预览/全页背景抢缓存导致红屏报错。
+  void _scheduleDeferredWallpaperImageCacheClear([String? path]) {
+    final pth = path ?? _backgroundImagePath;
+    if (pth == null || pth.isEmpty) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        PaintingBinding.instance.imageCache.clear();
-      } catch (_) {}
+      _evictThemeBackgroundImageCache(pth);
     });
   }
 
@@ -338,7 +337,7 @@ class ThemeConfigProvider extends ChangeNotifier {
       _backgroundImagePath = destPath;
       await prefs.setString('background_image_path', destPath);
       _themeBackgroundImageFrame++;
-      _scheduleDeferredWallpaperImageCacheClear();
+      _scheduleDeferredWallpaperImageCacheClear(destPath);
     } catch (e) {
       rethrow;
     }
@@ -349,15 +348,22 @@ class ThemeConfigProvider extends ChangeNotifier {
   /// 裁剪页输出的字节直接写入应用支持目录（当前为 PNG），避免临时文件再读取造成峰值内存翻倍。
   Future<void> setBackgroundImageFromBytes(Uint8List bytes) async {
     if (bytes.isEmpty) return;
+    final normalized = await normalizeWallpaperImageBytes(bytes);
+    if (!await canDecodeWallpaperImageBytes(normalized)) {
+      throw StateError('invalid wallpaper image bytes');
+    }
     final prefs = await SharedPreferences.getInstance();
+    final previousPath = _backgroundImagePath;
+    _evictThemeBackgroundImageCache(previousPath);
     await _removeOldThemeCacheFiles();
     final support = await getApplicationSupportDirectory();
     final destPath = p.join(support.path, '$themeBackgroundSupportBaseName.png');
-    await File(destPath).writeAsBytes(bytes, flush: true);
+    await File(destPath).writeAsBytes(normalized, flush: true);
     _backgroundImagePath = destPath;
     await prefs.setString('background_image_path', destPath);
     _themeBackgroundImageFrame++;
-    _scheduleDeferredWallpaperImageCacheClear();
+    _resetWallpaperAdaptiveToPlatformGuess();
+    _scheduleDeferredWallpaperImageCacheClear(destPath);
     notifyListeners();
     _scheduleWallpaperReadableSample();
   }
@@ -442,8 +448,8 @@ class ThemeConfigProvider extends ChangeNotifier {
                 builder: (ctx) {
                   final sz = MediaQuery.sizeOf(ctx);
                   final dpr = MediaQuery.devicePixelRatioOf(ctx);
-                  final w = (sz.width * dpr).round().clamp(1, 4096);
-                  final h = (sz.height * dpr).round().clamp(1, 4096);
+                  final cacheW =
+                      (sz.width * dpr).round().clamp(1, kWallpaperImageMaxSide);
                   return Image.file(
                     File(_backgroundImagePath!),
                     key: ValueKey<String>(
@@ -454,8 +460,19 @@ class ThemeConfigProvider extends ChangeNotifier {
                     height: double.infinity,
                     alignment: Alignment.center,
                     filterQuality: FilterQuality.low,
-                    cacheWidth: w,
-                    cacheHeight: h,
+                    cacheWidth: cacheW,
+                    errorBuilder: (context, error, stackTrace) {
+                      return ColoredBox(
+                        color: const Color(0xFF121820),
+                        child: Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: Colors.white.withValues(alpha: 0.35),
+                            size: 48,
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
