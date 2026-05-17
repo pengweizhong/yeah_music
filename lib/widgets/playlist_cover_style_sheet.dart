@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' show basename;
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
@@ -172,7 +172,7 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
     final d = _draft;
     if (d == null) return l10n.playlistCoverUseDefaultPalette;
     if (d.isCustomImage) {
-      final name = basename(d.imagePath);
+      final name = p.basename(d.imagePath);
       return '${l10n.playlistCoverPictureSection} · $name';
     }
     if (d.isSolid) {
@@ -211,8 +211,9 @@ class _PlaylistCoverStyleBodyState extends State<_PlaylistCoverStyleBody> {
     );
     if (bytes == null || !mounted) return;
     final dir = await getTemporaryDirectory();
+    // 固定文件名覆盖写入，避免多次选图未保存时 temp 里堆积带时间戳的 PNG。
     final tmp = File(
-      '${dir.path}/ym_playlist_cover_${widget.playlist.id.hashCode}_${DateTime.now().millisecondsSinceEpoch}.png',
+      p.join(dir.path, 'ym_playlist_cover_${widget.playlist.id.hashCode}.png'),
     );
     await tmp.writeAsBytes(bytes);
     setState(() => _draft = UserPlaylistCoverStyle.customImage(tmp.path));

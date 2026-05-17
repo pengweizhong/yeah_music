@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
@@ -13,24 +12,13 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
+import 'package:yeah_music/utils/app_ephemeral_storage.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/services/playback_sound_effect_service.dart';
-
-int _coverContentFingerprint(List<int> bytes) {
-  final len = bytes.length;
-  if (len == 0) return 0;
-  var h = len;
-  final n = len < 4096 ? len : 4096;
-  for (var i = 0; i < n; i++) {
-    h = (h * 31 + bytes[i]) & 0x3fffffff;
-  }
-  h ^= bytes[len - 1];
-  return h;
-}
 
 class MusicService {
   static AndroidLoudnessEnhancer? _androidLoudnessEnhancer;
@@ -696,15 +684,10 @@ class MusicService {
       final bytes = song.imageBytes;
       if (bytes != null && bytes.isNotEmpty) {
         try {
-          final dir = await getTemporaryDirectory();
-          final fp = _coverContentFingerprint(bytes);
-          final uniqueSuffix = Platform.isAndroid
-              ? '_${DateTime.now().microsecondsSinceEpoch}'
-              : '';
-          final name =
-              'yeah_nm_art_${song.path.hashCode}_${bytes.length}_$fp$uniqueSuffix.jpg';
-          final f = File(p.join(dir.path, name));
-          await f.writeAsBytes(bytes, flush: true);
+          final f = await AppEphemeralStorage.writeNotificationArtFile(
+            songPath: song.path,
+            bytes: bytes,
+          );
           artUri = Uri.file(f.path);
         } catch (_) {}
       }

@@ -707,8 +707,12 @@ class PlayListProvider extends ChangeNotifier {
 
     // 歌单「失效路径 → 曲库重绑」不在此批量执行；仅在 OneDrive 从云端恢复歌单后由设置页触发，避免冷启动与每次进歌单详情时全量扫描、写 Hive。
 
-    // 加载上次播放
-    await _restoreLastPlayedSnapshot(userPlaylists: userPlaylists);
+    // 恢复上次播放队列放到首帧之后，避免大曲库启动时与 Hive 门控叠在同一 await 链上。
+    unawaited(
+      _restoreLastPlayedSnapshot(userPlaylists: userPlaylists).then((_) {
+        if (_initialized) notifyListeners();
+      }),
+    );
 
     // 保障 currentIndex 合法
     final list = playList;

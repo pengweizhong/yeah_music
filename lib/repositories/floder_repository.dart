@@ -2,6 +2,7 @@ import 'package:hive/hive.dart';
 import 'package:yeah_music/models/constants.dart';
 
 import '../models/folder.dart';
+import '../utils/folder_hive_lightweight.dart';
 
 class FolderRepository {
   static LazyBox<Folder> get _box =>
@@ -29,6 +30,6 @@ class FolderRepository {
 
   /// 更新文件夹
   static Future<void> updateFolder(Folder folder) async {
-    await folder.save();
+    await FolderHiveLightweight.saveFolder(folder);
   }
 }

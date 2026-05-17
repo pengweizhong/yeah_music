@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -10,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_paths_backup.dart';
+import 'package:yeah_music/utils/folder_hive_lightweight.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 import '../config/app_config.dart';
@@ -61,14 +63,23 @@ class FolderProvider extends ChangeNotifier {
     }
     final box = await HiveUtils.openFolderBox();
     final list = <Folder>[];
+    var i = 0;
     for (final key in box.keys) {
       final f = await box.get(key);
-      if (f != null) list.add(f);
+      if (f != null) {
+        FolderHiveLightweight.stripHeavySongFieldsForHive(f);
+        list.add(f);
+      }
+      i++;
+      if (i % 2 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
     }
     _foldersCache
       ..clear()
       ..addAll(list);
     _box = box;
+    unawaited(FolderHiveLightweight.runStripEmbeddedArtMigrationIfNeeded());
     if (_foldersCache.isEmpty) {
       await _restoreFoldersFromBackupIfNeeded();
     }
@@ -160,7 +171,7 @@ class FolderProvider extends ChangeNotifier {
   /// 修改文件夹名称
   Future<void> renameFolder(Folder folder, String newName) async {
     folder.name = newName;
-    await folder.save();
+    await FolderHiveLightweight.saveFolder(folder);
     await FolderPathsBackup.save(_foldersCache);
     notifyListeners();
   }
@@ -238,7 +249,7 @@ class FolderProvider extends ChangeNotifier {
 
       folder.songList = songlist;
       if (save) {
-        await folder.save();
+        await FolderHiveLightweight.saveFolder(folder);
       }
       if (listen) {
         notifyListeners();

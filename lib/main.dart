@@ -45,28 +45,12 @@ import 'package:yeah_music/services/android_media_session_bridge.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 import 'package:yeah_music/platform/wire_remote_native.dart';
+import 'package:yeah_music/utils/app_ephemeral_storage.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppProductInfo.load();
-
-  if (!kIsWeb && Platform.isAndroid) {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'com.pengwz.yeah_music.channel.audio',
-      androidNotificationChannelName: AppProductInfo.displayName,
-      androidNotificationOngoing: true,
-      preloadArtwork: true,
-      artDownscaleWidth: 512,
-      artDownscaleHeight: 512,
-      notificationColor: const Color(0xFF1E1E2E),
-      onAndroidLyricsSyncToggle:
-          AndroidMediaSessionBridge.toggleLyricsSyncFromNotification,
-    );
-    JustAudioBackground.setFadeOutVolumeHandler(
-      MusicService.fadeOutVolumeWhilePlaying,
-    );
-  }
 
   if (!kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
     try {
@@ -143,11 +127,32 @@ class _AppStartupGateState extends State<AppStartupGate> {
     if (mounted) setState(() => _error = e);
   }
 
+  Future<void> _initAndroidPlaybackBackground() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.pengwz.yeah_music.channel.audio',
+      androidNotificationChannelName: AppProductInfo.displayName,
+      androidNotificationOngoing: true,
+      preloadArtwork: true,
+      artDownscaleWidth: 512,
+      artDownscaleHeight: 512,
+      notificationColor: const Color(0xFF1E1E2E),
+      onAndroidLyricsSyncToggle:
+          AndroidMediaSessionBridge.toggleLyricsSyncFromNotification,
+    );
+    JustAudioBackground.setFadeOutVolumeHandler(
+      MusicService.fadeOutVolumeWhilePlaying,
+    );
+  }
+
   Future<void> _bootstrap() async {
     final appInit = AppInit();
     appInit.initJustAudioKit();
     try {
-      await appInit.initHive();
+      await Future.wait<void>([
+        appInit.initHive(),
+        _initAndroidPlaybackBackground(),
+      ]);
     } catch (e, st) {
       appLog.e('initHive 失败', error: e, stackTrace: st);
       _onHiveInitError(e);
@@ -157,7 +162,10 @@ class _AppStartupGateState extends State<AppStartupGate> {
     MusicService.attachListeningTimeTracker();
     MusicService.attachAndroidSoundPresetSessionListener();
     _disposePreHiveResources();
-    appLog.i('应用启动成功');
+    unawaited(AppEphemeralStorage.runStartupMaintenanceIfNeeded());
+    appLog.i(
+      '应用启动成功（Hive 门控 ${AppStartupClock.formatSeconds2()}s）',
+    );
   }
 
   void _retry() {

@@ -41,6 +41,11 @@ object MusicTagEditorBridge {
             // 副本初始即来自原文件；未在编辑器保存时内容与原件一致，覆盖无损。
             cache.copyTo(freshOrig, overwrite = true)
         } catch (_: Exception) {
+        } finally {
+            try {
+                if (cache.exists()) cache.delete()
+            } catch (_: Exception) {
+            }
         }
     }
 

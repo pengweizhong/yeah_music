@@ -136,20 +136,9 @@ class AppInit {
     await openWithRecovery(Constant.hiveRootPath, () async {
       await Hive.openBox(Constant.hiveRootPath);
     });
-    if (!Hive.isBoxOpen(Constant.hiveFolderBox)) {
-      await openWithRecovery(
-        Constant.hiveFolderBox,
-        () async {
-          await Hive.openLazyBox<Folder>(
-            Constant.hiveFolderBox,
-            compactionStrategy: hiveFolderLazyBoxCompactionStrategy,
-          );
-        },
-        attemptsBeforeDelete: 8,
-        wipeDiskOnFirstOOM: true,
-      );
-    }
-    appLog.d('Hive: 已就绪');
+    // 音乐源 LazyBox 由 [FolderProvider.init] / [HiveUtils.openFolderBox] 按需打开，
+    // 避免启动门控在超大 yeah_music_folders.hive（含历史 imageBytes）上阻塞数十秒。
+    appLog.d('Hive: 已就绪（音乐源目录延后打开）');
   }
 
   /// 暂时在这里提供一个清理缓存的方法，在开发的时候临时调用

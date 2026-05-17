@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/folder.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/utils/folder_hive_lightweight.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 /// 批量把受影响曲目写入 Hive（单次遍历文件夹）；防抖合并短时密集写入，避免滑动列表时每首歌阻塞磁盘。
@@ -62,7 +63,7 @@ Future<void> persistEmbeddedSongPaths(Set<String> paths) async {
       }
     }
     for (final folder in toSave) {
-      await folder.save();
+      await FolderHiveLightweight.saveFolder(folder);
     }
   } catch (e, st) {
     appLog.w('persistEmbeddedSongPaths failed', error: e, stackTrace: st);
