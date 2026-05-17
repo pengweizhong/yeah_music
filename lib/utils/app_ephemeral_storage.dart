@@ -40,9 +40,32 @@ abstract final class AppEphemeralStorage {
     required List<int> bytes,
   }) async {
     final dir = await getTemporaryDirectory();
-    final file = File(p.join(dir.path, notificationArtBasename(songPath, bytes)));
+    final base = notificationArtBasename(songPath, bytes);
+    final file = File(p.join(dir.path, base));
     await file.writeAsBytes(bytes, flush: true);
+    await _deleteOtherNotificationArtForSong(dir, songPath.hashCode, keepBasename: base);
     return file;
+  }
+
+  /// 封面指纹变化会生成新文件名；删除同曲目的旧 `yeah_nm_art_<pathHash>_*.jpg`。
+  static Future<void> _deleteOtherNotificationArtForSong(
+    Directory dir,
+    int pathHash, {
+    required String keepBasename,
+  }) async {
+    final prefix = 'yeah_nm_art_${pathHash}_';
+    try {
+      if (!await dir.exists()) return;
+      await for (final entity in dir.list()) {
+        if (entity is! File) continue;
+        final name = p.basename(entity.path);
+        if (!name.startsWith(prefix) || !name.endsWith('.jpg')) continue;
+        if (name == keepBasename) continue;
+        try {
+          await entity.delete();
+        } catch (_) {}
+      }
+    } catch (_) {}
   }
 
   /// 启动后后台执行：一次性清掉历史泄漏的 `yeah_nm_art_*`，并修剪其它过期临时目录。
@@ -50,6 +73,7 @@ abstract final class AppEphemeralStorage {
     if (kIsWeb) return;
     await _purgeLegacyNotificationArtOnce();
     await pruneLegacyTimestampNotificationArt();
+    await _pruneStaleNotificationArtFiles();
     await _pruneStaleOneDriveDownloadParts();
     await _pruneStaleScratchFiles();
     await _pruneOrphanCloudRestoreScratchDirs();
@@ -135,6 +159,30 @@ abstract final class AppEphemeralStorage {
     } catch (e, st) {
       appLog.w('清理历史通知封面临时文件失败', error: e, stackTrace: st);
     }
+  }
+
+  /// 长期未播放曲目对应的通知封面（稳定命名、非时间戳泄漏）按修改时间过期删除。
+  static Future<void> _pruneStaleNotificationArtFiles() async {
+    final cutoff = DateTime.now().subtract(const Duration(days: 14));
+    try {
+      for (final root in await _cacheLikeRoots()) {
+        if (!await root.exists()) continue;
+        await for (final entity in root.list(recursive: true)) {
+          if (entity is! File) continue;
+          final base = p.basename(entity.path);
+          if (!base.startsWith('yeah_nm_art_') || !base.endsWith('.jpg')) {
+            continue;
+          }
+          if (_legacyTimestampArtName.hasMatch(base)) continue;
+          try {
+            final modified = await entity.lastModified();
+            if (modified.isBefore(cutoff)) {
+              await entity.delete();
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
   }
 
   /// 防止旧逻辑残留的时间戳文件名继续堆积（正常情况下不应再产生）。
