@@ -1908,7 +1908,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveLinuxUnsupported.
   ///
   /// In en, this message translates to:
-  /// **'OneDrive sign-in is not available on this platform yet.'**
+  /// **'This device does not support OneDrive.'**
   String get oneDriveLinuxUnsupported;
 
   /// No description provided for @oneDriveSignInFailed.
@@ -1916,6 +1916,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn’t sign in. Check your connection and try again.'**
   String get oneDriveSignInFailed;
+
+  /// No description provided for @oneDriveSigningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in…'**
+  String get oneDriveSigningIn;
+
+  /// No description provided for @oneDriveSignInInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in already in progress. Please wait.'**
+  String get oneDriveSignInInProgress;
+
+  /// No description provided for @oneDriveSignInCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in was cancelled.'**
+  String get oneDriveSignInCancelled;
+
+  /// No description provided for @oneDriveOAuthPlatformError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in failed due to a platform error.'**
+  String get oneDriveOAuthPlatformError;
+
+  /// No description provided for @oneDriveSignInMissingAccessToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in response did not include an access token.'**
+  String get oneDriveSignInMissingAccessToken;
+
+  /// No description provided for @oneDriveSignInMissingRefreshToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in response did not include a refresh token. Check that offline_access is granted.'**
+  String get oneDriveSignInMissingRefreshToken;
+
+  /// No description provided for @oneDriveSignInTokenSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save sign-in tokens: {error}'**
+  String oneDriveSignInTokenSaveFailed(String error);
+
+  /// No description provided for @oneDriveSignInDeviceCodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get a device code ({statusCode}).'**
+  String oneDriveSignInDeviceCodeFailed(int statusCode);
+
+  /// No description provided for @oneDriveSignInInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in was interrupted: {reason}'**
+  String oneDriveSignInInterrupted(String reason);
+
+  /// No description provided for @oneDriveSignInTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in timed out. Please try again.'**
+  String get oneDriveSignInTimedOut;
+
+  /// No description provided for @oneDriveSignInNoValidToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not obtain a valid token.'**
+  String get oneDriveSignInNoValidToken;
+
+  /// No description provided for @oneDriveClientIdNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive client ID is not configured.'**
+  String get oneDriveClientIdNotConfigured;
+
+  /// No description provided for @oneDriveClientIdDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OneDrive client ID'**
+  String get oneDriveClientIdDialogTitle;
+
+  /// No description provided for @oneDriveClientIdDialogLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Azure application (client) ID'**
+  String get oneDriveClientIdDialogLabel;
+
+  /// No description provided for @oneDriveClientIdDialogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'**
+  String get oneDriveClientIdDialogHint;
+
+  /// No description provided for @oneDriveOAuthErrorWithDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{error}: {description}'**
+  String oneDriveOAuthErrorWithDetail(String error, String description);
 
   /// No description provided for @oneDriveCacheNote.
   ///

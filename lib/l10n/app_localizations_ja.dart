@@ -980,10 +980,69 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveNotSignedIn => '未サインイン';
 
   @override
-  String get oneDriveLinuxUnsupported => 'このプラットフォームでは OneDrive サインインに未対応です。';
+  String get oneDriveLinuxUnsupported => 'このデバイスでは OneDrive に対応していません。';
 
   @override
   String get oneDriveSignInFailed => 'サインインできませんでした。通信を確認して再度お試しください。';
+
+  @override
+  String get oneDriveSigningIn => 'サインイン中…';
+
+  @override
+  String get oneDriveSignInInProgress => 'サインイン処理中です。しばらくお待ちください。';
+
+  @override
+  String get oneDriveSignInCancelled => 'サインインをキャンセルしました。';
+
+  @override
+  String get oneDriveOAuthPlatformError => 'プラットフォームエラーによりサインインに失敗しました。';
+
+  @override
+  String get oneDriveSignInMissingAccessToken =>
+      'サインイン応答に access_token がありません。';
+
+  @override
+  String get oneDriveSignInMissingRefreshToken =>
+      'サインイン応答に refresh_token がありません（offline_access を確認してください）。';
+
+  @override
+  String oneDriveSignInTokenSaveFailed(String error) {
+    return 'トークンの保存に失敗しました：$error';
+  }
+
+  @override
+  String oneDriveSignInDeviceCodeFailed(int statusCode) {
+    return 'デバイスコードを取得できませんでした（$statusCode）。';
+  }
+
+  @override
+  String oneDriveSignInInterrupted(String reason) {
+    return 'サインインが中断されました：$reason';
+  }
+
+  @override
+  String get oneDriveSignInTimedOut => 'サインインがタイムアウトしました。もう一度お試しください。';
+
+  @override
+  String get oneDriveSignInNoValidToken => '有効なトークンを取得できませんでした。';
+
+  @override
+  String get oneDriveClientIdNotConfigured => 'OneDrive のクライアント ID が設定されていません。';
+
+  @override
+  String get oneDriveClientIdDialogTitle => 'OneDrive クライアント ID';
+
+  @override
+  String get oneDriveClientIdDialogLabel => 'Azure アプリケーション（クライアント）ID';
+
+  @override
+  String get oneDriveClientIdDialogHint =>
+      'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+
+  @override
+  String oneDriveOAuthErrorWithDetail(String error, String description) {
+    return '$error：$description';
+  }
 
   @override
   String get oneDriveCacheNote =>

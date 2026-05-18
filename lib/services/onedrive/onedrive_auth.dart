@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:http/http.dart' as http;
 import 'package:yeah_music/config/onedrive_config.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/services/onedrive/onedrive_token_store.dart';
 
@@ -37,16 +38,19 @@ class OneDriveAuth {
   Future<void> signOut() => _store.clear();
 
   /// 交互式登录；Linux 等平台无 [FlutterAppAuth] 支持时返回 null。
-  Future<({String access, String refresh, DateTime expiry})?> signIn(String clientId) async {
+  Future<({String access, String refresh, DateTime expiry})?> signIn(
+    String clientId,
+    AppLocalizations l10n,
+  ) async {
     _lastErrorMessage = null;
     if (clientId.trim().isEmpty) return null;
     if (Platform.isLinux) {
-      return _signInByDeviceCode(clientId.trim());
+      return _signInByDeviceCode(clientId.trim(), l10n);
     }
 
     if (_interactiveSignInInFlight) {
       appLog.w('OneDrive OAuth: 已有登录流程进行中，请勿重复点击');
-      _lastErrorMessage = '登录流程进行中，请稍候';
+      _lastErrorMessage = l10n.oneDriveSignInInProgress;
       return null;
     }
     _interactiveSignInInFlight = true;
@@ -78,7 +82,7 @@ class OneDriveAuth {
       appLog.w(
         'OneDrive OAuth: 用户取消或系统关闭了登录页（release 模式下此前用 d 级日志会完全不显示）',
       );
-      _lastErrorMessage = '已取消登录';
+      _lastErrorMessage = l10n.oneDriveSignInCancelled;
       return null;
     } on FlutterAppAuthPlatformException catch (e, st) {
       final d = e.platformErrorDetails;
@@ -90,8 +94,10 @@ class OneDriveAuth {
         stackTrace: st,
       );
       _lastErrorMessage = errDesc.trim().isNotEmpty
-          ? errDesc
-          : (err.trim().isNotEmpty ? err : 'OAuth 平台错误');
+          ? (err.trim().isNotEmpty
+              ? l10n.oneDriveOAuthErrorWithDetail(err, errDesc)
+              : errDesc)
+          : (err.trim().isNotEmpty ? err : l10n.oneDriveOAuthPlatformError);
       return null;
     } catch (e, st) {
       appLog.e('OneDrive OAuth: authorizeAndExchangeCode 异常', error: e, stackTrace: st);
@@ -107,14 +113,14 @@ class OneDriveAuth {
     final refresh = res.refreshToken;
     if (access == null) {
       appLog.w('OneDrive OAuth: 响应缺少 access_token');
-      _lastErrorMessage = '登录返回缺少 access_token';
+      _lastErrorMessage = l10n.oneDriveSignInMissingAccessToken;
       return null;
     }
     if (refresh == null || refresh.isEmpty) {
       appLog.w(
         'OneDrive OAuth: 缺少 refresh_token（需确认 Microsoft 已授予 offline_access）；无法长期续期令牌',
       );
-      _lastErrorMessage = '登录返回缺少 refresh_token（请检查 offline_access 权限）';
+      _lastErrorMessage = l10n.oneDriveSignInMissingRefreshToken;
       return null;
     }
     final expiry = res.accessTokenExpirationDateTime ??
@@ -131,7 +137,7 @@ class OneDriveAuth {
         error: e,
         stackTrace: st,
       );
-      _lastErrorMessage = '令牌保存失败：$e';
+      _lastErrorMessage = l10n.oneDriveSignInTokenSaveFailed('$e');
       return null;
     }
     appLog.i('OneDrive OAuth: 登录成功');
@@ -224,10 +230,11 @@ class OneDriveAuth {
 
   Future<({String access, String refresh, DateTime expiry})?> _signInByDeviceCode(
     String clientId,
+    AppLocalizations l10n,
   ) async {
     if (_interactiveSignInInFlight) {
       appLog.w('OneDrive OAuth: 已有登录流程进行中，请勿重复点击');
-      _lastErrorMessage = '登录流程进行中，请稍候';
+      _lastErrorMessage = l10n.oneDriveSignInInProgress;
       return null;
     }
     _interactiveSignInInFlight = true;
@@ -244,7 +251,11 @@ class OneDriveAuth {
       );
       if (dc.statusCode < 200 || dc.statusCode >= 300) {
         appLog.w('OneDrive OAuth: Linux device code 获取失败 ${dc.statusCode}: ${dc.body}');
-        _lastErrorMessage = _friendlyOAuthError(dc.body, fallback: '获取设备码失败（${dc.statusCode}）');
+        _lastErrorMessage = _friendlyOAuthError(
+          dc.body,
+          l10n: l10n,
+          fallback: l10n.oneDriveSignInDeviceCodeFailed(dc.statusCode),
+        );
         return null;
       }
       final m = jsonDecode(dc.body);
@@ -318,15 +329,19 @@ class OneDriveAuth {
             err == 'expired_token' ||
             err == 'bad_verification_code') {
           appLog.w('OneDrive Linux 登录中断: $err');
-          _lastErrorMessage = '登录中断：$err';
+          _lastErrorMessage = l10n.oneDriveSignInInterrupted(err ?? '');
           return null;
         }
         appLog.w('OneDrive Linux 登录失败: ${tk.body}');
-        _lastErrorMessage = _friendlyOAuthError(tk.body, fallback: '登录失败');
+        _lastErrorMessage = _friendlyOAuthError(
+          tk.body,
+          l10n: l10n,
+          fallback: l10n.oneDriveSignInFailed,
+        );
         return null;
       }
       appLog.w('OneDrive Linux 登录超时');
-      _lastErrorMessage = '登录超时，请重试';
+      _lastErrorMessage = l10n.oneDriveSignInTimedOut;
       return null;
     } catch (e, st) {
       appLog.e('OneDrive Linux 登录异常', error: e, stackTrace: st);
@@ -337,7 +352,11 @@ class OneDriveAuth {
     }
   }
 
-  String _friendlyOAuthError(String raw, {required String fallback}) {
+  String _friendlyOAuthError(
+    String raw, {
+    required AppLocalizations l10n,
+    required String fallback,
+  }) {
     try {
       final m = jsonDecode(raw);
       if (m is! Map<String, dynamic>) return fallback;
@@ -347,9 +366,12 @@ class OneDriveAuth {
           (desc.contains('must be marked as \'mobile\'') ||
               desc.contains('must be marked as "mobile"') ||
               desc.contains('AADSTS70002'))) {
-        return '当前 Client ID 不是公共客户端（移动和桌面应用），请到 Azure 将应用配置为移动和桌面平台后重试';
+        return l10n.oneDriveLinuxUnsupported;
       }
-      if (desc.isNotEmpty) return '$err: $desc';
+      if (desc.isNotEmpty && err.isNotEmpty) {
+        return l10n.oneDriveOAuthErrorWithDetail(err, desc);
+      }
+      if (desc.isNotEmpty) return desc;
       if (err.isNotEmpty) return err;
       return fallback;
     } catch (_) {

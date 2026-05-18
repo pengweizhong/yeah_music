@@ -964,10 +964,68 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveNotSignedIn => '未登录';
 
   @override
-  String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
+  String get oneDriveLinuxUnsupported => '当前设备不支持Onedrive';
 
   @override
   String get oneDriveSignInFailed => '未能登录，请检查网络后重试。';
+
+  @override
+  String get oneDriveSigningIn => '登录中…';
+
+  @override
+  String get oneDriveSignInInProgress => '登录流程进行中，请稍候';
+
+  @override
+  String get oneDriveSignInCancelled => '已取消登录';
+
+  @override
+  String get oneDriveOAuthPlatformError => '登录失败（平台错误）';
+
+  @override
+  String get oneDriveSignInMissingAccessToken => '登录返回缺少 access_token';
+
+  @override
+  String get oneDriveSignInMissingRefreshToken =>
+      '登录返回缺少 refresh_token（请检查 offline_access 权限）';
+
+  @override
+  String oneDriveSignInTokenSaveFailed(String error) {
+    return '令牌保存失败：$error';
+  }
+
+  @override
+  String oneDriveSignInDeviceCodeFailed(int statusCode) {
+    return '获取设备码失败（$statusCode）';
+  }
+
+  @override
+  String oneDriveSignInInterrupted(String reason) {
+    return '登录中断：$reason';
+  }
+
+  @override
+  String get oneDriveSignInTimedOut => '登录超时，请重试';
+
+  @override
+  String get oneDriveSignInNoValidToken => '未获取到有效令牌';
+
+  @override
+  String get oneDriveClientIdNotConfigured => '未配置 OneDrive Client ID';
+
+  @override
+  String get oneDriveClientIdDialogTitle => 'OneDrive Client ID';
+
+  @override
+  String get oneDriveClientIdDialogLabel => 'Azure 应用程序（客户端）ID';
+
+  @override
+  String get oneDriveClientIdDialogHint =>
+      'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+
+  @override
+  String oneDriveOAuthErrorWithDetail(String error, String description) {
+    return '$error：$description';
+  }
 
   @override
   String get oneDriveCacheNote =>
@@ -3839,10 +3897,68 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveNotSignedIn => '未登录';
 
   @override
-  String get oneDriveLinuxUnsupported => '当前平台暂不支持 OneDrive 登录。';
+  String get oneDriveLinuxUnsupported => '当前设备不支持Onedrive';
 
   @override
   String get oneDriveSignInFailed => '未能登录，请检查网络后重试。';
+
+  @override
+  String get oneDriveSigningIn => '登录中…';
+
+  @override
+  String get oneDriveSignInInProgress => '登录流程进行中，请稍候';
+
+  @override
+  String get oneDriveSignInCancelled => '已取消登录';
+
+  @override
+  String get oneDriveOAuthPlatformError => '登录失败（平台错误）';
+
+  @override
+  String get oneDriveSignInMissingAccessToken => '登录返回缺少 access_token';
+
+  @override
+  String get oneDriveSignInMissingRefreshToken =>
+      '登录返回缺少 refresh_token（请检查 offline_access 权限）';
+
+  @override
+  String oneDriveSignInTokenSaveFailed(String error) {
+    return '令牌保存失败：$error';
+  }
+
+  @override
+  String oneDriveSignInDeviceCodeFailed(int statusCode) {
+    return '获取设备码失败（$statusCode）';
+  }
+
+  @override
+  String oneDriveSignInInterrupted(String reason) {
+    return '登录中断：$reason';
+  }
+
+  @override
+  String get oneDriveSignInTimedOut => '登录超时，请重试';
+
+  @override
+  String get oneDriveSignInNoValidToken => '未获取到有效令牌';
+
+  @override
+  String get oneDriveClientIdNotConfigured => '未配置 OneDrive Client ID';
+
+  @override
+  String get oneDriveClientIdDialogTitle => 'OneDrive Client ID';
+
+  @override
+  String get oneDriveClientIdDialogLabel => 'Azure 应用程序（客户端）ID';
+
+  @override
+  String get oneDriveClientIdDialogHint =>
+      'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+
+  @override
+  String oneDriveOAuthErrorWithDetail(String error, String description) {
+    return '$error：$description';
+  }
 
   @override
   String get oneDriveCacheNote =>
@@ -6714,10 +6830,68 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveNotSignedIn => '未登入';
 
   @override
-  String get oneDriveLinuxUnsupported => '此平台尚不支援 OneDrive 登入。';
+  String get oneDriveLinuxUnsupported => '目前裝置不支援 Onedrive';
 
   @override
   String get oneDriveSignInFailed => '未能登入，請檢查網路後再試。';
+
+  @override
+  String get oneDriveSigningIn => '登入中…';
+
+  @override
+  String get oneDriveSignInInProgress => '登入流程進行中，請稍候';
+
+  @override
+  String get oneDriveSignInCancelled => '已取消登入';
+
+  @override
+  String get oneDriveOAuthPlatformError => '登入失敗（平台錯誤）';
+
+  @override
+  String get oneDriveSignInMissingAccessToken => '登入回應缺少 access_token';
+
+  @override
+  String get oneDriveSignInMissingRefreshToken =>
+      '登入回應缺少 refresh_token（請檢查 offline_access 權限）';
+
+  @override
+  String oneDriveSignInTokenSaveFailed(String error) {
+    return '權杖儲存失敗：$error';
+  }
+
+  @override
+  String oneDriveSignInDeviceCodeFailed(int statusCode) {
+    return '取得裝置碼失敗（$statusCode）';
+  }
+
+  @override
+  String oneDriveSignInInterrupted(String reason) {
+    return '登入中斷：$reason';
+  }
+
+  @override
+  String get oneDriveSignInTimedOut => '登入逾時，請重試';
+
+  @override
+  String get oneDriveSignInNoValidToken => '未取得有效權杖';
+
+  @override
+  String get oneDriveClientIdNotConfigured => '未設定 OneDrive Client ID';
+
+  @override
+  String get oneDriveClientIdDialogTitle => 'OneDrive Client ID';
+
+  @override
+  String get oneDriveClientIdDialogLabel => 'Azure 應用程式（用戶端）ID';
+
+  @override
+  String get oneDriveClientIdDialogHint =>
+      'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+
+  @override
+  String oneDriveOAuthErrorWithDetail(String error, String description) {
+    return '$error：$description';
+  }
 
   @override
   String get oneDriveCacheNote =>

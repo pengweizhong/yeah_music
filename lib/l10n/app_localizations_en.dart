@@ -1027,11 +1027,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveLinuxUnsupported =>
-      'OneDrive sign-in is not available on this platform yet.';
+      'This device does not support OneDrive.';
 
   @override
   String get oneDriveSignInFailed =>
       'Couldn’t sign in. Check your connection and try again.';
+
+  @override
+  String get oneDriveSigningIn => 'Signing in…';
+
+  @override
+  String get oneDriveSignInInProgress =>
+      'Sign-in already in progress. Please wait.';
+
+  @override
+  String get oneDriveSignInCancelled => 'Sign-in was cancelled.';
+
+  @override
+  String get oneDriveOAuthPlatformError =>
+      'Sign-in failed due to a platform error.';
+
+  @override
+  String get oneDriveSignInMissingAccessToken =>
+      'Sign-in response did not include an access token.';
+
+  @override
+  String get oneDriveSignInMissingRefreshToken =>
+      'Sign-in response did not include a refresh token. Check that offline_access is granted.';
+
+  @override
+  String oneDriveSignInTokenSaveFailed(String error) {
+    return 'Could not save sign-in tokens: $error';
+  }
+
+  @override
+  String oneDriveSignInDeviceCodeFailed(int statusCode) {
+    return 'Could not get a device code ($statusCode).';
+  }
+
+  @override
+  String oneDriveSignInInterrupted(String reason) {
+    return 'Sign-in was interrupted: $reason';
+  }
+
+  @override
+  String get oneDriveSignInTimedOut => 'Sign-in timed out. Please try again.';
+
+  @override
+  String get oneDriveSignInNoValidToken => 'Could not obtain a valid token.';
+
+  @override
+  String get oneDriveClientIdNotConfigured =>
+      'OneDrive client ID is not configured.';
+
+  @override
+  String get oneDriveClientIdDialogTitle => 'OneDrive client ID';
+
+  @override
+  String get oneDriveClientIdDialogLabel => 'Azure application (client) ID';
+
+  @override
+  String get oneDriveClientIdDialogHint =>
+      'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+
+  @override
+  String oneDriveOAuthErrorWithDetail(String error, String description) {
+    return '$error: $description';
+  }
 
   @override
   String get oneDriveCacheNote =>

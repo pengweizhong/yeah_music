@@ -396,8 +396,55 @@
   "oneDriveSignOutDone": "Signed out from OneDrive",
   "oneDriveSignedIn": "Signed in",
   "oneDriveNotSignedIn": "Not signed in",
-  "oneDriveLinuxUnsupported": "OneDrive sign-in is not available on this platform yet.",
+  "oneDriveLinuxUnsupported": "This device does not support OneDrive.",
   "oneDriveSignInFailed": "Couldn’t sign in. Check your connection and try again.",
+  "oneDriveSigningIn": "Signing in…",
+  "oneDriveSignInInProgress": "Sign-in already in progress. Please wait.",
+  "oneDriveSignInCancelled": "Sign-in was cancelled.",
+  "oneDriveOAuthPlatformError": "Sign-in failed due to a platform error.",
+  "oneDriveSignInMissingAccessToken": "Sign-in response did not include an access token.",
+  "oneDriveSignInMissingRefreshToken": "Sign-in response did not include a refresh token. Check that offline_access is granted.",
+  "oneDriveSignInTokenSaveFailed": "Could not save sign-in tokens: {error}",
+  "@oneDriveSignInTokenSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "oneDriveSignInDeviceCodeFailed": "Could not get a device code ({statusCode}).",
+  "@oneDriveSignInDeviceCodeFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveSignInInterrupted": "Sign-in was interrupted: {reason}",
+  "@oneDriveSignInInterrupted": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "oneDriveSignInTimedOut": "Sign-in timed out. Please try again.",
+  "oneDriveSignInNoValidToken": "Could not obtain a valid token.",
+  "oneDriveClientIdNotConfigured": "OneDrive client ID is not configured.",
+  "oneDriveClientIdDialogTitle": "OneDrive client ID",
+  "oneDriveClientIdDialogLabel": "Azure application (client) ID",
+  "oneDriveClientIdDialogHint": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "oneDriveOAuthErrorWithDetail": "{error}: {description}",
+  "@oneDriveOAuthErrorWithDetail": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
   "oneDriveCacheNote": "Default storage is the private onedrive_cache folder under app data. A custom folder above is used only when it exists.",
   "oneDriveOpenBrowser": "Open OneDrive",
   "homeEntryOneDrive": "OneDrive",

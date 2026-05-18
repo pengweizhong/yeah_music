@@ -10,6 +10,7 @@ import 'package:yeah_music/compments/user_playlist_provider.dart'
         parseUserPlaylistExportJson,
         playlistCoverAssetNamesFromDoc;
 import 'package:yeah_music/config/onedrive_config.dart';
+import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/onedrive_cloud_track.dart';
 import 'package:yeah_music/models/onedrive_cloud_backup_snapshot.dart';
@@ -1066,18 +1067,18 @@ class OneDriveController extends ChangeNotifier {
     return _auth.getValidAccessToken(effectiveClientId);
   }
 
-  Future<bool> signIn() async {
+  Future<bool> signIn(AppLocalizations l10n) async {
     _lastSignInError = null;
     if (effectiveClientId.isEmpty) {
       appLog.w('OneDrive: 无法登录——未配置 Client ID');
-      _lastSignInError = '未配置 OneDrive Client ID';
+      _lastSignInError = l10n.oneDriveClientIdNotConfigured;
       return false;
     }
     try {
-      final res = await _auth.signIn(effectiveClientId);
+      final res = await _auth.signIn(effectiveClientId, l10n);
       if (res == null) {
         appLog.w('OneDrive: signIn 完成但无有效令牌（参见上方 OAuth 日志）');
-        _lastSignInError = _auth.lastErrorMessage ?? '未获取到有效令牌';
+        _lastSignInError = _auth.lastErrorMessage ?? l10n.oneDriveSignInNoValidToken;
         return false;
       }
       await loadFromStorage();

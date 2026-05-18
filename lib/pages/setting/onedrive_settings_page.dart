@@ -426,7 +426,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       }
     }
     setState(() => _signInBusy = true);
-    final ok = await od.signIn();
+    final ok = await od.signIn(l10n);
     if (mounted) {
       setState(() => _signInBusy = false);
     }
@@ -457,24 +457,25 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     final value = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
+        final dl10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
-          title: const Text('OneDrive Client ID'),
+          title: Text(dl10n.oneDriveClientIdDialogTitle),
           content: TextField(
             controller: c,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-              labelText: 'Azure Application (client) ID',
+            decoration: InputDecoration(
+              hintText: dl10n.oneDriveClientIdDialogHint,
+              labelText: dl10n.oneDriveClientIdDialogLabel,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text(dl10n.actionCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(c.text.trim()),
-              child: const Text('Save'),
+              child: Text(dl10n.actionSave),
             ),
           ],
         );
@@ -1860,7 +1861,9 @@ class _AccountCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.login_rounded, size: 20),
-                  label: Text(signingIn ? '登录中...' : l10n.oneDriveSignIn),
+                  label: Text(
+                    signingIn ? l10n.oneDriveSigningIn : l10n.oneDriveSignIn,
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF0078D4),
                     foregroundColor: Colors.white,
