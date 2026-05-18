@@ -45,6 +45,21 @@ class SongLibraryMetadataHydrator {
   /// 路径条数上限；单条可含大图与歌词，不宜过大。
   static const int maxCacheEntries = 384;
 
+  /// 封面指纹变化时回调（由 [MusicService] 注册，用于补推 Android 通知栏/车载封面）。
+  static void Function(Song song)? onCoverFingerprintChanged;
+
+  static void _applySnapshotToSong(Song song, _MetaSnapshot snap) {
+    final beforeFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
+    if (snap.matchesSong(song)) return;
+    snap.applyTo(song);
+    final afterFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
+    if (beforeFp != afterFp) {
+      ApplicationUtils.evictSongCoverProvidersForPath(song.path);
+      onCoverFingerprintChanged?.call(song);
+    }
+    scheduleEmbeddedSongMetadataPersist(song);
+  }
+
   static _MetaSnapshot? _cacheTouch(String path) {
     final snap = _cache.remove(path);
     if (snap == null) return null;
@@ -78,13 +93,7 @@ class SongLibraryMetadataHydrator {
       if (cached.matchesSong(song)) {
         return false;
       }
-      final beforeFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
-      cached.applyTo(song);
-      final afterFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
-      if (beforeFp != afterFp) {
-        ApplicationUtils.evictSongCoverProvidersForPath(p);
-      }
-      scheduleEmbeddedSongMetadataPersist(song);
+      _applySnapshotToSong(song, cached);
       return true;
     }
 
@@ -95,13 +104,7 @@ class SongLibraryMetadataHydrator {
     if (snap.matchesSong(song)) {
       return false;
     }
-    final beforeFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
-    snap.applyTo(song);
-    final afterFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
-    if (beforeFp != afterFp) {
-      ApplicationUtils.evictSongCoverProvidersForPath(p);
-    }
-    scheduleEmbeddedSongMetadataPersist(song);
+    _applySnapshotToSong(song, snap);
     return true;
   }
 

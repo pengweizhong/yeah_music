@@ -161,6 +161,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
     if (!mounted) return;
     MusicService.attachListeningTimeTracker();
     MusicService.attachAndroidSoundPresetSessionListener();
+    MusicService.attachAndroidNotificationCoverSync();
     _disposePreHiveResources();
     unawaited(AppEphemeralStorage.runStartupMaintenanceIfNeeded());
     appLog.i(

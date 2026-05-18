@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
@@ -255,6 +256,64 @@ class MusicService {
   /// 新一次 [setAudioSource]/队列换源成功并 [play] 时递增；仅带「本次播放代数」的
   /// [pushAndroidNotificationForSong] 在结束时若已过期则丢弃，避免切歌后旧 hydrate 覆盖新会话。
   static int _androidMediaSessionSyncGeneration = 0;
+
+  /// 每次 [pushAndroidNotificationForSong] 递增；仅最新一次允许 [updateMediaItem]。
+  static int _androidNotifyPushSerial = 0;
+
+  /// 短时内已成功推送的曲目 + 封面指纹，合并车载/歌词触发的重复 push。
+  static String? _androidNotifyLastOkPath;
+  static int _androidNotifyLastOkArtFp = -1;
+  static DateTime? _androidNotifyLastOkAt;
+
+  /// 列表/播放页 hydrate 封面后，若仍为在播曲目则补推通知栏（与 UI 封面补全同步）。
+  static void attachAndroidNotificationCoverSync() {
+    if (!Platform.isAndroid) return;
+    SongLibraryMetadataHydrator.onCoverFingerprintChanged = (song) {
+      unawaited(pushAndroidNotificationCoverIfStillCurrent(song));
+    };
+  }
+
+  /// 封面已在内存中补全且仍为当前解码曲目时，补推 [MediaItem.artUri]（不受切歌代数作废）。
+  static Future<void> pushAndroidNotificationCoverIfStillCurrent(Song song) async {
+    if (!Platform.isAndroid) return;
+    final playing = tryCurrentPlayingPath();
+    if (playing == null || !songPathsEqual(playing, song.path)) return;
+    if (song.imageBytes == null || song.imageBytes!.isEmpty) {
+      _logAndroidNotifyArt(
+        'coverIfStillCurrent skip (no bytes) ${_artDiag(song)}',
+      );
+      return;
+    }
+    _logAndroidNotifyArt('coverIfStillCurrent repush ${_artDiag(song)}');
+    await pushAndroidNotificationForSong(song);
+  }
+
+  /// 快速连点「下一曲」时：若 [abortIfStaleGeneration] 已过期但 [songPath] 仍是正在播放的路径，
+  /// 仍应推送（典型为封面 hydrate 较慢）；否则丢弃，避免旧曲 metadata 盖住新曲。
+  static bool _shouldApplyAndroidMediaPush({
+    required String songPath,
+    int? abortIfStaleGeneration,
+  }) {
+    final playing = tryCurrentPlayingPath();
+    if (playing != null && songPathsEqual(playing, songPath)) {
+      return true;
+    }
+    if (abortIfStaleGeneration == null) return true;
+    return abortIfStaleGeneration == _androidMediaSessionSyncGeneration;
+  }
+
+  static void _logAndroidNotifyArt(String message) {
+    if (!Platform.isAndroid) return;
+    appLog.i('[AndroidNotifyArt] $message');
+  }
+
+  static String _artDiag(Song song) {
+    final b = song.imageBytes;
+    return 'path=${p.basename(song.path)} bytes=${b?.length ?? 0}';
+  }
+
+  static String _mediaItemArtDiag(MediaItem item) =>
+      'id=${p.basename(item.id)} artUri=${item.artUri != null}';
 
   /// Android 多曲时 [playCurrentFromPlaylist] 会构建整段队列（与「车载歌词」开关无关）；单文件模式为 false。
   static bool androidCarQueueActive = false;
@@ -543,6 +602,9 @@ class MusicService {
         if (Platform.isAndroid) {
           final g = ++_androidMediaSessionSyncGeneration;
           final s = queue[idx];
+          try {
+            await SongLibraryMetadataHydrator.hydrateIfNeeded(s);
+          } catch (_) {}
           unawaited(
             pushAndroidNotificationForSong(s, abortIfStaleGeneration: g),
           );
@@ -589,13 +651,26 @@ class MusicService {
             ? await SettingsService.loadPlaybackSoundPreset()
             : null;
         final children = <AudioSource>[];
-        for (final s in queue) {
+        for (var i = 0; i < queue.length; i++) {
+          final s = queue[i];
+          if (i == idx) {
+            try {
+              await SongLibraryMetadataHydrator.hydrateIfNeeded(s);
+            } catch (e) {
+              _logAndroidNotifyArt('queueBuild hydrate current failed: $e');
+            }
+          }
           final tag = await buildMediaItemForSong(
             s,
             showCover: showCover,
             lyricStyle: lyricStyle,
             subtitlePosition: Duration.zero,
           );
+          if (i == idx) {
+            _logAndroidNotifyArt(
+              'queueBuild current ${_artDiag(s)} → ${_mediaItemArtDiag(tag)}',
+            );
+          }
           children.add(_buildAudioSource(s, tag: tag));
         }
         await _player.setAudioSources(
@@ -709,6 +784,16 @@ class MusicService {
     if (initialSubtitle != null && initialSubtitle.isNotEmpty) {
       displayDescription = initialSubtitle;
     }
+    final lyricExtras = _androidLyricExtras(initialSubtitle);
+    final Map<String, dynamic>? extras;
+    if (artUri != null && artUri.scheme == 'file') {
+      extras = <String, dynamic>{
+        if (lyricExtras != null) ...lyricExtras,
+        'artCacheFile': artUri.toFilePath(),
+      };
+    } else {
+      extras = lyricExtras;
+    }
     return MediaItem(
       id: song.path,
       title: title,
@@ -718,7 +803,7 @@ class MusicService {
       artUri: artUri,
       displaySubtitle: initialSubtitle,
       displayDescription: displayDescription,
-      extras: _androidLyricExtras(initialSubtitle),
+      extras: extras,
     );
   }
 
@@ -731,11 +816,36 @@ class MusicService {
     int? abortIfStaleGeneration,
   }) async {
     if (!Platform.isAndroid) return;
+    final targetPath = song.path;
+    if (targetPath.trim().isEmpty) return;
+    final artFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
+    final now = DateTime.now();
+    if (_androidNotifyLastOkPath != null &&
+        songPathsEqual(_androidNotifyLastOkPath!, targetPath) &&
+        _androidNotifyLastOkArtFp == artFp &&
+        _androidNotifyLastOkAt != null &&
+        now.difference(_androidNotifyLastOkAt!) <
+            const Duration(milliseconds: 450)) {
+      _logAndroidNotifyArt(
+        'push coalesced (recent OK) ${_artDiag(song)}',
+      );
+      return;
+    }
+    final sw = Stopwatch()..start();
+    final gen = abortIfStaleGeneration;
+    final ticket = ++_androidNotifyPushSerial;
+    _logAndroidNotifyArt(
+      'push start #$ticket gen=$gen ${_artDiag(song)} '
+      'playing=${p.basename(tryCurrentPlayingPath() ?? "")}',
+    );
     try {
       try {
-        await SongLibraryMetadataHydrator.hydrateIfNeeded(song);
+        final hydrated = await SongLibraryMetadataHydrator.hydrateIfNeeded(song);
+        _logAndroidNotifyArt(
+          'after hydrate ${sw.elapsedMilliseconds}ms changed=$hydrated ${_artDiag(song)}',
+        );
       } catch (e) {
-        appLog.d('通知用元数据补全失败(忽略): $e');
+        _logAndroidNotifyArt('hydrate failed: $e');
       }
       final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
       final wantLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
@@ -750,7 +860,12 @@ class MusicService {
           );
           ApplicationUtils.evictSongCoverProvidersForPath(song.path);
           scheduleEmbeddedSongMetadataPersist(song);
-        } catch (_) {}
+          _logAndroidNotifyArt(
+            'after loadSongMeta art ${sw.elapsedMilliseconds}ms ${_artDiag(song)}',
+          );
+        } catch (e) {
+          _logAndroidNotifyArt('loadSongMeta art failed: $e');
+        }
       } else if (wantLyrics &&
           (song.lyrics == null || song.lyrics!.trim().isEmpty)) {
         try {
@@ -762,8 +877,21 @@ class MusicService {
           scheduleEmbeddedSongMetadataPersist(song);
         } catch (_) {}
       }
-      if (abortIfStaleGeneration != null &&
-          abortIfStaleGeneration != _androidMediaSessionSyncGeneration) {
+      if (!showCover) {
+        _logAndroidNotifyArt('showCover=false, skip artUri');
+      }
+      final playing = tryCurrentPlayingPath();
+      final stillCurrent =
+          playing != null && songPathsEqual(playing, targetPath);
+      final genOk = _shouldApplyAndroidMediaPush(
+        songPath: targetPath,
+        abortIfStaleGeneration: abortIfStaleGeneration,
+      );
+      if (!genOk) {
+        _logAndroidNotifyArt(
+          'ABORT before build gen=$gen curGen=$_androidMediaSessionSyncGeneration '
+          'stillCurrent=$stillCurrent ${sw.elapsedMilliseconds}ms',
+        );
         return;
       }
       final lyricStyle = await SettingsService.loadLyricSettings();
@@ -773,13 +901,34 @@ class MusicService {
         lyricStyle: lyricStyle,
         subtitlePosition: lastPosition,
       );
-      if (abortIfStaleGeneration != null &&
-          abortIfStaleGeneration != _androidMediaSessionSyncGeneration) {
+      if (!_shouldApplyAndroidMediaPush(
+        songPath: targetPath,
+        abortIfStaleGeneration: abortIfStaleGeneration,
+      )) {
+        _logAndroidNotifyArt(
+          'ABORT before updateMediaItem ${sw.elapsedMilliseconds}ms '
+          '${_mediaItemArtDiag(item)}',
+        );
         return;
       }
-      await AudioService.updateMediaItem(item);
-    } catch (e) {
-      appLog.d('pushAndroidNotificationForSong: $e');
+      if (ticket != _androidNotifyPushSerial) {
+        _logAndroidNotifyArt(
+          'DROP stale ticket #$ticket (latest #$_androidNotifyPushSerial) '
+          '${sw.elapsedMilliseconds}ms',
+        );
+        return;
+      }
+      await JustAudioBackground.updateNotificationMediaItem(item);
+      _androidNotifyLastOkPath = targetPath;
+      _androidNotifyLastOkArtFp = artFp;
+      _androidNotifyLastOkAt = DateTime.now();
+      _logAndroidNotifyArt(
+        'notificationMediaItem OK #$ticket ${sw.elapsedMilliseconds}ms '
+        '${_mediaItemArtDiag(item)}',
+      );
+    } catch (e, st) {
+      _logAndroidNotifyArt('push FAILED ${sw.elapsedMilliseconds}ms: $e');
+      appLog.d('pushAndroidNotificationForSong', error: e, stackTrace: st);
     }
   }
 

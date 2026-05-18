@@ -100,6 +100,15 @@ class JustAudioBackground {
   static void setFadeOutVolumeHandler(Future<void> Function()? handler) {
     _yeahFadeOutVolumeHandler = handler;
   }
+
+  /// 更新系统媒体会话 / 通知栏 [MediaItem]（含封面）。
+  ///
+  /// 必须使用本方法，**不要**调用 [AudioService.updateMediaItem]：后者走
+  /// `audio_service` 内未接入 just_audio 的 `_compatibilitySwitcher`，
+  /// 不会触发 [_PlayerAudioHandler] 的 [mediaItem] 流，通知栏封面/标题不刷新。
+  static Future<void> updateNotificationMediaItem(MediaItem item) async {
+    await _audioHandler.updateMediaItem(item);
+  }
 }
 
 class _JustAudioBackgroundPlugin extends JustAudioPlatform {
@@ -453,13 +462,33 @@ class _PlayerAudioHandler extends BaseAudioHandler
                   queue.add(currentQueue);
                   durationPatched = true;
                 }
+                final indexChanged = _debounceLastEmittedIndex != idx;
                 final shouldBroadcast = durationPatched ||
-                    _debounceLastEmittedIndex != idx ||
+                    indexChanged ||
                     _debounceLastEmittedDuration != track.duration;
                 if (shouldBroadcast) {
                   _debounceLastEmittedIndex = idx;
                   _debounceLastEmittedDuration = track.duration;
-                  mediaItem.add(currentMediaItem!);
+                  var emit = currentMediaItem!;
+                  final live = mediaItem.nvalue;
+                  final queueHadArt = emit.artUri != null;
+                  emit = _yeahMergeNotificationArtwork(emit, live);
+                  if (!queueHadArt && emit.artUri != null) {
+                    final patched = List<MediaItem>.from(currentQueue);
+                    patched[idx] = emit;
+                    queue.add(patched);
+                    debugPrint(
+                      '[AndroidNotifyArt] debounce: patched queue[$idx] art from live',
+                    );
+                  } else if (!queueHadArt &&
+                      emit.artUri == null &&
+                      !indexChanged) {
+                    debugPrint(
+                      '[AndroidNotifyArt] debounce: SKIP null-art duration-only idx=$idx',
+                    );
+                    return;
+                  }
+                  mediaItem.add(emit);
                 }
               }
             }, onError: (Object e, [StackTrace? st]) {});
@@ -485,15 +514,40 @@ class _PlayerAudioHandler extends BaseAudioHandler
   }
 
   /// [QueueHandler.updateMediaItem] 不广播 [mediaItem]，Android [setMediaItem] 因此不刷新。
+  /// 同时将 [updated] 写回 [queue] 当前项，避免切轨 debounce 用建队列时的无封面项覆盖封面。
   @override
   Future<void> updateMediaItem(MediaItem updated) async {
     await super.updateMediaItem(updated);
     final idx = index;
     final q = queue.nvalue;
-    if (idx == null || q == null || idx < 0 || idx >= q.length) return;
-    if (q[idx].id == updated.id) {
-      mediaItem.add(updated);
+    var queuePatched = false;
+    if (q != null && idx != null && idx >= 0 && idx < q.length) {
+      final next = List<MediaItem>.from(q);
+      var slot = idx;
+      if (next[slot].id != updated.id) {
+        final byId = next.indexWhere((m) => m.id == updated.id);
+        if (byId >= 0) slot = byId;
+      }
+      if (next[slot].id == updated.id) {
+        next[slot] = updated;
+        queue.add(next);
+        queuePatched = true;
+      }
     }
+    // QueueHandler.updateMediaItem 不会触发 mediaItem 流；必须 add 才会走
+    // audio_service 的 setMediaItem（file:// 封面依赖 extras.artCacheFile）。
+    mediaItem.add(updated);
+  }
+
+  /// 队列项尚无 [artUri] 时保留 [mediaItem] 流里已推送的封面，防止 debounce 刷回黑图。
+  static MediaItem _yeahMergeNotificationArtwork(
+    MediaItem fromQueue,
+    MediaItem? live,
+  ) {
+    if (live == null || live.id != fromQueue.id) return fromQueue;
+    if (fromQueue.artUri != null) return fromQueue;
+    if (live.artUri == null) return fromQueue;
+    return fromQueue.copyWith(artUri: live.artUri);
   }
 
   @override

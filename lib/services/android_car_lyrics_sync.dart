@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
+import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
@@ -66,9 +68,28 @@ class AndroidCarLyricsSync {
     final list = _playlist!.playList;
     if (index < 0 || index >= list.length) return;
     _pushDebounce?.cancel();
-    _pushDebounce = Timer(const Duration(milliseconds: 100), () {
-      unawaited(MusicService.pushAndroidNotificationForSong(list[index]));
+    _pushDebounce = Timer(const Duration(milliseconds: 220), () {
+      unawaited(_pushForPlayerIndex(index));
     });
+  }
+
+  static Future<void> _pushForPlayerIndex(int index) async {
+    final p = _playlist;
+    if (p == null) return;
+    final list = p.playList;
+    if (list.isEmpty) return;
+    final playing = MusicService.tryCurrentPlayingPath();
+    Song? song;
+    if (playing != null) {
+      for (final s in list) {
+        if (songPathsEqual(s.path, playing)) {
+          song = s;
+          break;
+        }
+      }
+    }
+    song ??= list[index.clamp(0, list.length - 1)];
+    await MusicService.pushAndroidNotificationForSong(song);
   }
 
   static Future<void> _tick() async {
@@ -106,16 +127,22 @@ class AndroidCarLyricsSync {
       return;
     }
 
+    // 无封面时仅改副标题会把 Android 会话 artBitmap 置空；先补推完整 MediaItem。
+    if (item.artUri == null) {
+      unawaited(MusicService.pushAndroidNotificationForSong(song));
+      return;
+    }
+
     try {
       final merged = Map<String, dynamic>.from(item.extras ?? {});
       merged[MusicService.androidComposerMetadataKey] = line;
-      await AudioService.updateMediaItem(
-        item.copyWith(
-          displaySubtitle: line,
-          displayDescription: line,
-          extras: merged,
-        ),
+      final next = item.copyWith(
+        displaySubtitle: line,
+        displayDescription: line,
+        extras: merged,
       );
+      if (next.artUri == null) return;
+      await JustAudioBackground.updateNotificationMediaItem(next);
     } catch (_) {}
   }
 }
