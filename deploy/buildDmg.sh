@@ -3,7 +3,7 @@ set -e
 
 # ====================== 【配置区域】======================
 APP_NAME="YeahMusic"         # 应用名
-PLATFORM="macOS"            # 平台名称（大写S）
+PLATFORM="macOS"            # 平台名称
 ARCH="arm64"                # 苹果芯片架构
 APP_DISPLAY_NAME="Yeah Music" # 应用显示名
 # ==========================================================
@@ -29,7 +29,7 @@ VERSION=$(grep 'version:' pubspec.yaml | head -n1 | awk '{print $2}' | cut -d'+'
 echo "🚀 当前版本号：$VERSION (自动从 pubspec.yaml 读取)"
 echo "🔑 ONEDRIVE_CLIENT_ID 已通过命令行传入"
 
-# 输出文件名（你要的格式）
+# 输出文件名
 DMG_OUTPUT="${APP_NAME}-${PLATFORM}-${ARCH}-${VERSION}.dmg"
 
 # 清理 + 构建 macOS

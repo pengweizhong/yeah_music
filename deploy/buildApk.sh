@@ -28,7 +28,7 @@ VERSION=$(grep 'version:' pubspec.yaml | head -n1 | awk '{print $2}' | cut -d'+'
 echo "🚀 当前版本号：$VERSION (自动从 pubspec.yaml 读取)"
 echo "🔑 ONEDRIVE_CLIENT_ID 已通过命令行传入"
 
-# 输出文件名（你要的格式）
+# 输出文件名
 APK_OUTPUT="${APP_NAME}-${PLATFORM}-${ARCH}-${VERSION}.apk"
 
 # 清理 + 构建 Android
