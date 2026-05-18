@@ -1077,7 +1077,7 @@ class OneDriveController extends ChangeNotifier {
     try {
       final res = await _auth.signIn(effectiveClientId, l10n);
       if (res == null) {
-        appLog.w('OneDrive: signIn 完成但无有效令牌（参见上方 OAuth 日志）');
+        appLog.w('OneDrive: signIn 完成但无有效令牌');
         _lastSignInError = _auth.lastErrorMessage ?? l10n.oneDriveSignInNoValidToken;
         return false;
       }
@@ -1085,7 +1085,7 @@ class OneDriveController extends ChangeNotifier {
       return _signedIn;
     } catch (e, st) {
       appLog.e(
-        'OneDrive: signIn 未捕获异常（例如令牌存储失败会直接走这里）',
+        'OneDrive: signIn 未捕获异常',
         error: e,
         stackTrace: st,
       );
