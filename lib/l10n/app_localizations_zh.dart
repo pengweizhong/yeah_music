@@ -238,6 +238,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHomeGreetingSaved => '已保存';
 
   @override
+  String get settingsAudioQualityTitle => '音质';
+
+  @override
+  String get settingsAudioQualityListSubtitle => '曲库列表音质标识分级说明（从低到高）';
+
+  @override
+  String get settingsAudioQualityHelp =>
+      '当音频文件标签中可读码率、采样率等信息时，Yeah Music 会按下列分级在曲库与最近播放中显示对应标识；顺序从低到高，样式与列表中一致。';
+
+  @override
   String get settingsAboutDialogAuthor => '作者';
 
   @override
@@ -1843,6 +1853,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get audioQualityTierDsd => '顶级发烧';
+
+  @override
+  String get audioQualityTierLqDesc => '有损音质，通常低于约 96 kbps（如低码率 MP3）。';
+
+  @override
+  String get audioQualityTierStdDesc => '有损音质，约 96–255 kbps（常见流媒体 / MP3）。';
+
+  @override
+  String get audioQualityTierHqDesc =>
+      '有损音质，256 kbps 及以上（如 320 kbps MP3、高 VBR）。';
+
+  @override
+  String get audioQualityTierSqDesc =>
+      '无损格式（FLAC、WAV、APE 等），CD 级采样率（≤ 48 kHz）。';
+
+  @override
+  String get audioQualityTierHrDesc => '无损或极高码率，且采样率 ≥ 88.2 kHz（高解析 / Hi-Res）。';
+
+  @override
+  String get audioQualityTierDsdDesc => 'DSD 格式（.dsf / .dff）；曲库中最高档次。';
 
   @override
   String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 编辑…';
@@ -3171,6 +3201,16 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsHomeGreetingSaved => '已保存';
 
   @override
+  String get settingsAudioQualityTitle => '音质';
+
+  @override
+  String get settingsAudioQualityListSubtitle => '曲库列表音质标识分级说明（从低到高）';
+
+  @override
+  String get settingsAudioQualityHelp =>
+      '当音频文件标签中可读码率、采样率等信息时，Yeah Music 会按下列分级在曲库与最近播放中显示对应标识；顺序从低到高，样式与列表中一致。';
+
+  @override
   String get settingsAboutDialogAuthor => '作者';
 
   @override
@@ -4778,6 +4818,26 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get audioQualityTierDsd => '顶级发烧';
 
   @override
+  String get audioQualityTierLqDesc => '有损音质，通常低于约 96 kbps（如低码率 MP3）。';
+
+  @override
+  String get audioQualityTierStdDesc => '有损音质，约 96–255 kbps（常见流媒体 / MP3）。';
+
+  @override
+  String get audioQualityTierHqDesc =>
+      '有损音质，256 kbps 及以上（如 320 kbps MP3、高 VBR）。';
+
+  @override
+  String get audioQualityTierSqDesc =>
+      '无损格式（FLAC、WAV、APE 等），CD 级采样率（≤ 48 kHz）。';
+
+  @override
+  String get audioQualityTierHrDesc => '无损或极高码率，且采样率 ≥ 88.2 kHz（高解析 / Hi-Res）。';
+
+  @override
+  String get audioQualityTierDsdDesc => 'DSD 格式（.dsf / .dff）；曲库中最高档次。';
+
+  @override
   String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 编辑…';
 
   @override
@@ -6102,6 +6162,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsHomeGreetingSaved => '已儲存';
+
+  @override
+  String get settingsAudioQualityTitle => '音質';
+
+  @override
+  String get settingsAudioQualityListSubtitle => '曲庫列表音質標識分級說明（由低到高）';
+
+  @override
+  String get settingsAudioQualityHelp =>
+      '當音訊檔案標籤中可讀碼率、取樣率等資訊時，Yeah Music 會依下列分級在曲庫與最近播放中顯示對應標識；順序由低到高，樣式與列表中一致。';
 
   @override
   String get settingsAboutDialogAuthor => '作者';
@@ -7710,6 +7780,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get audioQualityTierDsd => '頂級發燒';
+
+  @override
+  String get audioQualityTierLqDesc => '有損音質，通常低於約 96 kbps（如低碼率 MP3）。';
+
+  @override
+  String get audioQualityTierStdDesc => '有損音質，約 96–255 kbps（常見串流 / MP3）。';
+
+  @override
+  String get audioQualityTierHqDesc =>
+      '有損音質，256 kbps 及以上（如 320 kbps MP3、高 VBR）。';
+
+  @override
+  String get audioQualityTierSqDesc =>
+      '無損格式（FLAC、WAV、APE 等），CD 級取樣率（≤ 48 kHz）。';
+
+  @override
+  String get audioQualityTierHrDesc => '無損或極高碼率，且取樣率 ≥ 88.2 kHz（高解析 / Hi-Res）。';
+
+  @override
+  String get audioQualityTierDsdDesc => 'DSD 格式（.dsf / .dff）；曲庫中最高檔次。';
 
   @override
   String get songPageMoreEditLyricsExternal => '使用 SyncedLyricEditor 編輯…';

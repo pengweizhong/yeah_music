@@ -249,6 +249,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHomeGreetingSaved => 'Saved';
 
   @override
+  String get settingsAudioQualityTitle => 'Audio quality';
+
+  @override
+  String get settingsAudioQualityListSubtitle =>
+      'How library badges are classified (low to high)';
+
+  @override
+  String get settingsAudioQualityHelp =>
+      'When bitrate and sample rate are available in file tags, Yeah Music assigns one of the tiers below. Order is from lowest to highest; badges in your library use the same style.';
+
+  @override
   String get settingsAboutDialogAuthor => 'Author';
 
   @override
@@ -1943,6 +1954,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioQualityTierDsd => 'DSD · audiophile';
+
+  @override
+  String get audioQualityTierLqDesc =>
+      'Lossy audio below about 96 kbps (e.g. low-bitrate MP3).';
+
+  @override
+  String get audioQualityTierStdDesc =>
+      'Lossy about 96–255 kbps (typical streaming or MP3).';
+
+  @override
+  String get audioQualityTierHqDesc =>
+      'Lossy 256 kbps and above (e.g. 320 kbps MP3, high VBR).';
+
+  @override
+  String get audioQualityTierSqDesc =>
+      'Lossless FLAC, WAV, APE, etc. at CD sample rates (up to 48 kHz).';
+
+  @override
+  String get audioQualityTierHrDesc =>
+      'Lossless or very high bitrate with sample rate at least 88.2 kHz (Hi-Res).';
+
+  @override
+  String get audioQualityTierDsdDesc =>
+      'DSD formats (.dsf / .dff); highest tier in the library.';
 
   @override
   String get songPageMoreEditLyricsExternal => 'Edit with SyncedLyricEditor…';

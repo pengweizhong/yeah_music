@@ -16,6 +16,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/setting/diagnostic_log_page.dart';
 import 'package:yeah_music/pages/setting/language_settings_page.dart';
+import 'package:yeah_music/pages/setting/audio_quality_settings_page.dart';
 import 'package:yeah_music/pages/setting/home_greeting_settings_page.dart';
 import 'package:yeah_music/pages/setting/onedrive_settings_page.dart';
 import 'package:yeah_music/pages/setting/playback_shortcuts_section.dart';
@@ -460,6 +461,33 @@ class SettingPage extends StatelessWidget {
                           MaterialPageRoute<void>(
                             builder: (context) =>
                             const HomeGreetingSettingsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    // 音质：曲库列表标识分级说明（从低到高）。
+                    ListTile(
+                      title: Text(
+                        l10n.settingsAudioQualityTitle,
+                        style: TextStyle(color: context.gradFg()),
+                      ),
+                      subtitle: Text(
+                        l10n.settingsAudioQualityListSubtitle,
+                        style: TextStyle(
+                          color: context.gradFg(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: Icon(
+                        Icons.high_quality_outlined,
+                        color: context.gradFg(),
+                      ),
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                const AudioQualitySettingsPage(),
                           ),
                         );
                       },

@@ -540,6 +540,24 @@ abstract class AppLocalizations {
   /// **'Saved'**
   String get settingsHomeGreetingSaved;
 
+  /// No description provided for @settingsAudioQualityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality'**
+  String get settingsAudioQualityTitle;
+
+  /// No description provided for @settingsAudioQualityListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How library badges are classified (low to high)'**
+  String get settingsAudioQualityListSubtitle;
+
+  /// No description provided for @settingsAudioQualityHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When bitrate and sample rate are available in file tags, Yeah Music assigns one of the tiers below. Order is from lowest to highest; badges in your library use the same style.'**
+  String get settingsAudioQualityHelp;
+
   /// No description provided for @settingsAboutDialogAuthor.
   ///
   /// In en, this message translates to:
@@ -3554,6 +3572,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'DSD · audiophile'**
   String get audioQualityTierDsd;
+
+  /// No description provided for @audioQualityTierLqDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy audio below about 96 kbps (e.g. low-bitrate MP3).'**
+  String get audioQualityTierLqDesc;
+
+  /// No description provided for @audioQualityTierStdDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy about 96–255 kbps (typical streaming or MP3).'**
+  String get audioQualityTierStdDesc;
+
+  /// No description provided for @audioQualityTierHqDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy 256 kbps and above (e.g. 320 kbps MP3, high VBR).'**
+  String get audioQualityTierHqDesc;
+
+  /// No description provided for @audioQualityTierSqDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless FLAC, WAV, APE, etc. at CD sample rates (up to 48 kHz).'**
+  String get audioQualityTierSqDesc;
+
+  /// No description provided for @audioQualityTierHrDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless or very high bitrate with sample rate at least 88.2 kHz (Hi-Res).'**
+  String get audioQualityTierHrDesc;
+
+  /// No description provided for @audioQualityTierDsdDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'DSD formats (.dsf / .dff); highest tier in the library.'**
+  String get audioQualityTierDsdDesc;
 
   /// No description provided for @songPageMoreEditLyricsExternal.
   ///

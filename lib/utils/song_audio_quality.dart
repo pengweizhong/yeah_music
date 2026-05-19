@@ -2,6 +2,8 @@ import 'package:path/path.dart' as p;
 import 'package:yeah_music/models/song.dart';
 
 /// 音质分级（展示短码：LQ / STD / HQ / SQ / HR / DSD）。
+///
+/// 从低到高的展示顺序见 [kSongAudioQualityTiersLowToHigh]。
 enum SongAudioQualityTier {
   /// 流畅
   lq,
@@ -21,6 +23,16 @@ enum SongAudioQualityTier {
   /// 顶级发烧（DSD）
   dsd,
 }
+
+/// 设置页音质说明、列表标识等：从低到高穷举。
+const List<SongAudioQualityTier> kSongAudioQualityTiersLowToHigh = [
+  SongAudioQualityTier.lq,
+  SongAudioQualityTier.std,
+  SongAudioQualityTier.hq,
+  SongAudioQualityTier.sq,
+  SongAudioQualityTier.hr,
+  SongAudioQualityTier.dsd,
+];
 
 extension SongAudioQualityTierCode on SongAudioQualityTier {
   String get shortLabel => switch (this) {

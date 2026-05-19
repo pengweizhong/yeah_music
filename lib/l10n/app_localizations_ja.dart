@@ -241,6 +241,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHomeGreetingSaved => '保存しました';
 
   @override
+  String get settingsAudioQualityTitle => '音質';
+
+  @override
+  String get settingsAudioQualityListSubtitle => 'ライブラリの音質バッジの区分（低→高）';
+
+  @override
+  String get settingsAudioQualityHelp =>
+      'ファイルタグからビットレートやサンプルレートが読める場合、下の区分でライブラリや最近の再生にバッジを表示します。低い順で、リストと同じ見た目です。';
+
+  @override
   String get settingsAboutDialogAuthor => '作者';
 
   @override
@@ -1870,6 +1880,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get audioQualityTierDsd => 'DSD・最上位';
+
+  @override
+  String get audioQualityTierLqDesc => '非可逆、おおよそ 96 kbps 未満（低ビットレート MP3 など）。';
+
+  @override
+  String get audioQualityTierStdDesc => '非可逆、約 96–255 kbps（一般的なストリーミング / MP3）。';
+
+  @override
+  String get audioQualityTierHqDesc =>
+      '非可逆、256 kbps 以上（320 kbps MP3、高 VBR など）。';
+
+  @override
+  String get audioQualityTierSqDesc =>
+      '可逆（FLAC、WAV、APE など）、CD 相当のサンプルレート（48 kHz 以下）。';
+
+  @override
+  String get audioQualityTierHrDesc =>
+      '可逆または超高ビットレートで、サンプルレート 88.2 kHz 以上（ハイレゾ）。';
+
+  @override
+  String get audioQualityTierDsdDesc => 'DSD（.dsf / .dff）；ライブラリ内の最上位区分。';
 
   @override
   String get songPageMoreEditLyricsExternal => 'SyncedLyricEditor で編集…';

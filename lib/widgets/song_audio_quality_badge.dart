@@ -35,6 +35,20 @@ String songAudioQualityLocalizedTitle(AppLocalizations l10n, SongAudioQualityTie
   };
 }
 
+String songAudioQualityLocalizedDescription(
+  AppLocalizations l10n,
+  SongAudioQualityTier t,
+) {
+  return switch (t) {
+    SongAudioQualityTier.lq => l10n.audioQualityTierLqDesc,
+    SongAudioQualityTier.std => l10n.audioQualityTierStdDesc,
+    SongAudioQualityTier.hq => l10n.audioQualityTierHqDesc,
+    SongAudioQualityTier.sq => l10n.audioQualityTierSqDesc,
+    SongAudioQualityTier.hr => l10n.audioQualityTierHrDesc,
+    SongAudioQualityTier.dsd => l10n.audioQualityTierDsdDesc,
+  };
+}
+
 class _BadgeTierStyle {
   const _BadgeTierStyle({
     required this.padding,
