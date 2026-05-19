@@ -81,7 +81,7 @@ class SongLibraryMetadataHydrator {
 
   /// 若 [Song] 已与缓存一致则返回 false；否则写入并返回 true（便于列表仅在真有变更时 [setState]）。
   ///
-  /// Hive 等已持久化「封面+标题+歌词」时，会先用内存快照预热 [_cache]，避免冷启动重复读音频文件。
+  /// Hive 已持久化曲名/封面等且内存中已有封面时，会先用快照预热 [_cache]，避免冷启动重复读音频文件。
   static Future<bool> hydrateIfNeeded(Song song) async {
     final p = song.path;
     if (p.isEmpty) return false;
@@ -118,8 +118,7 @@ class SongLibraryMetadataHydrator {
     ApplicationUtils.evictSongCoverProvidersForPath(p);
   }
 
-  /// Hive 等已持久化「封面 + 文案」时可预热 [_cache]，避免冷启动对已带封面的 FLAC 重复读文件。
-  /// （不要求先有歌词——否则大量「仅嵌入封面」条目无法命中缓存。）
+  /// 内存中已有封面与曲名时可预热 [_cache]，避免冷启动对已带封面的 FLAC 重复读文件。
   static void _maybeSeedCacheFromLibrarySong(Song song) {
     final p = song.path;
     if (p.isEmpty) return;

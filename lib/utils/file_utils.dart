@@ -15,9 +15,12 @@ import 'package:yeah_music/utils/wav_metadata_reader.dart';
 import '../models/song.dart';
 
 /// 读取内嵌元数据；WAV 使用项目内修复实现（库内 RIFF 解析易错位导致标签全空）。
+///
+/// [repairLyrics] 为 false 时跳过对整文件的二次扫描（音乐源批量入库应关闭，否则极慢）。
 AudioMetadata readEmbeddedAudioMetadata(
   File file, {
   bool getImage = false,
+  bool repairLyrics = true,
 }) {
   if (pathLooksLikeWav(file.path)) {
     try {
@@ -31,12 +34,14 @@ AudioMetadata readEmbeddedAudioMetadata(
     }
   }
   final metadata = readMetadata(file, getImage: getImage);
-  final fixedLyrics = _repairPossiblyTruncatedEmbeddedLyrics(
-    file: file,
-    currentLyrics: metadata.lyrics,
-  );
-  if (fixedLyrics != null && fixedLyrics.trim().isNotEmpty) {
-    metadata.lyrics = fixedLyrics;
+  if (repairLyrics) {
+    final fixedLyrics = _repairPossiblyTruncatedEmbeddedLyrics(
+      file: file,
+      currentLyrics: metadata.lyrics,
+    );
+    if (fixedLyrics != null && fixedLyrics.trim().isNotEmpty) {
+      metadata.lyrics = fixedLyrics;
+    }
   }
   return metadata;
 }
@@ -84,33 +89,52 @@ class FileUtils {
     File file = File(song.path);
     late final AudioMetadata metadata;
     var resolvedEmbedImages = loadEmbeddedAlbumArt;
+    final repairLyrics = storeLyricsWithTrack;
+
     Future<AudioMetadata> readMeta(bool image) async {
       if (!kIsWeb && image) {
         final path = song.path;
         return Isolate.run(() {
           final f = File(path);
-          return readEmbeddedAudioMetadata(f, getImage: true);
+          return readEmbeddedAudioMetadata(
+            f,
+            getImage: true,
+            repairLyrics: repairLyrics,
+          );
         });
       }
-      return readEmbeddedAudioMetadata(file, getImage: image);
+      return readEmbeddedAudioMetadata(
+        file,
+        getImage: image,
+        repairLyrics: repairLyrics,
+      );
     }
 
     Future<AudioMetadata> readMetaNoImage() async {
-      if (!kIsWeb) {
+      // 批量入库（无内嵌图）：避免每首 Isolate.run 的开销。
+      if (!kIsWeb && loadEmbeddedAlbumArt) {
         final path = song.path;
         return Isolate.run(() {
           final f = File(path);
-          return readEmbeddedAudioMetadata(f, getImage: false);
+          return readEmbeddedAudioMetadata(
+            f,
+            getImage: false,
+            repairLyrics: repairLyrics,
+          );
         });
       }
-      return readEmbeddedAudioMetadata(file, getImage: false);
+      return readEmbeddedAudioMetadata(
+        file,
+        getImage: false,
+        repairLyrics: repairLyrics,
+      );
     }
 
     try {
       if (resolvedEmbedImages) {
         metadata = await readMeta(true);
       } else {
-        metadata = await readMeta(false);
+        metadata = await readMetaNoImage();
       }
     } catch (e, st) {
       if (!storageUnlockRetryDone &&

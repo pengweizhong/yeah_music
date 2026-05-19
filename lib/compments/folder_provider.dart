@@ -9,6 +9,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
+import 'package:yeah_music/utils/concurrent_limiter.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_paths_backup.dart';
 import 'package:yeah_music/utils/folder_hive_lightweight.dart';
@@ -17,8 +18,8 @@ import 'package:yeah_music/utils/hive_utils.dart';
 import '../config/app_config.dart';
 import '../models/folder.dart';
 
-/// 目录重扫生成的新 [Song] 不含内嵌封面/歌词（见 [_loadSongBatch]）；合并旧列表中已持久化的
-/// [Song.imageBytes]、[Song.lyrics]，避免刷新目录把后台补全结果写没。
+/// 目录重扫生成的新 [Song] 不含内嵌封面/歌词（见 [_loadSongBatch]）；合并旧列表中已补全的
+/// [Song.imageBytes]（仅内存，不入 Hive），避免刷新目录把同会话内后台补全的封面写没。
 void mergeEmbeddedFieldsFromPreviousSongList({
   required List<Song> freshList,
   required List<Song>? previousList,
@@ -35,15 +36,15 @@ void mergeEmbeddedFieldsFromPreviousSongList({
         prev.imageBytes!.isNotEmpty) {
       fresh.imageBytes = prev.imageBytes;
     }
-    final freshLy = fresh.lyrics?.trim() ?? '';
-    final prevLy = prev.lyrics?.trim() ?? '';
-    if (freshLy.isEmpty && prevLy.isNotEmpty) {
-      fresh.lyrics = prev.lyrics;
-    }
   }
 }
 
 class FolderProvider extends ChangeNotifier {
+  /// 目录扫描时的并行读标签上限（无封面/歌词写 Hive，主要耗时在 readMetadata）。
+  static final ConcurrentLimiter _scanMetaLimiter = ConcurrentLimiter(
+    Platform.isAndroid ? 3 : 6,
+  );
+
   //main 里调用了 ..init()，也不能保证 UI 构建时 _box 已经就绪。
   LazyBox<Folder>? _box;
   final List<Folder> _foldersCache = [];
@@ -80,6 +81,7 @@ class FolderProvider extends ChangeNotifier {
       ..addAll(list);
     _box = box;
     unawaited(FolderHiveLightweight.runStripEmbeddedArtMigrationIfNeeded());
+    unawaited(FolderHiveLightweight.runStripEmbeddedLyricsMigrationIfNeeded());
     if (_foldersCache.isEmpty) {
       await _restoreFoldersFromBackupIfNeeded();
     }
@@ -288,35 +290,42 @@ class FolderProvider extends ChangeNotifier {
     return audioFiles;
   }
 
-  /// 批量加载歌曲元数据（须 [await] 逐首完成）；不写内嵌封面（列表按需在 UI 层补全）。
+  /// 批量加载歌曲元数据（有限并行）；不写内嵌封面/歌词，列表与播放时按需补全。
   Future<List<Song>> _loadSongBatch(List<File> files) async {
-    final List<Song> songs = [];
-    var n = 0;
-    for (final file in files) {
-      try {
-        final song = Song(file.path);
-        await FileUtils.loadSongMeta(
-          song,
-          loadEmbeddedAlbumArt: false,
-          storeLyricsWithTrack: false,
-        );
-        songs.add(song);
-      } catch (e) {
-        appLog.w('歌曲元数据读取失败', error: e);
+    if (files.isEmpty) return [];
+    final slots = List<Song?>.filled(files.length, null);
+    var done = 0;
+    await Future.wait(
+      List<Future<void>>.generate(files.length, (i) async {
+        final file = files[i];
+        await _scanMetaLimiter.acquire();
         try {
-          final song = Song(file.path);
-          song.title =
-              file.path.split('/').last.replaceAll(RegExp(r'\.\w+$'), '');
-          songs.add(song);
-        } catch (_) {}
-      }
-      n++;
-      // 分批内也会让出 UI，减轻大目录卡顿
-      if (n % 8 == 0) {
-        await Future<void>.delayed(Duration.zero);
-      }
-    }
-    return songs;
+          try {
+            final song = Song(file.path);
+            await FileUtils.loadSongMeta(
+              song,
+              loadEmbeddedAlbumArt: false,
+              storeLyricsWithTrack: false,
+            );
+            slots[i] = song;
+          } catch (e) {
+            appLog.w('歌曲元数据读取失败', error: e);
+            try {
+              final song = Song(file.path);
+              song.title = p.basenameWithoutExtension(file.path);
+              slots[i] = song;
+            } catch (_) {}
+          }
+        } finally {
+          _scanMetaLimiter.release();
+          done++;
+          if (done % 12 == 0) {
+            await Future<void>.delayed(Duration.zero);
+          }
+        }
+      }),
+    );
+    return slots.whereType<Song>().toList();
   }
 
   ///文件夹是否已经存在

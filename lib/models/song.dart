@@ -53,8 +53,7 @@ class Song extends HiveObject {
   /// 专辑的唱片编号
   int? totalDisc;
 
-  /// 曲目的歌词。可以是普通文本或歌词。
-  @HiveField(6)
+  /// 嵌入式歌词（仅内存；播放/展示时从音频文件读取，不入 Hive）。
   String? lyrics;
 
   /// 比特率

@@ -40,6 +40,7 @@ import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/lyric_highlight_gradient.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
@@ -122,8 +123,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   /// 与当前已加载歌词对应的曲目路径（build 中用于检测切歌，需与 [ _lyricsHydratedForPath ] 同步）
   String? _lyricsBoundSongPath;
 
-  /// 已完成歌词数据与滚动对齐的曲路径；用于避免首帧无歌词、以及 initState 的 postFrame 重复 [_initLyrics]
+  /// 已完成歌词加载的曲路径（已展示歌词，或已从文件确认无嵌入式歌词）。
   String? _lyricsHydratedForPath;
+
+  /// 正在从音频文件补全歌词的路径（与 [SongListCover] 的封面补全类似）。
+  String? _lyricsFetchInFlightPath;
 
   // 歌词显示配置（从设置加载）
   late LyricSettings _settings;
@@ -210,9 +214,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   void _tryEagerHydrateLyrics() {
     if (!mounted) return;
     final p = Provider.of<PlayListProvider>(context, listen: false);
-    if (p.playList.isEmpty) return;
-    final idx = widget.index.clamp(0, p.playList.length - 1);
-    final song = p.playList[idx];
+    final song = p.currentSong;
+    if (song == null) return;
     if (_lyricsHydratedForPath == song.path) return;
     _applySongLyrics(song);
   }
@@ -487,6 +490,39 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     _applySongLyrics(currentSong);
   }
 
+  /// 与 [SongListCover._ensureCoverReady] 对称：曲目尚无歌词时从文件补全后再刷新 UI。
+  Future<void> _ensureLyricsLoadedForSong(Song song) async {
+    final path = song.path.trim();
+    if (path.isEmpty) return;
+    if (_lyricsHydratedForPath == path) return;
+    if (_lyricsFetchInFlightPath == path) return;
+    if (song.lyrics?.trim().isNotEmpty ?? false) {
+      _applySongLyrics(song);
+      return;
+    }
+
+    _lyricsFetchInFlightPath = path;
+    try {
+      await SongLibraryMetadataHydrator.hydrateIfNeeded(song);
+    } catch (_) {}
+    if (!mounted) return;
+
+    final play = Provider.of<PlayListProvider>(context, listen: false);
+    final cur = play.currentSong;
+    if (cur == null || cur.path != path) return;
+
+    if (cur.lyrics?.trim().isNotEmpty ?? false) {
+      if (_lyricsHydratedForPath != path || _lyrics.isEmpty) {
+        _applySongLyrics(cur);
+      }
+    } else {
+      _lyricsHydratedForPath = path;
+      if (_lyricsBoundSongPath != path || _lyrics.isNotEmpty) {
+        _applySongLyrics(cur);
+      }
+    }
+  }
+
   void _applySongLyrics(Song song) {
     if (song.lyrics != null && song.lyrics!.isNotEmpty) {
       final pos = MusicService.lastPosition;
@@ -567,13 +603,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       _desktopTheaterLyricScrollController = ScrollController();
       setState(() {
         _lyricsBoundSongPath = song.path;
-        _lyricsHydratedForPath = song.path;
         _lyrics = [];
         _lyricKeys = [];
         _lyricKeysSplit = [];
         _lyricKeysDesktop = [];
         _currentLyricIndex = -1;
       });
+      unawaited(_ensureLyricsLoadedForSong(song));
     }
   }
 
