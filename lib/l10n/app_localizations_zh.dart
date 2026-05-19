@@ -245,7 +245,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsAudioQualityHelp =>
-      '当音频文件标签中可读码率、采样率等信息时，Yeah Music 会按下列分级在曲库与最近播放中显示对应标识；顺序从低到高，样式与列表中一致。';
+      '当音频文件标签中可读码率、采样率等信息时，Yeah Music 会按下列分级在曲库与最近播放中显示对应标识。';
 
   @override
   String get settingsAboutDialogAuthor => '作者';
@@ -3208,7 +3208,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get settingsAudioQualityHelp =>
-      '当音频文件标签中可读码率、采样率等信息时，Yeah Music 会按下列分级在曲库与最近播放中显示对应标识；顺序从低到高，样式与列表中一致。';
+      '当音频文件标签中可读码率、采样率等信息时，Yeah Music 会按下列分级在曲库与最近播放中显示对应标识。';
 
   @override
   String get settingsAboutDialogAuthor => '作者';
@@ -6171,7 +6171,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsAudioQualityHelp =>
-      '當音訊檔案標籤中可讀碼率、取樣率等資訊時，Yeah Music 會依下列分級在曲庫與最近播放中顯示對應標識；順序由低到高，樣式與列表中一致。';
+      '當音訊檔案標籤中可讀碼率、取樣率等資訊時，Yeah Music 會依下列分級在曲庫與最近播放中顯示對應標識。';
 
   @override
   String get settingsAboutDialogAuthor => '作者';

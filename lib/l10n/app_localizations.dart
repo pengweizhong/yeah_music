@@ -555,7 +555,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAudioQualityHelp.
   ///
   /// In en, this message translates to:
-  /// **'When bitrate and sample rate are available in file tags, Yeah Music assigns one of the tiers below. Order is from lowest to highest; badges in your library use the same style.'**
+  /// **'When bitrate and sample rate are available in file tags, Yeah Music assigns one of the tiers below for display in your library and recent plays.'**
   String get settingsAudioQualityHelp;
 
   /// No description provided for @settingsAboutDialogAuthor.

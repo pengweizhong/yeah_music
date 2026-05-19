@@ -107,7 +107,7 @@
   "settingsHomeGreetingSaved": "保存しました",
   "settingsAudioQualityTitle": "音質",
   "settingsAudioQualityListSubtitle": "ライブラリの音質バッジの区分（低→高）",
-  "settingsAudioQualityHelp": "ファイルタグからビットレートやサンプルレートが読める場合、下の区分でライブラリや最近の再生にバッジを表示します。低い順で、リストと同じ見た目です。",
+  "settingsAudioQualityHelp": "ファイルタグからビットレートやサンプルレートが読める場合、下の区分でライブラリや最近の再生にバッジを表示します。",
   "settingsAboutDialogAuthor": "作者",
   "settingsAboutDialogRepo": "リポジトリ",
   "settingsAboutDialogLicense": "ライセンス",

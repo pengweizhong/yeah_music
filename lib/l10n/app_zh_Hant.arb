@@ -107,7 +107,7 @@
   "settingsHomeGreetingSaved": "已儲存",
   "settingsAudioQualityTitle": "音質",
   "settingsAudioQualityListSubtitle": "曲庫列表音質標識分級說明（由低到高）",
-  "settingsAudioQualityHelp": "當音訊檔案標籤中可讀碼率、取樣率等資訊時，Yeah Music 會依下列分級在曲庫與最近播放中顯示對應標識；順序由低到高，樣式與列表中一致。",
+  "settingsAudioQualityHelp": "當音訊檔案標籤中可讀碼率、取樣率等資訊時，Yeah Music 會依下列分級在曲庫與最近播放中顯示對應標識。",
   "settingsAboutDialogAuthor": "作者",
   "settingsAboutDialogRepo": "存放庫",
   "settingsAboutDialogLicense": "授權條款",

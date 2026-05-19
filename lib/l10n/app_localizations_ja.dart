@@ -248,7 +248,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsAudioQualityHelp =>
-      'ファイルタグからビットレートやサンプルレートが読める場合、下の区分でライブラリや最近の再生にバッジを表示します。低い順で、リストと同じ見た目です。';
+      'ファイルタグからビットレートやサンプルレートが読める場合、下の区分でライブラリや最近の再生にバッジを表示します。';
 
   @override
   String get settingsAboutDialogAuthor => '作者';
