@@ -250,6 +250,35 @@ class MusicService {
   static const String androidComposerMetadataKey =
       'android.media.metadata.COMPOSER';
 
+  /// 通知栏副标题（与 [packages/audio_service] Java 侧常量一致）。
+  ///
+  /// ColorOS 等第二行常读 [METADATA_KEY_ARTIST] 而非 [DISPLAY_SUBTITLE]，
+  /// 歌词开启时 Java 会把本字段同步写入 ARTIST。
+  static const String androidNotifySubtitleExtraKey = 'yeah.notify.subtitle';
+
+  static const String androidNotifySongTitleExtraKey = 'yeah.notify.songTitle';
+
+  static const String androidNotifyArtistExtraKey = 'yeah.notify.artist';
+
+  static Map<String, dynamic> _androidNotifyExtras({
+    required Song song,
+    required bool syncLyrics,
+    Map<String, dynamic>? base,
+  }) {
+    final artist = song.artist?.trim() ?? '';
+    final title = songNotificationBaseTitle(song);
+    final subtitle = androidNotificationSubtitleForSong(
+      song,
+      syncLyrics: syncLyrics,
+    );
+    return <String, dynamic>{
+      ...?base,
+      androidNotifySongTitleExtraKey: title,
+      androidNotifyArtistExtraKey: artist,
+      androidNotifySubtitleExtraKey: subtitle,
+    };
+  }
+
   static Map<String, dynamic>? _androidLyricExtras(String? line) {
     if (line == null || line.isEmpty) return null;
     return {androidComposerMetadataKey: line};
@@ -262,9 +291,10 @@ class MusicService {
         : p.basename(song.path);
   }
 
-  static const String androidNotificationTitleSeparator = ' · ';
+  static const String androidNotificationTitleSeparator = ' - ';
 
-  static String androidNotificationArtistTitleLine({
+  /// 歌名 - 歌手（通知栏开歌词同步时副标题用）。
+  static String androidNotificationTitleArtistLine({
     required String title,
     required String artist,
   }) {
@@ -272,13 +302,19 @@ class MusicService {
     final a = artist.trim();
     if (a.isEmpty) return t;
     if (t.isEmpty) return a;
-    return '$a$androidNotificationTitleSeparator$t';
+    return '$t$androidNotificationTitleSeparator$a';
   }
 
-  static String androidNotificationArtistTitleFromSong(Song song) {
-    return androidNotificationArtistTitleLine(
+  /// 通知栏第二行：开歌词同步 = 歌名 - 歌手；关 = 仅歌手。
+  static String androidNotificationSubtitleForSong(
+    Song song, {
+    required bool syncLyrics,
+  }) {
+    final artist = song.artist?.trim() ?? '';
+    if (!syncLyrics) return artist;
+    return androidNotificationTitleArtistLine(
       title: songNotificationBaseTitle(song),
-      artist: song.artist?.trim() ?? '',
+      artist: artist,
     );
   }
 
@@ -302,7 +338,8 @@ class MusicService {
     if (line.isEmpty) return;
     if (line == _lastAndroidNotifyLyricLineShown) return;
     _lastAndroidNotifyLyricLineShown = line;
-    final subtitle = androidNotificationArtistTitleFromSong(song);
+    final subtitle =
+        androidNotificationSubtitleForSong(song, syncLyrics: true);
     JustAudioBackground.patchNotificationLyricDisplay(
       songPath: song.path,
       displayTitle: line,
@@ -890,19 +927,22 @@ class MusicService {
         : (lyricsInTitle ? lyricLine : baseTitle);
     final displaySubtitle = deferLyricDisplayToChannel
         ? null
-        : (lyricsInTitle
-            ? androidNotificationArtistTitleLine(title: baseTitle, artist: artist)
-            : null);
+        : androidNotificationSubtitleForSong(song, syncLyrics: syncLyrics);
     final lyricExtras = _androidLyricExtras(lyricsInTitle ? lyricLine : null);
-    final Map<String, dynamic>? extras;
+    Map<String, dynamic>? artBase;
     if (artUri != null && artUri.scheme == 'file') {
-      extras = <String, dynamic>{
+      artBase = <String, dynamic>{
         if (lyricExtras != null) ...lyricExtras,
         'artCacheFile': artUri.toFilePath(),
       };
     } else {
-      extras = lyricExtras;
+      artBase = lyricExtras;
     }
+    final extras = _androidNotifyExtras(
+      song: song,
+      syncLyrics: syncLyrics,
+      base: artBase,
+    );
     return MediaItem(
       id: song.path,
       title: baseTitle,

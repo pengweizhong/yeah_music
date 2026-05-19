@@ -111,6 +111,11 @@ public class AudioService extends MediaBrowserServiceCompat {
                     | PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
 
     static AudioService instance;
+    /** 与 Dart [MusicService.androidNotify*ExtraKey] 一致。 */
+    private static final String YEAH_EXTRA_NOTIFY_SUBTITLE = "yeah.notify.subtitle";
+    private static final String YEAH_EXTRA_NOTIFY_SONG_TITLE = "yeah.notify.songTitle";
+    private static final String YEAH_EXTRA_NOTIFY_ARTIST = "yeah.notify.artist";
+
     /** 为 true 时 [setMetadata] 不覆盖 [DISPLAY_TITLE]/[DISPLAY_SUBTITLE]（由 [updateNotificationDisplayText] 独占）。 */
     private static volatile boolean yeahLyricsDisplayManaged = false;
     /** 歌词模式下通知栏主行缓存，避免 DISPLAY_TITLE 空窗时回退成曲名 [MediaDescription.getTitle]。 */
@@ -1030,10 +1035,21 @@ public class AudioService extends MediaBrowserServiceCompat {
             yeahCanonicalSongTitle = null;
             return;
         }
+        final String realArtist = mediaMetadata.getString(YEAH_EXTRA_NOTIFY_ARTIST);
+        final String artistForSession = (realArtist != null && realArtist.length() > 0)
+                ? realArtist
+                : mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
         final MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder(mediaMetadata)
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, songTitle)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, songTitle)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "");
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, songTitle);
+        if (artistForSession != null) {
+            builder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artistForSession);
+            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artistForSession);
+            builder.putString(YEAH_EXTRA_NOTIFY_SUBTITLE, artistForSession);
+        } else {
+            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "");
+            builder.putString(YEAH_EXTRA_NOTIFY_SUBTITLE, "");
+        }
         final MediaMetadataCompat restored = builder.build();
         mediaMetadata = restored;
         yeahCanonicalSongTitle = null;
@@ -1048,6 +1064,39 @@ public class AudioService extends MediaBrowserServiceCompat {
     private void yeahRememberLyricDisplay(CharSequence title, CharSequence subtitle) {
         if (title != null && title.length() > 0) yeahLastLyricDisplayTitle = title;
         if (subtitle != null && subtitle.length() > 0) yeahLastLyricDisplaySubtitle = subtitle;
+    }
+
+    /** 通知副标题：优先读 Dart 写入的 extra（歌词开时为「歌名 - 歌手」）。 */
+    private CharSequence yeahNotifySubtitleFromMetadata(MediaMetadataCompat meta) {
+        if (meta == null) return null;
+        final String fromExtra = meta.getString(YEAH_EXTRA_NOTIFY_SUBTITLE);
+        if (fromExtra != null && fromExtra.length() > 0) return fromExtra;
+        final CharSequence displaySub =
+                meta.getText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE);
+        if (displaySub != null && displaySub.length() > 0) return displaySub;
+        if (!yeahLyricsDisplayManaged) {
+            final String artist = meta.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+            if (artist != null && artist.length() > 0) return artist;
+        }
+        return null;
+    }
+
+    /**
+     * ColorOS 等第二行读 [METADATA_KEY_ARTIST]；歌词托管时把副标题（歌名 - 歌手）同步进 ARTIST，
+     * 真实歌手保存在 [YEAH_EXTRA_NOTIFY_ARTIST]。
+     */
+    private MediaMetadataCompat yeahFinalizeNotificationMetadata(MediaMetadataCompat meta) {
+        if (meta == null) return null;
+        final CharSequence sub = yeahNotifySubtitleFromMetadata(meta);
+        if (sub == null || sub.length() == 0) return meta;
+        final String subStr = sub.toString();
+        final MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder(meta)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, subStr)
+                .putString(YEAH_EXTRA_NOTIFY_SUBTITLE, subStr);
+        if (yeahLyricsDisplayManaged) {
+            builder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, subStr);
+        }
+        return builder.build();
     }
 
     /** 歌词模式下 DISPLAY_TITLE 不得与曲名 [METADATA_KEY_TITLE] 相同。 */
@@ -1101,8 +1150,7 @@ public class AudioService extends MediaBrowserServiceCompat {
             MediaDescriptionCompat description,
             CharSequence[] out) {
         CharSequence title = mediaMetadata.getText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE);
-        CharSequence subtitle =
-                mediaMetadata.getText(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE);
+        CharSequence subtitle = yeahNotifySubtitleFromMetadata(mediaMetadata);
         if (yeahLyricsDisplayManaged) {
             String mediaId = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
             yeahSyncLastLyricMediaId(mediaId);
@@ -1121,7 +1169,9 @@ public class AudioService extends MediaBrowserServiceCompat {
             } else if (title == null) {
                 title = description.getTitle();
             }
-            subtitle = description.getSubtitle();
+            if (subtitle == null || subtitle.length() == 0) {
+                subtitle = description.getSubtitle();
+            }
         }
         out[0] = title;
         out[1] = subtitle;
@@ -1152,7 +1202,9 @@ public class AudioService extends MediaBrowserServiceCompat {
             builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, keepTitle.toString());
         }
         if (curSub != null) {
-            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, curSub.toString());
+            final String subStr = curSub.toString();
+            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, subStr);
+            builder.putString(YEAH_EXTRA_NOTIFY_SUBTITLE, subStr);
         }
         return builder.build();
     }
@@ -1182,6 +1234,7 @@ public class AudioService extends MediaBrowserServiceCompat {
             }
             if (displaySubtitle != null) {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, displaySubtitle);
+                builder.putString(YEAH_EXTRA_NOTIFY_SUBTITLE, displaySubtitle);
             }
             MediaMetadataCompat updated = builder.build();
             String mediaId = updated.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
@@ -1189,6 +1242,7 @@ public class AudioService extends MediaBrowserServiceCompat {
                 instance.yeahSyncLastLyricMediaId(mediaId);
                 updated = instance.yeahMirrorManagedLyricSessionTitle(updated);
             }
+            updated = instance.yeahFinalizeNotificationMetadata(updated);
             instance.mediaMetadata = updated;
             if (mediaId != null) {
                 mediaMetadataCache.put(mediaId, updated);
@@ -1239,16 +1293,17 @@ public class AudioService extends MediaBrowserServiceCompat {
                         && (cachedDisplay == null || cachedDisplay.equals(inDisplay))) {
                     builder.putString(
                             MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, curDisplay.toString());
-                    CharSequence curSub = this.mediaMetadata.getText(
-                            MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE);
+                    CharSequence curSub = yeahNotifySubtitleFromMetadata(this.mediaMetadata);
                     if (curSub != null) {
                         builder.putString(
                                 MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, curSub.toString());
+                        builder.putString(YEAH_EXTRA_NOTIFY_SUBTITLE, curSub.toString());
                     }
                 }
             }
             MediaMetadataCompat merged = builder.build();
             merged = yeahMirrorManagedLyricSessionTitle(merged);
+            merged = yeahFinalizeNotificationMetadata(merged);
             this.mediaMetadata = merged;
             mediaSession.setMetadata(putArtToMetadata(merged));
             postNotificationUpdate();
@@ -1274,6 +1329,7 @@ public class AudioService extends MediaBrowserServiceCompat {
         if (yeahLyricsDisplayManaged) {
             mediaMetadata = yeahMirrorManagedLyricSessionTitle(mediaMetadata);
         }
+        mediaMetadata = yeahFinalizeNotificationMetadata(mediaMetadata);
         this.mediaMetadata = mediaMetadata;
         mediaSession.setMetadata(mediaMetadata);
         postNotificationUpdate();

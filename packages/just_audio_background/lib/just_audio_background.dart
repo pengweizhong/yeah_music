@@ -609,6 +609,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
           composerLine.isNotEmpty) {
         extras[composerMetadataKey] = composerLine;
       }
+      extras['yeah.notify.subtitle'] = displaySubtitle;
       next[i] = next[i].copyWith(
         displayTitle: displayTitle,
         displaySubtitle: displaySubtitle,
@@ -630,9 +631,12 @@ class _PlayerAudioHandler extends BaseAudioHandler
         continue;
       }
       patched = true;
+      final extras = Map<String, dynamic>.from(item.extras ?? {});
+      extras['yeah.notify.subtitle'] = item.artist ?? '';
       next.add(item.copyWith(
         displayTitle: item.title,
-        displaySubtitle: null,
+        displaySubtitle: item.artist,
+        extras: extras,
       ));
     }
     if (patched) queue.add(next);
