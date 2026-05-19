@@ -1293,7 +1293,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCarLyricsGroupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Car & lock screen'**
+  /// **'Notification & car lyrics'**
   String get settingsCarLyricsGroupTitle;
 
   /// No description provided for @settingsCarLyricsGroupSubtitle.
@@ -1311,7 +1311,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCarLyricsEnabled.
   ///
   /// In en, this message translates to:
-  /// **'Enable car lyrics'**
+  /// **'Enable notification & car lyrics'**
   String get settingsCarLyricsEnabled;
 
   /// No description provided for @settingsCarLyricsEnabledSubtitle.
@@ -1497,7 +1497,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveSyncItemLyricsUiSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Lyric styling plus floating/car lyrics and keep screen awake.'**
+  /// **'Lyric styling plus floating, notification & car lyrics, and keep screen awake.'**
   String get oneDriveSyncItemLyricsUiSubtitle;
 
   /// No description provided for @oneDriveSyncItemSongRecognition.

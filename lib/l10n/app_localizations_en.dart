@@ -672,7 +672,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'When on, the floating window cannot be dragged.';
 
   @override
-  String get settingsCarLyricsGroupTitle => 'Car & lock screen';
+  String get settingsCarLyricsGroupTitle => 'Notification & car lyrics';
 
   @override
   String get settingsCarLyricsGroupSubtitle =>
@@ -683,7 +683,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Uses the Android media session so lock screen, Bluetooth accessories, and Android Auto can show what is playing and offer transport controls.\n\nEnable: builds a full playback queue in the player so previous/next in the notification and on car units skip real tracks; play/pause and single-track repeat stay aligned with the app where supported.\n\nArtwork: sends embedded cover art to the notification and to head units that display it.\n\nLyrics: periodically updates the media item subtitle with the current lyric line on systems that show it, using the same lyric line rules as elsewhere in the app.\n\nShuffle, play-once, and other modes are still driven from the app; hardware “repeat all/shuffle” may not mirror every in-app mode.';
 
   @override
-  String get settingsCarLyricsEnabled => 'Enable car lyrics';
+  String get settingsCarLyricsEnabled => 'Enable notification & car lyrics';
 
   @override
   String get settingsCarLyricsEnabledSubtitle =>
@@ -790,7 +790,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveSyncItemLyricsUiSubtitle =>
-      'Lyric styling plus floating/car lyrics and keep screen awake.';
+      'Lyric styling plus floating, notification & car lyrics, and keep screen awake.';
 
   @override
   String get oneDriveSyncItemSongRecognition => 'Song ID & recognition history';

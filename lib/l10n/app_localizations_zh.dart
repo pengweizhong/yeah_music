@@ -638,7 +638,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
 
   @override
-  String get settingsCarLyricsGroupTitle => '车载歌词';
+  String get settingsCarLyricsGroupTitle => '通知与车载歌词';
 
   @override
   String get settingsCarLyricsGroupSubtitle => '媒体通知、蓝牙与 Android Auto';
@@ -648,7 +648,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '使用 Android 媒体会话，让锁屏、蓝牙耳机与 Android Auto 等显示正在播放内容并提供控制。\n\n开启：在播放器中构建完整队列，通知与车机上的上一首/下一首对应真实切歌；播放/暂停与单曲循环在支持范围内与 App 一致。\n\n封面：将内嵌封面送到通知与支持显示封面车机。\n\n歌词：在支持的系统上把媒体副标题更新为当前歌词行，规则与 App 内其它歌词展示一致。\n\n随机、仅播一次等模式仍以 App 内「播放模式」为准；车机上的列表循环/随机可能与部分模式不完全一致。';
 
   @override
-  String get settingsCarLyricsEnabled => '启用车载歌词';
+  String get settingsCarLyricsEnabled => '启用通知与车载歌词';
 
   @override
   String get settingsCarLyricsEnabledSubtitle => '通知栏队列与切歌';
@@ -747,7 +747,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveSyncItemLyricsUi => '歌词与播放页';
 
   @override
-  String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。';
+  String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 通知与车载歌词与播放页屏幕常亮等。';
 
   @override
   String get oneDriveSyncItemSongRecognition => '听歌识曲与记录';
@@ -3602,7 +3602,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
 
   @override
-  String get settingsCarLyricsGroupTitle => '车载歌词';
+  String get settingsCarLyricsGroupTitle => '通知与车载歌词';
 
   @override
   String get settingsCarLyricsGroupSubtitle => '媒体通知、蓝牙与 Android Auto';
@@ -3612,7 +3612,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '使用 Android 媒体会话，让锁屏、蓝牙耳机与 Android Auto 等显示正在播放内容并提供控制。\n\n开启：在播放器中构建完整队列，通知与车机上的上一首/下一首对应真实切歌；播放/暂停与单曲循环在支持范围内与 App 一致。\n\n封面：将内嵌封面送到通知与支持显示封面车机。\n\n歌词：在支持的系统上把媒体副标题更新为当前歌词行，规则与 App 内其它歌词展示一致。\n\n随机、仅播一次等模式仍以 App 内「播放模式」为准；车机上的列表循环/随机可能与部分模式不完全一致。';
 
   @override
-  String get settingsCarLyricsEnabled => '启用车载歌词';
+  String get settingsCarLyricsEnabled => '启用通知与车载歌词';
 
   @override
   String get settingsCarLyricsEnabledSubtitle => '通知栏队列与切歌';
@@ -3711,7 +3711,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveSyncItemLyricsUi => '歌词与播放页';
 
   @override
-  String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 车载歌词与播放页屏幕常亮等。';
+  String get oneDriveSyncItemLyricsUiSubtitle => '歌词样式、桌面 / 通知与车载歌词与播放页屏幕常亮等。';
 
   @override
   String get oneDriveSyncItemSongRecognition => '听歌识曲与记录';
@@ -6566,7 +6566,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDesktopFloatingDragLockDesc => '開啟後懸浮歌詞視窗不可拖曳。';
 
   @override
-  String get settingsCarLyricsGroupTitle => '車載歌詞';
+  String get settingsCarLyricsGroupTitle => '通知與車載歌詞';
 
   @override
   String get settingsCarLyricsGroupSubtitle => '媒體通知、藍牙與 Android Auto';
@@ -6576,7 +6576,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '使用 Android 媒體工作階段，讓鎖屏、藍牙耳機與 Android Auto 等顯示正在播放內容並提供控制。\n\n開啟：在播放器中建立完整佇列，通知與車機上的上一首／下一首對應真實切歌；播放／暫停與單曲循環在支援範圍內與 App 一致。\n\n封面：將內嵌封面送到通知與支援顯示封面的車機。\n\n歌詞：在支援的系統上把媒體副標題更新為目前歌詞行，規則與 App 內其它歌詞展示一致。\n\n隨機、僅播一次等模式仍以 App 內「播放模式」為準；車機上的列表循環／隨機可能與部分模式不完全一致。';
 
   @override
-  String get settingsCarLyricsEnabled => '啟用車載歌詞';
+  String get settingsCarLyricsEnabled => '啟用通知與車載歌詞';
 
   @override
   String get settingsCarLyricsEnabledSubtitle => '通知列佇列與切歌';
@@ -6675,7 +6675,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveSyncItemLyricsUi => '歌詞與播放頁';
 
   @override
-  String get oneDriveSyncItemLyricsUiSubtitle => '歌詞樣式、桌面 / 車載歌詞與播放頁螢幕恆亮等。';
+  String get oneDriveSyncItemLyricsUiSubtitle => '歌詞樣式、桌面 / 通知與車載歌詞與播放頁螢幕恆亮等。';
 
   @override
   String get oneDriveSyncItemSongRecognition => '聽歌識曲與紀錄';

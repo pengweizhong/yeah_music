@@ -646,7 +646,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'オンにするとフローティングウィンドウをドラッグできません。';
 
   @override
-  String get settingsCarLyricsGroupTitle => '車載・ロック画面';
+  String get settingsCarLyricsGroupTitle => '通知・車載歌詞';
 
   @override
   String get settingsCarLyricsGroupSubtitle => '通知・Bluetooth・Android Auto';
@@ -656,7 +656,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'Android のメディアセッションを使い、ロック画面・Bluetooth・Android Auto などに再生情報と操作を提供します。\n\n有効化：プレイヤーにキューを構築し、通知や車載の前後曲が実際の曲送りに対応します。再生／一時停止や 1 曲リピートは環境が許す範囲でアプリと揃います。\n\nアートワーク：通知や対応ヘッドユニットに埋め込みジャケットを送ります。\n\n歌詞：対応端末では副題を現在の歌詞行に更新します。ルールはアプリ内の他の歌詞表示と同じです。\n\nシャッフルや 1 回だけ再生などはアプリ側の再生モードが優先されます。車載のリストリピート／シャッフルがすべてのモードと一致するとは限りません。';
 
   @override
-  String get settingsCarLyricsEnabled => '車載歌詞を有効化';
+  String get settingsCarLyricsEnabled => '通知・車載歌詞を有効化';
 
   @override
   String get settingsCarLyricsEnabledSubtitle => '通知のキューと前後曲';
@@ -756,7 +756,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveSyncItemLyricsUiSubtitle =>
-      '歌詞スタイル、デスクトップ／車載歌詞、画面スリープ抑制など。';
+      '歌詞スタイル、デスクトップ／通知・車載歌詞、画面スリープ抑制など。';
 
   @override
   String get oneDriveSyncItemSongRecognition => '楽曲認識と履歴';
