@@ -10,6 +10,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/services/android_media_session_lyrics_channel.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
@@ -260,6 +261,59 @@ class MusicService {
         : p.basename(song.path);
   }
 
+  static const String androidNotificationTitleSeparator = ' · ';
+
+  static String androidNotificationArtistTitleLine({
+    required String title,
+    required String artist,
+  }) {
+    final t = title.trim();
+    final a = artist.trim();
+    if (a.isEmpty) return t;
+    if (t.isEmpty) return a;
+    return '$a$androidNotificationTitleSeparator$t';
+  }
+
+  static String androidNotificationArtistTitleFromSong(Song song) {
+    return androidNotificationArtistTitleLine(
+      title: songNotificationBaseTitle(song),
+      artist: song.artist?.trim() ?? '',
+    );
+  }
+
+  static String? _lastAndroidNotifyLyricLineShown;
+
+  static void resetAndroidNotificationLyricDedupe() {
+    _lastAndroidNotifyLyricLineShown = null;
+  }
+
+  /// 与 macOS [MacosMenuBarLyrics.setText] 类似：主线程直推通知展示，不经过 setMediaItem 队列。
+  static void pushAndroidNotificationLyricLine(
+    Song song, {
+    required String lyricLine,
+  }) {
+    if (!Platform.isAndroid) return;
+    final line = lyricLine.trim();
+    if (line.isEmpty) return;
+    if (line == _lastAndroidNotifyLyricLineShown) return;
+    _lastAndroidNotifyLyricLineShown = line;
+    final subtitle = androidNotificationArtistTitleFromSong(song);
+    JustAudioBackground.patchNotificationLyricDisplay(
+      songPath: song.path,
+      displayTitle: line,
+      displaySubtitle: subtitle,
+      composerMetadataKey: androidComposerMetadataKey,
+      composerLine: line,
+    );
+    AndroidMediaSessionLyricsChannel.updateDisplay(
+      displayTitle: line,
+      displaySubtitle: subtitle,
+    );
+    _logAndroidNotifyArt(
+      'lyricLine ${line.length > 28 ? '${line.substring(0, 28)}…' : line}',
+    );
+  }
+
   /// 开启歌词同步时主标题为当前歌词行；否则为 [songNotificationBaseTitle]。
   static String androidNotificationPrimaryLine({
     required Song song,
@@ -313,6 +367,17 @@ class MusicService {
     if (song.imageBytes == null || song.imageBytes!.isEmpty) {
       _logAndroidNotifyArt(
         'coverIfStillCurrent skip (no bytes) ${_artDiag(song)}',
+      );
+      return;
+    }
+    final wantLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
+    final artFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
+    if (wantLyrics &&
+        _androidNotifyLastOkPath != null &&
+        songPathsEqual(_androidNotifyLastOkPath!, song.path) &&
+        _androidNotifyLastOkArtFp == artFp) {
+      _logAndroidNotifyArt(
+        'coverIfStillCurrent skip (lyrics sync, art unchanged) ${_artDiag(song)}',
       );
       return;
     }
@@ -779,6 +844,8 @@ class MusicService {
     required bool showCover,
     LyricSettings? lyricStyle,
     Duration subtitlePosition = Duration.zero,
+    /// 为 true 时不写入 [displayTitle]/歌词 extras，由 [pushAndroidNotificationLyricLine] 直推。
+    bool deferLyricDisplayToChannel = false,
   }) async {
     final baseTitle = songNotificationBaseTitle(song);
     final artist = song.artist?.trim().isNotEmpty == true
@@ -800,22 +867,23 @@ class MusicService {
     final style = lyricStyle ?? LyricSettings();
     style.normalizeLayoutFields();
     final syncLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
-    final title = androidNotificationPrimaryLine(
+    final embedLyricInItem = syncLyrics && !deferLyricDisplayToChannel;
+    final lyricLine = androidNotificationPrimaryLine(
       song: song,
       position: subtitlePosition,
       style: style,
-      syncLyrics: syncLyrics,
+      syncLyrics: embedLyricInItem,
     );
-    final lyricsInTitle = syncLyrics && title != baseTitle;
-    String? displaySubtitle;
-    String? displayDescription;
-    if (lyricsInTitle) {
-      displaySubtitle = baseTitle;
-      if (artist.isNotEmpty) {
-        displayDescription = artist;
-      }
-    }
-    final lyricExtras = _androidLyricExtras(lyricsInTitle ? title : null);
+    final lyricsInTitle = embedLyricInItem && lyricLine != baseTitle;
+    final displayTitle = deferLyricDisplayToChannel
+        ? null
+        : (lyricsInTitle ? lyricLine : baseTitle);
+    final displaySubtitle = deferLyricDisplayToChannel
+        ? null
+        : (lyricsInTitle
+            ? androidNotificationArtistTitleLine(title: baseTitle, artist: artist)
+            : null);
+    final lyricExtras = _androidLyricExtras(lyricsInTitle ? lyricLine : null);
     final Map<String, dynamic>? extras;
     if (artUri != null && artUri.scheme == 'file') {
       extras = <String, dynamic>{
@@ -827,13 +895,13 @@ class MusicService {
     }
     return MediaItem(
       id: song.path,
-      title: title,
+      title: baseTitle,
       artist: artist,
       album: song.album,
       duration: song.duration,
       artUri: artUri,
+      displayTitle: displayTitle,
       displaySubtitle: displaySubtitle,
-      displayDescription: displayDescription,
       extras: extras,
     );
   }
@@ -845,11 +913,24 @@ class MusicService {
   static Future<void> pushAndroidNotificationForSong(
     Song song, {
     int? abortIfStaleGeneration,
+    bool forceNotificationPush = false,
   }) async {
     if (!Platform.isAndroid) return;
     final targetPath = song.path;
     if (targetPath.trim().isEmpty) return;
+    final wantLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
     final artFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
+    if (!forceNotificationPush &&
+        wantLyrics &&
+        _androidNotifyLastOkPath != null &&
+        songPathsEqual(_androidNotifyLastOkPath!, targetPath) &&
+        _androidNotifyLastOkArtFp == artFp &&
+        (song.imageBytes?.isNotEmpty ?? false)) {
+      _logAndroidNotifyArt(
+        'push skip (lyrics sync, same path+art) ${_artDiag(song)}',
+      );
+      return;
+    }
     final now = DateTime.now();
     if (_androidNotifyLastOkPath != null &&
         songPathsEqual(_androidNotifyLastOkPath!, targetPath) &&
@@ -879,7 +960,6 @@ class MusicService {
         _logAndroidNotifyArt('hydrate failed: $e');
       }
       final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
-      final wantLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
       if (showCover && (song.imageBytes == null || song.imageBytes!.isEmpty)) {
         try {
           await FileUtils.loadSongMeta(
@@ -930,7 +1010,8 @@ class MusicService {
         song,
         showCover: showCover,
         lyricStyle: lyricStyle,
-        subtitlePosition: lastPosition,
+        subtitlePosition: playerPosition,
+        deferLyricDisplayToChannel: wantLyrics,
       );
       if (!_shouldApplyAndroidMediaPush(
         songPath: targetPath,

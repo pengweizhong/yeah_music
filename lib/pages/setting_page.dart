@@ -196,6 +196,7 @@ class _AndroidCarLyricsSettingsSectionState
   Future<void> _onEnabled(bool v) async {
     setState(() => _enabled = v);
     await SettingsService.saveAndroidCarLyricsEnabled(v);
+    await AndroidCarLyricsSync.refreshSyncEnabled();
   }
 
   Future<void> _onCover(bool v) async {
@@ -206,6 +207,7 @@ class _AndroidCarLyricsSettingsSectionState
   Future<void> _onSync(bool v) async {
     setState(() => _syncLyrics = v);
     await SettingsService.saveAndroidCarLyricsSyncLyrics(v);
+    await AndroidCarLyricsSync.refreshSyncEnabled();
     await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
   }
 

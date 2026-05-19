@@ -19,6 +19,9 @@ Future<void> Function()? _yeahAndroidLyricsSyncToggleHandler;
 /// Yeah Music：后台/锁屏媒体键点击处理；返回 true 表示已消费，不再走默认 play/pause/next/previous。
 Future<bool> Function(String kind)? _yeahAndroidMediaButtonClickHandler;
 
+/// 为 true 时 [setMediaItem] 不覆盖队列里已 patch 的当前歌词行。
+bool _yeahAndroidLyricsSyncEnabled = false;
+
 /// Yeah Music：暂停 / 通知栏切歌前 800ms 线性淡出（由宿主注入 [MusicService.fadeOutVolumeWhilePlaying]）。
 Future<void> Function()? _yeahFadeOutVolumeHandler;
 
@@ -101,6 +104,11 @@ class JustAudioBackground {
     _yeahFadeOutVolumeHandler = handler;
   }
 
+  /// 通知栏歌词由 [updateNotificationDisplayText] 直推时，避免 [setMediaItem] 用旧行覆盖当前行。
+  static void setAndroidLyricsSyncEnabled(bool enabled) {
+    _yeahAndroidLyricsSyncEnabled = enabled;
+  }
+
   /// 更新系统媒体会话 / 通知栏 [MediaItem]（含封面）。
   ///
   /// 必须使用本方法，**不要**调用 [AudioService.updateMediaItem]：后者走
@@ -108,6 +116,23 @@ class JustAudioBackground {
   /// 不会触发 [_PlayerAudioHandler] 的 [mediaItem] 流，通知栏封面/标题不刷新。
   static Future<void> updateNotificationMediaItem(MediaItem item) async {
     await _audioHandler.updateMediaItem(item);
+  }
+
+  /// 歌词换行：只改 [queue]，不 [mediaItem.add]（避免 setMediaItem 覆盖 [DISPLAY_TITLE]）。
+  static void patchNotificationLyricDisplay({
+    required String songPath,
+    required String displayTitle,
+    required String displaySubtitle,
+    String? composerMetadataKey,
+    String? composerLine,
+  }) {
+    _playerAudioHandler.patchNotificationLyricDisplay(
+      songPath: songPath,
+      displayTitle: displayTitle,
+      displaySubtitle: displaySubtitle,
+      composerMetadataKey: composerMetadataKey,
+      composerLine: composerLine,
+    );
   }
 }
 
@@ -473,6 +498,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
                   final live = mediaItem.nvalue;
                   final queueHadArt = emit.artUri != null;
                   emit = _yeahMergeNotificationArtwork(emit, live);
+                  emit = _yeahMergeNotificationLyricDisplay(emit, live);
                   if (!queueHadArt && emit.artUri != null) {
                     final patched = List<MediaItem>.from(currentQueue);
                     patched[idx] = emit;
@@ -487,8 +513,23 @@ class _PlayerAudioHandler extends BaseAudioHandler
                       '[AndroidNotifyArt] debounce: SKIP null-art duration-only idx=$idx',
                     );
                     return;
+                  } else if (durationPatched && !indexChanged) {
+                    final lyricsLayout = _yeahNotificationLyricsLayoutActive(emit);
+                    if (lyricsLayout || queueHadArt) {
+                      debugPrint(
+                        '[AndroidNotifyArt] debounce: SKIP duration-only '
+                        '(keep lyrics=$lyricsLayout art=$queueHadArt) idx=$idx',
+                      );
+                      return;
+                    }
                   }
-                  mediaItem.add(emit);
+                  if (_yeahAndroidLyricsSyncEnabled && !indexChanged) {
+                    debugPrint(
+                      '[AndroidNotifyArt] debounce: SKIP (lyrics managed) idx=$idx',
+                    );
+                    return;
+                  }
+                  mediaItem.add(_yeahEmitForSetMediaItem(emit));
                 }
               }
             }, onError: (Object e, [StackTrace? st]) {});
@@ -509,7 +550,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
         index != null &&
         index! >= 0 &&
         index! < queue.length) {
-      mediaItem.add(queue[index!]);
+      mediaItem.add(_yeahEmitForSetMediaItem(queue[index!]));
     }
   }
 
@@ -520,7 +561,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
     await super.updateMediaItem(updated);
     final idx = index;
     final q = queue.nvalue;
-    var queuePatched = false;
+    var emit = updated;
     if (q != null && idx != null && idx >= 0 && idx < q.length) {
       final next = List<MediaItem>.from(q);
       var slot = idx;
@@ -529,14 +570,55 @@ class _PlayerAudioHandler extends BaseAudioHandler
         if (byId >= 0) slot = byId;
       }
       if (next[slot].id == updated.id) {
-        next[slot] = updated;
+        emit = _yeahEmitForSetMediaItem(updated);
+        next[slot] = emit;
         queue.add(next);
-        queuePatched = true;
       }
     }
     // QueueHandler.updateMediaItem 不会触发 mediaItem 流；必须 add 才会走
     // audio_service 的 setMediaItem（file:// 封面依赖 extras.artCacheFile）。
-    mediaItem.add(updated);
+    mediaItem.add(emit);
+  }
+
+  void patchNotificationLyricDisplay({
+    required String songPath,
+    required String displayTitle,
+    required String displaySubtitle,
+    String? composerMetadataKey,
+    String? composerLine,
+  }) {
+    final q = queue.nvalue;
+    if (q == null || q.isEmpty) return;
+    final next = List<MediaItem>.from(q);
+    var patched = false;
+    for (var i = 0; i < next.length; i++) {
+      if (!_yeahMediaIdMatchesPath(next[i].id, songPath)) continue;
+      final extras = Map<String, dynamic>.from(next[i].extras ?? {});
+      if (composerMetadataKey != null &&
+          composerLine != null &&
+          composerLine.isNotEmpty) {
+        extras[composerMetadataKey] = composerLine;
+      }
+      next[i] = next[i].copyWith(
+        displayTitle: displayTitle,
+        displaySubtitle: displaySubtitle,
+        extras: extras,
+      );
+      patched = true;
+    }
+    if (patched) queue.add(next);
+  }
+
+  static bool _yeahMediaIdMatchesPath(String mediaId, String songPath) {
+    String norm(String p) =>
+        p.replaceAll(r'\', '/').trim().toLowerCase();
+    var fromId = mediaId.trim();
+    if (fromId.startsWith('file://')) {
+      try {
+        fromId = Uri.parse(fromId).toFilePath();
+      } catch (_) {}
+    }
+    return norm(fromId) == norm(songPath);
   }
 
   /// 队列项尚无 [artUri] 时保留 [mediaItem] 流里已推送的封面，防止 debounce 刷回黑图。
@@ -548,6 +630,43 @@ class _PlayerAudioHandler extends BaseAudioHandler
     if (fromQueue.artUri != null) return fromQueue;
     if (live.artUri == null) return fromQueue;
     return fromQueue.copyWith(artUri: live.artUri);
+  }
+
+  /// 歌词模式：队列经 [patchNotificationLyricDisplay] 更新时优先队列；否则保留 live 展示行。
+  static MediaItem _yeahMergeNotificationLyricDisplay(
+    MediaItem fromQueue,
+    MediaItem? live,
+  ) {
+    if (live == null || live.id != fromQueue.id) return fromQueue;
+    if (_yeahAndroidLyricsSyncEnabled &&
+        _yeahNotificationLyricsLayoutActive(fromQueue)) {
+      return fromQueue;
+    }
+    if (_yeahNotificationLyricsLayoutActive(fromQueue)) return fromQueue;
+    final lTitle = live.displayTitle?.trim();
+    if (lTitle == null || lTitle.isEmpty) return fromQueue;
+    if (lTitle == fromQueue.title.trim()) return fromQueue;
+    return fromQueue.copyWith(
+      displayTitle: live.displayTitle,
+      displaySubtitle: live.displaySubtitle ?? fromQueue.displaySubtitle,
+    );
+  }
+
+  static bool _yeahNotificationLyricsLayoutActive(MediaItem item) {
+    final sub = item.displaySubtitle?.trim();
+    if (sub != null && sub.isNotEmpty) return true;
+    final dt = item.displayTitle?.trim();
+    if (dt == null || dt.isEmpty) return false;
+    return dt != item.title.trim();
+  }
+
+  /// 歌词同步时 [setMediaItem] 不写展示行，避免用队列/cache 里的旧歌词刷通知。
+  static MediaItem _yeahEmitForSetMediaItem(MediaItem item) {
+    if (!_yeahAndroidLyricsSyncEnabled) return item;
+    return item.copyWith(
+      displayTitle: null,
+      displaySubtitle: null,
+    );
   }
 
   @override

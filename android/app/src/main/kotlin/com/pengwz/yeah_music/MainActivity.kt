@@ -13,6 +13,7 @@ class MainActivity : AudioServiceFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         DiskSpaceChannel.register(flutterEngine.dartExecutor.binaryMessenger)
+        MediaSessionLyricsChannel.register(flutterEngine.dartExecutor.binaryMessenger)
         MusicTagEditorBridge.register(this, flutterEngine)
         OpenWithChannel.register(this, flutterEngine.dartExecutor.binaryMessenger)
         WireRemoteDiagnostics.init(this)

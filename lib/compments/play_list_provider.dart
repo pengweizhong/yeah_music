@@ -725,7 +725,7 @@ class PlayListProvider extends ChangeNotifier {
     _attachPlayerIndexListener();
     _attachPlaybackErrorListener();
     if (!kIsWeb && Platform.isAndroid) {
-      AndroidCarLyricsSync.attach(this);
+      unawaited(AndroidCarLyricsSync.attach(this));
     }
     notifyListeners();
   }
