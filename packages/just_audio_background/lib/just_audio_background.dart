@@ -139,6 +139,11 @@ class JustAudioBackground {
   static void resetQueueNotificationDisplayToSongTitles() {
     _playerAudioHandler.resetQueueNotificationDisplayToSongTitles();
   }
+
+  /// 重广播 [PlaybackState]（含紧凑操作按钮），开关「同步歌词」后与开启时布局一致。
+  static void refreshNotificationPlaybackState() {
+    _playerAudioHandler.refreshNotificationPlaybackState();
+  }
 }
 
 class _JustAudioBackgroundPlugin extends JustAudioPlatform {
@@ -1097,6 +1102,29 @@ class _PlayerAudioHandler extends BaseAudioHandler
     }
   }
 
+  void refreshNotificationPlaybackState() => _broadcastStateIfActive();
+
+  /// [MediaStyle.setShowActionsInCompactView] 下标对应 [NotificationCompat.Action]，
+  /// 不是 [controls] 列表下标（「词」等 custom 不进 Action 列表）。
+  static List<int> _yeahAndroidCompactActionIndices(List<MediaControl> controls) {
+    final compact = <int>[];
+    var nativeIndex = 0;
+    for (final control in controls) {
+      if (control.action == MediaAction.custom) {
+        continue;
+      }
+      if (control.action == MediaAction.stop) {
+        nativeIndex++;
+        continue;
+      }
+      if (compact.length < 3) {
+        compact.add(nativeIndex);
+      }
+      nativeIndex++;
+    }
+    return compact;
+  }
+
   /// Broadcasts the current state to all clients.
   void _broadcastState() {
     // 词 / 上一首 / 播放暂停 / 下一首 / 停止（停止仅在展开栏；紧凑为前三项非停止）
@@ -1111,12 +1139,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
       if (hasNext) MediaControl.skipToNext,
       MediaControl.stop,
     ];
-    final compact = <int>[];
-    for (var i = 0; i < controls.length && compact.length < 3; i++) {
-      if (controls[i].action != MediaAction.stop) {
-        compact.add(i);
-      }
-    }
+    final compact = _yeahAndroidCompactActionIndices(controls);
     playbackState.add(playbackState.nvalue!.copyWith(
       controls: controls,
       systemActions: {

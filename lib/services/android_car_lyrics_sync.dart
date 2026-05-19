@@ -50,6 +50,9 @@ class AndroidCarLyricsSync {
     await AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(
       _syncLyricsEnabled,
     );
+    if (_carLyricsEnabled) {
+      JustAudioBackground.refreshNotificationPlaybackState();
+    }
     _rebindPositionListener();
     if (!_carLyricsEnabled) {
       _stopPlaybackListeners();

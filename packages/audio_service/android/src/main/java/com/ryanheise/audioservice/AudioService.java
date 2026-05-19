@@ -102,6 +102,14 @@ public class AudioService extends MediaBrowserServiceCompat {
             | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE
             | PlaybackStateCompat.ACTION_SET_CAPTIONING_ENABLED;
 
+    /** 通知栏紧凑区仅需上一曲/播放暂停/下一曲；勿含 QUEUE_ITEM/STOP 等（否则 Android 13+ 会显示列表/退出）。 */
+    private static final long YEAH_NOTIFICATION_PLAYBACK_ACTIONS =
+            PlaybackStateCompat.ACTION_PLAY
+                    | PlaybackStateCompat.ACTION_PAUSE
+                    | PlaybackStateCompat.ACTION_PLAY_PAUSE
+                    | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                    | PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
+
     static AudioService instance;
     /** 为 true 时 [setMetadata] 不覆盖 [DISPLAY_TITLE]/[DISPLAY_SUBTITLE]（由 [updateNotificationDisplayText] 独占）。 */
     private static volatile boolean yeahLyricsDisplayManaged = false;
@@ -125,13 +133,7 @@ public class AudioService extends MediaBrowserServiceCompat {
     private final Runnable yeahLyricFlashGuardRunnable = new Runnable() {
         @Override
         public void run() {
-            yeahPublishLyricNotification(yeahLastLyricDisplayTitle, yeahLastLyricDisplaySubtitle);
-        }
-    };
-    private final Runnable yeahLyricViewsOnlyRunnable = new Runnable() {
-        @Override
-        public void run() {
-            updateNotificationLyricViewsOnly();
+            updateNotification();
         }
     };
     private final Runnable yeahNotificationUpdateRunnable = new Runnable() {
@@ -569,7 +571,7 @@ public class AudioService extends MediaBrowserServiceCompat {
         this.shuffleMode = shuffleMode;
 
         PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
-                .setActions(AUTO_ENABLED_ACTIONS | actionBits)
+                .setActions(yeahNotificationPlaybackActions(actionBits))
                 .setState(getPlaybackState(), position, speed, updateTime)
                 .setBufferedPosition(bufferedPosition);
 
@@ -684,12 +686,82 @@ public class AudioService extends MediaBrowserServiceCompat {
         }
     }
 
-    private Notification buildNotification() {
-        int[] compactActionIndices = this.compactActionIndices;
-        if (compactActionIndices == null) {
-            compactActionIndices = new int[Math.min(MAX_COMPACT_ACTIONS, nativeActions.size())];
-            for (int i = 0; i < compactActionIndices.length; i++) compactActionIndices[i] = i;
+    /**
+     * 紧凑区下标必须落在 [nativeActions] 内；Dart 误传控件列表下标时部分 OEM 会显示成列表/退出。
+     */
+    private int[] yeahSafeCompactActionIndices() {
+        final int actionCount = nativeActions.size();
+        if (actionCount == 0) {
+            return new int[0];
         }
+        if (compactActionIndices != null && compactActionIndices.length > 0) {
+            final List<Integer> valid = new ArrayList<>();
+            for (int idx : compactActionIndices) {
+                if (idx >= 0 && idx < actionCount) {
+                    valid.add(idx);
+                }
+            }
+            if (!valid.isEmpty()) {
+                final int n = Math.min(MAX_COMPACT_ACTIONS, valid.size());
+                final int[] out = new int[n];
+                for (int i = 0; i < n; i++) {
+                    out[i] = valid.get(i);
+                }
+                return out;
+            }
+        }
+        final int n = Math.min(MAX_COMPACT_ACTIONS, actionCount);
+        final int[] out = new int[n];
+        for (int i = 0; i < n; i++) {
+            out[i] = i;
+        }
+        return out;
+    }
+
+    /**
+     * 会话 [setActions] 仅暴露切歌/播放，避免 SystemUI 用 QUEUE_ITEM→列表、STOP→退出 占紧凑位。
+     */
+    private static long yeahNotificationPlaybackActions(long actionBits) {
+        return YEAH_NOTIFICATION_PLAYBACK_ACTIONS
+                | (actionBits & YEAH_NOTIFICATION_PLAYBACK_ACTIONS);
+    }
+
+    private void yeahResyncNotificationActions() {
+        if (!notificationCreated) return;
+        if (mediaMetadata != null) {
+            final MediaMetadataCompat meta = artBitmap != null
+                    ? putArtToMetadata(mediaMetadata)
+                    : mediaMetadata;
+            mediaSession.setMetadata(meta);
+        }
+        updateNotification();
+        final PlaybackStateCompat current =
+                mediaSession.getController().getPlaybackState();
+        if (current != null) {
+            mediaSession.setPlaybackState(
+                    new PlaybackStateCompat.Builder(current).build());
+        }
+        updateNotification();
+    }
+
+    /**
+     * 统一 MediaStyle：始终绑定会话并显示上一曲 / 播放暂停 / 下一曲，不用取消钮占位（部分 OEM 会显示成列表/退出）。
+     */
+    private void yeahApplyMediaNotificationStyle(NotificationCompat.Builder builder) {
+        final int[] indices = yeahSafeCompactActionIndices();
+        final MediaStyle style = new MediaStyle()
+                .setMediaSession(mediaSession.getSessionToken());
+        if (indices.length > 0) {
+            style.setShowActionsInCompactView(indices);
+        }
+        style.setShowCancelButton(false);
+        if (config.androidNotificationOngoing) {
+            builder.setOngoing(true);
+        }
+        builder.setStyle(style);
+    }
+
+    private Notification buildNotification() {
         NotificationCompat.Builder builder = getNotificationBuilder();
         if (mediaMetadata != null) {
             MediaDescriptionCompat description = mediaMetadata.getDescription();
@@ -711,17 +783,7 @@ public class AudioService extends MediaBrowserServiceCompat {
         for (NotificationCompat.Action action : nativeActions) {
             builder.addAction(action);
         }
-        final MediaStyle style = new MediaStyle()
-            .setMediaSession(mediaSession.getSessionToken());
-        if (Build.VERSION.SDK_INT < 33) {
-            style.setShowActionsInCompactView(compactActionIndices);
-        }
-        if (config.androidNotificationOngoing) {
-            style.setShowCancelButton(true);
-            style.setCancelButtonIntent(buildMediaButtonPendingIntent(PlaybackStateCompat.ACTION_STOP));
-            builder.setOngoing(true);
-        }
-        builder.setStyle(style);
+        yeahApplyMediaNotificationStyle(builder);
         return builder.build();
     }
 
@@ -777,22 +839,8 @@ public class AudioService extends MediaBrowserServiceCompat {
 
     private void postNotificationUpdate() {
         if (!notificationCreated) return;
-        if (yeahLyricsDisplayManaged) {
-            handler.removeCallbacks(yeahLyricViewsOnlyRunnable);
-            handler.post(yeahLyricViewsOnlyRunnable);
-        } else {
-            handler.removeCallbacks(yeahNotificationUpdateRunnable);
-            handler.post(yeahNotificationUpdateRunnable);
-        }
-    }
-
-    /** 仅刷新歌词 RemoteViews，不触发 MediaStyle 默认标题的 marquee。 */
-    private void updateNotificationLyricViewsOnly() {
-        if (!notificationCreated || mediaMetadata == null) return;
-        MediaDescriptionCompat description = mediaMetadata.getDescription();
-        CharSequence[] lines = new CharSequence[2];
-        yeahResolveNotificationDisplayLines(description, lines);
-        yeahPublishLyricNotification(lines[0], lines[1]);
+        handler.removeCallbacks(yeahNotificationUpdateRunnable);
+        handler.post(yeahNotificationUpdateRunnable);
     }
 
     private void enterPlayingState() {
@@ -885,6 +933,11 @@ public class AudioService extends MediaBrowserServiceCompat {
                     instance.yeahCaptureCanonicalSongTitle(instance.mediaMetadata);
                 }
             }
+            instance.handler.post(() -> {
+                if (instance.notificationCreated) {
+                    instance.yeahResyncNotificationActions();
+                }
+            });
             return;
         }
         instance.yeahLastLyricDisplayTitle = null;
@@ -897,7 +950,7 @@ public class AudioService extends MediaBrowserServiceCompat {
         }
         instance.handler.post(() -> {
             if (instance.notificationCreated) {
-                instance.postNotificationUpdate();
+                instance.yeahResyncNotificationActions();
             }
         });
     }
@@ -988,11 +1041,8 @@ public class AudioService extends MediaBrowserServiceCompat {
         if (mediaId != null) {
             mediaMetadataCache.put(mediaId, restored);
         }
-        if (artBitmap != null) {
-            mediaSession.setMetadata(putArtToMetadata(restored));
-        } else {
-            mediaSession.setMetadata(restored);
-        }
+        // 不在此处 setMetadata：Android 13+ 会先按会话动作重绘成列表/退出；由
+        // [yeahResyncNotificationActions] 先刷带紧凑位的通知再同步会话。
     }
 
     private void yeahRememberLyricDisplay(CharSequence title, CharSequence subtitle) {
@@ -1014,44 +1064,14 @@ public class AudioService extends MediaBrowserServiceCompat {
         return displayTitle;
     }
 
+    /** 更新歌词缓存后走 [buildNotification]，与关歌词时同一套按钮布局。 */
     private void yeahPublishLyricNotification(CharSequence title, CharSequence subtitle) {
         if (!notificationCreated || mediaMetadata == null) return;
         MediaDescriptionCompat description = mediaMetadata.getDescription();
         title = yeahFilterManagedLyricTitle(title, description);
         if (title != null && title.length() > 0) yeahLastLyricDisplayTitle = title;
         if (subtitle != null && subtitle.length() > 0) yeahLastLyricDisplaySubtitle = subtitle;
-        if (title == null && subtitle == null) return;
-        NotificationCompat.Builder builder = getNotificationBuilder();
-        applyYeahCustomNotificationContent(builder, title, subtitle);
-        synchronized (this) {
-            if (artBitmap != null) builder.setLargeIcon(artBitmap);
-        }
-        if (config.androidNotificationClickStartsActivity) {
-            builder.setContentIntent(mediaSession.getController().getSessionActivity());
-        }
-        if (config.notificationColor != -1) builder.setColor(config.notificationColor);
-        for (NotificationCompat.Action action : nativeActions) {
-            builder.addAction(action);
-        }
-        int[] compactActionIndices = this.compactActionIndices;
-        if (compactActionIndices == null) {
-            compactActionIndices = new int[Math.min(MAX_COMPACT_ACTIONS, nativeActions.size())];
-            for (int i = 0; i < compactActionIndices.length; i++) compactActionIndices[i] = i;
-        }
-        final MediaStyle style = new MediaStyle()
-                .setMediaSession(mediaSession.getSessionToken());
-        if (Build.VERSION.SDK_INT < 33) {
-            style.setShowActionsInCompactView(compactActionIndices);
-        }
-        if (config.androidNotificationOngoing) {
-            style.setShowCancelButton(true);
-            style.setCancelButtonIntent(buildMediaButtonPendingIntent(PlaybackStateCompat.ACTION_STOP));
-            builder.setOngoing(true);
-        }
-        builder.setStyle(style);
-        builder.setOnlyAlertOnce(true);
-        builder.setSilent(true);
-        getNotificationManager().notify(NOTIFICATION_ID, builder.build());
+        updateNotification();
     }
 
     /**
