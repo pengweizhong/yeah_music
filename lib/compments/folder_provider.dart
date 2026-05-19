@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:yeah_music/compments/bookmark_service.dart';
 import 'package:yeah_music/utils/concurrent_limiter.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/folder_paths_backup.dart';
 import 'package:yeah_music/utils/folder_hive_lightweight.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
@@ -162,6 +163,10 @@ class FolderProvider extends ChangeNotifier {
 
   /// 删除文件夹
   Future<void> deleteFolder(Folder folder) async {
+    final removedPaths = folder.songList?.map((s) => s.path) ?? const <String>[];
+    if (removedPaths.isNotEmpty) {
+      SongLibraryMetadataHydrator.invalidatePaths(removedPaths);
+    }
     await folder.delete();
     _foldersCache.removeWhere(
       (x) => identical(x, folder) || x.path == folder.path,
@@ -244,12 +249,21 @@ class FolderProvider extends ChangeNotifier {
         appLog.d('目录已扫描: ${dir.path} → ${songlist.length} 首');
       }
 
+      final previousPaths = <String>{
+        for (final s in folder.songList ?? const <Song>[]) s.path,
+      };
+
       mergeEmbeddedFieldsFromPreviousSongList(
         freshList: songlist,
         previousList: folder.songList,
       );
 
       folder.songList = songlist;
+
+      previousPaths.removeAll(songlist.map((s) => s.path));
+      if (previousPaths.isNotEmpty) {
+        SongLibraryMetadataHydrator.invalidatePaths(previousPaths);
+      }
       if (save) {
         await FolderHiveLightweight.saveFolder(folder);
       }

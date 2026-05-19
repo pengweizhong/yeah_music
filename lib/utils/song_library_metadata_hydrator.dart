@@ -118,6 +118,13 @@ class SongLibraryMetadataHydrator {
     ApplicationUtils.evictSongCoverProvidersForPath(p);
   }
 
+  /// 音乐源删除或目录重扫移除曲目时批量失效，避免 [_cache] 长期保留已不在库内的路径。
+  static void invalidatePaths(Iterable<String> paths) {
+    for (final raw in paths) {
+      invalidatePath(raw);
+    }
+  }
+
   /// 内存中已有封面与曲名时可预热 [_cache]，避免冷启动对已带封面的 FLAC 重复读文件。
   static void _maybeSeedCacheFromLibrarySong(Song song) {
     final p = song.path;
@@ -224,9 +231,10 @@ class _MetaSnapshot {
     s.sampleRate = sampleRate;
     s.bitrate = bitrate;
     s.lyrics = lyrics;
-    s.pictures = pictures;
     if (!_sameImageBytes(s.imageBytes, imageBytes)) {
       s.imageBytes = imageBytes;
     }
+    // 列表/通知仅用 [imageBytes]；勿在每条 [Song] 上再挂整份 [pictures]（双份字节）。
+    s.pictures = null;
   }
 }

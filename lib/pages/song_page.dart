@@ -504,21 +504,26 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     _lyricsFetchInFlightPath = path;
     try {
       await SongLibraryMetadataHydrator.hydrateIfNeeded(song);
-    } catch (_) {}
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final play = Provider.of<PlayListProvider>(context, listen: false);
-    final cur = play.currentSong;
-    if (cur == null || cur.path != path) return;
+      final play = Provider.of<PlayListProvider>(context, listen: false);
+      final cur = play.currentSong;
+      if (cur == null || cur.path != path) return;
 
-    if (cur.lyrics?.trim().isNotEmpty ?? false) {
-      if (_lyricsHydratedForPath != path || _lyrics.isEmpty) {
-        _applySongLyrics(cur);
+      if (cur.lyrics?.trim().isNotEmpty ?? false) {
+        if (_lyricsHydratedForPath != path || _lyrics.isEmpty) {
+          _applySongLyrics(cur);
+        }
+      } else {
+        _lyricsHydratedForPath = path;
+        if (_lyricsBoundSongPath != path || _lyrics.isNotEmpty) {
+          _applySongLyrics(cur);
+        }
       }
-    } else {
-      _lyricsHydratedForPath = path;
-      if (_lyricsBoundSongPath != path || _lyrics.isNotEmpty) {
-        _applySongLyrics(cur);
+    } catch (_) {}
+    finally {
+      if (_lyricsFetchInFlightPath == path) {
+        _lyricsFetchInFlightPath = null;
       }
     }
   }
