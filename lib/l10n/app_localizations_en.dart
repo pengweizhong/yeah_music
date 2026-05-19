@@ -720,6 +720,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only configurable on Android. Switches show saved values and are disabled on this device.';
 
   @override
+  String get settingsCarLyricsApplyRestartHint =>
+      'Could not apply immediately. Resume playback or restart the app and try again.';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · Not playing';
 
   @override

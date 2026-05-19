@@ -8,7 +8,7 @@ class AndroidMediaSessionBridge {
   static Future<void> toggleLyricsSyncFromNotification() async {
     final cur = await SettingsService.loadAndroidCarLyricsSyncLyrics();
     await SettingsService.saveAndroidCarLyricsSyncLyrics(!cur);
-    await AndroidCarLyricsSync.refreshSyncEnabled();
+    await AndroidCarLyricsSync.applySettingsFromStorage();
     await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
   }
 }

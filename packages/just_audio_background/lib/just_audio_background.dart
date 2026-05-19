@@ -134,6 +134,11 @@ class JustAudioBackground {
       composerLine: composerLine,
     );
   }
+
+  /// 关闭歌词同步时，把队列里残留的歌词展示行还原为曲名。
+  static void resetQueueNotificationDisplayToSongTitles() {
+    _playerAudioHandler.resetQueueNotificationDisplayToSongTitles();
+  }
 }
 
 class _JustAudioBackgroundPlugin extends JustAudioPlatform {
@@ -609,6 +614,25 @@ class _PlayerAudioHandler extends BaseAudioHandler
     if (patched) queue.add(next);
   }
 
+  void resetQueueNotificationDisplayToSongTitles() {
+    final q = queue.nvalue;
+    if (q == null || q.isEmpty) return;
+    var patched = false;
+    final next = <MediaItem>[];
+    for (final item in q) {
+      if (!_yeahNotificationLyricsLayoutActive(item)) {
+        next.add(item);
+        continue;
+      }
+      patched = true;
+      next.add(item.copyWith(
+        displayTitle: item.title,
+        displaySubtitle: null,
+      ));
+    }
+    if (patched) queue.add(next);
+  }
+
   static bool _yeahMediaIdMatchesPath(String mediaId, String songPath) {
     String norm(String p) =>
         p.replaceAll(r'\', '/').trim().toLowerCase();
@@ -642,7 +666,15 @@ class _PlayerAudioHandler extends BaseAudioHandler
         _yeahNotificationLyricsLayoutActive(fromQueue)) {
       return fromQueue;
     }
-    if (_yeahNotificationLyricsLayoutActive(fromQueue)) return fromQueue;
+    if (_yeahNotificationLyricsLayoutActive(fromQueue)) {
+      if (!_yeahAndroidLyricsSyncEnabled) {
+        return fromQueue.copyWith(
+          displayTitle: fromQueue.title,
+          displaySubtitle: null,
+        );
+      }
+      return fromQueue;
+    }
     final lTitle = live.displayTitle?.trim();
     if (lTitle == null || lTitle.isEmpty) return fromQueue;
     if (lTitle == fromQueue.title.trim()) return fromQueue;

@@ -24,19 +24,52 @@ class AndroidCarLyricsSync {
   static StreamSubscription<int?>? _indexSubscription;
   static StreamSubscription<Duration>? _positionSubscription;
   static StreamSubscription<bool>? _playingSubscription;
+  static bool _carLyricsEnabled = false;
   static bool _syncLyricsEnabled = false;
+
+  /// 主开关：通知栏队列、车机切歌与媒体会话增强。
+  static bool get isFeatureEnabled => _carLyricsEnabled;
+
+  /// 子开关：通知栏主标题实时歌词（须 [isFeatureEnabled]）。
+  static bool get isSyncLyricsEnabled => _carLyricsEnabled && _syncLyricsEnabled;
 
   static String? _publishedLineKey;
   static String? _hydrateInFlightPath;
   static int? _lastHandledPlayerIndex;
 
-  static Future<void> refreshSyncEnabled() async {
-    _syncLyricsEnabled = await SettingsService.loadAndroidCarLyricsSyncLyrics();
+  /// 从 Hive 重读三个开关并应用到监听与原生托管状态。
+  static Future<void> applySettingsFromStorage() async {
+    _carLyricsEnabled = await SettingsService.loadAndroidCarLyricsEnabled();
+    _syncLyricsEnabled = _carLyricsEnabled
+        ? await SettingsService.loadAndroidCarLyricsSyncLyrics()
+        : false;
     JustAudioBackground.setAndroidLyricsSyncEnabled(_syncLyricsEnabled);
+    if (!_syncLyricsEnabled) {
+      JustAudioBackground.resetQueueNotificationDisplayToSongTitles();
+    }
     await AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(
       _syncLyricsEnabled,
     );
     _rebindPositionListener();
+    if (!_carLyricsEnabled) {
+      _stopPlaybackListeners();
+      _publishedLineKey = null;
+      MusicService.resetAndroidNotificationLyricDedupe();
+    } else if (_playlist != null) {
+      _bindPlaybackListeners();
+    }
+  }
+
+  static Future<void> refreshSyncEnabled() => applySettingsFromStorage();
+
+  static Future<void> attachIfNeeded(PlayListProvider playlist) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
+    if (_playlist == playlist && _indexSubscription != null) {
+      await applySettingsFromStorage();
+      return;
+    }
+    await attach(playlist);
   }
 
   static Future<void> _reloadLyricStyle() async {
@@ -52,29 +85,28 @@ class AndroidCarLyricsSync {
   static void _rebindPositionListener() {
     _positionSubscription?.cancel();
     _positionSubscription = null;
-    if (!_syncLyricsEnabled || _playlist == null) return;
+    if (!isSyncLyricsEnabled || _playlist == null) return;
     _positionSubscription =
         MusicService.androidLyricPositionStream.listen((_) {
       _onPositionPulse();
     });
   }
 
-  static Future<void> attach(PlayListProvider playlist) async {
-    if (kIsWeb || !Platform.isAndroid) return;
-    _playlist = playlist;
-    _publishedLineKey = null;
-    _hydrateInFlightPath = null;
-    MusicService.resetAndroidNotificationLyricDedupe();
-    await refreshSyncEnabled();
-    await _reloadLyricStyle();
+  static void _stopPlaybackListeners() {
     _indexSubscription?.cancel();
+    _indexSubscription = null;
     _playingSubscription?.cancel();
+    _playingSubscription = null;
+  }
+
+  static void _bindPlaybackListeners() {
+    if (!_carLyricsEnabled || _playlist == null) return;
+    _stopPlaybackListeners();
     _playingSubscription = MusicService.playingStream.listen((playing) {
-      if (playing && _syncLyricsEnabled) {
+      if (playing && isSyncLyricsEnabled) {
         _onPositionPulse();
       }
     });
-    _lastHandledPlayerIndex = null;
     _indexSubscription =
         MusicService.currentMediaIndexStream.listen((int? i) {
       if (i == null || i < 0) return;
@@ -86,6 +118,19 @@ class AndroidCarLyricsSync {
       _formatter?.invalidate();
       unawaited(_pushForPlayerIndex(i));
     });
+  }
+
+  static Future<void> attach(PlayListProvider playlist) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
+    _playlist = playlist;
+    _publishedLineKey = null;
+    _hydrateInFlightPath = null;
+    MusicService.resetAndroidNotificationLyricDedupe();
+    await applySettingsFromStorage();
+    await _reloadLyricStyle();
+    _lastHandledPlayerIndex = null;
+    _bindPlaybackListeners();
     final initial = MusicService.currentIndex;
     if (initial != null && initial >= 0 && initial != _lastHandledPlayerIndex) {
       _lastHandledPlayerIndex = initial;
@@ -95,7 +140,8 @@ class AndroidCarLyricsSync {
 
   static Future<void> republishCurrentTrackMediaItem() async {
     if (kIsWeb || !Platform.isAndroid) return;
-    await refreshSyncEnabled();
+    if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
+    await applySettingsFromStorage();
     await _reloadLyricStyle();
     final song = _songForPlayback();
     if (song == null) return;
@@ -105,20 +151,19 @@ class AndroidCarLyricsSync {
       song,
       forceNotificationPush: true,
     );
-    if (_syncLyricsEnabled) {
+    if (isSyncLyricsEnabled) {
       _onPositionPulse();
     }
   }
 
   static void detach() {
+    _carLyricsEnabled = false;
+    _syncLyricsEnabled = false;
     JustAudioBackground.setAndroidLyricsSyncEnabled(false);
     unawaited(AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(false));
-    _indexSubscription?.cancel();
-    _indexSubscription = null;
+    _stopPlaybackListeners();
     _positionSubscription?.cancel();
     _positionSubscription = null;
-    _playingSubscription?.cancel();
-    _playingSubscription = null;
     _playlist = null;
     _formatter = null;
     _publishedLineKey = null;
@@ -142,7 +187,7 @@ class AndroidCarLyricsSync {
   }
 
   static void _onPositionPulse() {
-    if (_playlist == null || !_syncLyricsEnabled) return;
+    if (_playlist == null || !isSyncLyricsEnabled) return;
 
     final song = _songForPlayback();
     if (song == null) return;
@@ -193,10 +238,10 @@ class AndroidCarLyricsSync {
       if (list.isEmpty) return;
       final fallback = list[index.clamp(0, list.length - 1)];
       await MusicService.pushAndroidNotificationForSong(fallback);
-      if (_syncLyricsEnabled) _onPositionPulse();
+      if (isSyncLyricsEnabled) _onPositionPulse();
       return;
     }
     await MusicService.pushAndroidNotificationForSong(song);
-    if (_syncLyricsEnabled) _onPositionPulse();
+    if (isSyncLyricsEnabled) _onPositionPulse();
   }
 }

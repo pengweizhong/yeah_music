@@ -725,9 +725,69 @@ class PlayListProvider extends ChangeNotifier {
     _attachPlayerIndexListener();
     _attachPlaybackErrorListener();
     if (!kIsWeb && Platform.isAndroid) {
-      unawaited(AndroidCarLyricsSync.attach(this));
+      unawaited(_attachAndroidCarLyricsIfEnabled());
     }
     notifyListeners();
+  }
+
+  Future<void> _attachAndroidCarLyricsIfEnabled() async {
+    if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
+    await AndroidCarLyricsSync.attach(this);
+  }
+
+  /// 设置页切换「通知与车载歌词」相关选项后尝试即时生效。
+  /// 返回 `false` 表示未能安全重建播放队列，建议用户重新播放或重启应用。
+  Future<bool> applyAndroidCarLyricsSettingsChange() async {
+    if (kIsWeb || !Platform.isAndroid) return true;
+    await AndroidCarLyricsSync.applySettingsFromStorage();
+    final enabled = await SettingsService.loadAndroidCarLyricsEnabled();
+    if (!enabled) {
+      if (MusicService.androidCarQueueActive) {
+        try {
+          await _rebindAndroidCurrentAsSingleConcatDisabled();
+        } catch (e, st) {
+          appLog.d('关闭车载歌词后重建单曲源失败', error: e, stackTrace: st);
+          return false;
+        }
+      }
+      return true;
+    }
+    await AndroidCarLyricsSync.attachIfNeeded(this);
+    final list = playList;
+    if (list.isEmpty) {
+      await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
+      return true;
+    }
+    final wantConcat =
+        _playbackMode != PlaybackMode.playOnce && list.length > 1;
+    final hasConcat = MusicService.androidCarQueueActive;
+    if (wantConcat && !hasConcat) {
+      final idx = _currentIndex.clamp(0, list.length - 1);
+      final pos = MusicService.lastPosition;
+      final wasPlaying = MusicService.isPlaying;
+      try {
+        final ok = await MusicService().playCurrentFromPlaylist(
+          queue: list,
+          currentIndex: idx,
+          useAndroidConcatQueue: true,
+        );
+        if (!ok) return false;
+        if (pos > Duration.zero) {
+          await Future<void>.delayed(const Duration(milliseconds: 48));
+          await MusicService().seek(pos);
+        }
+        if (!wasPlaying) {
+          await MusicService().pause(fadeOut: false);
+        }
+      } catch (e, st) {
+        appLog.d('启用车载歌词后重建队列失败', error: e, stackTrace: st);
+        return false;
+      }
+    } else {
+      await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
+    }
+    await _syncAndroidCarMediaSession();
+    return true;
   }
 
   /// 与 [just_audio_background] 内队列的 `hasPrevious` / `hasNext` 一致：列表循环时首曲仍有上一首，

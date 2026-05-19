@@ -273,6 +273,7 @@
   "settingsCarLyricsSyncLyricsSubtitle": "Notification title shows live lyrics",
   "settingsCarLyricsSyncLyricsDesc": "When enabled, the Android notification title updates with the current lyric line as playback advances (same rules as the player). When off, the song title is shown.",
   "settingsCarLyricsOnlyAndroidHint": "Only configurable on Android. Switches show saved values and are disabled on this device.",
+  "settingsCarLyricsApplyRestartHint": "Could not apply immediately. Resume playback or restart the app and try again.",
   "menuBarLyricsIdle": "Yeah Music · Not playing",
   "menuBarLyricsNoLyrics": "No lyrics",
   "menuBarContextPlay": "Play",

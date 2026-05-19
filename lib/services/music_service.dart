@@ -10,6 +10,7 @@ import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/services/android_car_lyrics_sync.dart';
 import 'package:yeah_music/services/android_media_session_lyrics_channel.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
@@ -293,6 +294,10 @@ class MusicService {
     required String lyricLine,
   }) {
     if (!Platform.isAndroid) return;
+    if (!AndroidCarLyricsSync.isFeatureEnabled ||
+        !AndroidCarLyricsSync.isSyncLyricsEnabled) {
+      return;
+    }
     final line = lyricLine.trim();
     if (line.isEmpty) return;
     if (line == _lastAndroidNotifyLyricLineShown) return;
@@ -412,7 +417,7 @@ class MusicService {
   static String _mediaItemArtDiag(MediaItem item) =>
       'id=${p.basename(item.id)} artUri=${item.artUri != null}';
 
-  /// Android 多曲时 [playCurrentFromPlaylist] 会构建整段队列（与「车载歌词」开关无关）；单文件模式为 false。
+  /// Android 多曲且「通知与车载歌词」开启时 [playCurrentFromPlaylist] 会构建整段队列；否则为 false。
   static bool androidCarQueueActive = false;
 
   /// 最近一次成功构建 Android 整队列时的 [queue] 引用；与本次调用 [identical] 时用 [seek] 切索引，避免整轨重建卡顿。
@@ -516,8 +521,13 @@ class MusicService {
     abortVolumeFade();
     if (queue.isEmpty) return false;
     final i = currentIndex.clamp(0, queue.length - 1);
-    final useFullPlayerQueue =
-        useAndroidConcatQueue && Platform.isAndroid && queue.length > 1;
+    final carLyricsOn = Platform.isAndroid
+        ? await SettingsService.loadAndroidCarLyricsEnabled()
+        : false;
+    final useFullPlayerQueue = useAndroidConcatQueue &&
+        Platform.isAndroid &&
+        carLyricsOn &&
+        queue.length > 1;
     if (useFullPlayerQueue) {
       final f = _playChain
           .catchError((Object? e) {
@@ -916,6 +926,7 @@ class MusicService {
     bool forceNotificationPush = false,
   }) async {
     if (!Platform.isAndroid) return;
+    if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
     final targetPath = song.path;
     if (targetPath.trim().isEmpty) return;
     final wantLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();

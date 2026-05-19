@@ -895,6 +895,11 @@ public class AudioService extends MediaBrowserServiceCompat {
         synchronized (instance) {
             instance.yeahRestoreCanonicalSongTitleOnSession();
         }
+        instance.handler.post(() -> {
+            if (instance.notificationCreated) {
+                instance.postNotificationUpdate();
+            }
+        });
     }
 
     private void yeahSyncLastLyricMediaId(String mediaId) {
@@ -960,20 +965,29 @@ public class AudioService extends MediaBrowserServiceCompat {
     }
 
     private void yeahRestoreCanonicalSongTitleOnSession() {
-        if (mediaMetadata == null || yeahCanonicalSongTitle == null) {
+        if (mediaMetadata == null) {
             yeahCanonicalSongTitle = null;
             return;
         }
-        final String curTitle = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-        if (yeahCanonicalSongTitle.equals(curTitle)) {
+        String songTitle = yeahCanonicalSongTitle;
+        if (songTitle == null || songTitle.isEmpty()) {
+            songTitle = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        }
+        if (songTitle == null || songTitle.isEmpty()) {
             yeahCanonicalSongTitle = null;
             return;
         }
-        final MediaMetadataCompat restored = new MediaMetadataCompat.Builder(mediaMetadata)
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, yeahCanonicalSongTitle)
-                .build();
+        final MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder(mediaMetadata)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, songTitle)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, songTitle)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "");
+        final MediaMetadataCompat restored = builder.build();
         mediaMetadata = restored;
         yeahCanonicalSongTitle = null;
+        final String mediaId = restored.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+        if (mediaId != null) {
+            mediaMetadataCache.put(mediaId, restored);
+        }
         if (artBitmap != null) {
             mediaSession.setMetadata(putArtToMetadata(restored));
         } else {
@@ -1024,8 +1038,8 @@ public class AudioService extends MediaBrowserServiceCompat {
             compactActionIndices = new int[Math.min(MAX_COMPACT_ACTIONS, nativeActions.size())];
             for (int i = 0; i < compactActionIndices.length; i++) compactActionIndices[i] = i;
         }
-        // 歌词换行时不绑定 MediaSession，避免 SystemUI 在 setMetadata 后从会话读曲名闪一帧。
-        final MediaStyle style = new MediaStyle();
+        final MediaStyle style = new MediaStyle()
+                .setMediaSession(mediaSession.getSessionToken());
         if (Build.VERSION.SDK_INT < 33) {
             style.setShowActionsInCompactView(compactActionIndices);
         }
@@ -1080,8 +1094,14 @@ public class AudioService extends MediaBrowserServiceCompat {
             if (title == null || title.length() == 0) title = yeahLastLyricDisplayTitle;
             if (subtitle == null || subtitle.length() == 0) subtitle = yeahLastLyricDisplaySubtitle;
         } else {
-            if (title == null) title = description.getTitle();
-            if (subtitle == null) subtitle = description.getSubtitle();
+            final String songTitle =
+                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+            if (songTitle != null && songTitle.length() > 0) {
+                title = songTitle;
+            } else if (title == null) {
+                title = description.getTitle();
+            }
+            subtitle = description.getSubtitle();
         }
         out[0] = title;
         out[1] = subtitle;

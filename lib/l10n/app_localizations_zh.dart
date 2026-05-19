@@ -681,6 +681,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '仅 Android 可生效与修改；当前设备上开关为只读，仅展示已保存的选项。';
 
   @override
+  String get settingsCarLyricsApplyRestartHint => '未能立即生效，请重新播放当前歌曲或重启应用后再试。';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
 
   @override
@@ -3645,6 +3648,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '仅 Android 可生效与修改；当前设备上开关为只读，仅展示已保存的选项。';
 
   @override
+  String get settingsCarLyricsApplyRestartHint => '未能立即生效，请重新播放当前歌曲或重启应用后再试。';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
 
   @override
@@ -6607,6 +6613,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
       '僅 Android 可生效與修改；目前裝置上開關為唯讀，僅顯示已儲存的選項。';
+
+  @override
+  String get settingsCarLyricsApplyRestartHint => '未能立即生效，請重新播放目前歌曲或重新啟動應用後再試。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';

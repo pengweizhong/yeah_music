@@ -689,6 +689,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'Android でのみ変更・反映できます。この端末ではスイッチは読み取り専用で、保存済みの内容を表示します。';
 
   @override
+  String get settingsCarLyricsApplyRestartHint =>
+      'すぐに反映できませんでした。再生を再開するか、アプリを再起動してお試しください。';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · 再生していません';
 
   @override

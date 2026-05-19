@@ -196,18 +196,33 @@ class _AndroidCarLyricsSettingsSectionState
   Future<void> _onEnabled(bool v) async {
     setState(() => _enabled = v);
     await SettingsService.saveAndroidCarLyricsEnabled(v);
-    await AndroidCarLyricsSync.refreshSyncEnabled();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final pl = context.read<PlayListProvider>();
+    if (v) {
+      await AndroidCarLyricsSync.attachIfNeeded(pl);
+    }
+    await AndroidCarLyricsSync.applySettingsFromStorage();
+    final ok = await pl.applyAndroidCarLyricsSettingsChange();
+    if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingsCarLyricsApplyRestartHint)),
+      );
+    }
   }
 
   Future<void> _onCover(bool v) async {
     setState(() => _showCover = v);
     await SettingsService.saveAndroidCarLyricsShowCover(v);
+    if (!mounted || !_enabled) return;
+    await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
   }
 
   Future<void> _onSync(bool v) async {
     setState(() => _syncLyrics = v);
     await SettingsService.saveAndroidCarLyricsSyncLyrics(v);
-    await AndroidCarLyricsSync.refreshSyncEnabled();
+    await AndroidCarLyricsSync.applySettingsFromStorage();
     await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
   }
 

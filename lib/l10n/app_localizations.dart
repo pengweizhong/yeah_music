@@ -1368,6 +1368,12 @@ abstract class AppLocalizations {
   /// **'Only configurable on Android. Switches show saved values and are disabled on this device.'**
   String get settingsCarLyricsOnlyAndroidHint;
 
+  /// No description provided for @settingsCarLyricsApplyRestartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not apply immediately. Resume playback or restart the app and try again.'**
+  String get settingsCarLyricsApplyRestartHint;
+
   /// No description provided for @menuBarLyricsIdle.
   ///
   /// In en, this message translates to:

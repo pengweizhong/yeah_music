@@ -274,6 +274,7 @@
   "settingsCarLyricsSyncLyricsSubtitle": "通知列主標題即時顯示目前歌詞",
   "settingsCarLyricsSyncLyricsDesc": "開啟後，Android 通知列主標題會隨播放進度更新為目前歌詞行（與播放頁一致）；關閉則顯示曲名。",
   "settingsCarLyricsOnlyAndroidHint": "僅 Android 可生效與修改；目前裝置上開關為唯讀，僅顯示已儲存的選項。",
+  "settingsCarLyricsApplyRestartHint": "未能立即生效，請重新播放目前歌曲或重新啟動應用後再試。",
   "menuBarLyricsIdle": "Yeah Music · 未在播放",
   "menuBarLyricsNoLyrics": "無歌詞",
   "menuBarContextPlay": "播放",
