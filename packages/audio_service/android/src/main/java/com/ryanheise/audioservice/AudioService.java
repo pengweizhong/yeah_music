@@ -109,6 +109,37 @@ public class AudioService extends MediaBrowserServiceCompat {
     private CharSequence yeahLastLyricDisplayTitle;
     private CharSequence yeahLastLyricDisplaySubtitle;
     private String yeahLastLyricMediaId;
+    /** 真实曲名（与 [METADATA_KEY_TITLE] 分离；托管时 TITLE 镜像为当前歌词以免系统闪曲名）。 */
+    private String yeahCanonicalSongTitle;
+    private CharSequence yeahPendingLyricTitle;
+    private CharSequence yeahPendingLyricSubtitle;
+    private MediaMetadataCompat yeahPendingSessionMeta;
+    private final Runnable yeahManagedLyricTickRunner = new Runnable() {
+        @Override
+        public void run() {
+            if (yeahPendingSessionMeta == null) return;
+            yeahApplyManagedLyricTick(
+                    yeahPendingLyricTitle, yeahPendingLyricSubtitle, yeahPendingSessionMeta);
+        }
+    };
+    private final Runnable yeahLyricFlashGuardRunnable = new Runnable() {
+        @Override
+        public void run() {
+            yeahPublishLyricNotification(yeahLastLyricDisplayTitle, yeahLastLyricDisplaySubtitle);
+        }
+    };
+    private final Runnable yeahLyricViewsOnlyRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateNotificationLyricViewsOnly();
+        }
+    };
+    private final Runnable yeahNotificationUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateNotification();
+        }
+    };
     private static PendingIntent contentIntent;
     private static ServiceListener listener;
     private static List<MediaSessionCompat.QueueItem> queue = new ArrayList<>();
@@ -745,12 +776,13 @@ public class AudioService extends MediaBrowserServiceCompat {
     }
 
     private void postNotificationUpdate() {
-        handler.removeCallbacksAndMessages(null);
         if (!notificationCreated) return;
         if (yeahLyricsDisplayManaged) {
-            handler.post(this::updateNotificationLyricViewsOnly);
+            handler.removeCallbacks(yeahLyricViewsOnlyRunnable);
+            handler.post(yeahLyricViewsOnlyRunnable);
         } else {
-            handler.post(this::updateNotification);
+            handler.removeCallbacks(yeahNotificationUpdateRunnable);
+            handler.post(yeahNotificationUpdateRunnable);
         }
     }
 
@@ -846,10 +878,22 @@ public class AudioService extends MediaBrowserServiceCompat {
      */
     public static void setYeahLyricsDisplayManaged(boolean managed) {
         yeahLyricsDisplayManaged = managed;
-        if (instance != null && !managed) {
-            instance.yeahLastLyricDisplayTitle = null;
-            instance.yeahLastLyricDisplaySubtitle = null;
-            instance.yeahLastLyricMediaId = null;
+        if (instance == null) return;
+        if (managed) {
+            synchronized (instance) {
+                if (instance.mediaMetadata != null) {
+                    instance.yeahCaptureCanonicalSongTitle(instance.mediaMetadata);
+                }
+            }
+            return;
+        }
+        instance.yeahLastLyricDisplayTitle = null;
+        instance.yeahLastLyricDisplaySubtitle = null;
+        instance.yeahLastLyricMediaId = null;
+        instance.handler.removeCallbacks(instance.yeahManagedLyricTickRunner);
+        instance.handler.removeCallbacks(instance.yeahLyricFlashGuardRunnable);
+        synchronized (instance) {
+            instance.yeahRestoreCanonicalSongTitleOnSession();
         }
     }
 
@@ -858,8 +902,83 @@ public class AudioService extends MediaBrowserServiceCompat {
         if (yeahLastLyricMediaId != null && !yeahLastLyricMediaId.equals(mediaId)) {
             yeahLastLyricDisplayTitle = null;
             yeahLastLyricDisplaySubtitle = null;
+            yeahCanonicalSongTitle = null;
         }
         yeahLastLyricMediaId = mediaId;
+    }
+
+    private void yeahCaptureCanonicalSongTitle(MediaMetadataCompat meta) {
+        if (meta == null || yeahCanonicalSongTitle != null) return;
+        final String title = meta.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        if (title == null || title.isEmpty()) return;
+        final CharSequence display =
+                meta.getText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE);
+        if (yeahLyricsDisplayManaged && display != null && display.length() > 0) {
+            if (title.contentEquals(display.toString())) return;
+            if (yeahLastLyricDisplayTitle != null
+                    && title.contentEquals(yeahLastLyricDisplayTitle.toString())) {
+                return;
+            }
+        }
+        if (display != null && !display.toString().contentEquals(title)) {
+            yeahCanonicalSongTitle = title;
+            return;
+        }
+        yeahCanonicalSongTitle = title;
+    }
+
+    private CharSequence yeahManagedSongTitleForFilter() {
+        if (yeahCanonicalSongTitle != null) return yeahCanonicalSongTitle;
+        if (mediaMetadata == null) return null;
+        return mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+    }
+
+    /**
+     * 托管歌词时把 [METADATA_KEY_TITLE] 设为当前歌词行，避免 SystemUI 在 setMetadata 间隙读曲名闪一下。
+     */
+    private MediaMetadataCompat yeahMirrorManagedLyricSessionTitle(MediaMetadataCompat meta) {
+        if (!yeahLyricsDisplayManaged || meta == null) return meta;
+        yeahCaptureCanonicalSongTitle(meta);
+        CharSequence lyric = meta.getText(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE);
+        lyric = yeahFilterManagedLyricTitle(lyric, meta.getDescription());
+        if (lyric == null || lyric.length() == 0) lyric = yeahLastLyricDisplayTitle;
+        if (lyric == null || lyric.length() == 0) return meta;
+        final String lyricStr = lyric.toString();
+        final CharSequence canon = yeahManagedSongTitleForFilter();
+        if (canon != null && lyricStr.contentEquals(canon.toString())) {
+            if (yeahLastLyricDisplayTitle != null && yeahLastLyricDisplayTitle.length() > 0) {
+                return new MediaMetadataCompat.Builder(meta)
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE,
+                                yeahLastLyricDisplayTitle.toString())
+                        .build();
+            }
+            return meta;
+        }
+        return new MediaMetadataCompat.Builder(meta)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, lyricStr)
+                .build();
+    }
+
+    private void yeahRestoreCanonicalSongTitleOnSession() {
+        if (mediaMetadata == null || yeahCanonicalSongTitle == null) {
+            yeahCanonicalSongTitle = null;
+            return;
+        }
+        final String curTitle = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        if (yeahCanonicalSongTitle.equals(curTitle)) {
+            yeahCanonicalSongTitle = null;
+            return;
+        }
+        final MediaMetadataCompat restored = new MediaMetadataCompat.Builder(mediaMetadata)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, yeahCanonicalSongTitle)
+                .build();
+        mediaMetadata = restored;
+        yeahCanonicalSongTitle = null;
+        if (artBitmap != null) {
+            mediaSession.setMetadata(putArtToMetadata(restored));
+        } else {
+            mediaSession.setMetadata(restored);
+        }
     }
 
     private void yeahRememberLyricDisplay(CharSequence title, CharSequence subtitle) {
@@ -874,14 +993,8 @@ public class AudioService extends MediaBrowserServiceCompat {
         if (displayTitle == null || displayTitle.length() == 0) {
             return yeahLastLyricDisplayTitle;
         }
-        if (mediaMetadata != null) {
-            String songTitle = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-            if (songTitle != null && displayTitle.toString().contentEquals(songTitle)) {
-                return yeahLastLyricDisplayTitle;
-            }
-        }
-        if (description != null && description.getTitle() != null
-                && displayTitle.toString().contentEquals(description.getTitle().toString())) {
+        final CharSequence songTitle = yeahManagedSongTitleForFilter();
+        if (songTitle != null && displayTitle.toString().contentEquals(songTitle.toString())) {
             return yeahLastLyricDisplayTitle;
         }
         return displayTitle;
@@ -911,8 +1024,8 @@ public class AudioService extends MediaBrowserServiceCompat {
             compactActionIndices = new int[Math.min(MAX_COMPACT_ACTIONS, nativeActions.size())];
             for (int i = 0; i < compactActionIndices.length; i++) compactActionIndices[i] = i;
         }
-        final MediaStyle style = new MediaStyle()
-                .setMediaSession(mediaSession.getSessionToken());
+        // 歌词换行时不绑定 MediaSession，避免 SystemUI 在 setMetadata 后从会话读曲名闪一帧。
+        final MediaStyle style = new MediaStyle();
         if (Build.VERSION.SDK_INT < 33) {
             style.setShowActionsInCompactView(compactActionIndices);
         }
@@ -934,6 +1047,8 @@ public class AudioService extends MediaBrowserServiceCompat {
             CharSequence notifyTitle,
             CharSequence notifySubtitle,
             MediaMetadataCompat sessionMetadata) {
+        sessionMetadata = yeahMirrorManagedLyricSessionTitle(sessionMetadata);
+        this.mediaMetadata = sessionMetadata;
         yeahPublishLyricNotification(notifyTitle, notifySubtitle);
         if (artBitmap != null) {
             mediaSession.setMetadata(putArtToMetadata(sessionMetadata));
@@ -941,6 +1056,8 @@ public class AudioService extends MediaBrowserServiceCompat {
             mediaSession.setMetadata(sessionMetadata);
         }
         yeahPublishLyricNotification(notifyTitle, notifySubtitle);
+        handler.removeCallbacks(yeahLyricFlashGuardRunnable);
+        handler.postDelayed(yeahLyricFlashGuardRunnable, 48);
     }
 
     /**
@@ -983,8 +1100,11 @@ public class AudioService extends MediaBrowserServiceCompat {
         MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder(incoming);
         CharSequence keepTitle = curTitle;
         if (keepTitle != null) {
-            String songTitle = incoming.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-            if (songTitle != null && keepTitle.toString().contentEquals(songTitle)) {
+            CharSequence songTitle = yeahManagedSongTitleForFilter();
+            if (songTitle == null) {
+                songTitle = incoming.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+            }
+            if (songTitle != null && keepTitle.toString().contentEquals(songTitle.toString())) {
                 keepTitle = yeahLastLyricDisplayTitle;
             }
         }
@@ -1024,28 +1144,24 @@ public class AudioService extends MediaBrowserServiceCompat {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, displaySubtitle);
             }
             MediaMetadataCompat updated = builder.build();
-            instance.mediaMetadata = updated;
             String mediaId = updated.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+            if (yeahLyricsDisplayManaged) {
+                instance.yeahSyncLastLyricMediaId(mediaId);
+                updated = instance.yeahMirrorManagedLyricSessionTitle(updated);
+            }
+            instance.mediaMetadata = updated;
             if (mediaId != null) {
                 mediaMetadataCache.put(mediaId, updated);
             }
             if (yeahLyricsDisplayManaged) {
-                instance.yeahSyncLastLyricMediaId(mediaId);
-                final CharSequence notifyTitle = displayTitle;
-                final CharSequence notifySub = displaySubtitle;
-                final MediaMetadataCompat sessionMeta = updated;
-                final boolean hasArt = instance.artBitmap != null;
-                instance.handler.removeCallbacksAndMessages(null);
-                instance.handler.post(() -> {
-                    if (hasArt) {
-                        instance.yeahApplyManagedLyricTick(
-                                notifyTitle, notifySub,
-                                instance.putArtToMetadata(sessionMeta));
-                    } else {
-                        instance.yeahApplyManagedLyricTick(
-                                notifyTitle, notifySub, sessionMeta);
-                    }
-                });
+                instance.yeahPendingLyricTitle = displayTitle;
+                instance.yeahPendingLyricSubtitle = displaySubtitle;
+                final MediaMetadataCompat sessionMeta = instance.artBitmap != null
+                        ? instance.putArtToMetadata(updated)
+                        : updated;
+                instance.yeahPendingSessionMeta = sessionMeta;
+                instance.handler.removeCallbacks(instance.yeahManagedLyricTickRunner);
+                instance.handler.post(instance.yeahManagedLyricTickRunner);
                 return true;
             }
             if (instance.artBitmap != null) {
@@ -1092,11 +1208,10 @@ public class AudioService extends MediaBrowserServiceCompat {
                 }
             }
             MediaMetadataCompat merged = builder.build();
+            merged = yeahMirrorManagedLyricSessionTitle(merged);
             this.mediaMetadata = merged;
             mediaSession.setMetadata(putArtToMetadata(merged));
-            if (!yeahLyricsDisplayManaged) {
-                postNotificationUpdate();
-            }
+            postNotificationUpdate();
             return;
         }
         if (artCacheFilePath != null) {
@@ -1115,6 +1230,9 @@ public class AudioService extends MediaBrowserServiceCompat {
             } else {
                 artBitmap = null;
             }
+        }
+        if (yeahLyricsDisplayManaged) {
+            mediaMetadata = yeahMirrorManagedLyricSessionTitle(mediaMetadata);
         }
         this.mediaMetadata = mediaMetadata;
         mediaSession.setMetadata(mediaMetadata);
