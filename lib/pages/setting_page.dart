@@ -23,6 +23,7 @@ import 'package:yeah_music/pages/setting/playback_shortcuts_section.dart';
 import 'package:yeah_music/pages/setting/sponsor_support_page.dart';
 import 'package:yeah_music/pages/setting/wire_remote_control_section.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
+import 'package:yeah_music/services/android_car_lyrics_sync.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
@@ -205,6 +206,7 @@ class _AndroidCarLyricsSettingsSectionState
   Future<void> _onSync(bool v) async {
     setState(() => _syncLyrics = v);
     await SettingsService.saveAndroidCarLyricsSyncLyrics(v);
+    await AndroidCarLyricsSync.republishCurrentTrackMediaItem();
   }
 
   @override

@@ -709,11 +709,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCarLyricsSyncLyricsSubtitle =>
-      'Subtitle shows active lyric';
+      'Notification title shows live lyrics';
 
   @override
   String get settingsCarLyricsSyncLyricsDesc =>
-      'Update the subtitle with the active line where the system supports it.';
+      'When enabled, the Android notification title updates with the current lyric line as playback advances (same rules as the player). When off, the song title is shown.';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>

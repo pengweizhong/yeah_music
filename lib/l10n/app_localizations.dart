@@ -1353,13 +1353,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCarLyricsSyncLyricsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Subtitle shows active lyric'**
+  /// **'Notification title shows live lyrics'**
   String get settingsCarLyricsSyncLyricsSubtitle;
 
   /// No description provided for @settingsCarLyricsSyncLyricsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Update the subtitle with the active line where the system supports it.'**
+  /// **'When enabled, the Android notification title updates with the current lyric line as playback advances (same rules as the player). When off, the song title is shown.'**
   String get settingsCarLyricsSyncLyricsDesc;
 
   /// No description provided for @settingsCarLyricsOnlyAndroidHint.

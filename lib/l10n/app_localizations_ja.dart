@@ -678,10 +678,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsCarLyricsSyncLyrics => '現在の歌詞行を同期';
 
   @override
-  String get settingsCarLyricsSyncLyricsSubtitle => '副題に現在の歌詞行';
+  String get settingsCarLyricsSyncLyricsSubtitle => '通知のタイトルに歌詞をリアルタイム表示';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc => '対応環境では副題を現在の歌詞行に更新します。';
+  String get settingsCarLyricsSyncLyricsDesc =>
+      'オンにすると、Android の通知タイトルが再生位置に合わせて現在の歌詞行に更新されます（再生画面と同じルール）。オフのときは曲名を表示します。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>

@@ -32,7 +32,8 @@ class ExternalLyricLineFormatter {
     _parsed = [];
   }
 
-  String formatLine({
+  /// 与播放页 [LyricsUtils.findCurrentLyricIndex] 一致：仅在行索引变化时需刷新 UI / 通知。
+  ExternalLyricLineAtPosition resolveAt({
     required Song? song,
     required Duration position,
     required AppLocalizations? l10n,
@@ -41,12 +42,20 @@ class ExternalLyricLineFormatter {
     final noLyrics = l10n?.menuBarLyricsNoLyrics ?? 'No lyrics';
 
     if (song == null) {
-      return sanitizeExternalLyricLine(idle);
+      return ExternalLyricLineAtPosition(
+        lyricIndex: -1,
+        displayLine: sanitizeExternalLyricLine(idle),
+        hasEmbeddedLyrics: false,
+      );
     }
 
     final raw = song.lyrics;
     if (raw == null || raw.trim().isEmpty) {
-      return sanitizeExternalLyricLine(noLyrics);
+      return ExternalLyricLineAtPosition(
+        lyricIndex: -1,
+        displayLine: sanitizeExternalLyricLine(noLyrics),
+        hasEmbeddedLyrics: false,
+      );
     }
 
     final path = song.path;
@@ -57,12 +66,20 @@ class ExternalLyricLineFormatter {
     }
 
     if (_parsed.isEmpty) {
-      return sanitizeExternalLyricLine(noLyrics);
+      return ExternalLyricLineAtPosition(
+        lyricIndex: -1,
+        displayLine: sanitizeExternalLyricLine(noLyrics),
+        hasEmbeddedLyrics: false,
+      );
     }
 
     final idx = LyricsUtils.findCurrentLyricIndex(_parsed, position);
     if (idx < 0 || idx >= _parsed.length) {
-      return sanitizeExternalLyricLine('…');
+      return ExternalLyricLineAtPosition(
+        lyricIndex: -1,
+        displayLine: sanitizeExternalLyricLine('…'),
+        hasEmbeddedLyrics: true,
+      );
     }
 
     lyricStyle.normalizeLayoutFields();
@@ -80,8 +97,38 @@ class ExternalLyricLineFormatter {
 
     final lyricLine = parts.join(' · ');
     if (lyricLine.isEmpty) {
-      return sanitizeExternalLyricLine(noLyrics);
+      return ExternalLyricLineAtPosition(
+        lyricIndex: idx,
+        displayLine: sanitizeExternalLyricLine(noLyrics),
+        hasEmbeddedLyrics: true,
+      );
     }
-    return sanitizeExternalLyricLine(lyricLine);
+    return ExternalLyricLineAtPosition(
+      lyricIndex: idx,
+      displayLine: sanitizeExternalLyricLine(lyricLine),
+      hasEmbeddedLyrics: true,
+    );
   }
+
+  String formatLine({
+    required Song? song,
+    required Duration position,
+    required AppLocalizations? l10n,
+  }) {
+    return resolveAt(song: song, position: position, l10n: l10n).displayLine;
+  }
+}
+
+/// [ExternalLyricLineFormatter.resolveAt] 的结果。
+class ExternalLyricLineAtPosition {
+  const ExternalLyricLineAtPosition({
+    required this.lyricIndex,
+    required this.displayLine,
+    required this.hasEmbeddedLyrics,
+  });
+
+  /// 当前时间轴行；-1 表示两行之间或曲目前空白。
+  final int lyricIndex;
+  final String displayLine;
+  final bool hasEmbeddedLyrics;
 }

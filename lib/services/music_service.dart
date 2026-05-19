@@ -253,6 +253,38 @@ class MusicService {
     return {androidComposerMetadataKey: line};
   }
 
+  /// 通知栏 / 媒体会话默认主标题（曲名）。
+  static String songNotificationBaseTitle(Song song) {
+    return (song.title?.trim().isNotEmpty ?? false)
+        ? song.title!.trim()
+        : p.basename(song.path);
+  }
+
+  /// 开启歌词同步时主标题为当前歌词行；否则为 [songNotificationBaseTitle]。
+  static String androidNotificationPrimaryLine({
+    required Song song,
+    required Duration position,
+    required LyricSettings style,
+    required bool syncLyrics,
+  }) {
+    final base = songNotificationBaseTitle(song);
+    if (!syncLyrics) return base;
+    final raw = song.lyrics?.trim();
+    if (raw == null || raw.isEmpty) return base;
+    try {
+      final snap = ExternalLyricLineFormatter(lyricStyle: style).resolveAt(
+        song: song,
+        position: position,
+        l10n: null,
+      );
+      if (!snap.hasEmbeddedLyrics || snap.lyricIndex < 0) return base;
+      if (snap.displayLine.isEmpty) return base;
+      return snap.displayLine;
+    } catch (_) {
+      return base;
+    }
+  }
+
   /// 新一次 [setAudioSource]/队列换源成功并 [play] 时递增；仅带「本次播放代数」的
   /// [pushAndroidNotificationForSong] 在结束时若已过期则丢弃，避免切歌后旧 hydrate 覆盖新会话。
   static int _androidMediaSessionSyncGeneration = 0;
@@ -748,9 +780,7 @@ class MusicService {
     LyricSettings? lyricStyle,
     Duration subtitlePosition = Duration.zero,
   }) async {
-    final title = (song.title?.trim().isNotEmpty ?? false)
-        ? song.title!.trim()
-        : p.basename(song.path);
+    final baseTitle = songNotificationBaseTitle(song);
     final artist = song.artist?.trim().isNotEmpty == true
         ? song.artist!.trim()
         : '';
@@ -769,22 +799,23 @@ class MusicService {
     }
     final style = lyricStyle ?? LyricSettings();
     style.normalizeLayoutFields();
-    String? initialSubtitle;
-    final rawLyrics = song.lyrics;
-    if (rawLyrics != null &&
-        rawLyrics.trim().isNotEmpty &&
-        await SettingsService.loadAndroidCarLyricsSyncLyrics()) {
-      try {
-        initialSubtitle = ExternalLyricLineFormatter(
-          lyricStyle: style,
-        ).formatLine(song: song, position: subtitlePosition, l10n: null);
-      } catch (_) {}
-    }
+    final syncLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
+    final title = androidNotificationPrimaryLine(
+      song: song,
+      position: subtitlePosition,
+      style: style,
+      syncLyrics: syncLyrics,
+    );
+    final lyricsInTitle = syncLyrics && title != baseTitle;
+    String? displaySubtitle;
     String? displayDescription;
-    if (initialSubtitle != null && initialSubtitle.isNotEmpty) {
-      displayDescription = initialSubtitle;
+    if (lyricsInTitle) {
+      displaySubtitle = baseTitle;
+      if (artist.isNotEmpty) {
+        displayDescription = artist;
+      }
     }
-    final lyricExtras = _androidLyricExtras(initialSubtitle);
+    final lyricExtras = _androidLyricExtras(lyricsInTitle ? title : null);
     final Map<String, dynamic>? extras;
     if (artUri != null && artUri.scheme == 'file') {
       extras = <String, dynamic>{
@@ -801,7 +832,7 @@ class MusicService {
       album: song.album,
       duration: song.duration,
       artUri: artUri,
-      displaySubtitle: initialSubtitle,
+      displaySubtitle: displaySubtitle,
       displayDescription: displayDescription,
       extras: extras,
     );
@@ -1069,6 +1100,26 @@ class MusicService {
   static Duration _positionCache = Duration.zero;
 
   static Duration get lastPosition => _positionCache;
+
+  /// 解码器当前进度（略早于 [positionStream] 事件，便于在歌词行边界即时判定）。
+  static Duration get playerPosition => _player.position;
+
+  static Stream<Duration>? _androidLyricPositionStream;
+
+  /// 供 Android 通知歌词同步：最高约 16ms 采样，与播放页 [positionStream] 同源于 just_audio，
+  /// 但不受默认 maxPeriod 200ms 限制。
+  static Stream<Duration> get androidLyricPositionStream {
+    return _androidLyricPositionStream ??= _player
+        .createPositionStream(
+          steps: 4000,
+          minPeriod: const Duration(milliseconds: 16),
+          maxPeriod: const Duration(milliseconds: 16),
+        )
+        .map((d) {
+          _positionCache = d;
+          return d;
+        });
+  }
 
   static Stream<Duration> get positionStream {
     return _player.positionStream.map((d) {

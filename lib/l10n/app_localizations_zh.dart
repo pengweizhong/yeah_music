@@ -670,10 +670,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCarLyricsSyncLyrics => '同步当前歌词行';
 
   @override
-  String get settingsCarLyricsSyncLyricsSubtitle => '副标题显示当前歌词';
+  String get settingsCarLyricsSyncLyricsSubtitle => '通知栏主标题实时显示当前歌词';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc => '在支持的系统上将副标题更新为当前歌词。';
+  String get settingsCarLyricsSyncLyricsDesc =>
+      '开启后，Android 通知栏主标题随播放进度更新为当前歌词行（与播放页一致）；关闭则显示曲名。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
@@ -3633,10 +3634,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsCarLyricsSyncLyrics => '同步当前歌词行';
 
   @override
-  String get settingsCarLyricsSyncLyricsSubtitle => '副标题显示当前歌词';
+  String get settingsCarLyricsSyncLyricsSubtitle => '通知栏主标题实时显示当前歌词';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc => '在支持的系统上将副标题更新为当前歌词。';
+  String get settingsCarLyricsSyncLyricsDesc =>
+      '开启后，Android 通知栏主标题随播放进度更新为当前歌词行（与播放页一致）；关闭则显示曲名。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
@@ -6596,10 +6598,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsCarLyricsSyncLyrics => '同步目前歌詞行';
 
   @override
-  String get settingsCarLyricsSyncLyricsSubtitle => '副標題顯示目前歌詞';
+  String get settingsCarLyricsSyncLyricsSubtitle => '通知列主標題即時顯示目前歌詞';
 
   @override
-  String get settingsCarLyricsSyncLyricsDesc => '在支援的系統上將副標題更新為目前歌詞。';
+  String get settingsCarLyricsSyncLyricsDesc =>
+      '開啟後，Android 通知列主標題會隨播放進度更新為目前歌詞行（與播放頁一致）；關閉則顯示曲名。';
 
   @override
   String get settingsCarLyricsOnlyAndroidHint =>
