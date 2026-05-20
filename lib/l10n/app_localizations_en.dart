@@ -672,6 +672,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'When on, the floating window cannot be dragged.';
 
   @override
+  String get settingsPlaybackFadeOutTitle => 'Playback fade-out';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle =>
+      'Volume ramp before pause or track change';
+
+  @override
+  String get settingsPlaybackFadeOutDesc =>
+      'Linearly lowers volume to zero before pause, skip, or stopping from the media notification. Set to 0 ms for an instant change with no fade.';
+
+  @override
+  String get settingsPlaybackFadeOutOff => 'Off (0 ms)';
+
+  @override
+  String settingsPlaybackFadeOutMillis(int ms) {
+    return '$ms ms';
+  }
+
+  @override
   String get settingsCarLyricsGroupTitle => 'Notification & car lyrics';
 
   @override

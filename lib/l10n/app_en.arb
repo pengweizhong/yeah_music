@@ -260,6 +260,18 @@
   "settingsDesktopFloatingDragLock": "Lock position",
   "settingsDesktopFloatingDragLockSubtitle": "Disable dragging the floating window",
   "settingsDesktopFloatingDragLockDesc": "When on, the floating window cannot be dragged.",
+  "settingsPlaybackFadeOutTitle": "Playback fade-out",
+  "settingsPlaybackFadeOutSubtitle": "Volume ramp before pause or track change",
+  "settingsPlaybackFadeOutDesc": "Linearly lowers volume to zero before pause, skip, or stopping from the media notification. Set to 0 ms for an instant change with no fade.",
+  "settingsPlaybackFadeOutOff": "Off (0 ms)",
+  "settingsPlaybackFadeOutMillis": "{ms} ms",
+  "@settingsPlaybackFadeOutMillis": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
   "settingsCarLyricsGroupTitle": "Notification & car lyrics",
   "settingsCarLyricsGroupSubtitle": "Media notification, Bluetooth & Android Auto",
   "settingsCarLyricsGroupDetail": "Uses the Android media session so lock screen, Bluetooth accessories, and Android Auto can show what is playing and offer transport controls.\n\nIf changes don't apply immediately, restart Yeah Music.",

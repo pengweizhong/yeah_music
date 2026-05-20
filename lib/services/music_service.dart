@@ -208,8 +208,6 @@ class MusicService {
 
   static bool isPlaying = false;
 
-  /// 暂停 / 切歌前线性淡出总时长（与宿主通知栏 handler 一致）。
-  static const Duration _kFadeOutDuration = Duration(milliseconds: 800);
   static const int _kFadeOutSteps = 40;
   static int _volumeFadeGeneration = 0;
 
@@ -218,9 +216,11 @@ class MusicService {
     _volumeFadeGeneration++;
   }
 
-  /// 正在播放时把 [AudioPlayer] 音量在 [_kFadeOutDuration] 内线性收到 0；与 [abortVolumeFade] 代数配合可打断。
+  /// 正在播放时把 [AudioPlayer] 音量在设定时长内线性收到 0；与 [abortVolumeFade] 代数配合可打断。
   static Future<void> fadeOutVolumeWhilePlaying() async {
     if (!_player.playing) return;
+    final durationMs = await SettingsService.loadPlaybackFadeOutDurationMs();
+    if (durationMs <= 0) return;
     final gen = ++_volumeFadeGeneration;
     double start;
     try {
@@ -229,9 +229,7 @@ class MusicService {
       start = 1.0;
     }
     if (start <= 0) return;
-    final stepMs = (_kFadeOutDuration.inMilliseconds / _kFadeOutSteps)
-        .floor()
-        .clamp(1, 1000);
+    final stepMs = (durationMs / _kFadeOutSteps).floor().clamp(1, 1000);
     for (var i = 1; i <= _kFadeOutSteps; i++) {
       if (gen != _volumeFadeGeneration) return;
       final v = start * (1.0 - i / _kFadeOutSteps);
@@ -1180,7 +1178,10 @@ class MusicService {
   Future<void> pause({bool fadeOut = true}) async {
     try {
       if (fadeOut && _player.playing) {
-        await fadeOutVolumeWhilePlaying();
+        final fadeMs = await SettingsService.loadPlaybackFadeOutDurationMs();
+        if (fadeMs > 0) {
+          await fadeOutVolumeWhilePlaying();
+        }
       }
       await _player.pause();
     } finally {

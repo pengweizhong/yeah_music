@@ -638,6 +638,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '播放淡出';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '暂停与切歌前的音量渐弱';
+
+  @override
+  String get settingsPlaybackFadeOutDesc =>
+      '在暂停、切歌或通知栏控制停止播放前，将音量在设定时间内线性降到零。设为 0 毫秒则立即切换、无渐弱。';
+
+  @override
+  String get settingsPlaybackFadeOutOff => '关闭（0 毫秒）';
+
+  @override
+  String settingsPlaybackFadeOutMillis(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
   String get settingsCarLyricsGroupTitle => '通知与车载歌词';
 
   @override
@@ -3605,6 +3623,24 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsDesktopFloatingDragLockDesc => '开启后悬浮歌词窗口不可拖动。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '播放淡出';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '暂停与切歌前的音量渐弱';
+
+  @override
+  String get settingsPlaybackFadeOutDesc =>
+      '在暂停、切歌或通知栏控制停止播放前，将音量在设定时间内线性降到零。设为 0 毫秒则立即切换、无渐弱。';
+
+  @override
+  String get settingsPlaybackFadeOutOff => '关闭（0 毫秒）';
+
+  @override
+  String settingsPlaybackFadeOutMillis(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
   String get settingsCarLyricsGroupTitle => '通知与车载歌词';
 
   @override
@@ -6570,6 +6606,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsDesktopFloatingDragLockDesc => '開啟後懸浮歌詞視窗不可拖曳。';
+
+  @override
+  String get settingsPlaybackFadeOutTitle => '播放淡出';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '暫停與切歌前的音量漸弱';
+
+  @override
+  String get settingsPlaybackFadeOutDesc =>
+      '在暫停、切歌或通知列控制停止播放前，將音量在設定時間內線性降到零。設為 0 毫秒則立即切換、無漸弱。';
+
+  @override
+  String get settingsPlaybackFadeOutOff => '關閉（0 毫秒）';
+
+  @override
+  String settingsPlaybackFadeOutMillis(int ms) {
+    return '$ms 毫秒';
+  }
 
   @override
   String get settingsCarLyricsGroupTitle => '通知與車載歌詞';

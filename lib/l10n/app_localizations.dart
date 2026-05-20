@@ -1290,6 +1290,36 @@ abstract class AppLocalizations {
   /// **'When on, the floating window cannot be dragged.'**
   String get settingsDesktopFloatingDragLockDesc;
 
+  /// No description provided for @settingsPlaybackFadeOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback fade-out'**
+  String get settingsPlaybackFadeOutTitle;
+
+  /// No description provided for @settingsPlaybackFadeOutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume ramp before pause or track change'**
+  String get settingsPlaybackFadeOutSubtitle;
+
+  /// No description provided for @settingsPlaybackFadeOutDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Linearly lowers volume to zero before pause, skip, or stopping from the media notification. Set to 0 ms for an instant change with no fade.'**
+  String get settingsPlaybackFadeOutDesc;
+
+  /// No description provided for @settingsPlaybackFadeOutOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off (0 ms)'**
+  String get settingsPlaybackFadeOutOff;
+
+  /// No description provided for @settingsPlaybackFadeOutMillis.
+  ///
+  /// In en, this message translates to:
+  /// **'{ms} ms'**
+  String settingsPlaybackFadeOutMillis(int ms);
+
   /// No description provided for @settingsCarLyricsGroupTitle.
   ///
   /// In en, this message translates to:

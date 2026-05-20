@@ -79,6 +79,10 @@ class SettingsService {
   static const String _desktopFloatingLyricsLockedKey =
       'desktop_floating_lyrics_locked';
 
+  /// 暂停 / 切歌前音量线性淡出时长（毫秒）；0 表示关闭。
+  static const String _playbackFadeOutDurationMsKey =
+      'playback_fade_out_duration_ms_v1';
+
   /// Android：车载 / 锁屏 / 蓝牙等媒体会话增强（封面、歌词行、队列切歌）。
   static const String _androidCarLyricsEnabledKey = 'android_car_lyrics_enabled';
   static const String _androidCarLyricsShowCoverKey =
@@ -117,6 +121,9 @@ class SettingsService {
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
   static const int desktopFloatingLyricsLinesAfterDefault = 2;
+  static const int playbackFadeOutDurationMsDefault = 500;
+  static const int playbackFadeOutDurationMsMin = 0;
+  static const int playbackFadeOutDurationMsMax = 1000;
 
   static const double _desktopBgOpacityMin = 0.0;
   static const double _desktopBgOpacityMax = 0.92;
@@ -817,6 +824,38 @@ class SettingsService {
     }
   }
 
+  static Future<int> loadPlaybackFadeOutDurationMs() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_playbackFadeOutDurationMsKey);
+      if (v is int) {
+        return v.clamp(playbackFadeOutDurationMsMin, playbackFadeOutDurationMsMax);
+      }
+      if (v is num) {
+        return v.round().clamp(playbackFadeOutDurationMsMin, playbackFadeOutDurationMsMax);
+      }
+      return playbackFadeOutDurationMsDefault;
+    } catch (_) {
+      return playbackFadeOutDurationMsDefault;
+    }
+  }
+
+  static Future<void> savePlaybackFadeOutDurationMs(int milliseconds) async {
+    final v = milliseconds.clamp(
+      playbackFadeOutDurationMsMin,
+      playbackFadeOutDurationMsMax,
+    );
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_playbackFadeOutDurationMsKey, v);
+    } catch (_) {
+      try {
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_playbackFadeOutDurationMsKey, v);
+      } catch (_) {}
+    }
+  }
+
   static Future<void> saveDesktopFloatingLyricsDragLocked(bool locked) async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
@@ -1239,6 +1278,7 @@ class SettingsService {
     _desktopFloatingLyricsLinesBeforeKey,
     _desktopFloatingLyricsLinesAfterKey,
     _desktopFloatingLyricsLockedKey,
+    _playbackFadeOutDurationMsKey,
     _androidCarLyricsEnabledKey,
     _androidCarLyricsShowCoverKey,
     _androidCarLyricsSyncLyricsKey,
@@ -1371,6 +1411,7 @@ class SettingsService {
         _desktopFloatingLyricsLinesBeforeKey,
         _desktopFloatingLyricsLinesAfterKey,
         _desktopFloatingLyricsLockedKey,
+        _playbackFadeOutDurationMsKey,
         _androidCarLyricsEnabledKey,
         _androidCarLyricsShowCoverKey,
         _androidCarLyricsSyncLyricsKey,
@@ -1388,6 +1429,7 @@ class SettingsService {
     final deskBefore = await loadDesktopFloatingLyricsLinesBefore();
     final deskAfter = await loadDesktopFloatingLyricsLinesAfter();
     final deskLock = await loadDesktopFloatingLyricsDragLocked();
+    final fadeMs = await loadPlaybackFadeOutDurationMs();
     final carEn = await loadAndroidCarLyricsEnabled();
     final carCover = await loadAndroidCarLyricsShowCover();
     final carSync = await loadAndroidCarLyricsSyncLyrics();
@@ -1403,6 +1445,7 @@ class SettingsService {
       _desktopFloatingLyricsLinesAfterKey:
           _hiveValueToJsonForCloudBackup(deskAfter),
       _desktopFloatingLyricsLockedKey: _hiveValueToJsonForCloudBackup(deskLock),
+      _playbackFadeOutDurationMsKey: _hiveValueToJsonForCloudBackup(fadeMs),
       _androidCarLyricsEnabledKey: _hiveValueToJsonForCloudBackup(carEn),
       _androidCarLyricsShowCoverKey: _hiveValueToJsonForCloudBackup(carCover),
       _androidCarLyricsSyncLyricsKey: _hiveValueToJsonForCloudBackup(carSync),
@@ -1787,6 +1830,11 @@ class SettingsService {
           json,
           desktopFloatingLyricsLinesAfterDefault,
         ).clamp(0, _desktopLinesRangeMax);
+      case _playbackFadeOutDurationMsKey:
+        return _asIntForCloudRestore(
+          json,
+          playbackFadeOutDurationMsDefault,
+        ).clamp(playbackFadeOutDurationMsMin, playbackFadeOutDurationMsMax);
       case _playbackShortcutsKey:
       case _wireRemoteControlKey:
         if (json is String) return json;

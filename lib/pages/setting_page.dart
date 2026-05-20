@@ -459,6 +459,7 @@ class SettingPage extends StatelessWidget {
                     const _AndroidCarLyricsSettingsSection(),
                     // 桌面歌词：Linux / macOS / Windows 悬浮歌词与菜单栏歌词设置。
                     const _DesktopLyricsSettingsSection(),
+                    const _PlaybackFadeOutSettingsSection(),
                     // 耳机线控：Android 单击、双击、三击和媒体键映射。
                     const WireRemoteControlSection(),
                     // 首页问候：编辑首页问候副标题轮播内容。
@@ -1049,5 +1050,122 @@ class _DesktopLyricsSettingsSectionState
       ],
     );
     return Opacity(opacity: desktopApplicable ? 1.0 : 0.48, child: expansion);
+  }
+}
+
+/// 暂停 / 切歌 / 通知栏控制前的音量线性淡出时长（0–1000 ms，0 为关闭）。
+class _PlaybackFadeOutSettingsSection extends StatefulWidget {
+  const _PlaybackFadeOutSettingsSection();
+
+  @override
+  State<_PlaybackFadeOutSettingsSection> createState() =>
+      _PlaybackFadeOutSettingsSectionState();
+}
+
+class _PlaybackFadeOutSettingsSectionState
+    extends State<_PlaybackFadeOutSettingsSection> {
+  static const int _kFadeMsMin = SettingsService.playbackFadeOutDurationMsMin;
+  static const int _kFadeMsMax = SettingsService.playbackFadeOutDurationMsMax;
+  static const int _kFadeSliderDivisions = 100;
+
+  bool _loaded = false;
+  double _fadeMs = SettingsService.playbackFadeOutDurationMsDefault.toDouble();
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final ms = await SettingsService.loadPlaybackFadeOutDurationMs();
+    if (!mounted) return;
+    setState(() {
+      _fadeMs = ms.toDouble();
+      _loaded = true;
+    });
+  }
+
+  String _valueLabel(AppLocalizations l10n, int ms) {
+    if (ms <= 0) return l10n.settingsPlaybackFadeOutOff;
+    return l10n.settingsPlaybackFadeOutMillis(ms);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final fg = context.gradFg();
+
+    if (!_loaded) {
+      return ListTile(
+        leading: Icon(Icons.volume_down_rounded, color: fg),
+        title: Text(
+          l10n.settingsPlaybackFadeOutTitle,
+          style: TextStyle(color: fg),
+        ),
+        subtitle: Text(l10n.settingsPlaybackFadeOutSubtitle, style: subStyle),
+      );
+    }
+
+    final ms = _fadeMs.round();
+    final valueText = _valueLabel(l10n, ms);
+
+    return ExpansionTile(
+      leading: Icon(Icons.volume_down_rounded, color: fg),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.settingsPlaybackFadeOutTitle,
+              style: TextStyle(color: fg),
+            ),
+          ),
+          _settingHelpButton(
+            context,
+            l10n: l10n,
+            dialogTitle: l10n.settingsPlaybackFadeOutTitle,
+            dialogBody: l10n.settingsPlaybackFadeOutDesc,
+          ),
+        ],
+      ),
+      subtitle: Text(
+        '${l10n.settingsPlaybackFadeOutSubtitle} · $valueText',
+        style: subStyle,
+      ),
+      iconColor: fg,
+      collapsedIconColor: fg,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                valueText,
+                style: subStyle,
+              ),
+              Slider(
+                value: _fadeMs.clamp(
+                  _kFadeMsMin.toDouble(),
+                  _kFadeMsMax.toDouble(),
+                ),
+                min: _kFadeMsMin.toDouble(),
+                max: _kFadeMsMax.toDouble(),
+                divisions: _kFadeSliderDivisions,
+                label: valueText,
+                onChanged: (v) => setState(() => _fadeMs = v),
+                onChangeEnd: (v) async {
+                  final rounded = v.round();
+                  await SettingsService.savePlaybackFadeOutDurationMs(rounded);
+                  if (!mounted) return;
+                  setState(() => _fadeMs = rounded.toDouble());
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

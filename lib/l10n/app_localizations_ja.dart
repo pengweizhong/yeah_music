@@ -646,6 +646,24 @@ class AppLocalizationsJa extends AppLocalizations {
       'オンにするとフローティングウィンドウをドラッグできません。';
 
   @override
+  String get settingsPlaybackFadeOutTitle => '再生フェードアウト';
+
+  @override
+  String get settingsPlaybackFadeOutSubtitle => '一時停止・曲送り前の音量減衰';
+
+  @override
+  String get settingsPlaybackFadeOutDesc =>
+      '一時停止、曲送り、通知からの停止の前に、設定した時間で音量を線形にゼロまで下げます。0 ms ならフェードなしで即時切り替え。';
+
+  @override
+  String get settingsPlaybackFadeOutOff => 'オフ（0 ms）';
+
+  @override
+  String settingsPlaybackFadeOutMillis(int ms) {
+    return '$ms ms';
+  }
+
+  @override
   String get settingsCarLyricsGroupTitle => '通知・車載歌詞';
 
   @override

@@ -261,6 +261,18 @@
   "settingsDesktopFloatingDragLock": "鎖定位置",
   "settingsDesktopFloatingDragLockSubtitle": "禁止拖曳懸浮視窗",
   "settingsDesktopFloatingDragLockDesc": "開啟後懸浮歌詞視窗不可拖曳。",
+  "settingsPlaybackFadeOutTitle": "播放淡出",
+  "settingsPlaybackFadeOutSubtitle": "暫停與切歌前的音量漸弱",
+  "settingsPlaybackFadeOutDesc": "在暫停、切歌或通知列控制停止播放前，將音量在設定時間內線性降到零。設為 0 毫秒則立即切換、無漸弱。",
+  "settingsPlaybackFadeOutOff": "關閉（0 毫秒）",
+  "settingsPlaybackFadeOutMillis": "{ms} 毫秒",
+  "@settingsPlaybackFadeOutMillis": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
   "settingsCarLyricsGroupTitle": "通知與車載歌詞",
   "settingsCarLyricsGroupSubtitle": "媒體通知、藍牙與 Android Auto",
   "settingsCarLyricsGroupDetail": "使用 Android 媒體工作階段，讓鎖屏、藍牙耳機與 Android Auto 等顯示正在播放內容並提供控制。\n\n若未即時生效，請重新啟動 Yeah Music。",

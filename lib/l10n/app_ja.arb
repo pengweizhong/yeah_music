@@ -261,6 +261,18 @@
   "settingsDesktopFloatingDragLock": "位置を固定",
   "settingsDesktopFloatingDragLockSubtitle": "フローティングをドラッグ不可に",
   "settingsDesktopFloatingDragLockDesc": "オンにするとフローティングウィンドウをドラッグできません。",
+  "settingsPlaybackFadeOutTitle": "再生フェードアウト",
+  "settingsPlaybackFadeOutSubtitle": "一時停止・曲送り前の音量減衰",
+  "settingsPlaybackFadeOutDesc": "一時停止、曲送り、通知からの停止の前に、設定した時間で音量を線形にゼロまで下げます。0 ms ならフェードなしで即時切り替え。",
+  "settingsPlaybackFadeOutOff": "オフ（0 ms）",
+  "settingsPlaybackFadeOutMillis": "{ms} ms",
+  "@settingsPlaybackFadeOutMillis": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
   "settingsCarLyricsGroupTitle": "通知・車載歌詞",
   "settingsCarLyricsGroupSubtitle": "通知・Bluetooth・Android Auto",
   "settingsCarLyricsGroupDetail": "Android のメディアセッションを使い、ロック画面・Bluetooth・Android Auto などに再生情報と操作を提供します。\n\nすぐに反映されない場合は、Yeah Music を再起動してください。",
