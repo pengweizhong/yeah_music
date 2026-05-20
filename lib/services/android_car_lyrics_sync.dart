@@ -13,8 +13,8 @@ import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 
-/// Android 通知栏歌词：逻辑对齐 [MacosMenuBarLyricsHost]——跟进度流、每 tick 算行，
-/// 行索引变化时 **原生直推** [displayTitle]（不经过 [setMediaItem] 单线程池）。
+/// Android 通知栏歌词：跟进度流、行变化时原生直推 [displayTitle]。
+/// 主开关关闭则不推送；子开关「同步当前歌词行」关时主标题为曲名，开时为实时歌词。
 class AndroidCarLyricsSync {
   AndroidCarLyricsSync._();
 
@@ -27,37 +27,42 @@ class AndroidCarLyricsSync {
   static bool _carLyricsEnabled = false;
   static bool _syncLyricsEnabled = false;
 
-  /// 主开关：通知栏队列、车机切歌与媒体会话增强。
+  /// 通知与车载歌词主开关。
   static bool get isFeatureEnabled => _carLyricsEnabled;
 
-  /// 子开关：通知栏主标题实时歌词（须 [isFeatureEnabled]）。
+  /// 同步当前歌词行（须 [isFeatureEnabled]）。
   static bool get isSyncLyricsEnabled => _carLyricsEnabled && _syncLyricsEnabled;
 
   static String? _publishedLineKey;
   static String? _hydrateInFlightPath;
   static int? _lastHandledPlayerIndex;
 
-  /// 从 Hive 重读三个开关并应用到监听与原生托管状态。
   static Future<void> applySettingsFromStorage() async {
     _carLyricsEnabled = await SettingsService.loadAndroidCarLyricsEnabled();
     _syncLyricsEnabled = _carLyricsEnabled
         ? await SettingsService.loadAndroidCarLyricsSyncLyrics()
         : false;
     JustAudioBackground.setAndroidLyricsSyncEnabled(_syncLyricsEnabled);
-    if (!_syncLyricsEnabled) {
-      JustAudioBackground.resetQueueNotificationDisplayToSongTitles();
-    }
     await AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(
       _syncLyricsEnabled,
     );
     if (_carLyricsEnabled) {
       JustAudioBackground.refreshNotificationPlaybackState();
+    } else {
+      _publishedLineKey = null;
+      MusicService.resetAndroidNotificationLyricDedupe();
+    }
+    if (_carLyricsEnabled && !_syncLyricsEnabled) {
+      _publishedLineKey = null;
+      MusicService.resetAndroidNotificationLyricDedupe();
+      final song = _songForPlayback();
+      if (song != null) {
+        MusicService.pushAndroidNotificationSongTitle(song);
+      }
     }
     _rebindPositionListener();
     if (!_carLyricsEnabled) {
       _stopPlaybackListeners();
-      _publishedLineKey = null;
-      MusicService.resetAndroidNotificationLyricDedupe();
     } else if (_playlist != null) {
       _bindPlaybackListeners();
     }
@@ -88,7 +93,7 @@ class AndroidCarLyricsSync {
   static void _rebindPositionListener() {
     _positionSubscription?.cancel();
     _positionSubscription = null;
-    if (!isSyncLyricsEnabled || _playlist == null) return;
+    if (!_carLyricsEnabled || _playlist == null) return;
     _positionSubscription =
         MusicService.androidLyricPositionStream.listen((_) {
       _onPositionPulse();
@@ -106,7 +111,7 @@ class AndroidCarLyricsSync {
     if (!_carLyricsEnabled || _playlist == null) return;
     _stopPlaybackListeners();
     _playingSubscription = MusicService.playingStream.listen((playing) {
-      if (playing && isSyncLyricsEnabled) {
+      if (playing && _carLyricsEnabled) {
         _onPositionPulse();
       }
     });
@@ -154,9 +159,7 @@ class AndroidCarLyricsSync {
       song,
       forceNotificationPush: true,
     );
-    if (isSyncLyricsEnabled) {
-      _onPositionPulse();
-    }
+    _onPositionPulse();
   }
 
   static void detach() {
@@ -177,6 +180,8 @@ class AndroidCarLyricsSync {
   static String _lineKey(String songPath, int lyricIndex) =>
       '$songPath|$lyricIndex';
 
+  static String _songTitleKey(String songPath) => '$songPath|title';
+
   static Song? _songForPlayback() {
     final p = _playlist;
     if (p == null) return null;
@@ -190,10 +195,17 @@ class AndroidCarLyricsSync {
   }
 
   static void _onPositionPulse() {
-    if (_playlist == null || !isSyncLyricsEnabled) return;
+    if (_playlist == null || !_carLyricsEnabled) return;
 
     final song = _songForPlayback();
     if (song == null) return;
+
+    final baseTitle = MusicService.songNotificationBaseTitle(song);
+
+    if (!_syncLyricsEnabled) {
+      _pushDisplayLine(song, baseTitle, _songTitleKey(song.path));
+      return;
+    }
 
     _formatter ??= ExternalLyricLineFormatter(lyricStyle: _lyricStyle);
     final position = MusicService.playerPosition;
@@ -212,6 +224,7 @@ class AndroidCarLyricsSync {
           }),
         );
       }
+      _pushDisplayLine(song, baseTitle, _lineKey(song.path, -1));
       return;
     }
 
@@ -221,14 +234,19 @@ class AndroidCarLyricsSync {
       l10n: null,
     );
     final key = _lineKey(song.path, snap.lyricIndex);
+    final line = (!snap.hasEmbeddedLyrics || snap.lyricIndex < 0)
+        ? baseTitle
+        : snap.displayLine;
+    _pushDisplayLine(song, line, key);
+  }
+
+  static void _pushDisplayLine(Song song, String line, String key) {
     if (key == _publishedLineKey) return;
-
-    final baseTitle = MusicService.songNotificationBaseTitle(song);
-    final line = snap.hasEmbeddedLyrics && snap.lyricIndex >= 0
-        ? snap.displayLine
-        : baseTitle;
-
-    MusicService.pushAndroidNotificationLyricLine(song, lyricLine: line);
+    if (_syncLyricsEnabled) {
+      MusicService.pushAndroidNotificationLyricLine(song, lyricLine: line);
+    } else {
+      MusicService.pushAndroidNotificationSongTitle(song);
+    }
     _publishedLineKey = key;
   }
 
@@ -241,10 +259,10 @@ class AndroidCarLyricsSync {
       if (list.isEmpty) return;
       final fallback = list[index.clamp(0, list.length - 1)];
       await MusicService.pushAndroidNotificationForSong(fallback);
-      if (isSyncLyricsEnabled) _onPositionPulse();
+      _onPositionPulse();
       return;
     }
     await MusicService.pushAndroidNotificationForSong(song);
-    if (isSyncLyricsEnabled) _onPositionPulse();
+    _onPositionPulse();
   }
 }

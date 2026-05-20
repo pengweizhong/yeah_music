@@ -5,6 +5,7 @@ import 'package:yeah_music/services/settings_service.dart';
 class AndroidMediaSessionBridge {
   AndroidMediaSessionBridge._();
 
+  /// 通知栏「词」按钮：切换「同步当前歌词行」。
   static Future<void> toggleLyricsSyncFromNotification() async {
     final cur = await SettingsService.loadAndroidCarLyricsSyncLyrics();
     await SettingsService.saveAndroidCarLyricsSyncLyrics(!cur);

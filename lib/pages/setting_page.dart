@@ -201,6 +201,8 @@ class _AndroidCarLyricsSettingsSectionState
     final pl = context.read<PlayListProvider>();
     if (v) {
       await AndroidCarLyricsSync.attachIfNeeded(pl);
+    } else {
+      AndroidCarLyricsSync.detach();
     }
     await AndroidCarLyricsSync.applySettingsFromStorage();
     final ok = await pl.applyAndroidCarLyricsSettingsChange();
