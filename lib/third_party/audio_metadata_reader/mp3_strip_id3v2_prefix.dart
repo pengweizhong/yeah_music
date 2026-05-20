@@ -1,3 +1,17 @@
+// Copyright (c) 2025 Yeah Music
+//
+// This file is part of Yeah Music.
+//
+// Yeah Music is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Yeah Music is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 import 'dart:typed_data';
 
 /// MP3：剔除开头的 ID3v2 标签块（可能有多段），便于在前面重写单个 ID3 标签区，

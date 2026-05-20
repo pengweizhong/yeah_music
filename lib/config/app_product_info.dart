@@ -1,3 +1,17 @@
+// Copyright (c) 2025 Yeah Music
+//
+// This file is part of Yeah Music.
+//
+// Yeah Music is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Yeah Music is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 import 'package:package_info_plus/package_info_plus.dart';
 
 /// 对外「产品 / 构建」信息的统一入口（关于页、导出元数据、备份 JSON 等）。
