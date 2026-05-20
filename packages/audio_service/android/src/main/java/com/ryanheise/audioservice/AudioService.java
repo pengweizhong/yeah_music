@@ -118,6 +118,8 @@ public class AudioService extends MediaBrowserServiceCompat {
 
     /** 为 true 时 [setMetadata] 不覆盖 [DISPLAY_TITLE]/[DISPLAY_SUBTITLE]（由 [updateNotificationDisplayText] 独占）。 */
     private static volatile boolean yeahLyricsDisplayManaged = false;
+    /** Yeah Music：关闭「通知与车载歌词」总开关时不展示媒体通知。 */
+    private static volatile boolean yeahCarMediaNotificationEnabled = false;
     /** 歌词模式下通知栏主行缓存，避免 DISPLAY_TITLE 空窗时回退成曲名 [MediaDescription.getTitle]。 */
     private CharSequence yeahLastLyricDisplayTitle;
     private CharSequence yeahLastLyricDisplaySubtitle;
@@ -837,25 +839,46 @@ public class AudioService extends MediaBrowserServiceCompat {
     }
 
     private void updateNotification() {
+        if (!yeahCarMediaNotificationEnabled) {
+            dismissYeahCarNotification();
+            return;
+        }
         if (notificationCreated) {
             getNotificationManager().notify(NOTIFICATION_ID, buildNotification());
         }
     }
 
     private void postNotificationUpdate() {
+        if (!yeahCarMediaNotificationEnabled) return;
         if (!notificationCreated) return;
         handler.removeCallbacks(yeahNotificationUpdateRunnable);
         handler.post(yeahNotificationUpdateRunnable);
     }
 
+    private void dismissYeahCarNotification() {
+        handler.removeCallbacks(yeahNotificationUpdateRunnable);
+        handler.removeCallbacks(yeahLyricFlashGuardRunnable);
+        handler.removeCallbacks(yeahManagedLyricTickRunner);
+        if (!notificationCreated) return;
+        getNotificationManager().cancel(NOTIFICATION_ID);
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
+        notificationCreated = false;
+    }
+
     private void enterPlayingState() {
-        ContextCompat.startForegroundService(this, new Intent(AudioService.this, AudioService.class));
-        if (!mediaSession.isActive())
+        if (yeahCarMediaNotificationEnabled) {
+            ContextCompat.startForegroundService(
+                    this, new Intent(AudioService.this, AudioService.class));
+        }
+        if (!mediaSession.isActive()) {
             mediaSession.setActive(true);
+        }
 
         acquireWakeLock();
         mediaSession.setSessionActivity(contentIntent);
-        internalStartForeground();
+        if (yeahCarMediaNotificationEnabled) {
+            internalStartForeground();
+        }
     }
 
     private void exitPlayingState() {
@@ -929,6 +952,24 @@ public class AudioService extends MediaBrowserServiceCompat {
      *  - https://developer.android.com/guide/topics/media-apps/working-with-a-media-session#album_artwork
      *  - https://9to5google.com/2020/08/02/android-11-lockscreen-art/
      */
+    public static void setYeahCarMediaNotificationEnabled(boolean enabled) {
+        yeahCarMediaNotificationEnabled = enabled;
+        if (instance == null) return;
+        instance.handler.post(() -> {
+            if (enabled) {
+                if (instance.playing
+                        && instance.processingState != AudioProcessingState.idle) {
+                    ContextCompat.startForegroundService(
+                            instance, new Intent(instance, AudioService.class));
+                    instance.internalStartForeground();
+                    instance.updateNotification();
+                }
+            } else {
+                instance.dismissYeahCarNotification();
+            }
+        });
+    }
+
     public static void setYeahLyricsDisplayManaged(boolean managed) {
         yeahLyricsDisplayManaged = managed;
         if (instance == null) return;
@@ -1213,7 +1254,7 @@ public class AudioService extends MediaBrowserServiceCompat {
      * 高频刷新通知栏歌词（主线程、不经过 setMediaItem 单线程池），与网易云等应用行为接近。
      */
     public static boolean updateNotificationDisplayText(String displayTitle, String displaySubtitle) {
-        if (instance == null) return false;
+        if (!yeahCarMediaNotificationEnabled || instance == null) return false;
         synchronized (instance) {
             if (instance.mediaMetadata == null) return false;
             CharSequence curTitle =

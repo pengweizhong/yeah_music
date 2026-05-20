@@ -629,28 +629,46 @@ class PlayListProvider extends ChangeNotifier {
     }
   }
 
-  /// 已在 Android concat 会话中时切换到「仅播放一次」，需重建为单曲源，否则会由系统在曲末自动切下一曲。
-  Future<void> _rebindAndroidCurrentAsSingleConcatDisabled() async {
+  /// 关闭「通知与车载歌词」前：若仍在 concat 队列，先换回单曲 [AudioSource]（通知仍在时完成，避免 stopForeground 打断换源）。
+  Future<bool> ensureAndroidSingleSourceBeforeCarNotifyOff() async {
+    if (kIsWeb || !Platform.isAndroid) return true;
+    if (!MusicService.androidCarQueueActive) return true;
+    return _rebindAndroidCurrentAsSingleConcatDisabled();
+  }
+
+  /// 已在 Android concat 会话中时重建为单曲源（列表循环 / 关闭车载通知前）。
+  Future<bool> _rebindAndroidCurrentAsSingleConcatDisabled() async {
     try {
       final list = playList;
-      if (list.isEmpty || list.length <= 1) return;
+      if (list.isEmpty || list.length <= 1) return true;
       final idx = _currentIndex.clamp(0, list.length - 1);
       final pos = MusicService.lastPosition;
-      final ok = await MusicService().playCurrentFromPlaylist(
-        queue: list,
-        currentIndex: idx,
-        useAndroidConcatQueue: false,
-      );
-      if (!ok) {
-        reportPlaybackFailureToUser();
-        return;
+      final wasPlaying = MusicService.isPlaying;
+      for (var attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) {
+          await Future<void>.delayed(
+            Duration(milliseconds: 72 + attempt * 48),
+          );
+        }
+        final ok = await MusicService().playCurrentFromPlaylist(
+          queue: list,
+          currentIndex: idx,
+          useAndroidConcatQueue: false,
+        );
+        if (!ok) continue;
+        if (pos > Duration.zero) {
+          await Future<void>.delayed(const Duration(milliseconds: 48));
+          await MusicService().seek(pos);
+        }
+        if (!wasPlaying) {
+          await MusicService().pause(fadeOut: false);
+        }
+        return true;
       }
-      if (pos > Duration.zero) {
-        await Future<void>.delayed(const Duration(milliseconds: 48));
-        await MusicService().seek(pos);
-      }
+      return false;
     } catch (e, st) {
-      appLog.e('仅播放一次：重建单曲会话失败', error: e, stackTrace: st);
+      appLog.e('重建单曲会话失败', error: e, stackTrace: st);
+      return false;
     }
   }
 
@@ -742,14 +760,7 @@ class PlayListProvider extends ChangeNotifier {
     await AndroidCarLyricsSync.applySettingsFromStorage();
     final enabled = await SettingsService.loadAndroidCarLyricsEnabled();
     if (!enabled) {
-      if (MusicService.androidCarQueueActive) {
-        try {
-          await _rebindAndroidCurrentAsSingleConcatDisabled();
-        } catch (e, st) {
-          appLog.d('关闭车载歌词后重建单曲源失败', error: e, stackTrace: st);
-          return false;
-        }
-      }
+      // 单曲换源应在撤通知前由 [ensureAndroidSingleSourceBeforeCarNotifyOff] 完成。
       return true;
     }
     await AndroidCarLyricsSync.attachIfNeeded(this);

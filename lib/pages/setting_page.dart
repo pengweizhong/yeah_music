@@ -199,13 +199,19 @@ class _AndroidCarLyricsSettingsSectionState
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     final pl = context.read<PlayListProvider>();
+    var ok = true;
+    if (!v) {
+      ok = await pl.ensureAndroidSingleSourceBeforeCarNotifyOff();
+    }
     if (v) {
       await AndroidCarLyricsSync.attachIfNeeded(pl);
     } else {
       AndroidCarLyricsSync.detach();
     }
     await AndroidCarLyricsSync.applySettingsFromStorage();
-    final ok = await pl.applyAndroidCarLyricsSettingsChange();
+    if (v) {
+      ok = await pl.applyAndroidCarLyricsSettingsChange();
+    }
     if (!mounted) return;
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(

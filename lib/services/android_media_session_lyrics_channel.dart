@@ -10,6 +10,17 @@ abstract final class AndroidMediaSessionLyricsChannel {
   static const MethodChannel _channel =
       MethodChannel('yeah_music/media_session_lyrics');
 
+  static Future<void> setCarNotificationEnabled(bool enabled) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod<void>('setCarNotificationEnabled', <String, bool>{
+        'enabled': enabled,
+      });
+    } catch (e) {
+      debugPrint('MediaSessionLyricsChannel.setCarNotificationEnabled failed: $e');
+    }
+  }
+
   static Future<void> setLyricsDisplayManaged(bool enabled) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {

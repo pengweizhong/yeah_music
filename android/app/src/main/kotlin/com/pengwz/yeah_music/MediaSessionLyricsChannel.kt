@@ -48,6 +48,30 @@ object MediaSessionLyricsChannel {
         }
     }
 
+    private fun setYeahCarMediaNotificationEnabled(enabled: Boolean) {
+        if (!hasSetYeahCarMediaNotificationEnabled()) return
+        val clazz = Class.forName(AUDIO_SERVICE_CLASS)
+        val method = clazz.getMethod(
+            "setYeahCarMediaNotificationEnabled",
+            Boolean::class.javaPrimitiveType,
+        )
+        method.invoke(null, enabled)
+    }
+
+    private fun hasSetYeahCarMediaNotificationEnabled(): Boolean {
+        return try {
+            Class.forName(AUDIO_SERVICE_CLASS).getMethod(
+                "setYeahCarMediaNotificationEnabled",
+                Boolean::class.javaPrimitiveType,
+            )
+            true
+        } catch (_: NoSuchMethodException) {
+            false
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
     private fun setYeahLyricsDisplayManaged(enabled: Boolean) {
         if (!hasSetYeahLyricsDisplayManaged()) return
         val clazz = Class.forName(AUDIO_SERVICE_CLASS)
@@ -86,6 +110,16 @@ object MediaSessionLyricsChannel {
     fun register(binaryMessenger: BinaryMessenger) {
         MethodChannel(binaryMessenger, CHANNEL_NAME).setMethodCallHandler { call, result ->
             when (call.method) {
+                "setCarNotificationEnabled" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    try {
+                        setYeahCarMediaNotificationEnabled(enabled)
+                        result.success(null)
+                    } catch (t: Throwable) {
+                        Log.w(TAG, "setCarNotificationEnabled failed", t)
+                        result.error("SET_CAR_NOTIFY_FAILED", t.message, null)
+                    }
+                }
                 "setLyricsManaged" -> {
                     val enabled = call.argument<Boolean>("enabled") ?: false
                     try {

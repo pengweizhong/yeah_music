@@ -42,6 +42,9 @@ class AndroidCarLyricsSync {
     _syncLyricsEnabled = _carLyricsEnabled
         ? await SettingsService.loadAndroidCarLyricsSyncLyrics()
         : false;
+    await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(
+      _carLyricsEnabled,
+    );
     JustAudioBackground.setAndroidLyricsSyncEnabled(_syncLyricsEnabled);
     await AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(
       _syncLyricsEnabled,
@@ -165,6 +168,7 @@ class AndroidCarLyricsSync {
   static void detach() {
     _carLyricsEnabled = false;
     _syncLyricsEnabled = false;
+    unawaited(AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(false));
     JustAudioBackground.setAndroidLyricsSyncEnabled(false);
     unawaited(AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(false));
     _stopPlaybackListeners();

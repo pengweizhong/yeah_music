@@ -42,6 +42,7 @@ import 'package:yeah_music/widgets/linux_taskbar_progress_host.dart';
 import 'package:yeah_music/widgets/linux_tray_host.dart';
 import 'package:yeah_music/widgets/macos_menu_bar_lyrics_host.dart';
 import 'package:yeah_music/services/android_media_session_bridge.dart';
+import 'package:yeah_music/services/android_media_session_lyrics_channel.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 import 'package:yeah_music/platform/wire_remote_native.dart';
@@ -162,6 +163,10 @@ class _AppStartupGateState extends State<AppStartupGate> {
     MusicService.attachListeningTimeTracker();
     MusicService.attachAndroidSoundPresetSessionListener();
     MusicService.attachAndroidNotificationCoverSync();
+    if (!kIsWeb && Platform.isAndroid) {
+      final carNotify = await SettingsService.loadAndroidCarLyricsEnabled();
+      await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(carNotify);
+    }
     _disposePreHiveResources();
     unawaited(AppEphemeralStorage.runStartupMaintenanceIfNeeded());
     appLog.i(

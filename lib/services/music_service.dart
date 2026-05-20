@@ -881,13 +881,18 @@ class MusicService {
 
   Future<Object?> _tagForSong(Song song) async {
     if (Platform.isAndroid) {
+      if (!await SettingsService.loadAndroidCarLyricsEnabled()) {
+        return song;
+      }
       final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
       final lyricStyle = await SettingsService.loadLyricSettings();
+      final syncLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
       return buildMediaItemForSong(
         song,
         showCover: showCover,
         lyricStyle: lyricStyle,
         subtitlePosition: Duration.zero,
+        deferLyricDisplayToChannel: syncLyrics,
       );
     }
     return song;
