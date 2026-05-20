@@ -22,12 +22,18 @@ import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/services/playback_sound_effect_service.dart';
+import 'package:yeah_music/utils/playback_speed.dart';
 
 class MusicService {
   static AndroidLoudnessEnhancer? _androidLoudnessEnhancer;
   static AndroidEqualizer? _androidEqualizer;
 
   static final AudioPlayer _player = _createAudioPlayer();
+
+  static double _playbackSpeed = kDefaultPlaybackSpeed;
+
+  /// 当前播放倍速（默认 1x）。
+  static double get playbackSpeed => _playbackSpeed;
 
   static AudioPlayer _createAudioPlayer() {
     if (Platform.isAndroid) {
@@ -1278,6 +1284,29 @@ class MusicService {
       try {
         await _player.setVolume(1.0);
       } catch (_) {}
+    }
+  }
+
+  /// 启动或设置变更后从 Hive 恢复倍速并应用到 [AudioPlayer]。
+  static Future<void> applyStoredPlaybackSpeed() async {
+    final speed = await SettingsService.loadPlaybackSpeed();
+    await setPlaybackSpeed(speed, persist: false);
+  }
+
+  /// 设置播放倍速；[persist] 为 true 时写入 Hive（默认）。
+  static Future<void> setPlaybackSpeed(
+    double speed, {
+    bool persist = true,
+  }) async {
+    final normalized = normalizePlaybackSpeed(speed);
+    _playbackSpeed = normalized;
+    try {
+      await _player.setSpeed(normalized);
+    } catch (e) {
+      appLog.d('setPlaybackSpeed($normalized): $e');
+    }
+    if (persist) {
+      await SettingsService.savePlaybackSpeed(normalized);
     }
   }
 

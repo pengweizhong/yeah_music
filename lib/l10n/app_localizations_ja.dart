@@ -1729,6 +1729,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get songPageMoreSoundEffectsSubtitle => 'EQプリセット（Android）';
 
   @override
+  String get songPageMorePlaybackSpeed => '再生速度';
+
+  @override
+  String get playbackSpeedSheetTitle => '再生速度';
+
+  @override
   String get playbackSoundPresetSheetTitle => 'サウンドエフェクト';
 
   @override

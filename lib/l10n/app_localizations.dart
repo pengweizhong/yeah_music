@@ -3267,6 +3267,18 @@ abstract class AppLocalizations {
   /// **'EQ presets (Android)'**
   String get songPageMoreSoundEffectsSubtitle;
 
+  /// No description provided for @songPageMorePlaybackSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get songPageMorePlaybackSpeed;
+
+  /// No description provided for @playbackSpeedSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get playbackSpeedSheetTitle;
+
   /// No description provided for @playbackSoundPresetSheetTitle.
   ///
   /// In en, this message translates to:

@@ -745,6 +745,8 @@
   "songPageMoreSheetTitle": "更多操作",
   "songPageMoreSoundEffects": "音效",
   "songPageMoreSoundEffectsSubtitle": "均衡器预设（Android）",
+  "songPageMorePlaybackSpeed": "倍速播放",
+  "playbackSpeedSheetTitle": "播放速度",
   "playbackSoundPresetSheetTitle": "音效设置",
   "playbackSoundPresetUnsupportedBody": "硬件均衡器仅在 Android 且正在播放时生效；其它平台可先保存预设，在支持的设备上播放时会自动应用。",
   "playbackSoundPresetStabilityAndroidHint": "该功能尚不稳定，若出现炸音、破音，请选择「原声」。",

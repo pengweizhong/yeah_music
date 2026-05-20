@@ -50,6 +50,8 @@ import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playback_sound_preset_sheet.dart';
+import 'package:yeah_music/widgets/playback_speed_sheet.dart';
+import 'package:yeah_music/utils/playback_speed.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
@@ -1619,6 +1621,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                           navigatorContext: navigatorContext,
                           parentMounted: () => mounted,
                         ),
+                        _SongMorePlaybackSpeedListTile(
+                          sheetContext: sheetContext,
+                          navigatorContext: navigatorContext,
+                          parentMounted: () => mounted,
+                        ),
                         ListTile(
                           leading: const Icon(Icons.info_outline_rounded),
                           title: Text(l10n.songPageMoreQueryMetadata),
@@ -1703,20 +1710,21 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             });
                           },
                         ),
-                        ListTile(
-                          leading: const Icon(Icons.subtitles_outlined),
-                          title: Text(l10n.songPageMoreEditLyricsExternal),
-                          onTap: () {
-                            Navigator.pop(sheetContext);
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (!mounted) return;
-                              _openSyncedLyricEditorExternal(
-                                navigatorContext,
-                                song,
-                              );
-                            });
-                          },
-                        ),
+                        // 这个软件不太友好
+                        // ListTile(
+                        //   leading: const Icon(Icons.subtitles_outlined),
+                        //   title: Text(l10n.songPageMoreEditLyricsExternal),
+                        //   onTap: () {
+                        //     Navigator.pop(sheetContext);
+                        //     WidgetsBinding.instance.addPostFrameCallback((_) {
+                        //       if (!mounted) return;
+                        //       _openSyncedLyricEditorExternal(
+                        //         navigatorContext,
+                        //         song,
+                        //       );
+                        //     });
+                        //   },
+                        // ),
                         Divider(height: 1, color: ctx.gradBorder(0.2)),
                         ListTile(
                           leading: Icon(
@@ -3549,6 +3557,75 @@ class _DesktopHoverMagnifyCoverState extends State<_DesktopHoverMagnifyCover> {
         alignment: Alignment.center,
         child: widget.child,
       ),
+    );
+  }
+}
+
+/// 播放页「更多」里倍速一行：标题带当前倍速，并在 [SettingsService.playbackSpeedRevision] 变化时刷新。
+class _SongMorePlaybackSpeedListTile extends StatefulWidget {
+  const _SongMorePlaybackSpeedListTile({
+    required this.sheetContext,
+    required this.navigatorContext,
+    required this.parentMounted,
+  });
+
+  final BuildContext sheetContext;
+  final BuildContext navigatorContext;
+  final bool Function() parentMounted;
+
+  @override
+  State<_SongMorePlaybackSpeedListTile> createState() =>
+      _SongMorePlaybackSpeedListTileState();
+}
+
+class _SongMorePlaybackSpeedListTileState
+    extends State<_SongMorePlaybackSpeedListTile> {
+  late Future<double> _speedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _speedFuture = SettingsService.loadPlaybackSpeed();
+    SettingsService.playbackSpeedRevision.addListener(_onSpeedRevision);
+  }
+
+  @override
+  void dispose() {
+    SettingsService.playbackSpeedRevision.removeListener(_onSpeedRevision);
+    super.dispose();
+  }
+
+  void _onSpeedRevision() {
+    if (mounted) {
+      setState(() {
+        _speedFuture = SettingsService.loadPlaybackSpeed();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(widget.sheetContext);
+    return FutureBuilder<double>(
+      future: _speedFuture,
+      builder: (context, snap) {
+        final speed = normalizePlaybackSpeed(
+          snap.data ?? MusicService.playbackSpeed,
+        );
+        final titleText =
+            '${l10n.songPageMorePlaybackSpeed}（${playbackSpeedLabel(speed)}）';
+        return ListTile(
+          leading: const Icon(Icons.speed_rounded),
+          title: Text(titleText),
+          onTap: () {
+            Navigator.pop(widget.sheetContext);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!widget.parentMounted()) return;
+              showPlaybackSpeedSheet(widget.navigatorContext);
+            });
+          },
+        );
+      },
     );
   }
 }

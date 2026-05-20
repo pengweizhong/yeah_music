@@ -165,6 +165,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
     MusicService.attachListeningTimeTracker();
     MusicService.attachAndroidSoundPresetSessionListener();
     MusicService.attachAndroidNotificationCoverSync();
+    unawaited(MusicService.applyStoredPlaybackSpeed());
     if (!kIsWeb && Platform.isAndroid) {
       final carNotify = await SettingsService.loadAndroidCarLyricsEnabled();
       await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(carNotify);

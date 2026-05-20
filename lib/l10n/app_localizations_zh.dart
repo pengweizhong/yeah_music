@@ -1702,6 +1702,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songPageMoreSoundEffectsSubtitle => '均衡器预设（Android）';
 
   @override
+  String get songPageMorePlaybackSpeed => '倍速播放';
+
+  @override
+  String get playbackSpeedSheetTitle => '播放速度';
+
+  @override
   String get playbackSoundPresetSheetTitle => '音效设置';
 
   @override
@@ -4690,6 +4696,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get songPageMoreSoundEffectsSubtitle => '均衡器预设（Android）';
+
+  @override
+  String get songPageMorePlaybackSpeed => '倍速播放';
+
+  @override
+  String get playbackSpeedSheetTitle => '播放速度';
 
   @override
   String get playbackSoundPresetSheetTitle => '音效设置';
@@ -7681,6 +7693,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get songPageMoreSoundEffectsSubtitle => '等化器預設（Android）';
+
+  @override
+  String get songPageMorePlaybackSpeed => '倍速播放';
+
+  @override
+  String get playbackSpeedSheetTitle => '播放速度';
 
   @override
   String get playbackSoundPresetSheetTitle => '音效設定';

@@ -775,6 +775,8 @@
   "songPageMoreSheetTitle": "More actions",
   "songPageMoreSoundEffects": "Sound effects",
   "songPageMoreSoundEffectsSubtitle": "EQ presets (Android)",
+  "songPageMorePlaybackSpeed": "Playback speed",
+  "playbackSpeedSheetTitle": "Playback speed",
   "playbackSoundPresetSheetTitle": "Sound effects",
   "playbackSoundPresetUnsupportedBody": "Hardware EQ is only applied on Android while audio is playing. On other platforms you can still pick a preset; it will apply the next time you play on a supported device.",
   "playbackSoundPresetStabilityAndroidHint": "This feature may still be unstable. If you hear pops or crackling, choose \"Original\" (flat).",

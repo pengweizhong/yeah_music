@@ -22,6 +22,7 @@ import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/song_recognition_history_service.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
+import 'package:yeah_music/utils/playback_speed.dart';
 
 class SettingsService {
   /// 首页快捷入口 Hive 写入或云端恢复后自增；[HomePage] 监听以刷新顺序与显隐。
@@ -33,6 +34,9 @@ class SettingsService {
   /// [savePlaybackSoundPreset] 写入 Hive 后自增；播放页「更多」音效标题监听。
   static final ValueNotifier<int> playbackSoundPresetRevision =
       ValueNotifier<int>(0);
+
+  /// [savePlaybackSpeed] 写入 Hive 后自增；播放页「更多」倍速标题监听。
+  static final ValueNotifier<int> playbackSpeedRevision = ValueNotifier<int>(0);
 
   static const String _lyricSettingsKey = 'lyric_settings';
   static const String _playbackModeKey = 'playback_mode';
@@ -105,6 +109,9 @@ class SettingsService {
   /// [PlaybackSoundPreset.custom] 时各频段增益（dB），与设备均衡器 band 顺序一致。
   static const String _playbackSoundCustomEqDbKey =
       'playback_sound_custom_eq_db_v1';
+
+  /// 播放倍速（与 [kPlaybackSpeedOptions] 之一一致；默认 1.0）。
+  static const String _playbackSpeedKey = 'playback_speed_v1';
 
   /// 首页问候卡片第二行：用户自定义条目（不含内置默认句）。
   static const String _homeGreetingCustomSubsKey =
@@ -1143,6 +1150,33 @@ class SettingsService {
       } catch (_) {}
     }
     if (ok) playbackSoundPresetRevision.value++;
+  }
+
+  static Future<double> loadPlaybackSpeed() async {
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      final v = box.get(_playbackSpeedKey);
+      if (v is num) return normalizePlaybackSpeed(v.toDouble());
+    } catch (_) {}
+    return kDefaultPlaybackSpeed;
+  }
+
+  static Future<void> savePlaybackSpeed(double speed) async {
+    final normalized = normalizePlaybackSpeed(speed);
+    var ok = false;
+    try {
+      final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+      await box.put(_playbackSpeedKey, normalized);
+      ok = true;
+    } catch (e) {
+      try {
+        await HiveUtils.closeBox(Constant.hiveRootPath);
+        final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
+        await box.put(_playbackSpeedKey, normalized);
+        ok = true;
+      } catch (_) {}
+    }
+    if (ok) playbackSpeedRevision.value++;
   }
 
   static Future<List<double>> loadPlaybackSoundCustomBandGainsDb() async {
