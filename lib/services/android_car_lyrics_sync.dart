@@ -42,6 +42,7 @@ class AndroidCarLyricsSync {
   static String? _publishedLineKey;
   static String? _hydrateInFlightPath;
   static int? _lastHandledPlayerIndex;
+  static VoidCallback? _lyricsUiRevListener;
 
   static Future<void> applySettingsFromStorage() async {
     _carLyricsEnabled = await SettingsService.loadAndroidCarLyricsEnabled();
@@ -78,6 +79,32 @@ class AndroidCarLyricsSync {
   }
 
   static Future<void> refreshSyncEnabled() => applySettingsFromStorage();
+
+  /// 歌词 UI / 显示模式从 Hive 更新后刷新通知栏（与 [MacosMenuBarLyricsGlue.reloadFromHive] 对齐）。
+  static Future<void> reloadFromHive() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    if (!_carLyricsEnabled) return;
+    await _reloadLyricStyle();
+    _formatter?.invalidate();
+    _publishedLineKey = null;
+    MusicService.resetAndroidNotificationLyricDedupe();
+    _onPositionPulse();
+  }
+
+  static void _bindLyricsUiRevisionListener() {
+    if (_lyricsUiRevListener != null) return;
+    _lyricsUiRevListener = () {
+      unawaited(reloadFromHive());
+    };
+    SettingsService.lyricsUiStorageRevision.addListener(_lyricsUiRevListener!);
+  }
+
+  static void _unbindLyricsUiRevisionListener() {
+    final l = _lyricsUiRevListener;
+    if (l == null) return;
+    SettingsService.lyricsUiStorageRevision.removeListener(l);
+    _lyricsUiRevListener = null;
+  }
 
   static Future<void> attachIfNeeded(PlayListProvider playlist) async {
     if (kIsWeb || !Platform.isAndroid) return;
@@ -146,6 +173,7 @@ class AndroidCarLyricsSync {
     MusicService.resetAndroidNotificationLyricDedupe();
     await applySettingsFromStorage();
     await _reloadLyricStyle();
+    _bindLyricsUiRevisionListener();
     _lastHandledPlayerIndex = null;
     _bindPlaybackListeners();
     final initial = MusicService.currentIndex;
@@ -172,6 +200,7 @@ class AndroidCarLyricsSync {
   }
 
   static Future<void> detach() async {
+    _unbindLyricsUiRevisionListener();
     _carLyricsEnabled = false;
     _syncLyricsEnabled = false;
     await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(false);
@@ -187,8 +216,12 @@ class AndroidCarLyricsSync {
     _lastHandledPlayerIndex = null;
   }
 
-  static String _lineKey(String songPath, int lyricIndex) =>
-      '$songPath|$lyricIndex';
+  static String _lineKey(
+    String songPath,
+    int lyricIndex,
+    String publishKeySuffix,
+  ) =>
+      '$songPath|$lyricIndex|$publishKeySuffix';
 
   static String _songTitleKey(String songPath) => '$songPath|title';
 
@@ -234,7 +267,11 @@ class AndroidCarLyricsSync {
           }),
         );
       }
-      _pushDisplayLine(song, baseTitle, _lineKey(song.path, -1));
+      _pushDisplayLine(
+        song,
+        baseTitle,
+        _lineKey(song.path, -1, 'title'),
+      );
       return;
     }
 
@@ -246,8 +283,12 @@ class AndroidCarLyricsSync {
     final inLyricGap =
         snap.hasEmbeddedLyrics && snap.lyricIndex < 0;
     final key = inLyricGap
-        ? _lineKey(song.path, -1)
-        : _lineKey(song.path, snap.lyricIndex);
+        ? _lineKey(song.path, -1, 'gap')
+        : _lineKey(
+            song.path,
+            snap.lyricIndex,
+            snap.publishKeySuffix,
+          );
     final line = !snap.hasEmbeddedLyrics
         ? baseTitle
         : inLyricGap

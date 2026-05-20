@@ -46,6 +46,7 @@ class ExternalLyricLineFormatter {
         lyricIndex: -1,
         displayLine: sanitizeExternalLyricLine(idle),
         hasEmbeddedLyrics: false,
+        publishKeySuffix: '',
       );
     }
 
@@ -55,6 +56,7 @@ class ExternalLyricLineFormatter {
         lyricIndex: -1,
         displayLine: sanitizeExternalLyricLine(noLyrics),
         hasEmbeddedLyrics: false,
+        publishKeySuffix: '',
       );
     }
 
@@ -70,6 +72,7 @@ class ExternalLyricLineFormatter {
         lyricIndex: -1,
         displayLine: sanitizeExternalLyricLine(noLyrics),
         hasEmbeddedLyrics: false,
+        publishKeySuffix: '',
       );
     }
 
@@ -79,6 +82,7 @@ class ExternalLyricLineFormatter {
         lyricIndex: -1,
         displayLine: sanitizeExternalLyricLine('…'),
         hasEmbeddedLyrics: true,
+        publishKeySuffix: 'gap',
       );
     }
 
@@ -96,17 +100,22 @@ class ExternalLyricLineFormatter {
     }
 
     final lyricLine = parts.join(' · ');
+    final effectiveMode = modeMap[idx] ?? globalMode;
+    final publishKeySuffix =
+        '$effectiveMode|${lyricStyle.showOriginal}|${lyricStyle.showTranslations}';
     if (lyricLine.isEmpty) {
       return ExternalLyricLineAtPosition(
         lyricIndex: idx,
         displayLine: sanitizeExternalLyricLine(noLyrics),
         hasEmbeddedLyrics: true,
+        publishKeySuffix: publishKeySuffix,
       );
     }
     return ExternalLyricLineAtPosition(
       lyricIndex: idx,
       displayLine: sanitizeExternalLyricLine(lyricLine),
       hasEmbeddedLyrics: true,
+      publishKeySuffix: publishKeySuffix,
     );
   }
 
@@ -125,10 +134,14 @@ class ExternalLyricLineAtPosition {
     required this.lyricIndex,
     required this.displayLine,
     required this.hasEmbeddedLyrics,
+    required this.publishKeySuffix,
   });
 
   /// 当前时间轴行；-1 表示两行之间或曲目前空白。
   final int lyricIndex;
   final String displayLine;
   final bool hasEmbeddedLyrics;
+
+  /// 与 [DesktopLyricsPayloadBuilder.linesToShowForLyricLine] 一致，供通知去重 key 区分显示模式切换。
+  final String publishKeySuffix;
 }

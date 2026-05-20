@@ -24,6 +24,7 @@ import 'package:yeah_music/models/playback_mode.dart';
 import 'package:yeah_music/models/playback_sound_preset.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
+import 'package:yeah_music/services/android_car_lyrics_sync.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/file_utils.dart';
@@ -363,6 +364,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     _settings = newSettings;
     unawaited(MacosMenuBarLyricsGlue.reloadFromHive());
     unawaited(DesktopFloatingLyricsGlue.reloadFromHive());
+    unawaited(AndroidCarLyricsSync.reloadFromHive());
   }
 
   Future<void> _reloadLyricsUiFromHiveExternalNotification() async {
@@ -371,6 +373,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     if (!mounted) return;
     unawaited(MacosMenuBarLyricsGlue.reloadFromHive());
     unawaited(DesktopFloatingLyricsGlue.reloadFromHive());
+    unawaited(AndroidCarLyricsSync.reloadFromHive());
   }
 
   Future<void> _loadKeepAwakePreference() async {
