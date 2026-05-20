@@ -1273,7 +1273,7 @@ public class AudioService extends MediaBrowserServiceCompat {
     }
 
     /**
-     * 高频刷新通知栏歌词（主线程、不经过 setMediaItem 单线程池），与网易云等应用行为接近。
+     * 高频刷新通知栏歌词（主线程、不经过 setMediaItem 单线程池）
      */
     public static boolean updateNotificationDisplayText(String displayTitle, String displaySubtitle) {
         if (!yeahCarMediaNotificationEnabled || instance == null) return false;
