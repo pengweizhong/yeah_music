@@ -29,19 +29,19 @@ class LyricSettingsAdapter extends TypeAdapter<LyricSettings> {
       ..upcomingTranslationColor = fields[9] as int
       ..lyricDisplayModeList = (fields[10] as List).cast<String>()
       ..lyricLineSpacing = fields[11] as double
-      ..lyricTextAlignIndex = (fields[12] as int?) ?? 1
-      ..activeLyricUseGradient = fields[13] as bool? ?? false
-      ..activeLyricGradientStart = fields[14] as int? ?? 0xFFFFFFFF
-      ..activeLyricGradientEnd = fields[15] as int? ?? 0xFFFFB74D
-      ..activeLyricGradientDirectionIndex = fields[16] as int? ?? 0
-      ..playedLyricUseGradient = fields[17] as bool? ?? false
-      ..playedLyricGradientStart = fields[18] as int? ?? 0xFF81C784
-      ..playedLyricGradientEnd = fields[19] as int? ?? 0xFFC8E6C9
-      ..playedLyricGradientDirectionIndex = fields[20] as int? ?? 0
-      ..upcomingLyricUseGradient = fields[21] as bool? ?? false
-      ..upcomingLyricGradientStart = fields[22] as int? ?? 0xFF64B5F6
-      ..upcomingLyricGradientEnd = fields[23] as int? ?? 0xFFBBDEFB
-      ..upcomingLyricGradientDirectionIndex = fields[24] as int? ?? 0;
+      ..lyricTextAlignIndex = fields[12] as int
+      ..activeLyricUseGradient = fields[13] as bool
+      ..activeLyricGradientStart = fields[14] as int
+      ..activeLyricGradientEnd = fields[15] as int
+      ..activeLyricGradientDirectionIndex = fields[16] as int
+      ..playedLyricUseGradient = fields[17] as bool
+      ..playedLyricGradientStart = fields[18] as int
+      ..playedLyricGradientEnd = fields[19] as int
+      ..playedLyricGradientDirectionIndex = fields[20] as int
+      ..upcomingLyricUseGradient = fields[21] as bool
+      ..upcomingLyricGradientStart = fields[22] as int
+      ..upcomingLyricGradientEnd = fields[23] as int
+      ..upcomingLyricGradientDirectionIndex = fields[24] as int;
   }
 
   @override

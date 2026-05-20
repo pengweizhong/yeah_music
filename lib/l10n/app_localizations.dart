@@ -210,22 +210,16 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get statisticsReloadTooltip;
 
-  /// No description provided for @statisticsReloadStarted.
-  ///
-  /// In en, this message translates to:
-  /// **'Refreshing playback statistics…'**
-  String get statisticsReloadStarted;
-
   /// No description provided for @statisticsReloadDone.
   ///
   /// In en, this message translates to:
-  /// **'Playback statistics updated.'**
+  /// **'Statistics updated.'**
   String get statisticsReloadDone;
 
   /// No description provided for @statisticsReloadFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t refresh playback statistics.'**
+  /// **'Couldn\'t refresh statistics.'**
   String get statisticsReloadFailed;
 
   /// No description provided for @statisticsSectionLibrary.
@@ -275,6 +269,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sum of durations where metadata is available'**
   String get statisticsDurationHint;
+
+  /// No description provided for @statisticsDurationCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'{withDuration} of {total} tracks counted'**
+  String statisticsDurationCoverage(int withDuration, int total);
+
+  /// No description provided for @statisticsReloadStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing statistics…'**
+  String get statisticsReloadStarted;
 
   /// No description provided for @statisticsFormatsLabel.
   ///

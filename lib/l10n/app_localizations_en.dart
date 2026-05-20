@@ -64,13 +64,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsReloadTooltip => 'Refresh';
 
   @override
-  String get statisticsReloadStarted => 'Refreshing playback statistics…';
+  String get statisticsReloadDone => 'Statistics updated.';
 
   @override
-  String get statisticsReloadDone => 'Playback statistics updated.';
-
-  @override
-  String get statisticsReloadFailed => 'Couldn\'t refresh playback statistics.';
+  String get statisticsReloadFailed => 'Couldn\'t refresh statistics.';
 
   @override
   String get statisticsSectionLibrary => 'Library';
@@ -96,6 +93,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get statisticsDurationHint =>
       'Sum of durations where metadata is available';
+
+  @override
+  String statisticsDurationCoverage(int withDuration, int total) {
+    return '$withDuration of $total tracks counted';
+  }
+
+  @override
+  String get statisticsReloadStarted => 'Refreshing statistics…';
 
   @override
   String get statisticsFormatsLabel => 'Formats';

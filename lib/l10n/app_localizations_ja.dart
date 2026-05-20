@@ -63,13 +63,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statisticsReloadTooltip => '更新';
 
   @override
-  String get statisticsReloadStarted => '再生統計を更新しています…';
+  String get statisticsReloadDone => '統計を更新しました';
 
   @override
-  String get statisticsReloadDone => '再生統計を更新しました';
-
-  @override
-  String get statisticsReloadFailed => '再生統計を更新できませんでした';
+  String get statisticsReloadFailed => '統計を更新できませんでした';
 
   @override
   String get statisticsSectionLibrary => 'ライブラリ';
@@ -94,6 +91,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get statisticsDurationHint => 'メタデータに長さがある曲のみ合計';
+
+  @override
+  String statisticsDurationCoverage(int withDuration, int total) {
+    return '長さあり $withDuration / $total 曲を合計';
+  }
+
+  @override
+  String get statisticsReloadStarted => '統計を更新しています…';
 
   @override
   String get statisticsFormatsLabel => 'フォーマット';

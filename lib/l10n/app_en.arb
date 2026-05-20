@@ -18,9 +18,8 @@
   "statisticsTitle": "Statistics",
   "statisticsSubtitle": "Overview of your library, listening activity, and playlists",
   "statisticsReloadTooltip": "Refresh",
-  "statisticsReloadStarted": "Refreshing playback statistics…",
-  "statisticsReloadDone": "Playback statistics updated.",
-  "statisticsReloadFailed": "Couldn't refresh playback statistics.",
+  "statisticsReloadDone": "Statistics updated.",
+  "statisticsReloadFailed": "Couldn't refresh statistics.",
   "statisticsSectionLibrary": "Library",
   "statisticsSectionPlayback": "Playback",
   "statisticsSectionPlaylists": "Playlists",
@@ -29,6 +28,14 @@
   "statisticsFoldersLabel": "Media folders",
   "statisticsDurationLabel": "Estimated duration",
   "statisticsDurationHint": "Sum of durations where metadata is available",
+  "statisticsDurationCoverage": "{withDuration} of {total} tracks counted",
+  "@statisticsDurationCoverage": {
+    "placeholders": {
+      "withDuration": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "statisticsReloadStarted": "Refreshing statistics…",
   "statisticsFormatsLabel": "Formats",
   "statisticsFormatsOther": "Other",
   "statisticsFormatsMore": "{count} more types",

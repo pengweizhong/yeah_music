@@ -6,6 +6,10 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/folder_hive_lightweight.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
+/// 由 [FolderProvider] 注册：持久化时必须写入内存里已更新的 [Folder]/[Song]，
+/// 不能仅从 LazyBox 再 get（会得到未含最新 [Song.durationMs] 的磁盘副本）。
+Iterable<Folder> Function()? inMemoryFoldersForPersist;
+
 /// 批量把受影响曲目写入 Hive（单次遍历文件夹）；防抖合并短时密集写入，避免滑动列表时每首歌阻塞磁盘。
 class EmbeddedSongMetadataPersistScheduler {
   EmbeddedSongMetadataPersistScheduler._();
@@ -47,10 +51,21 @@ class EmbeddedSongMetadataPersistScheduler {
 }
 
 /// 立即写入包含任一给定路径的 [Folder]（每文件夹至多一次）。
-Future<void> persistEmbeddedSongPaths(Set<String> paths) async {
+Future<void> persistEmbeddedSongPaths(Iterable<String> paths) async {
   final trimmed = paths.map((p) => p.trim()).where((p) => p.isNotEmpty).toSet();
   if (trimmed.isEmpty) return;
   try {
+    final memoryFolders = inMemoryFoldersForPersist?.call();
+    if (memoryFolders != null) {
+      for (final folder in memoryFolders) {
+        final list = folder.songList;
+        if (list == null || list.isEmpty) continue;
+        if (!list.any((s) => trimmed.contains(s.path))) continue;
+        await FolderHiveLightweight.saveFolder(folder);
+      }
+      return;
+    }
+
     final box = await HiveUtils.openFolderBox();
     final toSave = <Folder>{};
     for (final key in box.keys) {
@@ -58,9 +73,8 @@ Future<void> persistEmbeddedSongPaths(Set<String> paths) async {
       if (f == null) continue;
       final list = f.songList;
       if (list == null || list.isEmpty) continue;
-      if (list.any((s) => trimmed.contains(s.path))) {
-        toSave.add(f);
-      }
+      if (!list.any((s) => trimmed.contains(s.path))) continue;
+      toSave.add(f);
     }
     for (final folder in toSave) {
       await FolderHiveLightweight.saveFolder(folder);

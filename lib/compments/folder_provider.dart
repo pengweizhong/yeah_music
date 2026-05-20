@@ -14,6 +14,7 @@ import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/folder_paths_backup.dart';
 import 'package:yeah_music/utils/folder_hive_lightweight.dart';
+import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 import '../config/app_config.dart';
@@ -36,6 +37,11 @@ void mergeEmbeddedFieldsFromPreviousSongList({
         prev.imageBytes != null &&
         prev.imageBytes!.isNotEmpty) {
       fresh.imageBytes = prev.imageBytes;
+    }
+    if ((fresh.durationMs == null || fresh.durationMs! <= 0) &&
+        prev.durationMs != null &&
+        prev.durationMs! > 0) {
+      fresh.durationMs = prev.durationMs;
     }
   }
 }
@@ -80,6 +86,7 @@ class FolderProvider extends ChangeNotifier {
     _foldersCache
       ..clear()
       ..addAll(list);
+    inMemoryFoldersForPersist = () => _foldersCache;
     _box = box;
     unawaited(FolderHiveLightweight.runStripEmbeddedArtMigrationIfNeeded());
     unawaited(FolderHiveLightweight.runStripEmbeddedLyricsMigrationIfNeeded());

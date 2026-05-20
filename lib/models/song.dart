@@ -44,8 +44,21 @@ class Song extends HiveObject {
   /// 专辑中曲目总数
   int? trackTotal;
 
+  /// 曲目时长（毫秒，持久化到 Hive，供统计与列表展示）。
+  @HiveField(10)
+  int? durationMs;
+
   /// 曲目时长
-  Duration? duration;
+  Duration? get duration {
+    final ms = durationMs;
+    if (ms == null || ms <= 0) return null;
+    return Duration(milliseconds: ms);
+  }
+
+  set duration(Duration? value) {
+    final ms = value?.inMilliseconds;
+    durationMs = (ms == null || ms <= 0) ? null : ms;
+  }
 
   /// 包含此曲目的唱片编号
   int? discNumber;

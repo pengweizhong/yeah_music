@@ -37,6 +37,7 @@ import 'compments/user_playlist_provider.dart';
 import 'package:yeah_music/desktop_lyrics/desktop_lyrics_sub_window_app.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 import 'package:yeah_music/utils/android_notification_permission.dart';
+import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/widgets/desktop_playback_shortcuts_listener.dart';
 import 'package:yeah_music/widgets/linux_taskbar_progress_host.dart';
 import 'package:yeah_music/widgets/linux_tray_host.dart';
@@ -405,6 +406,11 @@ class _YeahMusicAppState extends State<YeahMusicApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(EmbeddedSongMetadataPersistScheduler.flushPending());
+      return;
+    }
     if (state != AppLifecycleState.resumed) return;
     // macOS：浏览器 OAuth 回跳时 keychain 写入与 resumed 几乎同时发生，立刻 loadFromStorage
     // 会偶发读不到新令牌并把 _signedIn 刷成 false（Android 无此窗口）。稍晚再读并配合控制器内重试。

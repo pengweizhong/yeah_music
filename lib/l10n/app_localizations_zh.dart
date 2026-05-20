@@ -63,13 +63,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statisticsReloadTooltip => '刷新';
 
   @override
-  String get statisticsReloadStarted => '正在刷新播放统计…';
+  String get statisticsReloadDone => '统计已更新';
 
   @override
-  String get statisticsReloadDone => '播放统计已更新';
-
-  @override
-  String get statisticsReloadFailed => '无法刷新播放统计';
+  String get statisticsReloadFailed => '无法刷新统计';
 
   @override
   String get statisticsSectionLibrary => '曲库';
@@ -94,6 +91,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get statisticsDurationHint => '仅统计元数据中带有有效时长的曲目';
+
+  @override
+  String statisticsDurationCoverage(int withDuration, int total) {
+    return '已计入 $withDuration / $total 首有效时长';
+  }
+
+  @override
+  String get statisticsReloadStarted => '正在刷新统计…';
 
   @override
   String get statisticsFormatsLabel => '格式分布';
@@ -3048,13 +3053,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get statisticsReloadTooltip => '刷新';
 
   @override
-  String get statisticsReloadStarted => '正在刷新播放统计…';
+  String get statisticsReloadDone => '统计已更新';
 
   @override
-  String get statisticsReloadDone => '播放统计已更新';
-
-  @override
-  String get statisticsReloadFailed => '无法刷新播放统计';
+  String get statisticsReloadFailed => '无法刷新统计';
 
   @override
   String get statisticsSectionLibrary => '曲库';
@@ -3079,6 +3081,14 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get statisticsDurationHint => '仅统计元数据中带有有效时长的曲目';
+
+  @override
+  String statisticsDurationCoverage(int withDuration, int total) {
+    return '已计入 $withDuration / $total 首有效时长';
+  }
+
+  @override
+  String get statisticsReloadStarted => '正在刷新统计…';
 
   @override
   String get statisticsFormatsLabel => '格式分布';
@@ -6033,13 +6043,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get statisticsReloadTooltip => '重新整理';
 
   @override
-  String get statisticsReloadStarted => '正在重新整理播放統計…';
+  String get statisticsReloadDone => '統計已更新';
 
   @override
-  String get statisticsReloadDone => '播放統計已更新';
-
-  @override
-  String get statisticsReloadFailed => '無法重新整理播放統計';
+  String get statisticsReloadFailed => '無法重新整理統計';
 
   @override
   String get statisticsSectionLibrary => '曲庫';
@@ -6064,6 +6071,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get statisticsDurationHint => '僅統計詮釋資料中含有效長度的曲目';
+
+  @override
+  String statisticsDurationCoverage(int withDuration, int total) {
+    return '已計入 $withDuration / $total 首有效長度';
+  }
+
+  @override
+  String get statisticsReloadStarted => '正在重新整理統計…';
 
   @override
   String get statisticsFormatsLabel => '格式分布';

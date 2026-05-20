@@ -18,9 +18,8 @@
   "statisticsTitle": "統計",
   "statisticsSubtitle": "ライブラリ・再生・プレイリストの概要",
   "statisticsReloadTooltip": "更新",
-  "statisticsReloadStarted": "再生統計を更新しています…",
-  "statisticsReloadDone": "再生統計を更新しました",
-  "statisticsReloadFailed": "再生統計を更新できませんでした",
+  "statisticsReloadDone": "統計を更新しました",
+  "statisticsReloadFailed": "統計を更新できませんでした",
   "statisticsSectionLibrary": "ライブラリ",
   "statisticsSectionPlayback": "再生",
   "statisticsSectionPlaylists": "プレイリスト",
@@ -29,6 +28,14 @@
   "statisticsFoldersLabel": "メディアフォルダ",
   "statisticsDurationLabel": "推定総再生時間",
   "statisticsDurationHint": "メタデータに長さがある曲のみ合計",
+  "statisticsDurationCoverage": "長さあり {withDuration} / {total} 曲を合計",
+  "@statisticsDurationCoverage": {
+    "placeholders": {
+      "withDuration": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "statisticsReloadStarted": "統計を更新しています…",
   "statisticsFormatsLabel": "フォーマット",
   "statisticsFormatsOther": "その他",
   "statisticsFormatsMore": "ほか {count} 種類",

@@ -18,9 +18,8 @@
   "statisticsTitle": "统计",
   "statisticsSubtitle": "曲库、收听习惯与歌单概览",
   "statisticsReloadTooltip": "刷新",
-  "statisticsReloadStarted": "正在刷新播放统计…",
-  "statisticsReloadDone": "播放统计已更新",
-  "statisticsReloadFailed": "无法刷新播放统计",
+  "statisticsReloadDone": "统计已更新",
+  "statisticsReloadFailed": "无法刷新统计",
   "statisticsSectionLibrary": "曲库",
   "statisticsSectionPlayback": "播放",
   "statisticsSectionPlaylists": "歌单",
@@ -29,6 +28,14 @@
   "statisticsFoldersLabel": "音乐文件夹",
   "statisticsDurationLabel": "估算总时长",
   "statisticsDurationHint": "仅统计元数据中带有有效时长的曲目",
+  "statisticsDurationCoverage": "已计入 {withDuration} / {total} 首有效时长",
+  "@statisticsDurationCoverage": {
+    "placeholders": {
+      "withDuration": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "statisticsReloadStarted": "正在刷新统计…",
   "statisticsFormatsLabel": "格式分布",
   "statisticsFormatsOther": "其他",
   "statisticsFormatsMore": "另有 {count} 种扩展名",

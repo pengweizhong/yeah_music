@@ -392,35 +392,6 @@ class SettingPage extends StatelessWidget {
                         );
                       },
                     ),
-                    // 语言：切换应用界面语言。
-                    ListTile(
-                      title: Text(
-                        l10n.settingsLanguage,
-                        style: TextStyle(color: context.gradFg()),
-                      ),
-                      subtitle: Text(
-                        l10n.settingsLanguageSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
-                      ),
-                      leading: Icon(Icons.language, color: context.gradFg()),
-                      trailing: _settingHelpButton(
-                        context,
-                        l10n: l10n,
-                        dialogTitle: l10n.settingsLanguage,
-                        dialogBody: l10n.settingsLanguageDesc,
-                      ),
-                      onTap: () {
-                        Navigator.push<void>(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (context) => const LanguageSettingsPage(),
-                          ),
-                        );
-                      },
-                    ),
                     // OneDrive：账号、云端曲库、同步和下载目录设置。
                     ListTile(
                       title: Text(
@@ -512,6 +483,35 @@ class SettingPage extends StatelessWidget {
                           MaterialPageRoute<void>(
                             builder: (context) =>
                                 const AudioQualitySettingsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    // 语言：切换应用界面语言。
+                    ListTile(
+                      title: Text(
+                        l10n.settingsLanguage,
+                        style: TextStyle(color: context.gradFg()),
+                      ),
+                      subtitle: Text(
+                        l10n.settingsLanguageSubtitle,
+                        style: TextStyle(
+                          color: context.gradFg(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                      leading: Icon(Icons.language, color: context.gradFg()),
+                      trailing: _settingHelpButton(
+                        context,
+                        l10n: l10n,
+                        dialogTitle: l10n.settingsLanguage,
+                        dialogBody: l10n.settingsLanguageDesc,
+                      ),
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) => const LanguageSettingsPage(),
                           ),
                         );
                       },

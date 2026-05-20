@@ -12,6 +12,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/utils/library_duration_statistics.dart';
 import 'package:yeah_music/utils/song_audio_quality.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
@@ -32,6 +33,28 @@ class _PlaybackHiveSlice {
   final int totalListenedWallMs;
 }
 
+class _LibraryDurationSlice {
+  const _LibraryDurationSlice({
+    required this.sum,
+    required this.withDuration,
+    required this.total,
+  });
+
+  final Duration sum;
+  final int withDuration;
+  final int total;
+}
+
+class _StatisticsSnapshot {
+  const _StatisticsSnapshot({
+    required this.playback,
+    required this.libraryDuration,
+  });
+
+  final _PlaybackHiveSlice playback;
+  final _LibraryDurationSlice libraryDuration;
+}
+
 /// 抽屉入口：本地曲库规模、收听累计、歌单与 OneDrive 概要。
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -50,30 +73,47 @@ class _StatisticsPageState extends State<StatisticsPage> {
     SongAudioQualityTier.lq,
   ];
 
-  late Future<_PlaybackHiveSlice> _sliceFuture;
-  bool _primedHiveSlice = false;
+  late Future<_StatisticsSnapshot> _statsFuture;
+  _StatisticsSnapshot? _cachedSnapshot;
+  bool _primedStats = false;
+
+  void _rememberSnapshot(_StatisticsSnapshot snap) {
+    _cachedSnapshot = snap;
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_primedHiveSlice) {
-      _primedHiveSlice = true;
+    if (!_primedStats) {
+      _primedStats = true;
       MusicService.flushListeningWallClockIntoHive();
-      _sliceFuture = _loadSlice(context.read<OneDriveController>());
+      final fut = _loadSnapshot(
+        context.read<PlayListProvider>(),
+        context.read<OneDriveController>(),
+        refreshDurations: false,
+      );
+      _statsFuture = fut;
+      fut.then((snap) {
+        if (!mounted) return;
+        setState(() => _rememberSnapshot(snap));
+      });
     }
   }
 
-  Future<void> _reload(BuildContext context, OneDriveController od) async {
+  Future<void> _reload(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final play = context.read<PlayListProvider>();
+    final od = context.read<OneDriveController>();
     MusicService.flushListeningWallClockIntoHive();
     showAppSnackBar(context, l10n.statisticsReloadStarted);
-    final fut = _loadSlice(od);
+    final fut = _loadSnapshot(play, od, refreshDurations: true);
     setState(() {
-      _sliceFuture = fut;
+      _statsFuture = fut;
     });
     try {
-      await fut;
+      final snap = await fut;
       if (!context.mounted) return;
+      setState(() => _rememberSnapshot(snap));
       showAppSnackBar(
         context,
         l10n.statisticsReloadDone,
@@ -89,18 +129,39 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }
   }
 
-  Future<_PlaybackHiveSlice> _loadSlice(OneDriveController od) async {
+  Future<_StatisticsSnapshot> _loadSnapshot(
+    PlayListProvider play,
+    OneDriveController od, {
+    required bool refreshDurations,
+  }) async {
     final recent = await RecentPlayService.getRecentListStoredCount();
     final totals = await RecentPlayService.getPlayCountTotals();
     final listenedMs = await RecentPlayService.getTotalListenedMilliseconds();
     final cached = await od.loadLocallyCachedOneDriveSongs();
-    return _PlaybackHiveSlice(
+    final playback = _PlaybackHiveSlice(
       recentEntries: recent,
       tracksWithCounts: totals.tracksWithCounts,
       totalPlayEvents: totals.totalPlayEvents,
       odCachedCount: cached.length,
       totalListenedWallMs: listenedMs,
     );
+    final lib = play.initialized ? play.libraryMergedSongs : const <Song>[];
+    final dur = refreshDurations
+        ? await LibraryDurationStatistics.refreshMissingAndSum(lib)
+        : LibraryDurationStatistics.sum(lib);
+    return _StatisticsSnapshot(
+      playback: playback,
+      libraryDuration: _LibraryDurationSlice(
+        sum: dur.sum,
+        withDuration: dur.withDuration,
+        total: dur.total,
+      ),
+    );
+  }
+
+  String _durationSubtitle(AppLocalizations l10n, _LibraryDurationSlice slice) {
+    if (slice.total <= 0) return l10n.statisticsDurationHint;
+    return l10n.statisticsDurationCoverage(slice.withDuration, slice.total);
   }
 
   String _formatListeningTotal(AppLocalizations l10n, int ms) {
@@ -206,10 +267,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 IconButton(
                   tooltip: l10n.statisticsReloadTooltip,
                   icon: Icon(Icons.refresh_rounded, color: context.gradFg()),
-                  onPressed: () => _reload(
-                    context,
-                    context.read<OneDriveController>(),
-                  ),
+                  onPressed: () => _reload(context),
                 ),
               ],
             ),
@@ -237,13 +295,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 }
 
                 final lib = play.libraryMergedSongs;
-                var sumDur = Duration.zero;
-                for (final s in lib) {
-                  final d = s.duration;
-                  if (d != null && d.inMilliseconds > 0) {
-                    sumDur += d;
-                  }
-                }
 
                 final playlistCount = upl.playlists.length;
                 var playlistRefs = 0;
@@ -260,10 +311,15 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 final indexedCloud =
                     od.signedIn ? od.cloudTracks.length : null;
 
-                return FutureBuilder<_PlaybackHiveSlice>(
-                  future: _sliceFuture,
+                return FutureBuilder<_StatisticsSnapshot>(
+                  future: _statsFuture,
                   builder: (context, snap) {
-                    final slice = snap.data;
+                    final stats = snap.data ?? _cachedSnapshot;
+                    final slice = stats?.playback;
+                    final libDur = stats?.libraryDuration;
+                    final awaitingFirstLoad =
+                        stats == null &&
+                        snap.connectionState != ConnectionState.done;
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPad + 16),
@@ -294,8 +350,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           context,
                           icon: Icons.schedule_outlined,
                           title: l10n.statisticsDurationLabel,
-                          value: _formatDuration(l10n, sumDur),
-                          subtitle: l10n.statisticsDurationHint,
+                          value: libDur == null
+                              ? '…'
+                              : _formatDuration(l10n, libDur.sum),
+                          subtitle: libDur == null
+                              ? l10n.statisticsDurationHint
+                              : _durationSubtitle(l10n, libDur),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -357,7 +417,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         _qualityDistributionWrap(context, l10n, lib),
                         const SizedBox(height: 22),
                         _sectionTitle(context, l10n.statisticsSectionPlayback),
-                        if (slice == null)
+                        if (awaitingFirstLoad)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             child: Center(
@@ -371,7 +431,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                               ),
                             ),
                           )
-                        else ...[
+                        else if (slice != null) ...[
                           _tile(
                             context,
                             icon: Icons.timer_outlined,
@@ -447,7 +507,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             context,
                             icon: Icons.download_for_offline_outlined,
                             title: l10n.statisticsOneDriveCachedLabel,
-                            value: slice != null ? '${slice.odCachedCount}' : '…',
+                            value: slice != null
+                                ? '${slice.odCachedCount}'
+                                : '…',
                           ),
                         ],
                       ],
