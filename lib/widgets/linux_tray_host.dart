@@ -20,9 +20,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide MenuItem;
 import 'package:provider/provider.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/song.dart';
+import 'package:yeah_music/platform/linux_desktop_quit.dart';
 import 'package:yeah_music/services/music_service.dart';
 
 /// Linux/KDE 托盘入口：设置图标并提供播放控制右键菜单。
@@ -35,7 +37,8 @@ class LinuxTrayHost extends StatefulWidget {
   State<LinuxTrayHost> createState() => _LinuxTrayHostState();
 }
 
-class _LinuxTrayHostState extends State<LinuxTrayHost> with TrayListener {
+class _LinuxTrayHostState extends State<LinuxTrayHost>
+    with TrayListener, WindowListener {
   static const String _kIconPath = 'assets/icons/yeah_music1.png';
   static const String _kMenuShowHideWindow = 'show_hide_window';
   static const String _kMenuPlayPause = 'play_pause';
@@ -45,6 +48,7 @@ class _LinuxTrayHostState extends State<LinuxTrayHost> with TrayListener {
 
   StreamSubscription<bool>? _playingSub;
   bool _attached = false;
+  bool _windowManagerHooked = false;
   bool _windowVisible = true;
   Locale? _lastLocale;
   WindowController? _windowController;
@@ -66,6 +70,15 @@ class _LinuxTrayHostState extends State<LinuxTrayHost> with TrayListener {
 
     try {
       _windowController = await WindowController.fromCurrentEngine();
+    } catch (_) {}
+
+    try {
+      await windowManager.ensureInitialized();
+      if (!_windowManagerHooked) {
+        windowManager.addListener(this);
+        await windowManager.setPreventClose(true);
+        _windowManagerHooked = true;
+      }
     } catch (_) {}
 
     await trayManager.setIcon(_kIconPath);
@@ -163,10 +176,12 @@ class _LinuxTrayHostState extends State<LinuxTrayHost> with TrayListener {
   }
 
   Future<void> _quitApp() async {
-    try {
-      await trayManager.destroy();
-    } catch (_) {}
-    exit(0);
+    await requestLinuxDesktopQuit();
+  }
+
+  @override
+  void onWindowClose() {
+    unawaited(_quitApp());
   }
 
   @override
@@ -211,12 +226,18 @@ class _LinuxTrayHostState extends State<LinuxTrayHost> with TrayListener {
 
   @override
   void dispose() {
+    if (_windowManagerHooked) {
+      try {
+        windowManager.removeListener(this);
+      } catch (_) {}
+    }
     if (_attached) {
       try {
         context.read<PlayListProvider>().removeListener(_onPlaylistChanged);
       } catch (_) {}
       trayManager.removeListener(this);
-      unawaited(trayManager.destroy());
+      // 勿在 dispose 中 destroy 托盘：与 libflutter_linux_gtk + epoxy 析构竞态会 SIGABRT。
+      // 正常退出请走 [requestLinuxDesktopQuit]；进程退出后托盘由系统回收。
     }
     _playingSub?.cancel();
     super.dispose();

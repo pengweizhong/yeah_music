@@ -40,15 +40,29 @@ final class DesktopFloatingLyricsGlue {
 
   static DesktopFloatingLyricsGlue? _instance;
   VoidCallback? _refresh;
+  Future<void> Function()? _shutdown;
 
-  static void register(VoidCallback onRefresh) {
+  static void register(
+    VoidCallback onRefresh, {
+    Future<void> Function()? onShutdown,
+  }) {
     _instance ??= DesktopFloatingLyricsGlue._();
     _instance!._refresh = onRefresh;
+    _instance!._shutdown = onShutdown;
   }
 
   static void unregister() {
     final i = _instance;
-    if (i != null) i._refresh = null;
+    if (i != null) {
+      i._refresh = null;
+      i._shutdown = null;
+    }
+  }
+
+  static Future<void> shutdownBeforeQuit() async {
+    if (!desktopFloatingLyricsSupported) return;
+    final fn = _instance?._shutdown;
+    if (fn != null) await fn();
   }
 
   static Future<void> reloadFromHive() async {
@@ -239,7 +253,10 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
   Future<void> _attachAsync() async {
     if (_registered || !desktopFloatingLyricsSupported) return;
 
-    DesktopFloatingLyricsGlue.register(_glueRefresh);
+    DesktopFloatingLyricsGlue.register(
+      _glueRefresh,
+      onShutdown: _hideLyricsWindow,
+    );
 
     await _applyEnabledAndSync();
     if (!mounted) {
