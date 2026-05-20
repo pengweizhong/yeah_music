@@ -81,7 +81,8 @@ class Song extends HiveObject {
   // @HiveField(7)
   List<Picture>? pictures;
 
-  ///hive 中只存储第一个图片，用作列表展示,数据源自 pictures 的第一个元素
+  /// 列表/播放展示用内嵌图字节（内存 + [SongLibraryMetadataHydrator] 缓存）。
+  /// [HiveField(7)] 仅兼容旧版 hive 读出；[FolderHiveLightweight.saveFolder] 写入前会剥离，不落盘。
   @HiveField(7)
   Uint8List? imageBytes;
 

@@ -1,9 +1,24 @@
+import 'dart:typed_data';
+
+import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/folder.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
+
+class _SongHeavyFields {
+  const _SongHeavyFields({
+    this.imageBytes,
+    this.pictures,
+    this.lyrics,
+  });
+
+  final Uint8List? imageBytes;
+  final List<Picture>? pictures;
+  final String? lyrics;
+}
 
 /// Hive 中 [Folder] 只存路径与文本元数据（曲名、歌手、专辑、时间等）；
 /// 封面与歌词由 [SongLibraryMetadataHydrator] / 播放时按需从音频文件读取。
@@ -29,9 +44,33 @@ abstract final class FolderHiveLightweight {
     }
   }
 
+  /// 写入 Hive 时临时剥离重字段；完成后恢复内存中的封面/歌词，避免统计等持久化冲掉会话内已加载的封面。
   static Future<void> saveFolder(Folder folder) async {
+    final backups = <Song, _SongHeavyFields>{};
+    final list = folder.songList;
+    if (list != null) {
+      for (final s in list) {
+        if (s.imageBytes == null && s.pictures == null && s.lyrics == null) {
+          continue;
+        }
+        backups[s] = _SongHeavyFields(
+          imageBytes: s.imageBytes,
+          pictures: s.pictures,
+          lyrics: s.lyrics,
+        );
+      }
+    }
     stripHeavySongFieldsForHive(folder);
-    await folder.save();
+    try {
+      await folder.save();
+    } finally {
+      for (final e in backups.entries) {
+        final b = e.value;
+        e.key.imageBytes = b.imageBytes;
+        e.key.pictures = b.pictures;
+        e.key.lyrics = b.lyrics;
+      }
+    }
   }
 
   /// 首次升级后后台重写各 [Folder]，缩小 `.hive` 体积（不阻塞 UI 构建）。

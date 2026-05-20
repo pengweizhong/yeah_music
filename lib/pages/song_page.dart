@@ -35,7 +35,6 @@ import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
-import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
@@ -53,6 +52,7 @@ import 'package:yeah_music/widgets/playback_sound_preset_sheet.dart';
 import 'package:yeah_music/widgets/playing_bars_indicator.dart';
 import 'package:yeah_music/widgets/scroll_to_current_locate_layer.dart';
 import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
+import 'package:yeah_music/widgets/song_cover_image.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
 import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
 import 'package:yeah_music/widgets/song_metadata_dialog.dart'
@@ -1925,29 +1925,22 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
   /// 与第一页相同封面资源；[side] 有值时按第三页分屏区计算出的边长，否则为全屏第一页布局
   Widget _buildCoverArt(Song song, {double? side}) {
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    final img = Image(
-      image: ApplicationUtils.getImageCoverProvider(
-        song,
-        size: 400,
-        devicePixelRatio: dpr,
-      ),
-      fit: BoxFit.cover,
-      gaplessPlayback: true,
+    final cover = SongCoverImage(
+      song: song,
+      decodeSize: side ?? 400,
+      width: side,
+      height: side,
+      borderRadius: BorderRadius.circular(16),
     );
     if (side != null) {
-      return SizedBox(
-        width: side,
-        height: side,
-        child: ClipRRect(borderRadius: BorderRadius.circular(16), child: img),
-      );
+      return cover;
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
         constraints: const BoxConstraints(maxWidth: 400),
-        child: AspectRatio(aspectRatio: 1, child: img),
+        child: AspectRatio(aspectRatio: 1, child: cover),
       ),
     );
   }

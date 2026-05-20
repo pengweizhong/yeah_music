@@ -19,6 +19,7 @@ import 'package:yeah_music/services/recent_play_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/utils/hive_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_list_sort.dart';
 import 'package:yeah_music/models/constants.dart';
 
@@ -1359,8 +1360,25 @@ class PlayListProvider extends ChangeNotifier {
         _applyPlaybackSession(listSession);
       }
       _currentIndex = index.clamp(0, list.length - 1);
-      notifyListeners();
       final playing = list[_currentIndex];
+      try {
+        await SongLibraryMetadataHydrator.hydrateIfNeeded(playing);
+      } catch (_) {}
+      if (list.length > 1) {
+        final nextIdx = (_currentIndex + 1) % list.length;
+        final prevIdx = (_currentIndex - 1 + list.length) % list.length;
+        if (nextIdx != _currentIndex) {
+          unawaited(
+            SongLibraryMetadataHydrator.hydrateIfNeeded(list[nextIdx]),
+          );
+        }
+        if (prevIdx != _currentIndex && prevIdx != nextIdx) {
+          unawaited(
+            SongLibraryMetadataHydrator.hydrateIfNeeded(list[prevIdx]),
+          );
+        }
+      }
+      notifyListeners();
       final ok = await MusicService().playCurrentFromPlaylist(
         queue: list,
         currentIndex: _currentIndex,

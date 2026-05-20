@@ -23,9 +23,12 @@ import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_cloud_playlist_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
+import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
+import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/onedrive_sync_device.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 
 enum _RestoreTabKind { thisDevice, otherDevice, legacyFlat }
 
@@ -642,6 +645,35 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
     ]);
   }
 
+  /// 云端备份不含曲目内嵌封面；恢复歌单/设置后会重算合并曲库，播放页 [Song] 可能暂时无 [imageBytes]。
+  Future<void> _rehydratePlayingCoverAfterCloudRestore(BuildContext context) async {
+    final pl = context.read<PlayListProvider>();
+    if (!pl.initialized) return;
+    final path = MusicService.tryCurrentPlayingPath()?.trim();
+    if (path == null || path.isEmpty) return;
+
+    final libSong = pl.songInLibraryByPath(path);
+    var target = pl.currentSong;
+    if (target == null || target.path.trim() != path) {
+      target = libSong;
+    }
+    target ??= libSong;
+    if (target == null) return;
+
+    if (libSong != null &&
+        !identical(libSong, target) &&
+        (libSong.imageBytes?.isNotEmpty ?? false)) {
+      target.imageBytes = libSong.imageBytes;
+      ApplicationUtils.evictSongCoverProvidersForPath(path);
+      return;
+    }
+    if (target.imageBytes != null && target.imageBytes!.isNotEmpty) return;
+    await SongLibraryMetadataHydrator.hydrateIfNeeded(target);
+    if (target.imageBytes != null && target.imageBytes!.isNotEmpty) {
+      ApplicationUtils.evictSongCoverProvidersForPath(path);
+    }
+  }
+
   Future<void> _handleRestoreFromCloud(
     BuildContext context,
     AppLocalizations l10n,
@@ -731,6 +763,8 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
         }
         if (!context.mounted) return;
         await _reloadAfterCloudRestore(context);
+        if (!context.mounted) return;
+        await _rehydratePlayingCoverAfterCloudRestore(context);
       } on StateError catch (e) {
         if (!context.mounted) return;
         final m = '$e';

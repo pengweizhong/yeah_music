@@ -200,8 +200,12 @@ class FileUtils {
     song.discNumber = metadata.discNumber;
     song.sampleRate = metadata.sampleRate;
     song.bitrate = metadata.bitrate;
-    song.lyrics = storeLyricsWithTrack ? metadata.lyrics : null;
-    song.pictures = resolvedEmbedImages ? metadata.pictures : null;
+    if (storeLyricsWithTrack) {
+      song.lyrics = metadata.lyrics;
+    }
+    if (resolvedEmbedImages) {
+      song.pictures = metadata.pictures;
+    }
     if (resolvedEmbedImages &&
         song.pictures != null &&
         song.pictures!.isNotEmpty) {
@@ -214,8 +218,9 @@ class FileUtils {
       if (song.imageBytes == null && loadEmbeddedAlbumArt) {
         song.pictures = null;
       }
-    } else {
+    } else if (loadEmbeddedAlbumArt) {
       song.imageBytes = null;
+      song.pictures = null;
     }
     await loadFileStat(song);
   }
