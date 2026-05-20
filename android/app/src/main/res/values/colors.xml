@@ -3,4 +3,5 @@
     <!-- 与 lib/widgets/app_splash_chrome.dart 主色段一致，减少原生白屏/黑屏与 Flutter 首帧切换时的反差 -->
     <color name="splash_background">#FF121820</color>
     <color name="splash_background_bottom">#FF050608</color>
+	<color name="ic_launcher_background">#FFFFFF</color>
 </resources>

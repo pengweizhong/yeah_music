@@ -14,7 +14,10 @@
 
 import 'package:flutter/material.dart';
 
-/// 应用内展示的 Yeah Music Logo（固定使用白底主视觉资源）。
+/// 应用内展示的 Yeah Music Logo：随主题切换资源。
+///
+/// - 浅色： [assetPathLight]（白底完整 logo）
+/// - 深色： [assetPathDark]（透明底 logo）+ 黑底衬底
 class AppThemedBrandingLogo extends StatelessWidget {
   const AppThemedBrandingLogo({
     super.key,
@@ -33,18 +36,32 @@ class AppThemedBrandingLogo extends StatelessWidget {
   final String? semanticLabel;
   final bool excludeFromSemantics;
 
-  static const String assetPath = 'assets/icons/yeah_music.png';
+  /// 日间 / 浅色主题：自带白底。
+  static const String assetPathLight = 'assets/icons/yeah_music.png';
+
+  /// 夜间 / 深色主题：透明底，需配合黑底。
+  static const String assetPathDark = 'assets/icons/yeah_music1.png';
+
+  /// 兼容旧引用（默认浅色资源路径）。
+  static const String assetPath = assetPathLight;
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final asset = isDark ? assetPathDark : assetPathLight;
+    final image = Image.asset(
+      asset,
       width: width,
       height: height,
       fit: fit,
       filterQuality: filterQuality,
       semanticLabel: semanticLabel,
       excludeFromSemantics: excludeFromSemantics,
+    );
+    if (!isDark) return image;
+    return ColoredBox(
+      color: Colors.black,
+      child: image,
     );
   }
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 自适应图标底层：系统夜间模式下使用黑底，与 yeah_music1 透明前景搭配 -->
+    <color name="ic_launcher_background">#FF000000</color>
+</resources>
