@@ -295,8 +295,6 @@ class _AndroidCarLyricsSettingsSectionState
           ),
           value: _enabled,
           onChanged: interactive ? _onEnabled : null,
-          activeThumbColor: context.gradFg(0.95),
-          activeTrackColor: context.gradFg(0.35),
         ),
         if (showDetailSwitches) ...[
           SwitchListTile(
@@ -311,8 +309,6 @@ class _AndroidCarLyricsSettingsSectionState
             ),
             value: _showCover,
             onChanged: interactive ? _onCover : null,
-            activeThumbColor: context.gradFg(0.95),
-            activeTrackColor: context.gradFg(0.35),
           ),
           SwitchListTile(
             secondary: Icon(Icons.subtitles_outlined, color: context.gradFg()),
@@ -326,8 +322,6 @@ class _AndroidCarLyricsSettingsSectionState
             ),
             value: _syncLyrics,
             onChanged: interactive ? _onSync : null,
-            activeThumbColor: context.gradFg(0.95),
-            activeTrackColor: context.gradFg(0.35),
           ),
         ],
       ],
@@ -973,8 +967,6 @@ class _DesktopLyricsSettingsSectionState
           onChanged: desktopApplicable && desktopFloatingLyricsSupported
               ? _onFloatingChanged
               : null,
-          activeThumbColor: context.gradFg(0.95),
-          activeTrackColor: context.gradFg(0.35),
         ),
         if (desktopFloatingLyricsSupported && _floating) ...[
           SwitchListTile(
@@ -989,8 +981,6 @@ class _DesktopLyricsSettingsSectionState
             ),
             value: _dragLocked,
             onChanged: _onDragLockedChanged,
-            activeThumbColor: context.gradFg(0.95),
-            activeTrackColor: context.gradFg(0.35),
           ),
           _floatingSliderBlock(
             context: context,
@@ -1053,8 +1043,6 @@ class _DesktopLyricsSettingsSectionState
           ),
           value: _menuBar,
           onChanged: MacosMenuBarLyrics.supported ? _onMenuBarChanged : null,
-          activeThumbColor: context.gradFg(0.95),
-          activeTrackColor: context.gradFg(0.35),
         ),
       ],
     );

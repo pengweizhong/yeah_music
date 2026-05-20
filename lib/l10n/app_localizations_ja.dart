@@ -653,7 +653,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsCarLyricsGroupDetail =>
-      'Android のメディアセッションを使い、ロック画面・Bluetooth・Android Auto などに再生情報と操作を提供します。\n\n有効化：プレイヤーにキューを構築し、通知や車載の前後曲が実際の曲送りに対応します。再生／一時停止や 1 曲リピートは環境が許す範囲でアプリと揃います。\n\nアートワーク：通知や対応ヘッドユニットに埋め込みジャケットを送ります。\n\n歌詞：対応端末では副題を現在の歌詞行に更新します。ルールはアプリ内の他の歌詞表示と同じです。\n\nシャッフルや 1 回だけ再生などはアプリ側の再生モードが優先されます。車載のリストリピート／シャッフルがすべてのモードと一致するとは限りません。';
+      'Android のメディアセッションを使い、ロック画面・Bluetooth・Android Auto などに再生情報と操作を提供します。\n\nすぐに反映されない場合は、Yeah Music を再起動してください。';
 
   @override
   String get settingsCarLyricsEnabled => '通知・車載歌詞を有効化';

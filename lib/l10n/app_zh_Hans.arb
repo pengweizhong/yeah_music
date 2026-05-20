@@ -263,7 +263,7 @@
   "settingsDesktopFloatingDragLockDesc": "开启后悬浮歌词窗口不可拖动。",
   "settingsCarLyricsGroupTitle": "通知与车载歌词",
   "settingsCarLyricsGroupSubtitle": "媒体通知、蓝牙与 Android Auto",
-  "settingsCarLyricsGroupDetail": "使用 Android 媒体会话，让锁屏、蓝牙耳机与 Android Auto 等显示正在播放内容并提供控制。\n\n开启：在播放器中构建完整队列，通知与车机上的上一首/下一首对应真实切歌；播放/暂停与单曲循环在支持范围内与 App 一致。\n\n封面：将内嵌封面送到通知与支持显示封面车机。\n\n歌词：在支持的系统上把媒体副标题更新为当前歌词行，规则与 App 内其它歌词展示一致。\n\n随机、仅播一次等模式仍以 App 内「播放模式」为准；车机上的列表循环/随机可能与部分模式不完全一致。",
+  "settingsCarLyricsGroupDetail": "使用 Android 媒体会话，让锁屏、蓝牙耳机与 Android Auto 等显示正在播放内容并提供控制。\n\n若未实时生效，请重启 Yeah Music。",
   "settingsCarLyricsEnabled": "启用通知与车载歌词",
   "settingsCarLyricsEnabledSubtitle": "通知栏队列与切歌",
   "settingsCarLyricsEnabledDesc": "显示媒体通知与队列，支持车机/耳机切歌；单曲循环与系统重复模式同步。",

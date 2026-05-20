@@ -103,6 +103,68 @@ extension GradOnThemedBackground on BuildContext {
   }
 }
 
+/// 渐变 / 壁纸底上的 [Switch]：避免白天关态拇指与轨道同为白色。
+SwitchThemeData gradOnBackgroundSwitchTheme(BuildContext context) {
+  final t = Theme.of(context);
+  final scheme = t.colorScheme;
+  if (t.brightness == Brightness.light) {
+    final whiteShell =
+        UserThemeGradientForegroundScope.maybeOf(context) != null;
+    if (whiteShell) {
+      return SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return const Color(0xFF5C6B7A);
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white.withValues(alpha: 0.48);
+          }
+          return Colors.white.withValues(alpha: 0.26);
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return Colors.white.withValues(alpha: 0.42);
+        }),
+      );
+    }
+    return SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) return scheme.primary;
+        return const Color(0xFF616161);
+      }),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return scheme.primary.withValues(alpha: 0.42);
+        }
+        return kGradLightInk.withValues(alpha: 0.18);
+      }),
+      trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.transparent;
+        }
+        return kGradLightInk.withValues(alpha: 0.30);
+      }),
+    );
+  }
+  return SwitchThemeData(
+    thumbColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
+        return Colors.white.withValues(alpha: 0.95);
+      }
+      return Colors.white.withValues(alpha: 0.52);
+    }),
+    trackColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) {
+        return Colors.white.withValues(alpha: 0.35);
+      }
+      return Colors.white.withValues(alpha: 0.16);
+    }),
+  );
+}
+
 /// 毛玻璃区域填充：白天用近实地浅板（提高与页面渐变的分界与字对比）；夜间保持半透明。
 enum FrostedSurfaceKind { drawerOrPinned, bottomBar, sheet, dialog }
 

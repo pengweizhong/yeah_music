@@ -50,6 +50,7 @@ ThemeData themeForLightUserGradientShell(BuildContext context) {
       thickness: 1,
       space: 1,
     ),
+    switchTheme: gradOnBackgroundSwitchTheme(context),
   );
 }
 
@@ -100,5 +101,6 @@ ThemeData themeForBrightLightGradientOverlay(BuildContext context) {
       thickness: 1,
       space: 1,
     ),
+    switchTheme: gradOnBackgroundSwitchTheme(context),
   );
 }

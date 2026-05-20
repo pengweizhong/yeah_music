@@ -97,8 +97,6 @@ class WireRemoteControlSection extends StatelessWidget {
               ),
               value: cfg.enabled,
               onChanged: (v) => ctrl.setWireRemote(cfg.copyWith(enabled: v)),
-              activeThumbColor: context.gradFg(0.95),
-              activeTrackColor: context.gradFg(0.35),
             ),
             ListTile(
               title: Text(

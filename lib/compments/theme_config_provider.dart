@@ -590,11 +590,16 @@ class _ThemedOnGradientContent extends StatelessWidget {
           ? kGradLightInk
           : Colors.white;
     }
-    return DefaultTextStyle(
-      style: TextStyle(color: c, height: 1.3),
-      child: IconTheme(
-        data: IconThemeData(color: c),
-        child: child,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        switchTheme: gradOnBackgroundSwitchTheme(context),
+      ),
+      child: DefaultTextStyle(
+        style: TextStyle(color: c, height: 1.3),
+        child: IconTheme(
+          data: IconThemeData(color: c),
+          child: child,
+        ),
       ),
     );
   }

@@ -680,7 +680,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCarLyricsGroupDetail =>
-      'Uses the Android media session so lock screen, Bluetooth accessories, and Android Auto can show what is playing and offer transport controls.\n\nEnable: builds a full playback queue in the player so previous/next in the notification and on car units skip real tracks; play/pause and single-track repeat stay aligned with the app where supported.\n\nArtwork: sends embedded cover art to the notification and to head units that display it.\n\nLyrics: periodically updates the media item subtitle with the current lyric line on systems that show it, using the same lyric line rules as elsewhere in the app.\n\nShuffle, play-once, and other modes are still driven from the app; hardware “repeat all/shuffle” may not mirror every in-app mode.';
+      'Uses the Android media session so lock screen, Bluetooth accessories, and Android Auto can show what is playing and offer transport controls.\n\nIf changes don\'t apply immediately, restart Yeah Music.';
 
   @override
   String get settingsCarLyricsEnabled => 'Enable notification & car lyrics';
