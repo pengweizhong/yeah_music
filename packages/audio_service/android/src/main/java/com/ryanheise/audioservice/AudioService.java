@@ -1295,7 +1295,8 @@ public class AudioService extends MediaBrowserServiceCompat {
             if (displayTitle != null) {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, displayTitle);
             }
-            if (displaySubtitle != null) {
+            // displaySubtitle == null：Dart 侧仅刷新歌词行，保留既有「歌名 - 歌手」副标题。
+            if (displaySubtitle != null && !subSame) {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, displaySubtitle);
                 builder.putString(YEAH_EXTRA_NOTIFY_SUBTITLE, displaySubtitle);
             }

@@ -309,9 +309,11 @@ class MusicService {
   }
 
   static String? _lastAndroidNotifyLyricLineShown;
+  static String? _lastAndroidNotifySubtitleShown;
 
   static void resetAndroidNotificationLyricDedupe() {
     _lastAndroidNotifyLyricLineShown = null;
+    _lastAndroidNotifySubtitleShown = null;
   }
 
   /// 子开关关闭时：通知主标题为曲名（仍走歌词模式 UI / 通道）。
@@ -323,6 +325,7 @@ class MusicService {
     if (line == _lastAndroidNotifyLyricLineShown) return;
     _lastAndroidNotifyLyricLineShown = line;
     final subtitle = androidNotificationSubtitleForSong(song);
+    _lastAndroidNotifySubtitleShown = subtitle;
     JustAudioBackground.patchNotificationLyricDisplay(
       songPath: song.path,
       displayTitle: line,
@@ -358,13 +361,34 @@ class MusicService {
           isGap ? null : androidComposerMetadataKey,
       composerLine: isGap ? null : line,
     );
-    AndroidMediaSessionLyricsChannel.updateDisplay(
+    _pushAndroidNotificationDisplayLines(
+      song: song,
       displayTitle: line,
       displaySubtitle: subtitle,
+      logTag:
+          'lyricLine ${line.length > 28 ? '${line.substring(0, 28)}…' : line}',
     );
-    _logAndroidNotifyArt(
-      'lyricLine ${line.length > 28 ? '${line.substring(0, 28)}…' : line}',
+  }
+
+  /// 仅歌词行变化时不重复写副标题，减轻 Lineage 等 ROM 整卡通知重绘。
+  static void _pushAndroidNotificationDisplayLines({
+    required Song song,
+    required String displayTitle,
+    required String displaySubtitle,
+    required String logTag,
+  }) {
+    final subForChannel =
+        displaySubtitle == _lastAndroidNotifySubtitleShown
+            ? null
+            : displaySubtitle;
+    if (subForChannel != null) {
+      _lastAndroidNotifySubtitleShown = displaySubtitle;
+    }
+    AndroidMediaSessionLyricsChannel.updateDisplay(
+      displayTitle: displayTitle,
+      displaySubtitle: subForChannel,
     );
+    _logAndroidNotifyArt(logTag);
   }
 
   static String androidNotificationPrimaryLine({

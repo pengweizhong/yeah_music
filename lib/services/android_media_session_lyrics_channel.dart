@@ -34,14 +34,15 @@ abstract final class AndroidMediaSessionLyricsChannel {
 
   static void updateDisplay({
     required String displayTitle,
-    required String displaySubtitle,
+    String? displaySubtitle,
   }) {
     if (kIsWeb || !Platform.isAndroid) return;
+    final args = <String, String>{'displayTitle': displayTitle};
+    if (displaySubtitle != null) {
+      args['displaySubtitle'] = displaySubtitle;
+    }
     _channel
-        .invokeMethod<void>('updateDisplay', <String, String>{
-          'displayTitle': displayTitle,
-          'displaySubtitle': displaySubtitle,
-        })
+        .invokeMethod<void>('updateDisplay', args)
         .catchError((Object e, StackTrace st) {
           debugPrint('MediaSessionLyricsChannel.updateDisplay failed: $e');
         });

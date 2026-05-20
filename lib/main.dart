@@ -134,6 +134,7 @@ class _AppStartupGateState extends State<AppStartupGate> {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.pengwz.yeah_music.channel.audio',
       androidNotificationChannelName: AppProductInfo.displayName,
+      androidNotificationIcon: 'drawable/ic_stat_yeah_music',
       androidNotificationOngoing: true,
       preloadArtwork: true,
       artDownscaleWidth: 512,
