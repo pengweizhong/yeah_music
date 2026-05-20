@@ -33,6 +33,12 @@ class AndroidCarLyricsSync {
   /// 同步当前歌词行（须 [isFeatureEnabled]）。
   static bool get isSyncLyricsEnabled => _carLyricsEnabled && _syncLyricsEnabled;
 
+  /// 行与行之间的间隙占位（不换行空格），避免闪曲名或重复上一句歌词。
+  static const String notificationLyricGapLine = '\u00A0';
+
+  static bool isNotificationLyricGapLine(String line) =>
+      line == notificationLyricGapLine;
+
   static String? _publishedLineKey;
   static String? _hydrateInFlightPath;
   static int? _lastHandledPlayerIndex;
@@ -237,10 +243,16 @@ class AndroidCarLyricsSync {
       position: position,
       l10n: null,
     );
-    final key = _lineKey(song.path, snap.lyricIndex);
-    final line = (!snap.hasEmbeddedLyrics || snap.lyricIndex < 0)
+    final inLyricGap =
+        snap.hasEmbeddedLyrics && snap.lyricIndex < 0;
+    final key = inLyricGap
+        ? _lineKey(song.path, -1)
+        : _lineKey(song.path, snap.lyricIndex);
+    final line = !snap.hasEmbeddedLyrics
         ? baseTitle
-        : snap.displayLine;
+        : inLyricGap
+            ? notificationLyricGapLine
+            : snap.displayLine;
     _pushDisplayLine(song, line, key);
   }
 

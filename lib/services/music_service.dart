@@ -346,7 +346,8 @@ class MusicService {
         !AndroidCarLyricsSync.isSyncLyricsEnabled) {
       return;
     }
-    final line = lyricLine.trim();
+    final isGap = AndroidCarLyricsSync.isNotificationLyricGapLine(lyricLine);
+    final line = isGap ? lyricLine : lyricLine.trim();
     if (line.isEmpty) return;
     if (line == _lastAndroidNotifyLyricLineShown) return;
     _lastAndroidNotifyLyricLineShown = line;
@@ -355,8 +356,9 @@ class MusicService {
       songPath: song.path,
       displayTitle: line,
       displaySubtitle: subtitle,
-      composerMetadataKey: androidComposerMetadataKey,
-      composerLine: line,
+      composerMetadataKey:
+          isGap ? null : androidComposerMetadataKey,
+      composerLine: isGap ? null : line,
     );
     AndroidMediaSessionLyricsChannel.updateDisplay(
       displayTitle: line,
