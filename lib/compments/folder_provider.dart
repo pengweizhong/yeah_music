@@ -43,6 +43,12 @@ void mergeEmbeddedFieldsFromPreviousSongList({
         prev.durationMs! > 0) {
       fresh.durationMs = prev.durationMs;
     }
+    if (fresh.bitrate == null && prev.bitrate != null) {
+      fresh.bitrate = prev.bitrate;
+    }
+    if (fresh.sampleRate == null && prev.sampleRate != null) {
+      fresh.sampleRate = prev.sampleRate;
+    }
   }
 }
 

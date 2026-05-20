@@ -24,6 +24,8 @@ class SongAdapter extends TypeAdapter<Song> {
       ..year = fields[3] as DateTime?
       ..artist = fields[4] as String?
       ..durationMs = fields[10] as int?
+      ..bitrate = fields[11] as int?
+      ..sampleRate = fields[12] as int?
       ..imageBytes = fields[7] as Uint8List?
       ..createDateTime = fields[8] as DateTime?
       ..updateDateTime = fields[9] as DateTime?;
@@ -32,7 +34,7 @@ class SongAdapter extends TypeAdapter<Song> {
   @override
   void write(BinaryWriter writer, Song obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.path)
       ..writeByte(1)
@@ -47,6 +49,10 @@ class SongAdapter extends TypeAdapter<Song> {
       ..write(obj.performers)
       ..writeByte(10)
       ..write(obj.durationMs)
+      ..writeByte(11)
+      ..write(obj.bitrate)
+      ..writeByte(12)
+      ..write(obj.sampleRate)
       ..writeByte(7)
       ..write(obj.imageBytes)
       ..writeByte(8)

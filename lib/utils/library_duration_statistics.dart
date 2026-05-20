@@ -6,8 +6,9 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/concurrent_limiter.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
+import 'package:yeah_music/utils/song_audio_quality.dart';
 
-/// 曲库「估算总时长」：汇总各曲 [Song.duration]，并可从文件补全缺失时长。
+/// 统计页曲库元数据：时长汇总、从文件补全标签，并写入 Hive。
 abstract final class LibraryDurationStatistics {
   LibraryDurationStatistics._();
 
@@ -31,7 +32,23 @@ abstract final class LibraryDurationStatistics {
     );
   }
 
-  /// 为 [songs] 中尚无有效时长的条目读取标签（无封面/歌词），再返回汇总。
+  /// 是否需从文件补读标签（时长和/或码率/采样率，后者用于音质分布）。
+  static bool _needsMetadataRefresh(Song song) {
+    if (song.playlistEntryMissingOnDevice) return false;
+    final needsDuration =
+        song.durationMs == null || song.durationMs! <= 0;
+    final needsQuality = song.bitrate == null && song.sampleRate == null;
+    return needsDuration || needsQuality;
+  }
+
+  static bool _metadataChanged(Song before, Song after) {
+    if (before.durationMs != after.durationMs) return true;
+    if (before.bitrate != after.bitrate) return true;
+    if (before.sampleRate != after.sampleRate) return true;
+    return false;
+  }
+
+  /// 补全缺失标签后汇总时长，并把 [durationMs]/[bitrate]/[sampleRate] 写入 Hive。
   static Future<({Duration sum, int withDuration, int total})>
       refreshMissingAndSum(List<Song> songs) async {
     if (kIsWeb || songs.isEmpty) {
@@ -39,9 +56,7 @@ abstract final class LibraryDurationStatistics {
     }
     final missing = <Song>[];
     for (final s in songs) {
-      if (s.playlistEntryMissingOnDevice) continue;
-      final d = s.duration;
-      if (d == null || d.inMilliseconds <= 0) {
+      if (_needsMetadataRefresh(s)) {
         missing.add(s);
       }
     }
@@ -53,17 +68,22 @@ abstract final class LibraryDurationStatistics {
           final song = missing[i];
           await _limiter.acquire();
           try {
+            final before = Song(song.path)
+              ..durationMs = song.durationMs
+              ..bitrate = song.bitrate
+              ..sampleRate = song.sampleRate;
             try {
               await FileUtils.loadSongMeta(
                 song,
                 loadEmbeddedAlbumArt: false,
                 storeLyricsWithTrack: false,
               );
-              if (song.durationMs != null && song.durationMs! > 0) {
+              if (_metadataChanged(before, song)) {
                 updatedPaths.add(song.path);
+                invalidateSongAudioQualityCacheForPath(song.path);
               }
             } catch (e) {
-              appLog.d('统计补全时长失败: ${song.path}', error: e);
+              appLog.d('统计补全曲目标签失败: ${song.path}', error: e);
             }
           } finally {
             _limiter.release();
@@ -75,12 +95,12 @@ abstract final class LibraryDurationStatistics {
         }),
       );
     }
-    await persistDurationsToHive(songs, extraPaths: updatedPaths);
+    await persistStatisticsMetadataToHive(songs, extraPaths: updatedPaths);
     return sum(songs);
   }
 
-  /// 将内存曲库中已有时长写入 Hive（须 [inMemoryFoldersForPersist] 已注册）。
-  static Future<void> persistDurationsToHive(
+  /// 将内存曲库中已补全的统计相关字段写入 Hive（须 [inMemoryFoldersForPersist] 已注册）。
+  static Future<void> persistStatisticsMetadataToHive(
     List<Song> songs, {
     Set<String> extraPaths = const {},
   }) async {
@@ -89,10 +109,19 @@ abstract final class LibraryDurationStatistics {
     for (final s in songs) {
       if (s.durationMs != null && s.durationMs! > 0) {
         paths.add(s.path);
+      } else if (s.bitrate != null || s.sampleRate != null) {
+        paths.add(s.path);
       }
     }
     if (paths.isEmpty) return;
     await EmbeddedSongMetadataPersistScheduler.flushPending();
     await persistEmbeddedSongPaths(paths);
   }
+
+  @Deprecated('Use persistStatisticsMetadataToHive')
+  static Future<void> persistDurationsToHive(
+    List<Song> songs, {
+    Set<String> extraPaths = const {},
+  }) =>
+      persistStatisticsMetadataToHive(songs, extraPaths: extraPaths);
 }

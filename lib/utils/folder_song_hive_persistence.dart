@@ -7,7 +7,7 @@ import 'package:yeah_music/utils/folder_hive_lightweight.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 
 /// 由 [FolderProvider] 注册：持久化时必须写入内存里已更新的 [Folder]/[Song]，
-/// 不能仅从 LazyBox 再 get（会得到未含最新 [Song.durationMs] 的磁盘副本）。
+/// 不能仅从 LazyBox 再 get（会得到未含最新 [Song.durationMs]/[Song.bitrate] 等的磁盘副本）。
 Iterable<Folder> Function()? inMemoryFoldersForPersist;
 
 /// 批量把受影响曲目写入 Hive（单次遍历文件夹）；防抖合并短时密集写入，避免滑动列表时每首歌阻塞磁盘。

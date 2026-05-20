@@ -69,10 +69,12 @@ class Song extends HiveObject {
   /// 嵌入式歌词（仅内存；播放/展示时从音频文件读取，不入 Hive）。
   String? lyrics;
 
-  /// 比特率
+  /// 比特率（标签原始值，供音质分级与统计）。
+  @HiveField(11)
   int? bitrate;
 
-  /// 采样率
+  /// 采样率（Hz，供音质分级与统计）。
+  @HiveField(12)
   int? sampleRate;
 
   /// 歌曲中包含的图片
