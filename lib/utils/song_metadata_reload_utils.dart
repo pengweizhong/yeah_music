@@ -4,6 +4,7 @@ import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
+import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
@@ -72,7 +73,9 @@ Future<void> reloadAllSongInstancesAfterFileMetadataChanged(
   afterProvidersNotify?.call();
 
   final cur = play.currentSong;
-  if (cur != null && songPathsEqual(cur.path, trimmed)) {
+  if (cur != null &&
+      songPathsEqual(cur.path, trimmed) &&
+      await SettingsService.loadAndroidCarLyricsEnabled()) {
     await MusicService.pushAndroidNotificationForSong(cur);
   }
 }

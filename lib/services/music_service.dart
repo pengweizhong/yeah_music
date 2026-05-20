@@ -414,6 +414,7 @@ class MusicService {
   /// 封面已在内存中补全且仍为当前解码曲目时，补推 [MediaItem.artUri]（不受切歌代数作废）。
   static Future<void> pushAndroidNotificationCoverIfStillCurrent(Song song) async {
     if (!Platform.isAndroid) return;
+    if (!await SettingsService.loadAndroidCarLyricsEnabled()) return;
     final playing = tryCurrentPlayingPath();
     if (playing == null || !songPathsEqual(playing, song.path)) return;
     if (song.imageBytes == null || song.imageBytes!.isEmpty) {
@@ -466,6 +467,14 @@ class MusicService {
 
   /// Android 多曲且「通知与车载歌词」开启时 [playCurrentFromPlaylist] 会构建整段队列；否则为 false。
   static bool androidCarQueueActive = false;
+
+  /// 换源前与设置页开关对齐原生「是否展示媒体通知 / 系统媒体卡片」。
+  static Future<void> syncAndroidCarNotificationGate() async {
+    if (!Platform.isAndroid) return;
+    await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(
+      await SettingsService.loadAndroidCarLyricsEnabled(),
+    );
+  }
 
   /// 最近一次成功构建 Android 整队列时的 [queue] 引用；与本次调用 [identical] 时用 [seek] 切索引，避免整轨重建卡顿。
   static List<Song>? _lastAndroidQueueRef;
@@ -609,6 +618,9 @@ class MusicService {
   }
 
   Future<bool> _playSongBody(Song song) async {
+    if (Platform.isAndroid) {
+      await syncAndroidCarNotificationGate();
+    }
     androidCarQueueActive = false;
     _invalidateAndroidQueueReuse();
     abortVolumeFade();
@@ -667,7 +679,8 @@ class MusicService {
           unawaited(_androidGradualUnmuteAfterSourceStart(unmuteGen));
         }
         await Future<void>.delayed(const Duration(milliseconds: 24));
-        if (Platform.isAndroid) {
+        if (Platform.isAndroid &&
+            await SettingsService.loadAndroidCarLyricsEnabled()) {
           final g = ++_androidMediaSessionSyncGeneration;
           unawaited(
             pushAndroidNotificationForSong(song, abortIfStaleGeneration: g),
@@ -753,7 +766,8 @@ class MusicService {
         }
         androidCarQueueActive = true;
         _lastAndroidQueueRef = queue;
-        if (Platform.isAndroid) {
+        if (Platform.isAndroid &&
+            await SettingsService.loadAndroidCarLyricsEnabled()) {
           final g = ++_androidMediaSessionSyncGeneration;
           final s = queue[idx];
           try {
@@ -770,6 +784,9 @@ class MusicService {
       }
     }
 
+    if (Platform.isAndroid) {
+      await syncAndroidCarNotificationGate();
+    }
     androidCarQueueActive = false;
     abortVolumeFade();
     for (var attempt = 0; attempt < 3; attempt++) {
@@ -853,7 +870,8 @@ class MusicService {
           unawaited(_androidGradualUnmuteAfterSourceStart(unmuteGen));
         }
         await Future<void>.delayed(const Duration(milliseconds: 24));
-        if (Platform.isAndroid) {
+        if (Platform.isAndroid &&
+            await SettingsService.loadAndroidCarLyricsEnabled()) {
           final g = ++_androidMediaSessionSyncGeneration;
           final s = queue[idx];
           unawaited(
@@ -881,21 +899,27 @@ class MusicService {
     return false;
   }
 
+  /// Android 已 [JustAudioBackground.init] 时 [AudioSource.tag] 必须为 [MediaItem]；
+  /// 通知栏/车载推送由 [loadAndroidCarLyricsEnabled] 单独门禁。
+  Future<MediaItem> _mediaItemTagForSong(Song song) async {
+    final carEnabled = await SettingsService.loadAndroidCarLyricsEnabled();
+    final showCover =
+        carEnabled && await SettingsService.loadAndroidCarLyricsShowCover();
+    final lyricStyle = await SettingsService.loadLyricSettings();
+    final syncLyrics = carEnabled &&
+        await SettingsService.loadAndroidCarLyricsSyncLyrics();
+    return buildMediaItemForSong(
+      song,
+      showCover: showCover,
+      lyricStyle: lyricStyle,
+      subtitlePosition: Duration.zero,
+      deferLyricDisplayToChannel: syncLyrics,
+    );
+  }
+
   Future<Object?> _tagForSong(Song song) async {
     if (Platform.isAndroid) {
-      if (!await SettingsService.loadAndroidCarLyricsEnabled()) {
-        return song;
-      }
-      final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
-      final lyricStyle = await SettingsService.loadLyricSettings();
-      final syncLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
-      return buildMediaItemForSong(
-        song,
-        showCover: showCover,
-        lyricStyle: lyricStyle,
-        subtitlePosition: Duration.zero,
-        deferLyricDisplayToChannel: syncLyrics,
-      );
+      return _mediaItemTagForSong(song);
     }
     return song;
   }
@@ -928,9 +952,8 @@ class MusicService {
     }
     final style = lyricStyle ?? LyricSettings();
     style.normalizeLayoutFields();
-    final syncLyrics = await SettingsService.loadAndroidCarLyricsSyncLyrics();
     // 开启同步歌词行且 defer 时，主标题由 [pushAndroidNotificationLyricLine] 跟进度直推。
-    final useLyricChannel = syncLyrics && deferLyricDisplayToChannel;
+    final useLyricChannel = deferLyricDisplayToChannel;
     final lyricLine = useLyricChannel
         ? androidNotificationPrimaryLine(
             song: song,

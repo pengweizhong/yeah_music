@@ -24,6 +24,7 @@ import 'package:yeah_music/pages/setting/sponsor_support_page.dart';
 import 'package:yeah_music/pages/setting/wire_remote_control_section.dart';
 import 'package:yeah_music/pages/setting/theme_setting_page.dart';
 import 'package:yeah_music/services/android_car_lyrics_sync.dart';
+import 'package:yeah_music/services/android_media_session_lyrics_channel.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
@@ -201,12 +202,13 @@ class _AndroidCarLyricsSettingsSectionState
     final pl = context.read<PlayListProvider>();
     var ok = true;
     if (!v) {
+      await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(false);
       ok = await pl.ensureAndroidSingleSourceBeforeCarNotifyOff();
     }
     if (v) {
       await AndroidCarLyricsSync.attachIfNeeded(pl);
     } else {
-      AndroidCarLyricsSync.detach();
+      await AndroidCarLyricsSync.detach();
     }
     await AndroidCarLyricsSync.applySettingsFromStorage();
     if (v) {

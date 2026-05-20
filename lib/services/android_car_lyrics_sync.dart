@@ -171,10 +171,10 @@ class AndroidCarLyricsSync {
     _onPositionPulse();
   }
 
-  static void detach() {
+  static Future<void> detach() async {
     _carLyricsEnabled = false;
     _syncLyricsEnabled = false;
-    unawaited(AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(false));
+    await AndroidMediaSessionLyricsChannel.setCarNotificationEnabled(false);
     JustAudioBackground.setAndroidLyricsSyncEnabled(false);
     unawaited(AndroidMediaSessionLyricsChannel.setLyricsDisplayManaged(false));
     _stopPlaybackListeners();

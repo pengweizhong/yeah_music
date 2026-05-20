@@ -601,10 +601,12 @@ public class AudioService extends MediaBrowserServiceCompat {
             stateBuilder.setExtras(extras);
         }
 
-        mediaSession.setPlaybackState(stateBuilder.build());
-        mediaSession.setRepeatMode(repeatMode);
-        mediaSession.setShuffleMode(shuffleMode);
-        mediaSession.setCaptioningEnabled(captioningEnabled);
+        if (yeahCarMediaNotificationEnabled) {
+            mediaSession.setPlaybackState(stateBuilder.build());
+            mediaSession.setRepeatMode(repeatMode);
+            mediaSession.setShuffleMode(shuffleMode);
+            mediaSession.setCaptioningEnabled(captioningEnabled);
+        }
 
         if (!wasPlaying && playing) {
             enterPlayingState();
@@ -866,19 +868,20 @@ public class AudioService extends MediaBrowserServiceCompat {
     }
 
     private void enterPlayingState() {
-        if (yeahCarMediaNotificationEnabled) {
-            ContextCompat.startForegroundService(
-                    this, new Intent(AudioService.this, AudioService.class));
+        if (!yeahCarMediaNotificationEnabled) {
+            dismissYeahCarNotification();
+            acquireWakeLock();
+            return;
         }
+        ContextCompat.startForegroundService(
+                this, new Intent(AudioService.this, AudioService.class));
         if (!mediaSession.isActive()) {
             mediaSession.setActive(true);
         }
 
         acquireWakeLock();
         mediaSession.setSessionActivity(contentIntent);
-        if (yeahCarMediaNotificationEnabled) {
-            internalStartForeground();
-        }
+        internalStartForeground();
     }
 
     private void exitPlayingState() {
@@ -957,17 +960,36 @@ public class AudioService extends MediaBrowserServiceCompat {
         if (instance == null) return;
         instance.handler.post(() -> {
             if (enabled) {
+                if (!instance.mediaSession.isActive()) {
+                    instance.mediaSession.setActive(true);
+                }
                 if (instance.playing
                         && instance.processingState != AudioProcessingState.idle) {
                     ContextCompat.startForegroundService(
                             instance, new Intent(instance, AudioService.class));
                     instance.internalStartForeground();
+                    instance.yeahRepublishSessionMetadataIfNeeded();
                     instance.updateNotification();
                 }
             } else {
                 instance.dismissYeahCarNotification();
+                instance.mediaSession.setActive(false);
             }
         });
+    }
+
+    private void yeahRepublishSessionMetadataIfNeeded() {
+        if (!yeahCarMediaNotificationEnabled || mediaMetadata == null) return;
+        final MediaMetadataCompat meta = artBitmap != null
+                ? putArtToMetadata(mediaMetadata)
+                : mediaMetadata;
+        mediaSession.setMetadata(meta);
+    }
+
+    private void yeahPublishMetadataToSession(MediaMetadataCompat mediaMetadata) {
+        if (!yeahCarMediaNotificationEnabled) return;
+        mediaSession.setMetadata(mediaMetadata);
+        postNotificationUpdate();
     }
 
     public static void setYeahLyricsDisplayManaged(boolean managed) {
@@ -1346,8 +1368,7 @@ public class AudioService extends MediaBrowserServiceCompat {
             merged = yeahMirrorManagedLyricSessionTitle(merged);
             merged = yeahFinalizeNotificationMetadata(merged);
             this.mediaMetadata = merged;
-            mediaSession.setMetadata(putArtToMetadata(merged));
-            postNotificationUpdate();
+            yeahPublishMetadataToSession(putArtToMetadata(merged));
             return;
         }
         if (artCacheFilePath != null) {
@@ -1372,8 +1393,7 @@ public class AudioService extends MediaBrowserServiceCompat {
         }
         mediaMetadata = yeahFinalizeNotificationMetadata(mediaMetadata);
         this.mediaMetadata = mediaMetadata;
-        mediaSession.setMetadata(mediaMetadata);
-        postNotificationUpdate();
+        yeahPublishMetadataToSession(mediaMetadata);
     }
 
     private MediaMetadataCompat putArtToMetadata(MediaMetadataCompat mediaMetadata) {

@@ -1051,7 +1051,7 @@ class PlayListProvider extends ChangeNotifier {
     _playerCompletionSubscription?.cancel();
     _playerIndexSubscription?.cancel();
     _playerErrorSubscription?.cancel();
-    AndroidCarLyricsSync.detach();
+    unawaited(AndroidCarLyricsSync.detach());
     super.dispose();
   }
 
