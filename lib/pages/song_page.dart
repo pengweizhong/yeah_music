@@ -191,6 +191,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     // 与路由 / Hive 一致：上次在剧院(3)则直接打开剧院，勿先落在分屏(2)再 jump，避免闪一下第三页
     _currentPage = pinned;
     _pageController = PageController(initialPage: pinned);
+    if (desktop && pinned == 3) {
+      _theaterCoverEnterPageAlignPending = true;
+    }
     _splitLyricScrollController = ScrollController();
     _desktopTheaterLyricScrollController = ScrollController();
     _desktopTheaterCoverScrollController = ScrollController();
@@ -281,6 +284,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       _loadPlaybackMode();
       // 加载上次的页面状态（封皮 / 歌词 / 分屏 / 宽屏剧院）
       await _loadPageState();
+      _scheduleTheaterCoverAlignOnPageEnterIfNeeded();
     });
   }
 
@@ -303,6 +307,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           if (target != _currentPage) {
             _pageController.jumpToPage(target);
             setState(() => _currentPage = target);
+          }
+          if (target == 3 && songPageShowsDesktopExtraPanels()) {
+            _theaterCoverEnterPageAlignPending = true;
           }
         } finally {
           if (!done.isCompleted) done.complete();
@@ -2126,6 +2133,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     });
   }
 
+  /// 退出播放页再进入、或 Hive 恢复在剧院页时：封面轨 [ScrollController] 已重建，须强制滚到当前曲。
+  void _scheduleTheaterCoverAlignOnPageEnterIfNeeded() {
+    if (!songPageShowsDesktopExtraPanels() || _currentPage != 3) return;
+    _theaterCoverEnterPageAlignPending = true;
+    _scheduleTheaterCoverScrollAlignment();
+  }
+
   /// 剧院左侧封面轨：与歌词「定位到当前」一致，点按后结束手动态并滚回当前封面。
   void _locateTheaterCoverToCurrent() {
     if (!songPageShowsDesktopExtraPanels() || _currentPage != 3) return;
@@ -2473,6 +2487,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
       required IconData icon,
       required VoidCallback? onTap,
       double size = 40,
+      double? iconSize,
     }) {
       return Material(
         color: Colors.transparent,
@@ -2482,7 +2497,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           child: SizedBox(
             width: size,
             height: size,
-            child: Icon(icon, size: size * 0.48, color: fg(0.9)),
+            child: Icon(
+              icon,
+              size: iconSize ?? size * 0.48,
+              color: fg(0.9),
+            ),
           ),
         ),
       );
@@ -2657,71 +2676,40 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         initialData: MusicService.isPlaying,
                         builder: (context, snapshot) {
                           final isPlayingNow = snapshot.data ?? false;
-                          return Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: () async {
-                                if (isPlayingNow) {
-                                  MusicService().pause();
+                          return circleCtrl(
+                            icon: isPlayingNow
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 48,
+                            iconSize: 30,
+                            onTap: () async {
+                              if (isPlayingNow) {
+                                MusicService().pause();
+                              } else {
+                                if (MusicService.duration != null &&
+                                    _currentPosition.inMilliseconds > 0) {
+                                  MusicService().seek(_currentPosition);
+                                  MusicService().resume();
                                 } else {
-                                  if (MusicService.duration != null &&
-                                      _currentPosition.inMilliseconds > 0) {
-                                    MusicService().seek(_currentPosition);
-                                    MusicService().resume();
-                                  } else {
-                                    final ok = await MusicService()
-                                        .playCurrentFromPlaylist(
-                                          queue: playListProvider.playList,
-                                          currentIndex:
-                                              playListProvider.currentIndex,
-                                          useAndroidConcatQueue:
-                                              playListProvider.playbackMode !=
-                                              PlaybackMode.playOnce,
-                                        );
-                                    if (!context.mounted) return;
-                                    if (!ok) {
-                                      reportPlaybackFailureToUser(context);
-                                      return;
-                                    }
-                                    await playListProvider
-                                        .recordRecentForCurrent();
+                                  final ok = await MusicService()
+                                      .playCurrentFromPlaylist(
+                                        queue: playListProvider.playList,
+                                        currentIndex:
+                                            playListProvider.currentIndex,
+                                        useAndroidConcatQueue:
+                                            playListProvider.playbackMode !=
+                                            PlaybackMode.playOnce,
+                                      );
+                                  if (!context.mounted) return;
+                                  if (!ok) {
+                                    reportPlaybackFailureToUser(context);
+                                    return;
                                   }
+                                  await playListProvider
+                                      .recordRecentForCurrent();
                                 }
-                              },
-                              child: Container(
-                                width: 48,
-                                height: 48,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      scheme.primary.withValues(alpha: 0.95),
-                                      scheme.primary.withValues(alpha: 0.72),
-                                    ],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: scheme.primary.withValues(
-                                        alpha: 0.35,
-                                      ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  isPlayingNow
-                                      ? Icons.pause_rounded
-                                      : Icons.play_arrow_rounded,
-                                  size: 28,
-                                  color: scheme.onPrimary,
-                                ),
-                              ),
-                            ),
+                              }
+                            },
                           );
                         },
                       ),
@@ -2939,6 +2927,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             if (mounted) {
               _initLyrics();
               _updateDuration();
+              if (_currentPage == 3) {
+                _theaterCoverEnterPageAlignPending = true;
+              }
               _scheduleTheaterCoverScrollAlignment();
             }
           });
