@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 13+ 主题图标 / 部分系统通知用的单色层：仅白色描边，透明底。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,22 A32,32 0 1,1 49.2,86.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="7.5" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M62.5,78.5m-7.5,0a7.5,7.5 0 1,1 15,0a7.5,7.5 0 1,1 -15,0" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M69,78.5 V38"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="6.5" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M69,38 C76,41 77.5,48 72,52"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="5.5" />
+</vector>

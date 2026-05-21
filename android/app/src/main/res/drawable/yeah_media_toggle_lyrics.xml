@@ -5,6 +5,6 @@
     android:viewportHeight="24">
     <!-- 描边式「词」图标，避免 Lineage 等 ROM 把实心块渲染成白方块。 -->
     <path
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="@color/ic_stat_yeah_music_fill"
         android:pathData="M5,6.5h14v1.5H5z M5,11h14v1.5H5z M5,15.5h9v1.5H5z" />
 </vector>

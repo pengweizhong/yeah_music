@@ -2,4 +2,6 @@
 <resources>
     <!-- 自适应图标底层：系统夜间模式下使用黑底，与 yeah_music1 透明前景搭配 -->
     <color name="ic_launcher_background">#FF000000</color>
+    <!-- 状态栏/通知小图标描色：深色界面用浅色图标 -->
+    <color name="ic_stat_yeah_music_fill">#FFFFFFFF</color>
 </resources>

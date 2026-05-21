@@ -7,8 +7,12 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -34,6 +38,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ServiceCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.VolumeProviderCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
@@ -460,6 +465,9 @@ public class AudioService extends MediaBrowserServiceCompat {
         if (!config.androidResumeOnClick) {
             mediaSession.setMediaButtonReceiver(null);
         }
+        if (notificationCreated) {
+            updateNotification();
+        }
     }
 
     int getResourceId(String resource) {
@@ -816,9 +824,56 @@ public class AudioService extends MediaBrowserServiceCompat {
                     .setDeleteIntent(buildDeletePendingIntent())
             ;
         }
-        int iconId = getResourceId(config.androidNotificationIcon);
-        notificationBuilder.setSmallIcon(iconId);
+        yeahSetNotificationSmallIcon(notificationBuilder);
         return notificationBuilder;
+    }
+
+    /**
+     * 通知小图标：使用透明底 Logo 矢量并按昼夜栅格化为黑/白像素。
+     * 勿用带黑底的 {@code ic_launcher_foreground}；{@code IconCompat.setTint} 对通知小图标通常无效。
+     */
+    private void yeahSetNotificationSmallIcon(NotificationCompat.Builder builder) {
+        int iconId = getResourceId(config.androidNotificationIcon);
+        if (iconId == 0) {
+            iconId = getResourceId("drawable/ic_stat_yeah_music");
+        }
+        if (iconId == 0) {
+            return;
+        }
+        final boolean night =
+                (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                        == Configuration.UI_MODE_NIGHT_YES;
+        final int color = night ? 0xFFFFFFFF : 0xFF000000;
+        IconCompat icon = yeahRasterizeNotificationIcon(iconId, color);
+        if (icon != null) {
+            builder.setSmallIcon(icon);
+        } else {
+            builder.setSmallIcon(iconId);
+        }
+    }
+
+    private IconCompat yeahRasterizeNotificationIcon(int drawableId, int color) {
+        Drawable drawable = ContextCompat.getDrawable(this, drawableId);
+        if (drawable == null) {
+            return null;
+        }
+        final float density = getResources().getDisplayMetrics().density;
+        final int sizePx = Math.max(1, Math.round(24f * density));
+        Bitmap bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable = drawable.mutate();
+        drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        drawable.setBounds(0, 0, sizePx, sizePx);
+        drawable.draw(canvas);
+        return IconCompat.createWithBitmap(bitmap);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (notificationCreated) {
+            updateNotification();
+        }
     }
 
     public void handleDeleteNotification() {

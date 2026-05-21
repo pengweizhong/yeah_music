@@ -17,8 +17,16 @@ enum PlaybackMode {
   shuffle, // 随机播放
   singleLoop, // 单曲循环
   playOnce, // 仅播放一次
-  timerShutdown, // 定时关闭
+  timerShutdown, // 已废弃：定时关闭改由「更多」入口；仅兼容旧持久化值
 }
+
+/// 播放模式弹窗可选项（不含 [PlaybackMode.timerShutdown]）。
+const List<PlaybackMode> kPlaybackModesForSheet = [
+  PlaybackMode.sequential,
+  PlaybackMode.shuffle,
+  PlaybackMode.singleLoop,
+  PlaybackMode.playOnce,
+];
 
 extension PlaybackModeExtension on PlaybackMode {
   /// 仅作调试或日志用；UI 请使用 [playbackModeLabel] 与 [AppLocalizations]。

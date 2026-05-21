@@ -152,6 +152,7 @@ class FrostedGlassBottomSheet extends StatelessWidget {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (showTopHandle) ...[
                 const SizedBox(height: 10),

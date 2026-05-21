@@ -416,7 +416,11 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
   /// 加载播放模式
   Future<void> _loadPlaybackMode() async {
-    final mode = await SettingsService.loadPlaybackMode();
+    var mode = await SettingsService.loadPlaybackMode();
+    if (mode == PlaybackMode.timerShutdown) {
+      mode = PlaybackMode.sequential;
+      await SettingsService.savePlaybackMode(mode);
+    }
     final playListProvider = Provider.of<PlayListProvider>(
       context,
       listen: false,
@@ -1181,6 +1185,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   // 获取播放模式图标（圆角系，与底栏/模式列表一致）
   IconData _getPlaybackModeIcon(PlaybackMode mode) {
     switch (mode) {
+      case PlaybackMode.timerShutdown:
       case PlaybackMode.sequential:
         return Icons.queue_music_rounded;
       case PlaybackMode.shuffle:
@@ -1189,8 +1194,6 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         return Icons.repeat_one_rounded;
       case PlaybackMode.playOnce:
         return Icons.play_arrow_rounded;
-      case PlaybackMode.timerShutdown:
-        return Icons.timer_rounded;
     }
   }
 
@@ -1226,7 +1229,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                      ...PlaybackMode.values.map((mode) {
+                      ...kPlaybackModesForSheet.map((mode) {
                         final isSelected = provider.playbackMode == mode;
                         return ListTile(
                           leading: Icon(_getPlaybackModeIcon(mode)),
@@ -1257,104 +1260,33 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   static const int _customTimerMinMinutes = 1;
   static const int _customTimerMaxMinutes = 600;
 
-  /// 自定义定时分钟数（返回 null 表示取消）
+  /// 自定义定时分钟数（返回 null 表示取消）。底部 sheet + 仅抬高 sheet，避免键盘顶起整页。
   Future<int?> _promptCustomTimerMinutes(
-    BuildContext dialogContext,
+    BuildContext context,
     int initialMinutes,
   ) {
-    final controller = TextEditingController(
-      text: initialMinutes > 0 ? '$initialMinutes' : '',
-    );
-    return showDialog<int>(
-      context: dialogContext,
-      builder: (ctx) {
-        final l10n = AppLocalizations.of(ctx);
-        final scheme = Theme.of(ctx).colorScheme;
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Theme(
-            data: frostedDialogContentTheme(ctx),
-            child: FrostedGlassDialog(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.sleepTimerCustom,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: ctx.gradFg(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: controller,
-                      style: TextStyle(color: ctx.gradFg()),
-                      cursorColor: ctx.gradFg(),
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: l10n.sleepTimerLabelMinutes,
-                        labelStyle: TextStyle(color: ctx.gradFgMuted()),
-                        hintText:
-                            '$_customTimerMinMinutes–$_customTimerMaxMinutes',
-                        hintStyle: TextStyle(color: ctx.gradFg(0.38)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: ctx.gradBorder(0.22)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: scheme.primary),
-                        ),
-                      ),
-                      autofocus: true,
-                      onSubmitted: (_) => _submitCustomTimer(ctx, controller),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: TextButton.styleFrom(
-                            foregroundColor: ctx.gradFg(0.7),
-                          ),
-                          child: Text(l10n.actionCancel),
-                        ),
-                        TextButton(
-                          onPressed: () => _submitCustomTimer(ctx, controller),
-                          child: Text(l10n.actionOK),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+    return showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final maxH = MediaQuery.sizeOf(sheetContext).height * 0.92;
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxH),
+            child: _CustomSleepTimerMinutesSheet(
+              initialMinutes: initialMinutes,
+              minMinutes: _customTimerMinMinutes,
+              maxMinutes: _customTimerMaxMinutes,
             ),
           ),
         );
       },
-    ).whenComplete(controller.dispose);
-  }
-
-  void _submitCustomTimer(BuildContext ctx, TextEditingController c) {
-    final v = int.tryParse(c.text.trim());
-    if (v == null || v < _customTimerMinMinutes || v > _customTimerMaxMinutes) {
-      final l10n = AppLocalizations.of(ctx);
-      showAppSnackBar(
-        ctx,
-        l10n.sleepTimerInvalidRange(
-          _customTimerMinMinutes,
-          _customTimerMaxMinutes,
-        ),
-        kind: AppSnackKind.error,
-      );
-      return;
-    }
-    Navigator.pop(ctx, v);
+    );
   }
 
   Future<void> _showSongMetadataDialog(BuildContext context, Song song) async {
@@ -1794,67 +1726,72 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
               child: Builder(
                 builder: (inner) {
                   final l10n = AppLocalizations.of(inner);
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                        child: Text(
-                          l10n.sleepTimerSheetTitle,
-                          style: Theme.of(inner).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                          child: Text(
+                            l10n.sleepTimerSheetTitle,
+                            style: Theme.of(inner).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      if (provider.isSleepTimerActive)
+                        if (provider.isSleepTimerActive)
+                          ListTile(
+                            leading: const Icon(Icons.timer_off),
+                            title: Text(l10n.sleepTimerCancel),
+                            onTap: () {
+                              provider.cancelSleepTimer();
+                              Navigator.pop(sheetContext);
+                            },
+                          ),
+                        ..._presetTimerMinutes.map((minutes) {
+                          return ListTile(
+                            leading: const Icon(Icons.timer),
+                            title: Text(l10n.sleepTimerMinutesN(minutes)),
+                            trailing:
+                                provider.timerDuration == minutes &&
+                                    provider.isSleepTimerActive
+                                ? Icon(Icons.check, color: primary)
+                                : null,
+                            onTap: () {
+                              _startSleepTimer(minutes, provider);
+                              Navigator.pop(sheetContext);
+                            },
+                          );
+                        }),
                         ListTile(
-                          leading: const Icon(Icons.timer_off),
-                          title: Text(l10n.sleepTimerCancel),
-                          onTap: () {
-                            provider.cancelSleepTimer();
-                            Navigator.pop(sheetContext);
-                          },
-                        ),
-                      ..._presetTimerMinutes.map((minutes) {
-                        return ListTile(
-                          leading: const Icon(Icons.timer),
-                          title: Text(l10n.sleepTimerMinutesN(minutes)),
-                          trailing:
-                              provider.timerDuration == minutes &&
-                                  provider.isSleepTimerActive
+                          leading: const Icon(Icons.edit_outlined),
+                          title: Text(l10n.sleepTimerCustom),
+                          subtitle: isCustom
+                              ? Text(
+                                  l10n.sleepTimerCurrentN(
+                                    provider.timerDuration,
+                                  ),
+                                )
+                              : null,
+                          trailing: isCustom
                               ? Icon(Icons.check, color: primary)
                               : null,
-                          onTap: () {
+                          onTap: () async {
+                            final initial = provider.timerDuration;
+                            Navigator.pop(sheetContext);
+                            if (!mounted) return;
+                            final minutes = await _promptCustomTimerMinutes(
+                              context,
+                              initial,
+                            );
+                            if (!mounted || minutes == null) return;
                             _startSleepTimer(minutes, provider);
-                            Navigator.pop(sheetContext);
                           },
-                        );
-                      }),
-                      ListTile(
-                        leading: const Icon(Icons.edit_outlined),
-                        title: Text(l10n.sleepTimerCustom),
-                        subtitle: isCustom
-                            ? Text(
-                                l10n.sleepTimerCurrentN(provider.timerDuration),
-                              )
-                            : null,
-                        trailing: isCustom
-                            ? Icon(Icons.check, color: primary)
-                            : null,
-                        onTap: () async {
-                          final minutes = await _promptCustomTimerMinutes(
-                            sheetContext,
-                            provider.timerDuration,
-                          );
-                          if (!mounted || minutes == null) return;
-                          _startSleepTimer(minutes, provider);
-                          if (sheetContext.mounted) {
-                            Navigator.pop(sheetContext);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                    ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -2975,6 +2912,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             context: context,
             child: Scaffold(
               backgroundColor: Colors.transparent,
+              resizeToAvoidBottomInset: false,
               body: Center(
                 child: Text(
                   l10n.songNotFound,
@@ -3011,6 +2949,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           child: SafeArea(
             child: Scaffold(
               backgroundColor: Colors.transparent,
+              resizeToAvoidBottomInset: false,
               extendBody: true,
               body: Column(
                 children: [
@@ -4252,6 +4191,133 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 自定义定时关闭输入；[TextEditingController] 由 State 管理，底部 sheet 仅随键盘抬高自身。
+class _CustomSleepTimerMinutesSheet extends StatefulWidget {
+  const _CustomSleepTimerMinutesSheet({
+    required this.initialMinutes,
+    required this.minMinutes,
+    required this.maxMinutes,
+  });
+
+  final int initialMinutes;
+  final int minMinutes;
+  final int maxMinutes;
+
+  @override
+  State<_CustomSleepTimerMinutesSheet> createState() =>
+      _CustomSleepTimerMinutesSheetState();
+}
+
+class _CustomSleepTimerMinutesSheetState
+    extends State<_CustomSleepTimerMinutesSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.initialMinutes > 0 ? '${widget.initialMinutes}' : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final v = int.tryParse(_controller.text.trim());
+    if (v == null || v < widget.minMinutes || v > widget.maxMinutes) {
+      final l10n = AppLocalizations.of(context);
+      showAppSnackBar(
+        context,
+        l10n.sleepTimerInvalidRange(widget.minMinutes, widget.maxMinutes),
+        kind: AppSnackKind.error,
+      );
+      return;
+    }
+    Navigator.pop(context, v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Theme(
+      data: frostedDialogContentTheme(context),
+      child: FrostedGlassBottomSheet(
+        showTopHandle: false,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.sleepTimerCustom,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: context.gradFg(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _controller,
+                    style: TextStyle(color: context.gradFg()),
+                    cursorColor: context.gradFg(),
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: l10n.sleepTimerLabelMinutes,
+                      labelStyle: TextStyle(color: context.gradFgMuted()),
+                      hintText: '${widget.minMinutes}–${widget.maxMinutes}',
+                      hintStyle: TextStyle(color: context.gradFg(0.38)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: context.gradBorder(0.22),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: scheme.primary),
+                      ),
+                    ),
+                    autofocus: true,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: context.gradFg(0.7),
+                        ),
+                        child: Text(l10n.actionCancel),
+                      ),
+                      TextButton(
+                        onPressed: _submit,
+                        child: Text(l10n.actionOK),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
