@@ -48,15 +48,27 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
   bool _registered = false;
   bool _enabled = false;
   Locale? _lastSyncedLocale;
+  String? _lastSyncedMenuBarLine;
+  bool? _lastSyncedMenuPlaying;
+  String? _lastSyncedMenuTrackPath;
+  String? _lastSyncedMenuPlayPauseTitle;
 
   final ExternalLyricLineFormatter _formatter =
       ExternalLyricLineFormatter(lyricStyle: LyricSettings());
 
   void _playlistChanged() {
     _formatter.invalidate();
+    _resetMenuBarNativeDedupe();
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     unawaited(_syncToNative(l10n));
+  }
+
+  void _resetMenuBarNativeDedupe() {
+    _lastSyncedMenuBarLine = null;
+    _lastSyncedMenuPlaying = null;
+    _lastSyncedMenuTrackPath = null;
+    _lastSyncedMenuPlayPauseTitle = null;
   }
 
   void _glueRefresh() {
@@ -83,19 +95,31 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
     final pos = MusicService.lastPosition;
 
     final line = _formatter.formatLine(song: song, position: pos, l10n: l10n);
-    await MacosMenuBarLyrics.setText(line);
+    if (line != _lastSyncedMenuBarLine) {
+      _lastSyncedMenuBarLine = line;
+      await MacosMenuBarLyrics.setText(line);
+    }
 
     final playing = MusicService.isPlaying;
-    await MacosMenuBarLyrics.setMenuBarState(
-      isPlaying: playing,
-      trackTitle: _trackTitleForMenu(song, l10n),
-      trackArtist: _trackArtistForMenu(song, l10n),
-      playPauseTitle: playing
-          ? (l10n?.menuBarContextPause ?? 'Pause')
-          : (l10n?.menuBarContextPlay ?? 'Play'),
-      previousTitle: l10n?.menuBarContextPrevious ?? 'Previous Track',
-      nextTitle: l10n?.menuBarContextNext ?? 'Next Track',
-    );
+    final trackPath = song?.path ?? '';
+    final playPauseTitle = playing
+        ? (l10n?.menuBarContextPause ?? 'Pause')
+        : (l10n?.menuBarContextPlay ?? 'Play');
+    if (playing != _lastSyncedMenuPlaying ||
+        trackPath != _lastSyncedMenuTrackPath ||
+        playPauseTitle != _lastSyncedMenuPlayPauseTitle) {
+      _lastSyncedMenuPlaying = playing;
+      _lastSyncedMenuTrackPath = trackPath;
+      _lastSyncedMenuPlayPauseTitle = playPauseTitle;
+      await MacosMenuBarLyrics.setMenuBarState(
+        isPlaying: playing,
+        trackTitle: _trackTitleForMenu(song, l10n),
+        trackArtist: _trackArtistForMenu(song, l10n),
+        playPauseTitle: playPauseTitle,
+        previousTitle: l10n?.menuBarContextPrevious ?? 'Previous Track',
+        nextTitle: l10n?.menuBarContextNext ?? 'Next Track',
+      );
+    }
   }
 
   String _trackTitleForMenu(Song? song, AppLocalizations? l10n) {
@@ -118,8 +142,10 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
     _enabled = await SettingsService.loadMacosMenuBarLyricsEnabled();
     await MacosMenuBarLyrics.setVisible(_enabled);
     if (!_enabled) {
+      _resetMenuBarNativeDedupe();
       return;
     }
+    _resetMenuBarNativeDedupe();
     final s = await SettingsService.loadLyricSettings();
     if (mounted && s != null) {
       s.normalizeLayoutFields();

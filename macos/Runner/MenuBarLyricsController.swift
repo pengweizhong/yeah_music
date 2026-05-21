@@ -15,9 +15,229 @@
 
 import Cocoa
 import FlutterMacOS
+import QuartzCore
+
+// MARK: - 菜单栏歌词跑马灯视图
+
+/// 固定宽度内展示单行歌词；超出时用 Core Animation 线性平移循环滚动（GPU、与屏刷同步）。
+private final class MenuBarLyricsMarqueeView: NSView {
+    private static let font = NSFont.systemFont(ofSize: 11, weight: .medium)
+    private static let horizontalPadding: CGFloat = 4
+    private static let gapBetweenLoops: CGFloat = 40
+    private static let pixelsPerSecond: CGFloat = 32
+    private static let marqueeAnimationKey = "yeah.menuBarMarquee"
+
+    private let clipLayer = CALayer()
+    private let scrollLayer = CALayer()
+    private let marqueeTextA = CATextLayer()
+    private let marqueeTextB = CATextLayer()
+    private let staticTextLayer = CATextLayer()
+
+    private var fullText = ""
+    private var textSize = CGSize.zero
+    private var lastMarqueeLoop: CGFloat = 0
+    private var lastAppliedLayerText = ""
+    private var didInstallLayers = false
+
+    override var wantsLayer: Bool {
+        get { true }
+        set { super.wantsLayer = newValue }
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    deinit {
+        stopMarqueeAnimation()
+    }
+
+    func update(text: String) {
+        if text == fullText {
+            return
+        }
+
+        fullText = text
+        lastAppliedLayerText = ""
+        stopMarqueeAnimation()
+
+        guard !text.isEmpty else {
+            textSize = .zero
+            relayoutContent()
+            return
+        }
+
+        textSize = (fullText as NSString).size(withAttributes: Self.textAttributes)
+        relayoutContent()
+    }
+
+    /// 宽度变更等：文案不变但需重算裁剪与跑马灯周期。
+    func relayoutPreservingScrollIfPossible() {
+        guard !fullText.isEmpty else { return }
+        textSize = (fullText as NSString).size(withAttributes: Self.textAttributes)
+        relayoutContent()
+    }
+
+    override func layout() {
+        super.layout()
+        ensureLayersInstalled()
+        relayoutContent()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        lastAppliedLayerText = ""
+        applyTextToLayers()
+    }
+
+    private var viewportWidth: CGFloat {
+        max(0, bounds.width - Self.horizontalPadding * 2)
+    }
+
+    private var needsMarquee: Bool {
+        !fullText.isEmpty && textSize.width > viewportWidth + 0.5
+    }
+
+    private static var textAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: font,
+            .foregroundColor: NSColor.labelColor,
+        ]
+    }
+
+    private func ensureLayersInstalled() {
+        guard !didInstallLayers, let root = layer else { return }
+        didInstallLayers = true
+
+        clipLayer.masksToBounds = true
+        clipLayer.actions = [
+            "bounds": NSNull(),
+            "position": NSNull(),
+            "frame": NSNull(),
+        ]
+        scrollLayer.actions = ["position": NSNull(), "bounds": NSNull(), "frame": NSNull()]
+        for layer in [marqueeTextA, marqueeTextB, staticTextLayer] {
+            layer.contentsScale = backingScaleFactor()
+            layer.isWrapped = false
+            layer.alignmentMode = .left
+            layer.truncationMode = .none
+            layer.actions = ["contents": NSNull(), "position": NSNull(), "bounds": NSNull()]
+        }
+        root.addSublayer(clipLayer)
+        clipLayer.addSublayer(scrollLayer)
+        scrollLayer.addSublayer(marqueeTextA)
+        scrollLayer.addSublayer(marqueeTextB)
+        root.addSublayer(staticTextLayer)
+    }
+
+    private func backingScaleFactor() -> CGFloat {
+        window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+    }
+
+    private func relayoutContent() {
+        ensureLayersInstalled()
+        guard layer != nil else { return }
+
+        let scale = backingScaleFactor()
+        for layer in [marqueeTextA, marqueeTextB, staticTextLayer] {
+            layer.contentsScale = scale
+        }
+
+        clipLayer.frame = CGRect(
+            x: Self.horizontalPadding,
+            y: 0,
+            width: viewportWidth,
+            height: bounds.height
+        )
+        scrollLayer.frame = clipLayer.bounds
+
+        if fullText.isEmpty {
+            staticTextLayer.isHidden = true
+            scrollLayer.isHidden = true
+            stopMarqueeAnimation()
+            return
+        }
+
+        applyTextToLayers()
+
+        let textH = ceil(textSize.height)
+        let textW = ceil(textSize.width)
+        let textY = floor((bounds.height - textH) * 0.5)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        if needsMarquee {
+            staticTextLayer.isHidden = true
+            scrollLayer.isHidden = false
+
+            marqueeTextA.frame = CGRect(x: 0, y: textY, width: textW, height: textH)
+            marqueeTextB.frame = CGRect(
+                x: textW + Self.gapBetweenLoops,
+                y: textY,
+                width: textW,
+                height: textH
+            )
+
+            let loop = textW + Self.gapBetweenLoops
+            let animRunning = scrollLayer.animation(forKey: Self.marqueeAnimationKey) != nil
+            if !animRunning || abs(loop - lastMarqueeLoop) > 0.5 {
+                lastMarqueeLoop = loop
+                startMarqueeAnimation(loopDistance: loop)
+            }
+        } else {
+            lastMarqueeLoop = 0
+            stopMarqueeAnimation()
+            scrollLayer.isHidden = true
+            staticTextLayer.isHidden = false
+            staticTextLayer.frame = CGRect(
+                x: Self.horizontalPadding + floor((viewportWidth - textW) * 0.5),
+                y: textY,
+                width: textW,
+                height: textH
+            )
+        }
+
+        CATransaction.commit()
+    }
+
+    private func applyTextToLayers() {
+        guard fullText != lastAppliedLayerText else { return }
+        lastAppliedLayerText = fullText
+        let attributed = NSAttributedString(string: fullText, attributes: Self.textAttributes)
+        marqueeTextA.string = attributed
+        marqueeTextB.string = attributed
+        staticTextLayer.string = attributed
+    }
+
+    private func startMarqueeAnimation(loopDistance: CGFloat) {
+        guard loopDistance > 0 else { return }
+
+        stopMarqueeAnimation()
+        scrollLayer.transform = CATransform3DIdentity
+
+        let anim = CABasicAnimation(keyPath: "transform.translation.x")
+        anim.fromValue = 0
+        anim.toValue = -loopDistance
+        anim.duration = Double(loopDistance / Self.pixelsPerSecond)
+        anim.repeatCount = .infinity
+        anim.timingFunction = CAMediaTimingFunction(name: .linear)
+        anim.isRemovedOnCompletion = false
+        scrollLayer.add(anim, forKey: Self.marqueeAnimationKey)
+    }
+
+    private func stopMarqueeAnimation() {
+        scrollLayer.removeAnimation(forKey: Self.marqueeAnimationKey)
+        scrollLayer.transform = CATransform3DIdentity
+    }
+}
 
 /// 在菜单栏展示当前句歌词（紧凑版）。
-/// - 宽度固定；过长单行尾部省略。
+/// - 宽度固定；过长时向左循环滚动，否则居中静态展示。
 /// - **右键**歌词区域：当前曲目、播放控制、宽度、退出。
 /// - 与同区域其它图标一样，可按 **⌘ + 拖拽**调换顺序。
 final class MenuBarLyricsController: NSObject {
@@ -38,6 +258,7 @@ final class MenuBarLyricsController: NSObject {
     ).map { CGFloat($0) }
 
     private var statusItem: NSStatusItem?
+    private weak var lyricsMarqueeView: MenuBarLyricsMarqueeView?
     private var lastDisplayedText = ""
     private var rightMouseMonitor: Any?
 
@@ -66,18 +287,24 @@ final class MenuBarLyricsController: NSObject {
             statusItem?.isVisible = true
         } else {
             statusItem?.isVisible = false
+            lyricsMarqueeView?.update(text: "")
         }
     }
 
     func setText(_ text: String) {
         ensureStatusItem()
-        lastDisplayedText = text
 
         guard let item = statusItem, let button = item.button else { return }
 
         button.imagePosition = .noImage
         item.length = Self.storedFixedWidthPts()
 
+        if text == lastDisplayedText {
+            lyricsMarqueeView?.relayoutPreservingScrollIfPossible()
+            return
+        }
+
+        lastDisplayedText = text
         refreshButtonTitle(button: button, text: text)
     }
 
@@ -135,23 +362,22 @@ final class MenuBarLyricsController: NSObject {
     }
 
     private func refreshButtonTitle(button: NSStatusBarButton, text: String) {
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .center
-        paragraph.lineBreakMode = .byTruncatingTail
-
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.labelColor,
-            .paragraphStyle: paragraph,
-        ]
-
-        button.attributedTitle = NSAttributedString(string: text, attributes: attrs)
+        button.title = ""
+        button.attributedTitle = NSAttributedString(string: "")
         button.toolTip = text
+        ensureMarqueeView(on: button)
+        lyricsMarqueeView?.update(text: text)
+    }
 
-        if let cell = button.cell as? NSButtonCell {
-            cell.lineBreakMode = .byTruncatingTail
-            cell.alignment = .center
+    private func ensureMarqueeView(on button: NSStatusBarButton) {
+        if let existing = lyricsMarqueeView, existing.superview === button {
+            return
         }
+        button.subviews.forEach { $0.removeFromSuperview() }
+        let view = MenuBarLyricsMarqueeView(frame: button.bounds)
+        view.autoresizingMask = [.width, .height]
+        button.addSubview(view)
+        lyricsMarqueeView = view
     }
 
     /// 右键菜单行内 SF Symbol：与菜单字体对齐，模板色适配浅色/深色。
@@ -346,6 +572,9 @@ final class MenuBarLyricsController: NSObject {
         }
 
         button.imagePosition = .noImage
+        button.title = ""
+        button.attributedTitle = NSAttributedString(string: "")
+        ensureMarqueeView(on: button)
         statusItem = item
 
         attachRightMouseMonitorIfNeeded()
