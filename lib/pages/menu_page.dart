@@ -36,6 +36,7 @@ class MenuPage extends StatefulWidget {
 
 class _MenuPageState extends State<MenuPage> {
   static const double _kDrawerContentMaxWidth = 340;
+
   /// 略加大左侧留白、收紧右侧，让图标+文字整块视觉上更落在抽屉中线偏右（仍左对齐文案）。
   static const double _kListPadLeft = 34;
   static const double _kListPadRight = 12;
@@ -55,7 +56,7 @@ class _MenuPageState extends State<MenuPage> {
       title: Text(
         label,
         textAlign: TextAlign.left,
-        style: TextStyle(color: context.gradFg()),
+        style: context.gradTileTitleStyle(fontSize: 15),
       ),
       onTap: onTap,
     );
@@ -73,8 +74,7 @@ class _MenuPageState extends State<MenuPage> {
               final drawerW = constraints.maxWidth;
               final contentW = math.min(_kDrawerContentMaxWidth, drawerW);
               // 窄于 max 时略偏右对齐，避免几何居中仍显「贴左」；与左右非对称 padding 一起做视觉平衡
-              final alignX =
-                  contentW < drawerW - 1 ? 0.14 : 0.08;
+              final alignX = contentW < drawerW - 1 ? 0.14 : 0.08;
               return Align(
                 alignment: Alignment(alignX, -1),
                 child: SizedBox(

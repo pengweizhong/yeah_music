@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -23,7 +23,6 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/playback_shortcut_config.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
-
 bool _isModifierOnlyKey(LogicalKeyboardKey k) {
   return k == LogicalKeyboardKey.controlLeft ||
       k == LogicalKeyboardKey.controlRight ||
@@ -51,7 +50,7 @@ Future<SingleActivator?> _recordShortcut(BuildContext context) {
             children: [
               Text(
                 l10n.settingsPlaybackShortcutsPressKey,
-                style: TextStyle(
+                style: context.gradTextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: titleFg,
@@ -81,7 +80,7 @@ Future<SingleActivator?> _recordShortcut(BuildContext context) {
                 },
                 child: Text(
                   l10n.settingsPlaybackShortcutsPressKeyHint,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: bodyFg,
                     height: 1.45,
                   ),
@@ -112,7 +111,10 @@ class PlaybackShortcutsSettingsSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final ctrl = context.watch<PlaybackShortcutController>();
     final cfg = ctrl.config;
-    final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final subStyle = context.gradTextStyle(
+      color: context.gradFg(0.6),
+      fontSize: 13,
+    );
     final supported =
         !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
@@ -120,7 +122,7 @@ class PlaybackShortcutsSettingsSection extends StatelessWidget {
       leading: Icon(Icons.keyboard_outlined, color: context.gradFg()),
       title: Text(
         l10n.settingsPlaybackShortcutsTitle,
-        style: TextStyle(color: context.gradFg()),
+        style: context.gradTileTitleStyle(),
       ),
       subtitle: Text(l10n.settingsPlaybackShortcutsSubtitle, style: subStyle),
       iconColor: context.gradFg(),
@@ -221,14 +223,17 @@ class _ShortcutTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final muted = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final muted = context.gradTextStyle(
+      color: context.gradFg(0.6),
+      fontSize: 13,
+    );
     final current = binding.enabled && binding.activator != null
         ? binding.describeKeys()
         : l10n.settingsPlaybackShortcutsDisabledLabel;
     final enabled = binding.enabled && binding.activator != null;
 
     return ListTile(
-      title: Text(label, style: TextStyle(color: context.gradFg())),
+      title: Text(label, style: context.gradTileTitleStyle()),
       subtitle: Text(current, style: muted),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

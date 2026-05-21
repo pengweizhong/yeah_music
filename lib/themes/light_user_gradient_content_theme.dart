@@ -14,107 +14,123 @@
 
 import 'package:flutter/material.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 
-/// 浅色全局 [Theme] +「用户双色渐变 / 回落渐变」（非壁纸）全页外壳上的局部 [Theme]，与夜间渐变页的观感对齐。
-///
-/// 解决：仅用 [DefaultTextStyle] 仍会漏掉 [ListTile] / [ExpansionTile] 等合并 [Theme.textTheme] 墨色的问题。
-ThemeData themeForLightUserGradientShell(BuildContext context) {
+/// 渐变 / 壁纸 / 毛玻璃面板上的局部 [Theme]：以平台 [TextTheme] 为基底，避免 Roboto 渗入。
+ThemeData themeForGradientForeground(
+  BuildContext context, {
+  required Color onSurface,
+  required Color onSurfaceVariant,
+}) {
   final t = Theme.of(context);
-  const on = Colors.white;
-  final muted = Colors.white.withValues(alpha: 0.72);
-  final scheme = t.colorScheme.copyWith(
-    onSurface: on,
-    onSurfaceVariant: muted,
-    outline: Colors.white.withValues(alpha: 0.28),
-    outlineVariant: Colors.white.withValues(alpha: 0.18),
+  final platformBase = PlatformTypography.textThemeForBrightness(t.brightness);
+  final merged = PlatformTypography.mergeTextThemePreferPlatformFont(
+    platformBase,
+    t.textTheme,
   );
-  final titleBase = t.listTileTheme.titleTextStyle ??
-      TextStyle(
-        fontSize: t.textTheme.titleMedium?.fontSize ?? 16,
-        fontWeight:
-            t.textTheme.titleMedium?.fontWeight ?? FontWeight.w500,
-      );
-  final subtitleBase = t.listTileTheme.subtitleTextStyle ??
-      TextStyle(
-        fontSize: 13,
-        fontWeight:
-            t.textTheme.bodySmall?.fontWeight ?? FontWeight.w400,
-      );
-  final textThemeApply = t.textTheme.apply(
-    bodyColor: on,
-    displayColor: on,
-    decorationColor: on,
+  final textTheme = PlatformTypography.patchTextTheme(
+    merged.apply(
+      bodyColor: onSurface,
+      displayColor: onSurface,
+      decorationColor: onSurface,
+    ),
   );
-  return t.copyWith(
-    colorScheme: scheme,
-    textTheme: textThemeApply,
-    iconTheme: t.iconTheme.copyWith(color: on),
-    listTileTheme: t.listTileTheme.copyWith(
-      iconColor: on,
-      textColor: on,
-      titleTextStyle: titleBase.copyWith(color: on),
-      subtitleTextStyle: subtitleBase.copyWith(color: muted),
+  final primaryMerged = PlatformTypography.mergeTextThemePreferPlatformFont(
+    platformBase,
+    t.primaryTextTheme,
+  );
+  final primaryTextTheme = PlatformTypography.patchTextTheme(
+    primaryMerged.apply(bodyColor: onSurface, displayColor: onSurface),
+  );
+  final titleMedium = textTheme.titleMedium ?? const TextStyle(fontSize: 16);
+  final bodySmall = textTheme.bodySmall ?? const TextStyle(fontSize: 13);
+  final titleLarge = textTheme.titleLarge ?? const TextStyle(fontSize: 20);
+  return PlatformTypography.patchButtonThemes(
+    t.copyWith(
+      colorScheme: t.colorScheme.copyWith(
+        onSurface: onSurface,
+        onSurfaceVariant: onSurfaceVariant,
+      ),
+      textTheme: textTheme,
+      primaryTextTheme: primaryTextTheme,
+      iconTheme: t.iconTheme.copyWith(color: onSurface),
+      listTileTheme: t.listTileTheme.copyWith(
+        iconColor: onSurface,
+        textColor: onSurface,
+        titleTextStyle: PlatformTypography.merge(
+          titleMedium.copyWith(color: onSurface),
+        ),
+        subtitleTextStyle: PlatformTypography.merge(
+          bodySmall.copyWith(color: onSurfaceVariant),
+        ),
+      ),
+      appBarTheme: t.appBarTheme.copyWith(
+        foregroundColor: onSurface,
+        iconTheme: IconThemeData(color: onSurface),
+        titleTextStyle: PlatformTypography.merge(
+          titleLarge.copyWith(color: onSurface),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: onSurface.withValues(alpha: 0.18),
+        thickness: 1,
+        space: 1,
+      ),
+      switchTheme: gradOnBackgroundSwitchTheme(context),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(
+            const Color(0xE02C2C2C),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        textStyle: PlatformTypography.merge(
+          (textTheme.bodyLarge ?? const TextStyle(fontSize: 16)).copyWith(
+            color: onSurface,
+          ),
+        ),
+      ),
+      dialogTheme: t.dialogTheme.copyWith(
+        titleTextStyle: PlatformTypography.merge(
+          titleLarge.copyWith(color: onSurface),
+        ),
+        contentTextStyle: PlatformTypography.merge(
+          (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+            color: onSurfaceVariant,
+          ),
+        ),
+      ),
+      inputDecorationTheme: t.inputDecorationTheme.copyWith(
+        hintStyle: PlatformTypography.merge(
+          TextStyle(color: onSurfaceVariant.withValues(alpha: 0.85)),
+        ),
+        labelStyle: PlatformTypography.merge(TextStyle(color: onSurface)),
+      ),
     ),
-    appBarTheme: t.appBarTheme.copyWith(
-      foregroundColor: on,
-      iconTheme: IconThemeData(color: on),
-    ),
-    dividerTheme: DividerThemeData(
-      color: Colors.white.withValues(alpha: 0.18),
-      thickness: 1,
-      space: 1,
-    ),
-    switchTheme: gradOnBackgroundSwitchTheme(context),
   );
 }
 
-/// 浅色模式 + 双色渐变，但主/辅色整体偏亮时用墨色前景（避免白字与白调渐变糊成一片）。
+ThemeData themeForFrostedDeepChrome(BuildContext context) {
+  return themeForGradientForeground(
+    context,
+    onSurface: Colors.white,
+    onSurfaceVariant: Colors.white.withValues(alpha: 0.72),
+  );
+}
+
+ThemeData themeForLightUserGradientShell(BuildContext context) {
+  return themeForGradientForeground(
+    context,
+    onSurface: Colors.white,
+    onSurfaceVariant: Colors.white.withValues(alpha: 0.72),
+  );
+}
+
 ThemeData themeForBrightLightGradientOverlay(BuildContext context) {
-  final t = Theme.of(context);
-  final on = kGradLightInk;
-  final muted = kGradLightInkMuted.withValues(alpha: 0.88);
-  final scheme = t.colorScheme.copyWith(
-    onSurface: on,
-    onSurfaceVariant: muted,
-    outline: kGradLightInk.withValues(alpha: 0.35),
-    outlineVariant: kGradLightInk.withValues(alpha: 0.20),
-  );
-  final titleBase = t.listTileTheme.titleTextStyle ??
-      TextStyle(
-        fontSize: t.textTheme.titleMedium?.fontSize ?? 16,
-        fontWeight:
-            t.textTheme.titleMedium?.fontWeight ?? FontWeight.w500,
-      );
-  final subtitleBase = t.listTileTheme.subtitleTextStyle ??
-      TextStyle(
-        fontSize: 13,
-        fontWeight:
-            t.textTheme.bodySmall?.fontWeight ?? FontWeight.w400,
-      );
-  final textThemeApply = t.textTheme.apply(
-    bodyColor: on,
-    displayColor: on,
-    decorationColor: on,
-  );
-  return t.copyWith(
-    colorScheme: scheme,
-    textTheme: textThemeApply,
-    iconTheme: t.iconTheme.copyWith(color: on),
-    listTileTheme: t.listTileTheme.copyWith(
-      iconColor: on,
-      textColor: on,
-      titleTextStyle: titleBase.copyWith(color: on),
-      subtitleTextStyle: subtitleBase.copyWith(color: muted),
-    ),
-    appBarTheme: t.appBarTheme.copyWith(
-      foregroundColor: on,
-      iconTheme: IconThemeData(color: on),
-    ),
-    dividerTheme: DividerThemeData(
-      color: kGradLightInk.withValues(alpha: 0.14),
-      thickness: 1,
-      space: 1,
-    ),
-    switchTheme: gradOnBackgroundSwitchTheme(context),
+  return themeForGradientForeground(
+    context,
+    onSurface: kGradLightInk,
+    onSurfaceVariant: kGradLightInkMuted.withValues(alpha: 0.88),
   );
 }

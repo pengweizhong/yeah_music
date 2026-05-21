@@ -22,6 +22,7 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
 import 'package:yeah_music/widgets/song_list_cover.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/widgets/song_list_marquee_when_current_line.dart';
 
 /// 最近播放列表行（首页等）。顺序由调用方传入决定，不在此重排。
@@ -135,10 +136,10 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                     children: [
                       SongListMarqueeWhenCurrentLine(
                         text: titleStr,
-                        style: TextStyle(
+                        style: context.gradTextStyle(
                           color: widget.isCurrent
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.95),
+                              ? context.gradFg()
+                              : context.gradFg(0.95),
                           fontSize: 15,
                           fontWeight: widget.isCurrent
                               ? FontWeight.w700
@@ -150,10 +151,10 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                       widget.trailingPlayCount != null
                           ? SongListSubtitleWithQualityMarqueePlayCount(
                               song: widget.song,
-                              textStyle: TextStyle(
+                              textStyle: context.gradTextStyle(
                                 color: widget.isCurrent
-                                    ? Colors.white.withValues(alpha: 0.7)
-                                    : Colors.white.withValues(alpha: 0.5),
+                                    ? context.gradFg(0.7)
+                                    : context.gradFg(0.5),
                                 fontSize: 13,
                               ),
                               playCount: widget.trailingPlayCount!,
@@ -164,10 +165,10 @@ class _RecentPlayListRowState extends State<RecentPlayListRow> {
                               song: widget.song,
                               fallbackSubtitle: widget.subtitle,
                               compactBadge: true,
-                              textStyle: TextStyle(
+                              textStyle: context.gradTextStyle(
                                 color: widget.isCurrent
-                                    ? Colors.white.withValues(alpha: 0.7)
-                                    : Colors.white.withValues(alpha: 0.5),
+                                    ? context.gradFg(0.7)
+                                    : context.gradFg(0.5),
                                 fontSize: 13,
                               ),
                               isCurrentTrack: widget.isCurrent,

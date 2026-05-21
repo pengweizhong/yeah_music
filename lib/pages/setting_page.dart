@@ -42,6 +42,7 @@ import 'package:yeah_music/services/android_media_session_lyrics_channel.dart';
 import 'package:yeah_music/services/macos_menu_bar_lyrics.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
@@ -258,13 +259,13 @@ class _AndroidCarLyricsSettingsSectionState
     final detailBody = interactive
         ? l10n.settingsCarLyricsGroupDetail
         : '${l10n.settingsCarLyricsGroupDetail}\n\n${l10n.settingsCarLyricsOnlyAndroidHint}';
-    final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final subStyle = context.gradTileSubtitleStyle(alpha: 0.6);
     if (!_loaded) {
       final tile = ListTile(
         leading: Icon(Icons.directions_car_outlined, color: context.gradFg()),
         title: Text(
           l10n.settingsCarLyricsGroupTitle,
-          style: TextStyle(color: context.gradFg()),
+          style: context.gradTileTitleStyle(),
         ),
         subtitle: Text(l10n.settingsCarLyricsGroupSubtitle, style: subStyle),
         trailing: _settingHelpButton(
@@ -284,7 +285,7 @@ class _AndroidCarLyricsSettingsSectionState
           Expanded(
             child: Text(
               l10n.settingsCarLyricsGroupTitle,
-              style: TextStyle(color: context.gradFg()),
+              style: context.gradTileTitleStyle(),
             ),
           ),
           _settingHelpButton(
@@ -303,7 +304,7 @@ class _AndroidCarLyricsSettingsSectionState
           secondary: Icon(Icons.play_circle_outline, color: context.gradFg()),
           title: Text(
             l10n.settingsCarLyricsEnabled,
-            style: TextStyle(color: context.gradFg()),
+            style: context.gradTileTitleStyle(),
           ),
           subtitle: Text(
             l10n.settingsCarLyricsEnabledSubtitle,
@@ -317,7 +318,7 @@ class _AndroidCarLyricsSettingsSectionState
             secondary: Icon(Icons.album_outlined, color: context.gradFg()),
             title: Text(
               l10n.settingsCarLyricsShowCover,
-              style: TextStyle(color: context.gradFg()),
+              style: context.gradTileTitleStyle(),
             ),
             subtitle: Text(
               l10n.settingsCarLyricsShowCoverSubtitle,
@@ -330,7 +331,7 @@ class _AndroidCarLyricsSettingsSectionState
             secondary: Icon(Icons.subtitles_outlined, color: context.gradFg()),
             title: Text(
               l10n.settingsCarLyricsSyncLyrics,
-              style: TextStyle(color: context.gradFg()),
+              style: context.gradTileTitleStyle(),
             ),
             subtitle: Text(
               l10n.settingsCarLyricsSyncLyricsSubtitle,
@@ -356,14 +357,17 @@ class SettingPage extends StatelessWidget {
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: context.gradFg(),
+            child: Scaffold(
             extendBodyBehindAppBar: false,
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               title: Text(
                 l10n.settingsTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -387,14 +391,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsBackgroundTheme,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsBackgroundThemeSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(Icons.color_lens, color: context.gradFg()),
                       onTap: () {
@@ -410,14 +411,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsOneDrive,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsOneDriveSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(
                         Icons.cloud_outlined,
@@ -451,14 +449,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsHomeGreetingTitle,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsHomeGreetingListSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(
                         Icons.chat_bubble_outline_rounded,
@@ -478,14 +473,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsAudioQualityTitle,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsAudioQualityListSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(
                         Icons.high_quality_outlined,
@@ -505,14 +497,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsLanguage,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsLanguageSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(Icons.language, color: context.gradFg()),
                       trailing: _settingHelpButton(
@@ -536,14 +525,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.diagnosticLogTitle,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.diagnosticLogSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(
                         Icons.bug_report_outlined,
@@ -562,14 +548,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsSponsorTitle,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsSponsorSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(
                         Icons.volunteer_activism_outlined,
@@ -588,14 +571,11 @@ class SettingPage extends StatelessWidget {
                     ListTile(
                       title: Text(
                         l10n.settingsAbout,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsAboutSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       leading: Icon(Icons.favorite, color: context.gradFg()),
                       onTap: () {
@@ -610,14 +590,11 @@ class SettingPage extends StatelessWidget {
                       ),
                       title: Text(
                         l10n.settingsSystemInfo,
-                        style: TextStyle(color: context.gradFg()),
+                        style: context.gradTileTitleStyle(),
                       ),
                       subtitle: Text(
                         l10n.settingsSystemInfoSubtitle,
-                        style: TextStyle(
-                          color: context.gradFg(0.6),
-                          fontSize: 13,
-                        ),
+                        style: context.gradTileSubtitleStyle(alpha: 0.6),
                       ),
                       iconColor: context.gradFg(),
                       collapsedIconColor: context.gradFg(),
@@ -628,6 +605,7 @@ class SettingPage extends StatelessWidget {
               },
             ),
             bottomNavigationBar: const MiniPlayer(),
+            ),
           ),
         );
       },
@@ -704,8 +682,11 @@ class _CacheManagementSectionState extends State<_CacheManagementSection> {
         ? t.measuring
         : t.currentSize(_formatBytes(_cacheBytes));
     return ListTile(
-      title: Text(t.title, style: TextStyle(color: fg)),
-      subtitle: Text(subtitle, style: TextStyle(color: fgMuted, fontSize: 13)),
+      title: Text(t.title, style: context.gradListTitleStyle(color: fg)),
+      subtitle: Text(
+        subtitle,
+        style: context.gradListSubtitleStyle(color: fgMuted, muted: false),
+      ),
       leading: Icon(Icons.cleaning_services_outlined, color: fg),
       trailing: _clearing
           ? const SizedBox(
@@ -892,16 +873,22 @@ class _DesktopLyricsSettingsSectionState
         children: [
           Text(
             title,
-            style: TextStyle(color: fg, fontWeight: FontWeight.w600),
+            style: context.gradListTitleStyle(
+              color: fg,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: fgMuted, fontSize: 13)),
+          Text(
+            subtitle,
+            style: context.gradListSubtitleStyle(color: fgMuted, muted: false),
+          ),
           if (label != null)
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 2),
               child: Text(
                 label,
-                style: TextStyle(color: fgMuted, fontSize: 13),
+                style: context.gradListSubtitleStyle(color: fgMuted, muted: false),
               ),
             ),
           Slider(
@@ -920,7 +907,7 @@ class _DesktopLyricsSettingsSectionState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final subStyle = context.gradTileSubtitleStyle(alpha: 0.6);
     final desktopApplicable =
         !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
@@ -929,7 +916,7 @@ class _DesktopLyricsSettingsSectionState
         leading: Icon(Icons.lyrics_outlined, color: context.gradFg()),
         title: Text(
           l10n.settingsDesktopLyricsGroupTitle,
-          style: TextStyle(color: context.gradFg()),
+          style: context.gradTileTitleStyle(),
         ),
         subtitle: Text(
           l10n.settingsDesktopLyricsGroupSubtitle,
@@ -952,7 +939,7 @@ class _DesktopLyricsSettingsSectionState
           Expanded(
             child: Text(
               l10n.settingsDesktopLyricsGroupTitle,
-              style: TextStyle(color: context.gradFg()),
+              style: context.gradTileTitleStyle(),
             ),
           ),
           _settingHelpButton(
@@ -974,7 +961,7 @@ class _DesktopLyricsSettingsSectionState
           ),
           title: Text(
             l10n.settingsDesktopFloatingLyrics,
-            style: TextStyle(color: context.gradFg()),
+            style: context.gradTileTitleStyle(),
           ),
           subtitle: Text(
             l10n.settingsDesktopFloatingLyricsSubtitle,
@@ -990,7 +977,7 @@ class _DesktopLyricsSettingsSectionState
             secondary: Icon(Icons.lock_outline, color: context.gradFg()),
             title: Text(
               l10n.settingsDesktopFloatingDragLock,
-              style: TextStyle(color: context.gradFg()),
+              style: context.gradTileTitleStyle(),
             ),
             subtitle: Text(
               l10n.settingsDesktopFloatingDragLockSubtitle,
@@ -1052,7 +1039,7 @@ class _DesktopLyricsSettingsSectionState
           secondary: Icon(Icons.podcasts_rounded, color: context.gradFg()),
           title: Text(
             l10n.settingsMacosMenuBarLyrics,
-            style: TextStyle(color: context.gradFg()),
+            style: context.gradTileTitleStyle(),
           ),
           subtitle: Text(
             l10n.settingsMacosMenuBarLyricsSubtitle,
@@ -1108,7 +1095,7 @@ class _PlaybackFadeOutSettingsSectionState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final subStyle = context.gradTileSubtitleStyle(alpha: 0.6);
     final fg = context.gradFg();
 
     if (!_loaded) {
@@ -1116,7 +1103,7 @@ class _PlaybackFadeOutSettingsSectionState
         leading: Icon(Icons.volume_down_rounded, color: fg),
         title: Text(
           l10n.settingsPlaybackFadeOutTitle,
-          style: TextStyle(color: fg),
+          style: context.gradListTitleStyle(color: fg),
         ),
         subtitle: Text(l10n.settingsPlaybackFadeOutSubtitle, style: subStyle),
       );
@@ -1132,7 +1119,7 @@ class _PlaybackFadeOutSettingsSectionState
           Expanded(
             child: Text(
               l10n.settingsPlaybackFadeOutTitle,
-              style: TextStyle(color: fg),
+              style: context.gradListTitleStyle(color: fg),
             ),
           ),
           _settingHelpButton(

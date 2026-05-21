@@ -125,11 +125,15 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
     } else {
       resolvedTitleColor = context.gradFg();
     }
-    final subtitleColor = widget.isCurrent
-        ? primary.withValues(alpha: 0.82)
-        : context.gradFgMuted();
     final trailingIconColor = context.gradFg(0.72);
     final isLinuxDesktop = defaultTargetPlatform == TargetPlatform.linux;
+    final titleStyle = context.gradListTitleStyle(
+      color: resolvedTitleColor,
+      isCurrent: widget.isCurrent,
+    );
+    final subtitleStyle = context.gradListSubtitleStyle(
+      isCurrent: widget.isCurrent,
+    );
     final titleStr = _effectiveTitle();
     return VisibilityDetector(
       key: ValueKey<String>('list_row_vis_${widget.song.path}'),
@@ -203,13 +207,8 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                       children: [
                         SongListMarqueeWhenCurrentLine(
                           text: titleStr,
-                          style: TextStyle(
-                            color: resolvedTitleColor,
-                            fontSize: 16,
-                            height: isLinuxDesktop ? 1.04 : null,
-                            fontWeight: widget.isCurrent
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                          style: titleStyle.copyWith(
+                            height: isLinuxDesktop ? 1.04 : titleStyle.height,
                           ),
                           isCurrentTrack: widget.isCurrent,
                         ),
@@ -217,10 +216,10 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                         widget.trailingPlayCount != null
                             ? SongListSubtitleWithQualityMarqueePlayCount(
                                 song: widget.song,
-                                textStyle: TextStyle(
-                                  color: subtitleColor,
-                                  fontSize: 13,
-                                  height: isLinuxDesktop ? 1.0 : null,
+                                textStyle: subtitleStyle.copyWith(
+                                  height: isLinuxDesktop
+                                      ? 1.0
+                                      : subtitleStyle.height,
                                 ),
                                 playCount: widget.trailingPlayCount!,
                                 l10n: l10n,
@@ -230,10 +229,10 @@ class _CompactSongListRowState extends State<CompactSongListRow> {
                                 song: widget.song,
                                 fallbackSubtitle: widget.subtitle,
                                 compactBadge: false,
-                                textStyle: TextStyle(
-                                  color: subtitleColor,
-                                  fontSize: 13,
-                                  height: isLinuxDesktop ? 1.0 : null,
+                                textStyle: subtitleStyle.copyWith(
+                                  height: isLinuxDesktop
+                                      ? 1.0
+                                      : subtitleStyle.height,
                                 ),
                                 isCurrentTrack: widget.isCurrent,
                               ),

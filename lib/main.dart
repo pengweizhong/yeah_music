@@ -27,6 +27,7 @@ import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/logging/diagnostic_log_store.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/init/app_init.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/models/playback_session_surface.dart';
 import 'package:yeah_music/models/song.dart';
@@ -486,13 +487,20 @@ class _YeahMusicAppState extends State<YeahMusicApp>
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale.resolvedLocale,
           builder: (context, child) {
+            Widget tree = child ?? const SizedBox.shrink();
+            if (PlatformTypography.isDesktop) {
+              tree = DefaultTextStyle(
+                style: PlatformTypography.bodyBaseFrom(Theme.of(context)),
+                child: tree,
+              );
+            }
             return DesktopPlaybackShortcutsListener(
               controller: context.read<PlaybackShortcutController>(),
               child: DesktopFloatingLyricsHost(
                 child: LinuxTaskbarProgressHost(
                   child: LinuxTrayHost(
                     child: MacosMenuBarLyricsHost(
-                      child: child ?? const SizedBox.shrink(),
+                      child: tree,
                     ),
                   ),
                 ),

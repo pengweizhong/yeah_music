@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -20,6 +20,7 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/config/sponsor_links.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 
 /// 接近 GitHub Star 图标的金色（ Material `Icons.star_outline`）
@@ -81,7 +82,7 @@ class SponsorSupportPage extends StatelessWidget {
     return Consumer<ThemeConfigProvider>(
       builder: (context, themeConfig, _) {
         final l10n = AppLocalizations.of(context);
-        final descStyle = TextStyle(
+        final descStyle = context.gradTextStyle(
           color: context.gradFg(0.6),
           fontSize: 13,
           height: 1.35,
@@ -91,8 +92,7 @@ class SponsorSupportPage extends StatelessWidget {
               padding: const EdgeInsets.only(top: 22, bottom: 10),
               child: Text(
                 text,
-                style: TextStyle(
-                  color: context.gradFg(),
+                style: context.gradTextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.2,
@@ -119,7 +119,7 @@ class SponsorSupportPage extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(color: context.gradFg(), fontSize: 16),
+                    style: context.gradTileTitleStyle(fontSize: 16),
                   ),
                 ),
               ],
@@ -128,7 +128,7 @@ class SponsorSupportPage extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 subtitle,
-                style: TextStyle(color: context.gradFg(0.6), fontSize: 13),
+                style: context.gradTileSubtitleStyle(alpha: 0.6),
               ),
             ),
             trailing: IconButton(
@@ -142,14 +142,17 @@ class SponsorSupportPage extends StatelessWidget {
 
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: context.gradFg(),
+            child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               title: Text(
                 l10n.settingsSponsorTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradAppBarTitleStyle(fontSize: 18),
               ),
               leading: IconButton(
                 icon: Icon(Icons.arrow_back_ios_new,
@@ -186,7 +189,7 @@ class SponsorSupportPage extends StatelessWidget {
                   ),
                   title: Text(
                     l10n.settingsSponsorEasterEggTriggerLine,
-                    style: TextStyle(color: context.gradFg(), fontSize: 16),
+                    style: context.gradTileTitleStyle(fontSize: 16),
                   ),
                   trailing: Icon(
                     Icons.chevron_right_rounded,
@@ -197,6 +200,7 @@ class SponsorSupportPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(l10n.settingsSponsorExternalHint, style: descStyle),
               ],
+            ),
             ),
           ),
         );

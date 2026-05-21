@@ -68,6 +68,30 @@ void EnableFullDpiSupportIfAvailable(HWND hwnd) {
   FreeLibrary(user32_module);
 }
 
+/// Picks the closest embedded .ico size for taskbar / title bar (per-monitor DPI).
+void ApplyAppIconsToWindow(HWND hwnd) {
+  HINSTANCE instance = GetModuleHandle(nullptr);
+  const int sm_cx = GetSystemMetrics(SM_CXSMICON);
+  const int sm_cy = GetSystemMetrics(SM_CYSMICON);
+  const int cx = GetSystemMetrics(SM_CXICON);
+  const int cy = GetSystemMetrics(SM_CYICON);
+
+  HICON small_icon = static_cast<HICON>(LoadImage(
+      instance, MAKEINTRESOURCE(IDI_APP_ICON), IMAGE_ICON, sm_cx, sm_cy,
+      LR_DEFAULTCOLOR));
+  HICON big_icon = static_cast<HICON>(LoadImage(
+      instance, MAKEINTRESOURCE(IDI_APP_ICON), IMAGE_ICON, cx, cy,
+      LR_DEFAULTCOLOR));
+
+  if (small_icon) {
+    SendMessage(hwnd, WM_SETICON, ICON_SMALL,
+                reinterpret_cast<LPARAM>(small_icon));
+  }
+  if (big_icon) {
+    SendMessage(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(big_icon));
+  }
+}
+
 }  // namespace
 
 // Manages the Win32Window's window class registration.
@@ -159,6 +183,7 @@ bool Win32Window::Create(const std::wstring& title,
     return false;
   }
 
+  ApplyAppIconsToWindow(window);
   UpdateTheme(window);
 
   return OnCreate();
@@ -210,7 +235,21 @@ Win32Window::MessageHandler(HWND hwnd,
       SetWindowPos(hwnd, nullptr, newRectSize->left, newRectSize->top, newWidth,
                    newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
 
+      ApplyAppIconsToWindow(hwnd);
       return 0;
+    }
+
+    case WM_GETICON: {
+      const int icon_type = static_cast<int>(wparam);
+      const bool is_small_icon =
+          icon_type == ICON_SMALL || icon_type == ICON_SMALL2;
+      const int icon_cx = is_small_icon ? GetSystemMetrics(SM_CXSMICON)
+                                        : GetSystemMetrics(SM_CXICON);
+      const int icon_cy = is_small_icon ? GetSystemMetrics(SM_CYSMICON)
+                                        : GetSystemMetrics(SM_CYICON);
+      return reinterpret_cast<LRESULT>(LoadImage(
+          GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON), IMAGE_ICON,
+          icon_cx, icon_cy, LR_DEFAULTCOLOR));
     }
     case WM_SIZE: {
       RECT rect = GetClientArea();

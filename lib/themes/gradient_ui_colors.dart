@@ -13,6 +13,7 @@
 // GNU General Public License for more details.
 
 import 'package:flutter/material.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/themes/user_theme_gradient_foreground_scope.dart';
 import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
 
@@ -115,6 +116,109 @@ extension GradOnThemedBackground on BuildContext {
     }
     return Colors.white.withValues(alpha: a);
   }
+
+  /// 列表主标题（系统字体 + Windows 清晰字重；不读取 [Theme.textTheme] 避免 Roboto）。
+  TextStyle gradListTitleStyle({
+    Color? color,
+    double fontSize = 16,
+    FontWeight? fontWeight,
+    bool isCurrent = false,
+  }) {
+    return PlatformTypography.gradListTitle(
+      this,
+      color: color ?? gradFg(),
+      fontSize: fontSize,
+      fontWeight:
+          fontWeight ??
+          (isCurrent
+              ? PlatformTypography.listTitleCurrentWeight
+              : PlatformTypography.listTitleWeight),
+    );
+  }
+
+  /// 列表副标题；[muted] 时用 [gradFgMuted] 且不低于可读 alpha。
+  TextStyle gradListSubtitleStyle({
+    Color? color,
+    double fontSize = 13,
+    bool muted = true,
+    bool isCurrent = false,
+  }) {
+    final c =
+        color ??
+        (isCurrent
+            ? Theme.of(this).colorScheme.primary.withValues(alpha: 0.88)
+            : gradFgMuted(
+                PlatformTypography.preferSharpDesktopMetrics ? 0.88 : 1.0,
+              ));
+    return PlatformTypography.gradListSubtitle(
+      this,
+      color: c,
+      fontSize: fontSize,
+    );
+  }
+
+  /// AppBar 标题。
+  TextStyle gradAppBarTitleStyle({double alpha = 0.96, double fontSize = 20}) {
+    return PlatformTypography.gradAppBarTitle(
+      this,
+      color: gradFg(alpha),
+      fontSize: fontSize,
+    );
+  }
+
+  /// ListTile / 设置项标题（渐变前景 + 平台字体）。
+  TextStyle gradTileTitleStyle({
+    double alpha = 0.96,
+    double fontSize = 16,
+    FontWeight? fontWeight,
+  }) {
+    return gradListTitleStyle(
+      color: gradFg(alpha),
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+    );
+  }
+
+  /// 渐变页通用文案（按字重自动选 Windows 粗体族）。
+  TextStyle gradTextStyle({
+    Color? color,
+    double? fontSize,
+    FontWeight? fontWeight,
+    double? height,
+    double? letterSpacing,
+    List<FontFeature>? fontFeatures,
+  }) {
+    return PlatformTypography.merge(
+      TextStyle(
+        color: color ?? gradFg(),
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        height: height,
+        letterSpacing: letterSpacing,
+        fontFeatures: fontFeatures,
+        leadingDistribution: TextLeadingDistribution.even,
+      ),
+    );
+  }
+
+  /// 设置子页分区标题。
+  TextStyle gradSectionTitleStyle({double fontSize = 18}) {
+    return gradTextStyle(
+      fontSize: fontSize,
+      fontWeight: PlatformTypography.preferSharpDesktopMetrics
+          ? FontWeight.w600
+          : FontWeight.bold,
+    );
+  }
+
+  /// ListTile / 设置项副标题。
+  TextStyle gradTileSubtitleStyle({double alpha = 0.88, double fontSize = 13}) {
+    return gradListSubtitleStyle(
+      color: gradFg(alpha),
+      fontSize: fontSize,
+      muted: false,
+    );
+  }
 }
 
 /// 渐变 / 壁纸底上的 [Switch]：避免白天关态拇指与轨道同为白色。
@@ -191,6 +295,7 @@ abstract final class FrostedPalette {
       case FrostedSurfaceKind.bottomBar:
         return const Color(0xEE28323D);
       case FrostedSurfaceKind.drawerOrPinned:
+
         /// 白昼与底栏同色实板：与白字链路一致（避免浅色雾面 + 白字发糊）。
         return const Color(0xEE28323D);
       case FrostedSurfaceKind.sheet:

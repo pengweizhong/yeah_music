@@ -14,6 +14,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_splash_chrome.dart';
 
 const PageTransitionsTheme _kPageTransitions = PageTransitionsTheme(
@@ -45,7 +46,7 @@ abstract final class AppMaterialThemes {
       brightness: Brightness.light,
       colorScheme: scheme,
     );
-    return base.copyWith(
+    final theme = base.copyWith(
       scaffoldBackgroundColor: _kLightScaffoldTone,
       canvasColor: _kLightScaffoldTone,
       cardColor: const Color(0xFFFFFFFF),
@@ -96,10 +97,11 @@ abstract final class AppMaterialThemes {
       ),
       scrollbarTheme: const ScrollbarThemeData(interactive: true),
     );
+    return PlatformTypography.apply(theme);
   }
 
   static ThemeData get dark {
-    return ThemeData(
+    final theme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
@@ -119,5 +121,6 @@ abstract final class AppMaterialThemes {
       ),
       scrollbarTheme: const ScrollbarThemeData(interactive: true),
     );
+    return PlatformTypography.apply(theme);
   }
 }

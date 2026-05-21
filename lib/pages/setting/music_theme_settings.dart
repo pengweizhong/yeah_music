@@ -15,6 +15,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/themes/theme_provider.dart';
 
 class MusicThemeSettings extends StatefulWidget {
@@ -27,8 +28,20 @@ class MusicThemeSettings extends StatefulWidget {
 class _ThemeSettingsState extends State<MusicThemeSettings> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("主题设置")),
+    return PlatformTypography.desktopFontScope(
+      context: context,
+      child: Scaffold(
+      appBar: AppBar(
+        title: Text(
+          '主题设置',
+          style: PlatformTypography.merge(
+            Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ) ??
+                const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
       body: Container(
         //装饰
         decoration: BoxDecoration(
@@ -41,7 +54,12 @@ class _ThemeSettingsState extends State<MusicThemeSettings> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             //夜晚模式
-            const Text("夜晚模式", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              '夜晚模式',
+              style: PlatformTypography.merge(
+                const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
             //切换模式
             CupertinoSwitch(
               value: Provider.of<ThemeProvider>(context, listen: false).isDarkTheme,
@@ -49,6 +67,7 @@ class _ThemeSettingsState extends State<MusicThemeSettings> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

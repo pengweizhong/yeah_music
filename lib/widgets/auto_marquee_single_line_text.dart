@@ -13,6 +13,7 @@
 // GNU General Public License for more details.
 
 import 'package:flutter/material.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 
 /// 单行文本在可用宽度不足时向左循环滚动（无缝拼接两段相同文案）。
 ///
@@ -121,6 +122,8 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
     super.dispose();
   }
 
+  TextStyle get _style => PlatformTypography.merge(widget.style);
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -131,7 +134,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             widget.text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: widget.style,
+            style: _style,
             textAlign: widget.textAlign,
           );
         }
@@ -140,11 +143,11 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             widget.text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: widget.style,
+            style: _style,
             textAlign: widget.textAlign,
           );
         }
-        final span = TextSpan(text: widget.text, style: widget.style);
+        final span = TextSpan(text: widget.text, style: _style);
         final tp = TextPainter(
           text: span,
           textDirection: TextDirection.ltr,
@@ -160,7 +163,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             widget.text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: widget.style,
+            style: _style,
             textAlign: widget.textAlign,
           );
         }
@@ -173,7 +176,7 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
             widget.text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: widget.style,
+            style: _style,
             textAlign: widget.textAlign,
           );
         }
@@ -192,9 +195,9 @@ class _AutoMarqueeSingleLineTextState extends State<AutoMarqueeSingleLineText>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(widget.text, maxLines: 1, style: widget.style),
+                  Text(widget.text, maxLines: 1, style: _style),
                   SizedBox(width: widget.gapBetweenLoops),
-                  Text(widget.text, maxLines: 1, style: widget.style),
+                  Text(widget.text, maxLines: 1, style: _style),
                 ],
               ),
             ),

@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/utils/desktop_lyrics_payload_builder.dart';
 import 'package:yeah_music/utils/desktop_lyrics_window_geometry_store.dart';
 import 'package:yeah_music/welcome/app_startup_clock.dart';
@@ -40,13 +41,15 @@ class _DesktopLyricsSubApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        splashColor: Colors.transparent,
+      theme: PlatformTypography.apply(
+        ThemeData(
+          useMaterial3: true,
+          scaffoldBackgroundColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          splashColor: Colors.transparent,
+        ),
       ),
       home: const DesktopLyricsSubWindowPage(),
     );
@@ -402,10 +405,8 @@ class _DesktopLyricsSubWindowPageState extends State<DesktopLyricsSubWindowPage>
       final c = (s['c'] as num?)?.toInt() ?? 0xFFFFFFFF;
       final wt = (s['wt'] as num?)?.toInt() ?? 400;
       final tw = wt >= 600 ? FontWeight.w600 : FontWeight.w400;
-      final baseStyle = TextStyle(
+      final baseStyle = PlatformTypography.lyricLine(
         fontSize: fs,
-        height: 1.35,
-        letterSpacing: 0.2,
         fontWeight: tw,
       );
       if (useGrad) {
@@ -447,7 +448,7 @@ class _DesktopLyricsSubWindowPageState extends State<DesktopLyricsSubWindowPage>
       child: RichText(
         textAlign: align,
         text: TextSpan(
-          style: const TextStyle(height: 1.35, letterSpacing: 0.2),
+          style: PlatformTypography.lyricLine(fontSize: 18),
           children: children,
         ),
       ),

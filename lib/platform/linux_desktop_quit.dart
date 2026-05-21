@@ -23,16 +23,17 @@ import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
 
-/// Linux 桌面退出是否已由 [requestLinuxDesktopQuit] 接管（避免 dispose 里重复销毁托盘）。
+/// 桌面退出是否已由 [requestLinuxDesktopQuit] 接管（避免 dispose 里重复销毁托盘）。
 bool linuxDesktopQuitInProgress = false;
 
-/// 有序退出：先停播/关子窗口/销毁托盘，再交给 Flutter/GTK 正常收尾。
+/// 有序退出：先停播/关子窗口/销毁托盘，再交给 Flutter 正常收尾。
 ///
 /// Linux 上勿调用 [windowManager.destroy]：会触发
 /// `FlutterEngineRemoveView`（implicit view 不可移除）并在 epoxy 中断言失败。
 /// 主窗口关闭与托盘退出均使用 [SystemNavigator.pop]。
 Future<void> requestLinuxDesktopQuit() async {
-  if (kIsWeb || !Platform.isLinux) return;
+  if (kIsWeb) return;
+  if (!Platform.isLinux && !Platform.isWindows) return;
   if (linuxDesktopQuitInProgress) return;
   linuxDesktopQuitInProgress = true;
 
@@ -40,9 +41,11 @@ Future<void> requestLinuxDesktopQuit() async {
     await EmbeddedSongMetadataPersistScheduler.flushPending();
   } catch (_) {}
 
-  try {
-    await LinuxTaskbarProgress.clear();
-  } catch (_) {}
+  if (Platform.isLinux) {
+    try {
+      await LinuxTaskbarProgress.clear();
+    } catch (_) {}
+  }
 
   try {
     await MusicService().stop();
@@ -62,6 +65,13 @@ Future<void> requestLinuxDesktopQuit() async {
   try {
     await windowManager.setPreventClose(false);
   } catch (_) {}
+
+  if (Platform.isWindows) {
+    try {
+      await windowManager.destroy();
+    } catch (_) {}
+    exit(0);
+  }
 
   SystemNavigator.pop();
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -21,7 +21,6 @@ import 'package:yeah_music/compments/playback_shortcut_controller.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/wire_remote_control_config.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
-
 String _actionLabel(AppLocalizations l10n, WireRemoteControlAction a) {
   return switch (a) {
     WireRemoteControlAction.playPause => l10n.wireRemoteActionPlayPause,
@@ -67,7 +66,10 @@ class WireRemoteControlSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final ctrl = context.watch<PlaybackShortcutController>();
     final cfg = ctrl.wireRemote;
-    final subStyle = TextStyle(color: context.gradFg(0.6), fontSize: 13);
+    final subStyle = context.gradTextStyle(
+      color: context.gradFg(0.6),
+      fontSize: 13,
+    );
     final supportedHere = !kIsWeb && Platform.isAndroid;
 
     return Opacity(
@@ -76,7 +78,7 @@ class WireRemoteControlSection extends StatelessWidget {
         leading: Icon(Icons.headset_outlined, color: context.gradFg()),
         title: Text(
           l10n.settingsWireRemoteTitle,
-          style: TextStyle(color: context.gradFg()),
+          style: context.gradTileTitleStyle(),
         ),
         subtitle: Text(
           supportedHere
@@ -91,7 +93,7 @@ class WireRemoteControlSection extends StatelessWidget {
             ListTile(
               title: Text(
                 l10n.settingsWireRemoteUnavailableTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 l10n.settingsWireRemoteUnavailableBody,
@@ -103,7 +105,7 @@ class WireRemoteControlSection extends StatelessWidget {
               secondary: Icon(Icons.tune, color: context.gradFg(0.75)),
               title: Text(
                 l10n.settingsWireRemoteUseCustom,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 l10n.settingsWireRemoteUseCustomSubtitle,
@@ -115,7 +117,7 @@ class WireRemoteControlSection extends StatelessWidget {
             ListTile(
               title: Text(
                 l10n.wireRemoteSingleTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 _actionLabel(l10n, cfg.singleClick),
@@ -131,7 +133,7 @@ class WireRemoteControlSection extends StatelessWidget {
             ListTile(
               title: Text(
                 l10n.wireRemoteDoubleTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 _actionLabel(l10n, cfg.doubleClick),
@@ -147,7 +149,7 @@ class WireRemoteControlSection extends StatelessWidget {
             ListTile(
               title: Text(
                 l10n.wireRemoteTripleTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 _actionLabel(l10n, cfg.tripleClick),
@@ -163,7 +165,7 @@ class WireRemoteControlSection extends StatelessWidget {
             ListTile(
               title: Text(
                 l10n.wireRemoteMediaNextTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 _actionLabel(l10n, cfg.mediaNextKeyAction),
@@ -181,7 +183,7 @@ class WireRemoteControlSection extends StatelessWidget {
             ListTile(
               title: Text(
                 l10n.wireRemoteMediaPreviousTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               subtitle: Text(
                 _actionLabel(l10n, cfg.mediaPreviousKeyAction),

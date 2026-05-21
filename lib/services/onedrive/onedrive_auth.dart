@@ -16,8 +16,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yeah_music/config/onedrive_config.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
@@ -49,16 +51,20 @@ class OneDriveAuth {
 
   String? get lastErrorMessage => _lastErrorMessage;
 
+  /// Windows / Linux 无 flutter_appauth 原生实现，走 OAuth 设备码。
+  static bool get _usesDeviceCodeOAuth =>
+      Platform.isLinux || Platform.isWindows;
+
   Future<void> signOut() => _store.clear();
 
-  /// 交互式登录；Linux 等平台无 [FlutterAppAuth] 支持时返回 null。
+  /// 交互式登录；桌面无 AppAuth 时用设备码（浏览器 + 轮询令牌）。
   Future<({String access, String refresh, DateTime expiry})?> signIn(
     String clientId,
     AppLocalizations l10n,
   ) async {
     _lastErrorMessage = null;
     if (clientId.trim().isEmpty) return null;
-    if (Platform.isLinux) {
+    if (_usesDeviceCodeOAuth) {
       return _signInByDeviceCode(clientId.trim(), l10n);
     }
 
@@ -70,11 +76,11 @@ class OneDriveAuth {
     _interactiveSignInInFlight = true;
 
     appLog.i(
-      'OneDrive OAuth: 开始授权…（macOS 将在系统浏览器中打开 Microsoft 登录页，完成后跳回本应用）',
+      'OneDrive OAuth: 开始授权…（将在系统浏览器中打开 Microsoft 登录页，完成后跳回本应用）',
     );
 
     Timer? desktopHangWatch;
-    if (!Platform.isLinux && !Platform.isIOS && !Platform.isAndroid) {
+    if (Platform.isMacOS) {
       desktopHangWatch = Timer.periodic(const Duration(seconds: 25), (_) {
         appLog.w(
           'OneDrive OAuth: 仍在等待：请在已打开的浏览器中完成登录并同意权限；若无浏览器窗口请先切到 Dock/其它桌面。',
@@ -113,6 +119,15 @@ class OneDriveAuth {
               : errDesc)
           : (err.trim().isNotEmpty ? err : l10n.oneDriveOAuthPlatformError);
       return null;
+    } on MissingPluginException catch (e, st) {
+      appLog.w(
+        'OneDrive OAuth: 当前平台未注册 FlutterAppAuth，改用设备码登录',
+        error: e,
+        stackTrace: st,
+      );
+      _interactiveSignInInFlight = false;
+      desktopHangWatch?.cancel();
+      return _signInByDeviceCode(clientId.trim(), l10n);
     } catch (e, st) {
       appLog.e('OneDrive OAuth: authorizeAndExchangeCode 异常', error: e, stackTrace: st);
       _lastErrorMessage = '$e';
@@ -167,7 +182,7 @@ class OneDriveAuth {
     if (exp != null && DateTime.now().isBefore(exp.subtract(const Duration(minutes: 2)))) {
       return access;
     }
-    if (Platform.isLinux) {
+    if (_usesDeviceCodeOAuth) {
       return _refreshAccessTokenByHttp(
         clientId: clientId.trim(),
         refreshToken: refresh,
@@ -218,7 +233,7 @@ class OneDriveAuth {
         },
       );
       if (res.statusCode < 200 || res.statusCode >= 300) {
-        appLog.w('OneDrive OAuth: Linux refresh 失败 ${res.statusCode}: ${res.body}');
+        appLog.w('OneDrive OAuth: HTTP refresh 失败 ${res.statusCode}: ${res.body}');
         return null;
       }
       final raw = jsonDecode(res.body);
@@ -237,7 +252,7 @@ class OneDriveAuth {
       );
       return newAccess;
     } catch (e, st) {
-      appLog.e('OneDrive OAuth: Linux refresh 异常', error: e, stackTrace: st);
+      appLog.e('OneDrive OAuth: HTTP refresh 异常', error: e, stackTrace: st);
       return null;
     }
   }
@@ -264,7 +279,7 @@ class OneDriveAuth {
         },
       );
       if (dc.statusCode < 200 || dc.statusCode >= 300) {
-        appLog.w('OneDrive OAuth: Linux device code 获取失败 ${dc.statusCode}: ${dc.body}');
+        appLog.w('OneDrive OAuth: device code 获取失败 ${dc.statusCode}: ${dc.body}');
         _lastErrorMessage = _friendlyOAuthError(
           dc.body,
           l10n: l10n,
@@ -283,19 +298,13 @@ class OneDriveAuth {
       var interval = (m['interval'] as num?)?.toInt() ?? 5;
       final humanMessage = (m['message'] as String?)?.trim();
       if (deviceCode == null || deviceCode.isEmpty) return null;
-      appLog.i('OneDrive Linux 登录：$humanMessage');
+      appLog.i('OneDrive 设备码登录：$humanMessage');
       if (verifyUri != null && verifyUri.isNotEmpty) {
-        appLog.i('OneDrive Linux 登录地址：$verifyUri');
-        try {
-          await Process.start(
-            'xdg-open',
-            <String>[verifyUri],
-            runInShell: true,
-          );
-        } catch (_) {}
+        appLog.i('OneDrive 登录地址：$verifyUri');
+        await _openVerificationUri(verifyUri);
       }
       if (userCode != null && userCode.isNotEmpty) {
-        appLog.i('OneDrive Linux 用户码：$userCode');
+        appLog.i('OneDrive 用户码：$userCode');
       }
 
       final deadline = DateTime.now().add(Duration(seconds: expiresIn));
@@ -327,7 +336,7 @@ class OneDriveAuth {
             refreshToken: refresh,
             accessExpiry: expiry,
           );
-          appLog.i('OneDrive Linux 登录成功');
+          appLog.i('OneDrive 设备码登录成功');
           return (access: access, refresh: refresh, expiry: expiry);
         }
         final rawErr = jsonDecode(tk.body);
@@ -342,11 +351,11 @@ class OneDriveAuth {
         if (err == 'authorization_declined' ||
             err == 'expired_token' ||
             err == 'bad_verification_code') {
-          appLog.w('OneDrive Linux 登录中断: $err');
+          appLog.w('OneDrive 设备码登录中断: $err');
           _lastErrorMessage = l10n.oneDriveSignInInterrupted(err ?? '');
           return null;
         }
-        appLog.w('OneDrive Linux 登录失败: ${tk.body}');
+        appLog.w('OneDrive 设备码登录失败: ${tk.body}');
         _lastErrorMessage = _friendlyOAuthError(
           tk.body,
           l10n: l10n,
@@ -354,15 +363,36 @@ class OneDriveAuth {
         );
         return null;
       }
-      appLog.w('OneDrive Linux 登录超时');
+      appLog.w('OneDrive 设备码登录超时');
       _lastErrorMessage = l10n.oneDriveSignInTimedOut;
       return null;
     } catch (e, st) {
-      appLog.e('OneDrive Linux 登录异常', error: e, stackTrace: st);
+      appLog.e('OneDrive 设备码登录异常', error: e, stackTrace: st);
       _lastErrorMessage = '$e';
       return null;
     } finally {
       _interactiveSignInInFlight = false;
+    }
+  }
+
+  Future<void> _openVerificationUri(String verifyUri) async {
+    final uri = Uri.tryParse(verifyUri);
+    if (uri == null) return;
+    try {
+      final ok = await canLaunchUrl(uri);
+      if (!ok) return;
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      try {
+        if (Platform.isLinux) {
+          await Process.start('xdg-open', <String>[verifyUri], runInShell: true);
+        } else if (Platform.isWindows) {
+          await Process.run('cmd', <String>['/c', 'start', '', verifyUri],
+              runInShell: true);
+        } else if (Platform.isMacOS) {
+          await Process.run('open', <String>[verifyUri]);
+        }
+      } catch (_) {}
     }
   }
 
