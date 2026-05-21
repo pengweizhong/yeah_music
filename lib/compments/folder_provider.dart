@@ -117,8 +117,14 @@ class FolderProvider extends ChangeNotifier {
     _initialized = true;
     if (Platform.isMacOS) {
       try {
-        await BookmarkService.restoreAllBookmarks();
-        appLog.d('macOS: 已恢复音乐目录安全作用域书签');
+        final roots = await BookmarkService.restoreAllBookmarks();
+        if (roots.isEmpty) {
+          appLog.w(
+            'macOS: 未能恢复任何音乐目录访问权限；请在「设置→音乐源」中重新选择已添加的文件夹',
+          );
+        } else {
+          appLog.d('macOS: 已恢复 ${roots.length} 个音乐目录安全作用域书签');
+        }
       } catch (e) {
         appLog.w('macOS 恢复书签失败（可尝试在「音乐源」中刷新）', error: e);
       }

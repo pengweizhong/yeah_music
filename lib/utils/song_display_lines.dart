@@ -22,6 +22,14 @@ String songListPrimaryTitle(Song song) {
   return p.basenameWithoutExtension(song.path);
 }
 
+/// 悬停提示等：「歌名 – 歌手」；无歌手时仅歌名。
+String songTitleArtistTooltip(Song song) {
+  final title = songListPrimaryTitle(song);
+  final artist = song.artist?.trim();
+  if (artist == null || artist.isEmpty) return title;
+  return '$title – $artist';
+}
+
 /// 列表副标题：艺人 · 专辑（与曲库页、用户歌单、最近播放等处一致）。
 String songListSecondaryLine(Song song) {
   if (song.artist == null || song.artist!.isEmpty) {

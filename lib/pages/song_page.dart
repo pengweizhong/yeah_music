@@ -2312,7 +2312,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         );
-                  return Material(
+                  return Tooltip(
+                    message: songTitleArtistTooltip(s),
+                    waitDuration: const Duration(milliseconds: 450),
+                    child: Material(
                     key: i == ci
                         ? _theaterCoverCurrentSlotKey
                         : ValueKey<String>('theater_cover_${s.path}'),
@@ -2359,6 +2362,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
+                  ),
                   );
                 },
               ),

@@ -785,7 +785,8 @@ void mergeId3v1TailAscii(
   required void Function(DateTime?) yearSetter,
 }) {
   if (tag.length < 128) return;
-  if (ascii.decode(tag.sublist(0, 3)) != 'TAG') return;
+  // 尾部 128 字节未必是合法 ID3v1（混有非 ASCII 时勿用 ascii.decode，否则会抛 FormatException）。
+  if (tag[0] != 0x54 || tag[1] != 0x41 || tag[2] != 0x47) return;
 
   considerTitle(_decodeId3v1Cp125X(tag.sublist(3, 33)));
   considerArtist(_decodeId3v1Cp125X(tag.sublist(33, 63)));

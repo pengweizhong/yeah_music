@@ -157,13 +157,19 @@ enum YeahMusicMethodChannels {
                                   relativeTo: nil,
                                   bookmarkDataIsStale: &isStale)
                 if isStale {
-                    continue
+                    NSLog("YeahMusic: 音乐目录书签已过期，仍尝试恢复访问: \(path)")
                 }
 
                 if url.startAccessingSecurityScopedResource() {
                     restoredPaths.append(path)
+                    if isStale {
+                        NSLog("YeahMusic: 已恢复访问（建议在「音乐源」中重新选择该文件夹以更新书签）: \(path)")
+                    }
+                } else if isStale {
+                    NSLog("YeahMusic: 无法访问音乐目录（请在「音乐源」中重新选择文件夹）: \(path)")
                 }
             } catch {
+                NSLog("YeahMusic: 解析音乐目录书签失败: \(path)")
                 continue
             }
         }

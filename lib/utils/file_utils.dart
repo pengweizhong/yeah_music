@@ -24,6 +24,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
+import 'package:yeah_music/utils/macos_file_access.dart';
 import 'package:yeah_music/utils/wav_metadata_reader.dart';
 
 import '../models/song.dart';
@@ -100,6 +101,9 @@ class FileUtils {
     bool storageUnlockRetryDone = false,
   }) async {
     String filename = song.path.split('/').last;
+    if (!kIsWeb && Platform.isMacOS) {
+      await MacOsFileAccess.ensureForSongPath(song.path);
+    }
     File file = File(song.path);
     late final AudioMetadata metadata;
     var resolvedEmbedImages = loadEmbeddedAlbumArt;
@@ -166,6 +170,15 @@ class FileUtils {
         return;
       }
       if (loadEmbeddedAlbumArt) {
+        if (!kIsWeb &&
+            Platform.isMacOS &&
+            MacOsFileAccess.looksLikeAccessDenied(e)) {
+          appLog.w(
+            'macOS 无法读取该文件（请在 设置→音乐源 中重新选择对应文件夹）: $filename',
+          );
+          song.title = filename;
+          return;
+        }
         appLog.w('readMetadata 失败，尝试跳过内嵌图: $filename', error: e);
         try {
           metadata = await readMetaNoImage();
@@ -189,14 +202,30 @@ class FileUtils {
           final msg = e2.toString();
           final short =
               msg.length > 140 ? '${msg.substring(0, 140)}…' : msg;
-          appLog.w(
-            '读取歌曲元信息失败（文件损坏或不完整）: $filename — $short',
-          );
+          if (!kIsWeb &&
+              Platform.isMacOS &&
+              MacOsFileAccess.looksLikeAccessDenied(e2)) {
+            appLog.w(
+              'macOS 无法读取该文件（请在 设置→音乐源 中重新选择对应文件夹）: $filename',
+            );
+          } else {
+            appLog.w(
+              '读取歌曲元信息失败（文件损坏或不完整）: $filename — $short',
+            );
+          }
           return;
         }
       } else {
         song.title = filename;
-        appLog.e('读取歌曲元信息失败', error: e, stackTrace: st);
+        if (!kIsWeb &&
+            Platform.isMacOS &&
+            MacOsFileAccess.looksLikeAccessDenied(e)) {
+          appLog.w(
+            'macOS 无法读取该文件（请在 设置→音乐源 中重新选择对应文件夹以授予访问权限）: $filename',
+          );
+        } else {
+          appLog.e('读取歌曲元信息失败', error: e, stackTrace: st);
+        }
         return;
       }
     }
