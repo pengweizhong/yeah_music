@@ -12,6 +12,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
@@ -41,12 +43,19 @@ Future<bool> showAddManyToUserPlaylistsSheet(
     showDragHandle: false,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: FrostedGlassBottomSheet(
-        child: _AddToUserPlaylistsBody(songs: songs),
-      ),
-    ),
+    builder: (sheetContext) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: FrostedGlassBottomSheet(
+            child: _AddToUserPlaylistsBody(songs: songs),
+          ),
+        ),
+      );
+    },
   );
   return result ?? false;
 }
@@ -61,8 +70,24 @@ class _AddToUserPlaylistsBody extends StatefulWidget {
 }
 
 class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
+  /// 与 [CheckboxListTile] 默认两行高度接近，用于按条数估算列表高度。
+  static const double _playlistTileHeight = 72;
+  /// 标题、说明、新建行、底部按钮等（不含列表）的估算高度。
+  static const double _sheetChromeEstimate = 232;
+
   late Set<String> _selected;
   final TextEditingController _newNameController = TextEditingController();
+
+  double _playlistListMaxHeight(BuildContext context, int playlistCount) {
+    final mq = MediaQuery.of(context);
+    final visibleH = mq.size.height - mq.viewInsets.bottom;
+    final byViewport = (visibleH - _sheetChromeEstimate - mq.viewPadding.bottom)
+        .clamp(80.0, mq.size.height * 0.42)
+        .toDouble();
+    if (playlistCount == 0) return math.min(120.0, byViewport);
+    final byCount = playlistCount * _playlistTileHeight;
+    return math.min(byCount, byViewport);
+  }
 
   @override
   void initState() {
@@ -103,8 +128,6 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
     final scheme = Theme.of(context).colorScheme;
     final on = scheme.onSurface;
     final onMuted = scheme.onSurfaceVariant;
-    final maxListHeight = MediaQuery.sizeOf(context).height * 0.52;
-
     final sheetTitle = widget.songs.length == 1
         ? l10n.addToPlaylistTitle(titleName)
         : l10n.libraryBatchAddToPlaylistSheetTitle(widget.songs.length);
@@ -113,7 +136,12 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
         ? l10n.addToPlaylistMultiHelp
         : l10n.libraryBatchAddToPlaylistSheetHelp;
 
+    final bottomSafe = MediaQuery.viewPaddingOf(context).bottom;
+    final listMaxHeight = _playlistListMaxHeight(context, playlists.length);
+
     return SafeArea(
+      top: false,
+      bottom: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -185,10 +213,10 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
             ),
           ),
           ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxListHeight),
+            constraints: BoxConstraints(maxHeight: listMaxHeight),
             child: playlists.isEmpty
                 ? SizedBox(
-                    height: 120,
+                    height: listMaxHeight,
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -251,7 +279,7 @@ class _AddToUserPlaylistsBodyState extends State<_AddToUserPlaylistsBody> {
                   ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+            padding: EdgeInsets.fromLTRB(8, 4, 8, 12 + bottomSafe),
             child: Row(
               children: [
                 TextButton(

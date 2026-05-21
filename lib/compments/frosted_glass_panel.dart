@@ -170,10 +170,13 @@ class FrostedGlassBottomSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
               ],
-              Theme(
-                data: frostedBottomSheetContentTheme(context),
-                child: FrostedSheetForegroundScope(
-                  child: child,
+              Flexible(
+                fit: FlexFit.loose,
+                child: Theme(
+                  data: frostedBottomSheetContentTheme(context),
+                  child: FrostedSheetForegroundScope(
+                    child: child,
+                  ),
                 ),
               ),
             ],

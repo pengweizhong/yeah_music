@@ -131,23 +131,12 @@ public class AudioService extends MediaBrowserServiceCompat {
     private String yeahLastLyricMediaId;
     /** 真实曲名（与 [METADATA_KEY_TITLE] 分离；托管时 TITLE 镜像为当前歌词以免系统闪曲名）。 */
     private String yeahCanonicalSongTitle;
-    private CharSequence yeahPendingLyricTitle;
-    private CharSequence yeahPendingLyricSubtitle;
-    private MediaMetadataCompat yeahPendingSessionMeta;
-    private final Runnable yeahManagedLyricTickRunner = new Runnable() {
-        @Override
-        public void run() {
-            if (yeahPendingSessionMeta == null) return;
-            yeahApplyManagedLyricTick(
-                    yeahPendingLyricTitle, yeahPendingLyricSubtitle, yeahPendingSessionMeta);
-        }
-    };
-    private final Runnable yeahLyricFlashGuardRunnable = new Runnable() {
-        @Override
-        public void run() {
-            updateNotification();
-        }
-    };
+    /** 复用 RemoteViews，避免每次 notify 重建导致跑马灯从头闪。 */
+    private RemoteViews yeahCachedNotificationRemoteViews;
+    private CharSequence yeahCachedNotifyTitle;
+    private CharSequence yeahCachedNotifySubtitle;
+    private CharSequence yeahLastPublishedNotifyTitle;
+    private CharSequence yeahLastPublishedNotifySubtitle;
     private final Runnable yeahNotificationUpdateRunnable = new Runnable() {
         @Override
         public void run() {
@@ -670,29 +659,68 @@ public class AudioService extends MediaBrowserServiceCompat {
         }
     }
 
+    private static boolean yeahTextEquals(CharSequence a, CharSequence b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        return a.toString().contentEquals(b.toString());
+    }
+
+    private void yeahClearNotificationRemoteViewsCache() {
+        yeahCachedNotificationRemoteViews = null;
+        yeahCachedNotifyTitle = null;
+        yeahCachedNotifySubtitle = null;
+        yeahLastPublishedNotifyTitle = null;
+        yeahLastPublishedNotifySubtitle = null;
+    }
+
     private void applyYeahCustomNotificationContent(
             NotificationCompat.Builder builder,
             CharSequence title,
             CharSequence subtitle) {
         if (title == null && subtitle == null) return;
+        final boolean titleSame = yeahTextEquals(title, yeahCachedNotifyTitle);
+        final boolean subtitleSame = yeahTextEquals(subtitle, yeahCachedNotifySubtitle);
+        if (yeahCachedNotificationRemoteViews != null && titleSame && subtitleSame) {
+            builder.setCustomContentView(yeahCachedNotificationRemoteViews);
+            builder.setCustomBigContentView(yeahCachedNotificationRemoteViews);
+            yeahApplyNotificationCompatTitles(builder, title, subtitle);
+            return;
+        }
         try {
-            RemoteViews content =
-                    new RemoteViews(getPackageName(), R.layout.yeah_media_notification);
+            RemoteViews content = yeahCachedNotificationRemoteViews;
+            if (content == null) {
+                content = new RemoteViews(getPackageName(), R.layout.yeah_media_notification);
+                yeahCachedNotificationRemoteViews = content;
+            }
             if (title != null) {
-                content.setTextViewText(R.id.yeah_notify_title, title);
+                if (!titleSame) {
+                    content.setTextViewText(R.id.yeah_notify_title, title);
+                }
                 content.setViewVisibility(R.id.yeah_notify_title, View.VISIBLE);
+                content.setBoolean(R.id.yeah_notify_title, "setSelected", true);
             } else {
                 content.setViewVisibility(R.id.yeah_notify_title, View.GONE);
             }
             if (subtitle != null) {
-                content.setTextViewText(R.id.yeah_notify_subtitle, subtitle);
+                if (!subtitleSame) {
+                    content.setTextViewText(R.id.yeah_notify_subtitle, subtitle);
+                }
                 content.setViewVisibility(R.id.yeah_notify_subtitle, View.VISIBLE);
             } else {
                 content.setViewVisibility(R.id.yeah_notify_subtitle, View.GONE);
             }
+            yeahCachedNotifyTitle = title;
+            yeahCachedNotifySubtitle = subtitle;
             builder.setCustomContentView(content);
             builder.setCustomBigContentView(content);
         } catch (Exception ignored) {}
+        yeahApplyNotificationCompatTitles(builder, title, subtitle);
+    }
+
+    private void yeahApplyNotificationCompatTitles(
+            NotificationCompat.Builder builder,
+            CharSequence title,
+            CharSequence subtitle) {
         if (yeahLyricsDisplayManaged) {
             // 必须写入与 RemoteViews 相同的歌词，否则 MediaStyle 会回退显示 METADATA_KEY_TITLE（曲名）。
             if (title != null && title.length() > 0) builder.setContentTitle(title);
@@ -751,7 +779,6 @@ public class AudioService extends MediaBrowserServiceCompat {
                     : mediaMetadata;
             mediaSession.setMetadata(meta);
         }
-        updateNotification();
         final PlaybackStateCompat current =
                 mediaSession.getController().getPlaybackState();
         if (current != null) {
@@ -900,9 +927,23 @@ public class AudioService extends MediaBrowserServiceCompat {
             dismissYeahCarNotification();
             return;
         }
-        if (notificationCreated) {
-            getNotificationManager().notify(NOTIFICATION_ID, buildNotification());
+        if (!notificationCreated) return;
+        CharSequence publishTitle = null;
+        CharSequence publishSubtitle = null;
+        if (mediaMetadata != null) {
+            final MediaDescriptionCompat description = mediaMetadata.getDescription();
+            final CharSequence[] lines = new CharSequence[2];
+            yeahResolveNotificationDisplayLines(description, lines);
+            publishTitle = lines[0];
+            publishSubtitle = lines[1];
+            if (yeahTextEquals(publishTitle, yeahLastPublishedNotifyTitle)
+                    && yeahTextEquals(publishSubtitle, yeahLastPublishedNotifySubtitle)) {
+                return;
+            }
         }
+        getNotificationManager().notify(NOTIFICATION_ID, buildNotification());
+        yeahLastPublishedNotifyTitle = publishTitle;
+        yeahLastPublishedNotifySubtitle = publishSubtitle;
     }
 
     private void postNotificationUpdate() {
@@ -914,8 +955,7 @@ public class AudioService extends MediaBrowserServiceCompat {
 
     private void dismissYeahCarNotification() {
         handler.removeCallbacks(yeahNotificationUpdateRunnable);
-        handler.removeCallbacks(yeahLyricFlashGuardRunnable);
-        handler.removeCallbacks(yeahManagedLyricTickRunner);
+        yeahClearNotificationRemoteViewsCache();
         if (!notificationCreated) return;
         getNotificationManager().cancel(NOTIFICATION_ID);
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
@@ -1048,26 +1088,29 @@ public class AudioService extends MediaBrowserServiceCompat {
     }
 
     public static void setYeahLyricsDisplayManaged(boolean managed) {
+        final boolean wasManaged = yeahLyricsDisplayManaged;
         yeahLyricsDisplayManaged = managed;
         if (instance == null) return;
         if (managed) {
-            synchronized (instance) {
-                if (instance.mediaMetadata != null) {
-                    instance.yeahCaptureCanonicalSongTitle(instance.mediaMetadata);
+            if (!wasManaged) {
+                synchronized (instance) {
+                    if (instance.mediaMetadata != null) {
+                        instance.yeahCaptureCanonicalSongTitle(instance.mediaMetadata);
+                    }
                 }
+                instance.handler.post(() -> {
+                    if (instance.notificationCreated) {
+                        instance.yeahResyncNotificationActions();
+                    }
+                });
             }
-            instance.handler.post(() -> {
-                if (instance.notificationCreated) {
-                    instance.yeahResyncNotificationActions();
-                }
-            });
             return;
         }
+        if (!wasManaged) return;
         instance.yeahLastLyricDisplayTitle = null;
         instance.yeahLastLyricDisplaySubtitle = null;
         instance.yeahLastLyricMediaId = null;
-        instance.handler.removeCallbacks(instance.yeahManagedLyricTickRunner);
-        instance.handler.removeCallbacks(instance.yeahLyricFlashGuardRunnable);
+        instance.yeahClearNotificationRemoteViewsCache();
         synchronized (instance) {
             instance.yeahRestoreCanonicalSongTitleOnSession();
         }
@@ -1084,6 +1127,7 @@ public class AudioService extends MediaBrowserServiceCompat {
             yeahLastLyricDisplayTitle = null;
             yeahLastLyricDisplaySubtitle = null;
             yeahCanonicalSongTitle = null;
+            yeahClearNotificationRemoteViewsCache();
         }
         yeahLastLyricMediaId = mediaId;
     }
@@ -1238,27 +1282,11 @@ public class AudioService extends MediaBrowserServiceCompat {
         title = yeahFilterManagedLyricTitle(title, description);
         if (title != null && title.length() > 0) yeahLastLyricDisplayTitle = title;
         if (subtitle != null && subtitle.length() > 0) yeahLastLyricDisplaySubtitle = subtitle;
-        updateNotification();
-    }
-
-    /**
-     * 换行：先刷歌词通知，再 setMetadata（部分机型依赖会话元数据才刷新），最后再刷一次歌词盖住曲名闪帧。
-     */
-    private void yeahApplyManagedLyricTick(
-            CharSequence notifyTitle,
-            CharSequence notifySubtitle,
-            MediaMetadataCompat sessionMetadata) {
-        sessionMetadata = yeahMirrorManagedLyricSessionTitle(sessionMetadata);
-        this.mediaMetadata = sessionMetadata;
-        yeahPublishLyricNotification(notifyTitle, notifySubtitle);
-        if (artBitmap != null) {
-            mediaSession.setMetadata(putArtToMetadata(sessionMetadata));
-        } else {
-            mediaSession.setMetadata(sessionMetadata);
+        if (yeahTextEquals(title, yeahLastPublishedNotifyTitle)
+                && yeahTextEquals(subtitle, yeahLastPublishedNotifySubtitle)) {
+            return;
         }
-        yeahPublishLyricNotification(notifyTitle, notifySubtitle);
-        handler.removeCallbacks(yeahLyricFlashGuardRunnable);
-        handler.postDelayed(yeahLyricFlashGuardRunnable, 48);
+        updateNotification();
     }
 
     /**
@@ -1367,14 +1395,13 @@ public class AudioService extends MediaBrowserServiceCompat {
                 mediaMetadataCache.put(mediaId, updated);
             }
             if (yeahLyricsDisplayManaged) {
-                instance.yeahPendingLyricTitle = displayTitle;
-                instance.yeahPendingLyricSubtitle = displaySubtitle;
                 final MediaMetadataCompat sessionMeta = instance.artBitmap != null
                         ? instance.putArtToMetadata(updated)
                         : updated;
-                instance.yeahPendingSessionMeta = sessionMeta;
-                instance.handler.removeCallbacks(instance.yeahManagedLyricTickRunner);
-                instance.handler.post(instance.yeahManagedLyricTickRunner);
+                if (!titleSame) {
+                    instance.mediaSession.setMetadata(sessionMeta);
+                }
+                instance.yeahPublishLyricNotification(displayTitle, displaySubtitle);
                 return true;
             }
             if (instance.artBitmap != null) {

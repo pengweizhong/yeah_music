@@ -30,6 +30,8 @@ object MediaSessionLyricsChannel {
     private const val CHANNEL_NAME = "yeah_music/media_session_lyrics"
     private const val AUDIO_SERVICE_CLASS = "com.ryanheise.audioservice.AudioService"
     private val mainHandler = Handler(Looper.getMainLooper())
+    /** 与 [setYeahLyricsDisplayManaged] 一致，避免每次 updateDisplay 都整卡重绘通知。 */
+    private var lyricsDisplayManaged = false
 
     private fun updateNotificationDisplayText(title: String?, subtitle: String?): Boolean {
         if (!hasUpdateNotificationDisplayText()) {
@@ -138,6 +140,7 @@ object MediaSessionLyricsChannel {
                 "setLyricsManaged" -> {
                     val enabled = call.argument<Boolean>("enabled") ?: false
                     try {
+                        lyricsDisplayManaged = enabled
                         setYeahLyricsDisplayManaged(enabled)
                         result.success(null)
                     } catch (t: Throwable) {
@@ -172,7 +175,6 @@ object MediaSessionLyricsChannel {
                                 result.success(null)
                                 return@post
                             }
-                            setYeahLyricsDisplayManaged(true)
                             val changed = updateNotificationDisplayText(title, subtitle)
                             if (changed) {
                                 Log.d(TAG, "updateDisplay title=${title?.take(24)}")

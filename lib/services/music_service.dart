@@ -373,14 +373,7 @@ class MusicService {
     if (line == _lastAndroidNotifyLyricLineShown) return;
     _lastAndroidNotifyLyricLineShown = line;
     final subtitle = androidNotificationSubtitleForSong(song);
-    JustAudioBackground.patchNotificationLyricDisplay(
-      songPath: song.path,
-      displayTitle: line,
-      displaySubtitle: subtitle,
-      composerMetadataKey:
-          isGap ? null : androidComposerMetadataKey,
-      composerLine: isGap ? null : line,
-    );
+    // 歌词行仅走原生直推，避免 queue.add 连带触发会话/通知整卡重绘（长句跑马灯易闪）。
     _pushAndroidNotificationDisplayLines(
       song: song,
       displayTitle: line,
