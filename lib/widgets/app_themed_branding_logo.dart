@@ -27,6 +27,8 @@ class AppThemedBrandingLogo extends StatelessWidget {
     this.filterQuality = FilterQuality.medium,
     this.semanticLabel,
     this.excludeFromSemantics = false,
+    /// 为 true 时始终使用透明底 [assetPathDark]（适合渐变 / 壁纸上的 AppBar）。
+    this.useTransparentAsset = false,
   });
 
   final double height;
@@ -35,6 +37,7 @@ class AppThemedBrandingLogo extends StatelessWidget {
   final FilterQuality filterQuality;
   final String? semanticLabel;
   final bool excludeFromSemantics;
+  final bool useTransparentAsset;
 
   /// 日间 / 浅色主题：自带白底。
   static const String assetPathLight = 'assets/icons/yeah_music.png';
@@ -48,7 +51,8 @@ class AppThemedBrandingLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final asset = isDark ? assetPathDark : assetPathLight;
+    final useDarkAsset = useTransparentAsset || isDark;
+    final asset = useDarkAsset ? assetPathDark : assetPathLight;
     final image = Image.asset(
       asset,
       width: width,
@@ -58,7 +62,7 @@ class AppThemedBrandingLogo extends StatelessWidget {
       semanticLabel: semanticLabel,
       excludeFromSemantics: excludeFromSemantics,
     );
-    if (!isDark) return image;
+    if (!isDark || useTransparentAsset) return image;
     return ColoredBox(
       color: Colors.black,
       child: image,

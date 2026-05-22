@@ -15,7 +15,9 @@ dependencies:
   just_audio: 0.10.5
   just_audio_background: 0.0.1-beta.17
   audio_service: 0.18.18
-  just_audio_media_kit: 2.1.0 # liunx 需要加入这个插件才能支持音乐播放
+  just_audio_media_kit: 2.1.0 # Linux / Windows 桌面播放（绑定 media_kit）
+  media_kit_libs_linux: any
+  media_kit_libs_windows_audio: any
   audio_session: 0.2.2
   permission_handler: 12.0.1
   file_picker: 10.3.2  # 用来选择目录或文件
@@ -53,6 +55,8 @@ dependencies:
   crypto: ^3.0.7
 
 dependency_overrides:
+  tray_manager:
+    path: packages/tray_manager
   flutter_appauth:
     path: packages/flutter_appauth
   just_audio_background:
@@ -66,14 +70,18 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: 6.0.0
   flutter_launcher_icons: ^0.14.4 # 图标生成
+  image: ^4.5.4 # Windows 多尺寸 .ico（tool/generate_windows_app_icon.dart）
   build_runner: ^2.4.12 #  生成 Hive TypeAdapter： flutter packages pub run build_runner build   或者 dart run build_runner build --delete-conflicting-outputs
   hive_generator: ^2.0.1
 
 # 生成命令：dart run flutter_launcher_icons
+# Windows 任务栏/托盘 .ico（runner + assets）：dart run tool/generate_windows_app_icon.dart
 # 日间：白底 + yeah_music；夜间：黑底由 res/values-night/colors.xml 的 ic_launcher_background 控制。
 flutter_launcher_icons:
   android: true
   ios: true
+  windows:
+    generate: false
   image_path: "assets/icons/yeah_music.png"
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/icons/yeah_music1.png"

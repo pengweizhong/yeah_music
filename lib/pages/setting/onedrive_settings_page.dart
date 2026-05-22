@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -32,6 +32,8 @@ import 'package:yeah_music/models/onedrive_restore_selection.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
@@ -307,14 +309,17 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
       builder: (context, theme, od, _) {
         return theme.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: Colors.white,
+            child: Scaffold(
             extendBodyBehindAppBar: false,
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               title: Text(
                 l10n.oneDriveSettingsTitle,
-                style: const TextStyle(color: Colors.white),
+                style: context.gradAppBarTitleStyle(fontSize: 18),
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -333,7 +338,10 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                     },
                     child: Text(
                       l10n.oneDriveOpenBrowser,
-                      style: const TextStyle(color: Colors.white),
+                      style: context.gradTextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
               ],
@@ -358,11 +366,11 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                       ),
                       title: Text(
                         l10n.oneDriveTransferQueueTitle,
-                        style: const TextStyle(color: Colors.white),
+                        style: context.gradTextStyle(color: Colors.white),
                       ),
                       subtitle: Text(
                         l10n.oneDriveDownloadQueueSubtitle,
-                        style: TextStyle(
+                        style: context.gradTextStyle(
                           color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 13,
                         ),
@@ -417,6 +425,7 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
                 ],
             ),
             bottomNavigationBar: const MiniPlayer(),
+            ),
           ),
         );
       },
@@ -470,33 +479,15 @@ class _OneDriveSettingsPageState extends State<OneDriveSettingsPage> {
 
   Future<bool> _promptClientIdIfMissing(BuildContext context) async {
     final od = context.read<OneDriveController>();
-    final c = TextEditingController(text: od.effectiveClientId);
-    final value = await showDialog<String>(
+    final dl10n = AppLocalizations.of(context);
+    final value = await showAppTextPromptDialog(
       context: context,
-      builder: (dialogContext) {
-        final dl10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
-          title: Text(dl10n.oneDriveClientIdDialogTitle),
-          content: TextField(
-            controller: c,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: dl10n.oneDriveClientIdDialogHint,
-              labelText: dl10n.oneDriveClientIdDialogLabel,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(dl10n.actionCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(c.text.trim()),
-              child: Text(dl10n.actionSave),
-            ),
-          ],
-        );
-      },
+      title: dl10n.oneDriveClientIdDialogTitle,
+      initialValue: od.effectiveClientId,
+      fieldLabel: dl10n.oneDriveClientIdDialogLabel,
+      hintText: dl10n.oneDriveClientIdDialogHint,
+      cancelLabel: dl10n.actionCancel,
+      confirmLabel: dl10n.actionSave,
     );
     if (value == null || value.trim().isEmpty) {
       return false;
@@ -937,7 +928,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceHomeGreeting,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -948,7 +939,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceQuickEntry,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -959,7 +950,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSlicePlaybackLists,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -970,7 +961,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceLyricsUi,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -981,7 +972,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceSongRecognition,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
         CheckboxListTile(
@@ -992,7 +983,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreSliceTheme,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
       ],
@@ -1005,7 +996,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           activeColor: _accent,
           title: Text(
             l10n.oneDriveRestoreLegacySettingsCheckbox,
-            style: TextStyle(color: textColor),
+            style: context.gradTextStyle(color: textColor),
           ),
         ),
     ];
@@ -1034,14 +1025,14 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
       },
       title: Text(
         _backupSnapshotRowTitle(l10n, s, tabKind),
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: _textPrimary(context),
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: Text(
         _backupSnapshotSubtitle(l10n, s),
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: _textMuted(context),
           fontSize: 12,
         ),
@@ -1070,7 +1061,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
             children: [
               Text(
                 l10n.oneDriveRestoreListShowing(visible, total),
-                style: TextStyle(
+                style: context.gradTextStyle(
                   color: _textMuted(context),
                   fontSize: 12,
                 ),
@@ -1083,7 +1074,10 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                         (visible + _restorePageSize).clamp(1, total);
                   });
                 },
-                child: Text(l10n.oneDriveRestoreLoadMore),
+                child: Text(
+                  l10n.oneDriveRestoreLoadMore,
+                  style: context.gradTextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -1095,7 +1089,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
           child: Text(
             l10n.oneDriveRestoreListShowing(visible, total),
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: _textMuted(context),
               fontSize: 12,
             ),
@@ -1168,7 +1162,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
         activeColor: _accent,
         title: Text(
           l10n.oneDriveRestorePlaylistCheckbox,
-          style: TextStyle(color: textColor),
+          style: context.gradTextStyle(color: textColor),
         ),
       ),
       ...sliceTiles,
@@ -1182,7 +1176,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           },
           title: Text(
             l10n.oneDriveRestorePlaylistModeMerge,
-            style: TextStyle(color: _textSecondary(context)),
+            style: context.gradTextStyle(color: _textSecondary(context)),
           ),
         ),
         RadioListTile<bool>(
@@ -1194,7 +1188,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           },
           title: Text(
             l10n.oneDriveRestorePlaylistModeReplace,
-            style: TextStyle(color: _textSecondary(context)),
+            style: context.gradTextStyle(color: _textSecondary(context)),
           ),
         ),
       ],
@@ -1257,7 +1251,10 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(48),
         ),
-        child: Text(l10n.oneDriveRestoreAction),
+        child: Text(
+          l10n.oneDriveRestoreAction,
+          style: context.gradTextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -1280,7 +1277,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                     Expanded(
                       child: Text(
                         l10n.oneDriveRestoreSheetTitle,
-                        style: TextStyle(
+                        style: context.gradTextStyle(
                           color: _textPrimary(context),
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -1296,7 +1293,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                 const SizedBox(height: 8),
                 Text(
                   l10n.oneDriveRestoreEmpty,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: _textSecondary(context),
                     height: 1.35,
                   ),
@@ -1320,7 +1317,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
             Expanded(
               child: Text(
                 l10n.oneDriveRestoreSheetTitle,
-                style: TextStyle(
+                style: context.gradTextStyle(
                   color: _textPrimary(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -1340,7 +1337,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Text(
         l10n.oneDriveRestoreSubtitle,
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: _textMuted(context),
           fontSize: 12,
           height: 1.35,
@@ -1423,7 +1420,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                                   children: [
                                     Text(
                                       l10n.oneDriveRestoreContentSectionTitle,
-                                      style: TextStyle(
+                                      style: context.gradTextStyle(
                                         color: _textPrimary(context),
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
@@ -1432,7 +1429,7 @@ class _OneDriveRestoreSheetState extends State<_OneDriveRestoreSheet>
                                     const SizedBox(height: 6),
                                     Text(
                                       l10n.oneDriveRestoreSubtitle,
-                                      style: TextStyle(
+                                      style: context.gradTextStyle(
                                         color: _textMuted(context),
                                         fontSize: 12,
                                         height: 1.35,
@@ -1480,7 +1477,7 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         text,
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: Colors.white.withValues(alpha: 0.5),
           fontSize: 13,
           fontWeight: FontWeight.w600,
@@ -1522,7 +1519,8 @@ class _SyncCard extends StatelessWidget {
   final bool syncShowsProgress;
   final bool restoreShowsProgress;
 
-  static Widget _busyLabelRow({
+  static Widget _busyLabelRow(
+    BuildContext context, {
     required Widget indicator,
     required String label,
   }) {
@@ -1533,7 +1531,12 @@ class _SyncCard extends StatelessWidget {
         SizedBox(height: 20, width: 20, child: indicator),
         const SizedBox(width: 10),
         Flexible(
-          child: Text(label, overflow: TextOverflow.ellipsis, maxLines: 1),
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: context.gradTextStyle(color: Colors.white, fontSize: 14),
+          ),
         ),
       ],
     );
@@ -1543,8 +1546,26 @@ class _SyncCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = od.syncSettings;
     final masterOn = s.cloudSyncEnabled;
+    final tileTitle = context.gradTileTitleStyle(fontSize: 16);
+    final tileSubtitle = context.gradTileSubtitleStyle(
+      alpha: 0.55,
+      fontSize: 12,
+    );
+    final tileSubtitleMuted = context.gradTileSubtitleStyle(
+      alpha: 0.5,
+      fontSize: 12,
+    );
+    final buttonLabel = context.gradTextStyle(
+      color: Colors.white,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+    );
 
-    return DecoratedBox(
+    return Theme(
+      data: themeForFrostedDeepChrome(context),
+      child: DefaultTextStyle(
+        style: context.gradTextStyle(color: Colors.white, fontSize: 14),
+        child: DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(14),
@@ -1560,17 +1581,11 @@ class _SyncCard extends StatelessWidget {
             activeThumbColor: const Color(0xFF0078D4),
             title: Text(
               l10n.oneDriveSyncMasterTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+              style: tileTitle.copyWith(fontWeight: FontWeight.w500),
             ),
             subtitle: Text(
               l10n.oneDriveSyncMasterSubtitle,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
-                fontSize: 12,
-              ),
+              style: tileSubtitle,
             ),
           ),
           Opacity(
@@ -1591,14 +1606,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemUserPlaylists,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemUserPlaylistsSubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   SwitchListTile(
@@ -1609,14 +1621,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemHomeGreeting,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemHomeGreetingSubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   SwitchListTile(
@@ -1627,14 +1636,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemQuickEntry,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemQuickEntrySubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   SwitchListTile(
@@ -1647,14 +1653,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemPlaybackListsStats,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemPlaybackListsStatsSubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   SwitchListTile(
@@ -1665,14 +1668,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemLyricsUi,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemLyricsUiSubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   SwitchListTile(
@@ -1683,14 +1683,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemSongRecognition,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemSongRecognitionSubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   SwitchListTile(
@@ -1701,14 +1698,11 @@ class _SyncCard extends StatelessWidget {
                     activeThumbColor: const Color(0xFF0078D4),
                     title: Text(
                       l10n.oneDriveSyncItemTheme,
-                      style: const TextStyle(color: Colors.white),
+                      style: tileTitle,
                     ),
                     subtitle: Text(
                       l10n.oneDriveSyncItemThemeSubtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
+                      style: tileSubtitleMuted,
                     ),
                   ),
                   Padding(
@@ -1718,36 +1712,23 @@ class _SyncCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             l10n.oneDriveSyncFrequencyLabel,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.85),
-                              fontSize: 15,
-                            ),
+                            style: tileTitle,
                           ),
                         ),
-                        Theme(
-                          data: Theme.of(context).copyWith(
-                            dropdownMenuTheme: DropdownMenuThemeData(
-                              menuStyle: MenuStyle(
-                                backgroundColor: WidgetStateProperty.all(
-                                  const Color(0xE02C2C2C),
-                                ),
-                              ),
-                            ),
-                          ),
-                          child: DropdownButton<OneDriveSyncFrequency>(
+                        DropdownButton<OneDriveSyncFrequency>(
                             value: s.frequency,
                             underline: const SizedBox.shrink(),
                             dropdownColor: const Color(0xFF2C2C2C),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
+                            style: buttonLabel,
                             iconEnabledColor: Colors.white70,
                             items: OneDriveSyncFrequency.values
                                 .map(
                                   (e) => DropdownMenuItem(
                                     value: e,
-                                    child: Text(_syncFrequencyLabel(l10n, e)),
+                                    child: Text(
+                                      _syncFrequencyLabel(l10n, e),
+                                      style: buttonLabel,
+                                    ),
                                   ),
                                 )
                                 .toList(),
@@ -1757,7 +1738,6 @@ class _SyncCard extends StatelessWidget {
                               }
                             },
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -1773,7 +1753,7 @@ class _SyncCard extends StatelessWidget {
               children: [
                 Text(
                   l10n.oneDriveSyncNowDescription,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: Colors.white.withValues(alpha: 0.55),
                     fontSize: 12,
                     height: 1.35,
@@ -1782,7 +1762,7 @@ class _SyncCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   l10n.oneDriveRestoreSubtitle,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: Colors.white.withValues(alpha: 0.45),
                     fontSize: 12,
                     height: 1.35,
@@ -1791,21 +1771,27 @@ class _SyncCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 FilledButton.tonal(
                   onPressed: operationsLocked ? null : onSyncNow,
+                  style: FilledButton.styleFrom(
+                    textStyle: buttonLabel,
+                    minimumSize: const Size.fromHeight(46),
+                  ),
                   child: syncShowsProgress
                       ? _busyLabelRow(
+                          context,
                           indicator: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white70,
                           ),
                           label: l10n.oneDriveSyncNowInProgress,
                         )
-                      : Text(l10n.oneDriveSyncNow),
+                      : Text(l10n.oneDriveSyncNow, style: buttonLabel),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton(
                   onPressed: operationsLocked ? null : onRestoreFromCloud,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
+                    textStyle: buttonLabel,
                     side: BorderSide(
                       color: Colors.white.withValues(alpha: 0.35),
                     ),
@@ -1813,18 +1799,24 @@ class _SyncCard extends StatelessWidget {
                   ),
                   child: restoreShowsProgress
                       ? _busyLabelRow(
+                          context,
                           indicator: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white70,
                           ),
                           label: l10n.oneDriveRestoreInProgress,
                         )
-                      : Text(l10n.oneDriveRestoreFromCloud),
+                      : Text(
+                          l10n.oneDriveRestoreFromCloud,
+                          style: buttonLabel,
+                        ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -1876,7 +1868,7 @@ class _AccountCard extends StatelessWidget {
                         : (od.signedIn
                               ? l10n.oneDriveSignedIn
                               : l10n.oneDriveNotSignedIn),
-                    style: const TextStyle(
+                    style: context.gradTextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -1897,7 +1889,10 @@ class _AccountCard extends StatelessWidget {
                     ),
                     minimumSize: const Size.fromHeight(46),
                   ),
-                  child: Text(l10n.oneDriveSignOut),
+                  child: Text(
+                    l10n.oneDriveSignOut,
+                    style: context.gradTextStyle(color: Colors.white),
+                  ),
                 )
               else
                 FilledButton.icon(
@@ -1911,6 +1906,7 @@ class _AccountCard extends StatelessWidget {
                       : const Icon(Icons.login_rounded, size: 20),
                   label: Text(
                     signingIn ? l10n.oneDriveSigningIn : l10n.oneDriveSignIn,
+                    style: context.gradTextStyle(color: Colors.white),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF0078D4),
@@ -1967,7 +1963,8 @@ class _PathsCard extends StatelessWidget {
     return od.musicUploadFolderId!;
   }
 
-  Widget _pathBlock({
+  Widget _pathBlock(
+    BuildContext context, {
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -2000,7 +1997,7 @@ class _PathsCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
+                          style: context.gradTextStyle(
                             color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -2009,7 +2006,7 @@ class _PathsCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           subtitle,
-                          style: TextStyle(
+                          style: context.gradTextStyle(
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 12,
                             height: 1.3,
@@ -2018,7 +2015,7 @@ class _PathsCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           valueLine,
-                          style: TextStyle(
+                          style: context.gradTextStyle(
                             color: Colors.white.withValues(alpha: 0.72),
                             fontSize: 13,
                           ),
@@ -2044,10 +2041,19 @@ class _PathsCard extends StatelessWidget {
               children: [
                 FilledButton.tonal(
                   onPressed: onPrimary,
-                  child: Text(primaryLabel),
+                  child: Text(
+                    primaryLabel,
+                    style: context.gradTextStyle(color: Colors.white),
+                  ),
                 ),
                 if (clearLabel != null && onClear != null)
-                  TextButton(onPressed: onClear, child: Text(clearLabel)),
+                  TextButton(
+                    onPressed: onClear,
+                    child: Text(
+                      clearLabel,
+                      style: context.gradTextStyle(color: Colors.white),
+                    ),
+                  ),
               ],
             ),
           ],
@@ -2067,6 +2073,7 @@ class _PathsCard extends StatelessWidget {
       child: Column(
         children: [
           _pathBlock(
+            context,
             icon: Icons.folder_special_outlined,
             iconColor: Colors.lightBlue.shade200,
             title: l10n.oneDriveCloudAppDataTitle,
@@ -2087,6 +2094,7 @@ class _PathsCard extends StatelessWidget {
           ),
           Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           _pathBlock(
+            context,
             icon: Icons.cloud_upload_outlined,
             iconColor: Colors.cyan.shade200,
             title: l10n.oneDriveMusicUploadFolderTitle,
@@ -2107,6 +2115,7 @@ class _PathsCard extends StatelessWidget {
           ),
           Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           _pathBlock(
+            context,
             icon: Icons.download_for_offline_outlined,
             iconColor: Colors.green.shade200,
             title: l10n.oneDriveLocalDownloadTitle,

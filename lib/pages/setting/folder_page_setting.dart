@@ -21,6 +21,8 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 
 import '../../widgets/song_playlist_page_shell.dart';
@@ -45,14 +47,17 @@ class FolderPageSettings extends StatelessWidget {
         final l10n = AppLocalizations.of(context);
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: Colors.white,
+            child: Scaffold(
             extendBodyBehindAppBar: true,
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               title: Text(
                 l10n.folderAppBarTitle,
-                style: const TextStyle(color: Colors.white),
+                style: context.gradAppBarTitleStyle(fontSize: 18),
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -70,11 +75,13 @@ class FolderPageSettings extends StatelessWidget {
                   return ListTile(
                     title: Text(
                       folder.name ?? l10n.homeUnknownTitle,
-                      style: const TextStyle(color: Colors.white),
+                      style: context.gradTextStyle(color: Colors.white),
                     ),
                     subtitle: Text(
                       l10n.homeTrackCount(n),
-                      style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                      style: context.gradTextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -106,20 +113,17 @@ class FolderPageSettings extends StatelessWidget {
                                         builder: (innerCtx) {
                                           final theme = Theme.of(innerCtx);
                                           final cs = theme.colorScheme;
-                                          final body = theme.textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                color: cs.onSurface,
-                                                fontSize: 15,
-                                                height: 1.35,
-                                              ) ??
-                                              TextStyle(
-                                                color: cs.onSurface,
-                                                fontSize: 15,
-                                                height: 1.35,
-                                              );
-                                          final labelStyle = body.copyWith(
-                                            fontWeight: FontWeight.w700,
+                                          final body = PlatformTypography.merge(
+                                            TextStyle(
+                                              color: cs.onSurface,
+                                              fontSize: 15,
+                                              height: 1.35,
+                                            ),
+                                          );
+                                          final labelStyle = PlatformTypography.merge(
+                                            body.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           );
                                           return SizedBox(
                                             height: 300,
@@ -308,7 +312,9 @@ class FolderPageSettings extends StatelessWidget {
                                   },
                                   child: Text(
                                     l10n.actionConfirm,
-                                    style: const TextStyle(color: Colors.red),
+                                    style: context.gradTextStyle(
+                                      color: Colors.red,
+                                    ),
                                   ),
                                 ),
                                 TextButton(
@@ -330,6 +336,7 @@ class FolderPageSettings extends StatelessWidget {
               onPressed: () async {
                 await _showAddFolderDialog(context, folderProvider);
               },
+            ),
             ),
           ),
         );

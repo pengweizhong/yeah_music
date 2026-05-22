@@ -666,7 +666,7 @@ class MusicService {
           _androidPostSourceUnmuteGen++;
           unmuteGen = _androidPostSourceUnmuteGen;
         }
-        if (Platform.isLinux &&
+        if ((Platform.isLinux || Platform.isWindows) &&
             _player.processingState == ProcessingState.completed) {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
@@ -831,7 +831,7 @@ class MusicService {
           _androidPostSourceUnmuteGen++;
           unmuteGen = _androidPostSourceUnmuteGen;
         }
-        if (Platform.isLinux &&
+        if ((Platform.isLinux || Platform.isWindows) &&
             _player.processingState == ProcessingState.completed) {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }

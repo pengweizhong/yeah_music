@@ -272,7 +272,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             appBar: AppBar(
               title: Text(
                 l10n.statisticsTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -302,7 +302,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       padding: EdgeInsets.only(bottom: bottomPad),
                       child: Text(
                         l10n.statisticsNotInitialized,
-                        style: TextStyle(color: context.gradFg(0.72)),
+                        style: context.gradTileSubtitleStyle(alpha: 0.72),
                       ),
                     ),
                   );
@@ -374,7 +374,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         const SizedBox(height: 8),
                         Text(
                           l10n.statisticsFormatsLabel,
-                          style: TextStyle(
+                          style: context.gradTextStyle(
                             color: context.gradFg(0.58),
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -412,7 +412,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         const SizedBox(height: 18),
                         Text(
                           l10n.statisticsQualityLabel,
-                          style: TextStyle(
+                          style: context.gradTextStyle(
                             color: context.gradFg(0.58),
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -544,7 +544,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         title,
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: context.gradFg(0.92),
           fontSize: 15,
           fontWeight: FontWeight.w600,
@@ -583,7 +583,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: fg,
                     fontSize: 19,
                     fontWeight: FontWeight.w600,
@@ -622,7 +622,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       ),
       child: Text(
         '$label · $count',
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: fg.withValues(alpha: 0.88),
           fontSize: 13,
           fontWeight: FontWeight.w500,

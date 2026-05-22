@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -13,9 +13,8 @@
 // GNU General Public License for more details.
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/pages/setting/setting_page_scaffold.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/utils/song_audio_quality.dart';
 import 'package:yeah_music/widgets/song_audio_quality_badge.dart';
@@ -27,41 +26,25 @@ class AudioQualitySettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Consumer<ThemeConfigProvider>(
-      builder: (context, themeConfig, _) {
-        return themeConfig.buildThemedBackground(
-          context: context,
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              title: Text(
-                l10n.settingsAudioQualityTitle,
-                style: TextStyle(color: context.gradFg()),
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: IconThemeData(color: context.gradFg()),
-            ),
-            body: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-              children: [
-                Text(
-                  l10n.settingsAudioQualityHelp,
-                  style: TextStyle(
-                    color: context.gradFg(0.72),
-                    fontSize: 14,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ...kSongAudioQualityTiersLowToHigh.map(
-                  (tier) => _TierReferenceTile(tier: tier),
-                ),
-              ],
+    return SettingPageScaffold(
+      title: l10n.settingsAudioQualityTitle,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+        children: [
+          Text(
+            l10n.settingsAudioQualityHelp,
+            style: context.gradTextStyle(
+              color: context.gradFg(0.72),
+              fontSize: 14,
+              height: 1.45,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 20),
+          ...kSongAudioQualityTiersLowToHigh.map(
+            (tier) => _TierReferenceTile(tier: tier),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -95,8 +78,7 @@ class _TierReferenceTile extends StatelessWidget {
                   children: [
                     Text(
                       songAudioQualityLocalizedTitle(l10n, tier),
-                      style: TextStyle(
-                        color: context.gradFg(),
+                      style: context.gradTextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -104,7 +86,7 @@ class _TierReferenceTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       tier.shortLabel,
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: songAudioQualityAccent(tier, context)
                             .withValues(alpha: 0.9),
                         fontSize: 12,
@@ -115,7 +97,7 @@ class _TierReferenceTile extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       songAudioQualityLocalizedDescription(l10n, tier),
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: context.gradFg(0.65),
                         fontSize: 13,
                         height: 1.4,

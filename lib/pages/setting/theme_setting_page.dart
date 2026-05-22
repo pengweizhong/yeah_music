@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -20,6 +20,7 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
@@ -45,14 +46,17 @@ class ThemeSettingPage extends StatelessWidget {
       builder: (context, themeConfig, appTheme, child) {
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: context.gradFg(),
+            child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               title: Text(
                 l10n.themeSettingsTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradAppBarTitleStyle(fontSize: 18),
               ),
               leading: IconButton(
                 icon: Icon(Icons.arrow_back_ios_new, color: context.gradFg(), size: 20),
@@ -66,7 +70,7 @@ class ThemeSettingPage extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   l10n.globalThemeDesc,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: context.gradFg(0.6),
                     fontSize: 13,
                     height: 1.35,
@@ -98,10 +102,11 @@ class ThemeSettingPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildImagePicker(context, l10n, themeConfig),
                   const SizedBox(height: 20),
-                  _buildImageEffectSection(l10n, themeConfig),
+                  _buildImageEffectSection(context, l10n, themeConfig),
                 ],
               ],
             ),
+          ),
           ),
         );
       },
@@ -111,11 +116,7 @@ class ThemeSettingPage extends StatelessWidget {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: TextStyle(
-        color: context.gradFg(),
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
+      style: context.gradSectionTitleStyle(),
     );
   }
 
@@ -170,7 +171,7 @@ class ThemeSettingPage extends StatelessWidget {
     final selected = appTheme.themeMode == value;
     return ListTile(
       leading: Icon(icon, color: context.gradFg(), size: 22),
-      title: Text(label, style: TextStyle(color: context.gradFg(), fontSize: 15)),
+      title: Text(label, style: context.gradTileTitleStyle(fontSize: 15)),
       trailing: selected
           ? Icon(Icons.check_circle, color: context.gradFg(), size: 22)
           : Icon(Icons.circle_outlined, color: context.gradFg(0.3), size: 22),
@@ -229,7 +230,7 @@ class ThemeSettingPage extends StatelessWidget {
     final isSelected = themeConfig.themeType == type;
     return ListTile(
       leading: Icon(icon, color: context.gradFg(), size: 22),
-      title: Text(label, style: TextStyle(color: context.gradFg(), fontSize: 15)),
+      title: Text(label, style: context.gradTileTitleStyle(fontSize: 15)),
       trailing: isSelected
           ? Icon(Icons.check_circle, color: context.gradFg(), size: 22)
           : Icon(Icons.circle_outlined, color: context.gradFg(0.3), size: 22),
@@ -254,8 +255,7 @@ class ThemeSettingPage extends StatelessWidget {
         children: [
           Text(
             l10n.themeGradientRgbSectionTitle,
-            style: TextStyle(
-              color: context.gradFg(),
+            style: context.gradTextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -263,7 +263,7 @@ class ThemeSettingPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l10n.themeGradientRgbSectionSubtitle,
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: context.gradFg(0.6),
               fontSize: 13,
               height: 1.35,
@@ -297,7 +297,7 @@ class ThemeSettingPage extends StatelessWidget {
               icon: Icon(Icons.tune_rounded, color: context.gradFg()),
               label: Text(
                 l10n.themeGradientRgbFineTune,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradTileTitleStyle(),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: context.gradFg(),
@@ -399,7 +399,7 @@ class ThemeSettingPage extends StatelessWidget {
         children: [
           Text(
             l10n.primaryColor,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: context.gradTextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Row(
@@ -420,14 +420,14 @@ class ThemeSettingPage extends StatelessWidget {
               Expanded(
                 child: Text(
                   '#${themeConfig.primaryColor.value.toRadixString(16).substring(2).toUpperCase()}',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  style: context.gradTextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
               TextButton(
                 onPressed: () => _showColorPicker(context, l10n, themeConfig, true),
                 child: Text(
                   l10n.actionSelect,
-                  style: const TextStyle(color: Colors.white),
+                  style: context.gradTextStyle(color: Colors.white),
                 ),
               ),
             ],
@@ -435,7 +435,7 @@ class ThemeSettingPage extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             l10n.secondaryColor,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: context.gradTextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Row(
@@ -456,14 +456,14 @@ class ThemeSettingPage extends StatelessWidget {
               Expanded(
                 child: Text(
                   '#${themeConfig.secondaryColor.value.toRadixString(16).substring(2).toUpperCase()}',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  style: context.gradTextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
               TextButton(
                 onPressed: () => _showColorPicker(context, l10n, themeConfig, false),
                 child: Text(
                   l10n.actionSelect,
-                  style: const TextStyle(color: Colors.white),
+                  style: context.gradTextStyle(color: Colors.white),
                 ),
               ),
             ],
@@ -474,6 +474,7 @@ class ThemeSettingPage extends StatelessWidget {
   }
 
   Widget _buildImageEffectSection(
+    BuildContext context,
     AppLocalizations l10n,
     ThemeConfigProvider themeConfig,
   ) {
@@ -490,7 +491,7 @@ class ThemeSettingPage extends StatelessWidget {
         children: [
           Text(
             l10n.fogBackground,
-            style: const TextStyle(
+            style: context.gradTextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -499,7 +500,7 @@ class ThemeSettingPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l10n.fogBackgroundDesc,
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: Colors.white.withOpacity(0.65),
               fontSize: 13,
               height: 1.35,
@@ -510,7 +511,7 @@ class ThemeSettingPage extends StatelessWidget {
             children: [
               Text(
                 l10n.fogWeak,
-                style: TextStyle(
+                style: context.gradTextStyle(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 12,
                 ),
@@ -529,7 +530,7 @@ class ThemeSettingPage extends StatelessWidget {
               ),
               Text(
                 l10n.fogStrong,
-                style: TextStyle(
+                style: context.gradTextStyle(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 12,
                 ),
@@ -540,7 +541,7 @@ class ThemeSettingPage extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               '${(v * 100).round()}%',
-              style: const TextStyle(
+              style: context.gradTextStyle(
                 color: Colors.white70,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -680,7 +681,7 @@ class ThemeSettingPage extends StatelessWidget {
                   isPrimary
                       ? l10n.colorDialogTitlePrimary
                       : l10n.colorDialogTitleSecondary,
-                  style: const TextStyle(
+                  style: context.gradTextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,

@@ -646,10 +646,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                 _batchSelect
                     ? '${_selectedNormPaths.length}'
                     : l10n.homeAllSongs,
-                style: TextStyle(
-                  color: context.gradFg(0.96),
-                  fontWeight: FontWeight.w600,
-                ),
+                style: context.gradAppBarTitleStyle(),
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -660,7 +657,10 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                     onPressed: _exitBatchSelect,
                     child: Text(
                       l10n.libraryBatchDone,
-                      style: TextStyle(color: context.gradFg()),
+                      style: context.gradListTitleStyle(
+                        color: context.gradFg(),
+                        fontSize: 15,
+                      ),
                     ),
                   )
                 else ...[

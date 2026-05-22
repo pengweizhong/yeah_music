@@ -140,6 +140,22 @@ abstract final class AppEphemeralStorage {
     return roots;
   }
 
+  /// 递归列举文件；跳过 WinSAT 等无权限的系统子目录，避免整次清理失败。
+  static Stream<FileSystemEntity> _walkFilesSafely(Directory root) async* {
+    if (!await root.exists()) return;
+    try {
+      await for (final entity in root.list(followLinks: false)) {
+        if (entity is File) {
+          yield entity;
+        } else if (entity is Directory) {
+          yield* _walkFilesSafely(entity);
+        }
+      }
+    } on FileSystemException {
+      return;
+    }
+  }
+
   static Future<void> _purgeLegacyNotificationArtOnce() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_legacyArtPurgedKey) == true) return;
@@ -149,7 +165,7 @@ abstract final class AppEphemeralStorage {
     try {
       for (final root in await _cacheLikeRoots()) {
         if (!await root.exists()) continue;
-        await for (final entity in root.list(recursive: true)) {
+        await for (final entity in _walkFilesSafely(root)) {
           if (entity is! File) continue;
           final base = p.basename(entity.path);
           if (!base.startsWith('yeah_nm_art_') || !base.endsWith('.jpg')) {
@@ -181,7 +197,7 @@ abstract final class AppEphemeralStorage {
     try {
       for (final root in await _cacheLikeRoots()) {
         if (!await root.exists()) continue;
-        await for (final entity in root.list(recursive: true)) {
+        await for (final entity in _walkFilesSafely(root)) {
           if (entity is! File) continue;
           final base = p.basename(entity.path);
           if (!base.startsWith('yeah_nm_art_') || !base.endsWith('.jpg')) {
@@ -205,7 +221,7 @@ abstract final class AppEphemeralStorage {
     try {
       for (final root in await _cacheLikeRoots()) {
         if (!await root.exists()) continue;
-        await for (final entity in root.list(recursive: true)) {
+        await for (final entity in _walkFilesSafely(root)) {
           if (entity is! File) continue;
           final base = p.basename(entity.path);
           if (!_legacyTimestampArtName.hasMatch(base)) continue;

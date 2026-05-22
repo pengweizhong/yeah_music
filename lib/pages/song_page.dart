@@ -30,6 +30,7 @@ import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
@@ -1231,8 +1232,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                         child: Text(
                           l10n.playbackModeTitle,
-                          style: Theme.of(inner).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
+                          style: PlatformTypography.merge(
+                            (Theme.of(inner).textTheme.titleLarge ??
+                                    const TextStyle())
+                                .copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -1536,8 +1539,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                           child: Text(
                             l10n.songPageMoreSheetTitle,
-                            style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
+                            style: PlatformTypography.merge(
+                              (Theme.of(ctx).textTheme.titleLarge ??
+                                      const TextStyle())
+                                  .copyWith(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -1742,8 +1747,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                           child: Text(
                             l10n.sleepTimerSheetTitle,
-                            style: Theme.of(inner).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
+                            style: PlatformTypography.merge(
+                              (Theme.of(inner).textTheme.titleLarge ??
+                                      const TextStyle())
+                                  .copyWith(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -2008,7 +2015,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                         width: double.infinity,
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 160),
-                          style: TextStyle(
+                          style: PlatformTypography.lyricLine(
                             fontSize: shouldHighlight && isOriginalLine
                                 ? _settings.originalFontSize + 2
                                 : (isOriginalLine
@@ -2018,8 +2025,6 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                 ? FontWeight.w600
                                 : FontWeight.w400,
                             color: displayColor,
-                            height: 1.35,
-                            letterSpacing: 0.2,
                           ),
                           child: useRowGradient
                               ? ShaderMask(
@@ -2533,11 +2538,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                 Expanded(
                   child: Text(
                     l10n.songPageTheaterNowPlaying,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.9,
-                      color: fg(0.55),
+                    style: PlatformTypography.merge(
+                      TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.9,
+                        color: fg(0.55),
+                      ),
                     ),
                   ),
                 ),
@@ -2573,21 +2580,25 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
               children: [
                 Text(
                   LyricsUtils.formatDuration(effectivePos),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: fg(0.5),
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                  style: PlatformTypography.merge(
+                    TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: fg(0.5),
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
                 const Spacer(),
                 Text(
                   LyricsUtils.formatDuration(_totalDuration),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: fg(0.5),
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                  style: PlatformTypography.merge(
+                    TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: fg(0.5),
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
               ],
@@ -2752,11 +2763,13 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
             Expanded(
               child: Text(
                 l10n.songPageTheaterUpNext,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.85,
-                  color: fg(0.5),
+                style: PlatformTypography.merge(
+                  TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.85,
+                    color: fg(0.5),
+                  ),
                 ),
               ),
             ),
@@ -2968,12 +2981,12 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             children: [
                               AutoMarqueeSingleLineText(
                                 text: song.title ?? l10n.pageUnknownTitle,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                  color: context.gradFg(),
-                                ),
+                                style: context
+                                    .gradAppBarTitleStyle(
+                                      alpha: 1.0,
+                                      fontSize: 20,
+                                    )
+                                    .copyWith(letterSpacing: 0.5),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 4),
@@ -2981,10 +2994,9 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                   song.artist!.isNotEmpty)
                                 AutoMarqueeSingleLineText(
                                   text: song.artist!,
-                                  style: TextStyle(
+                                  style: context.gradListSubtitleStyle(
+                                    color: context.gradFg(0.88),
                                     fontSize: 14,
-                                    color: context.gradFg(0.65),
-                                    fontWeight: FontWeight.w400,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -4018,10 +4030,12 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
             child: Text(
               l10n.playQueueTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: fg,
+              style: PlatformTypography.merge(
+                TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: fg,
+                ),
               ),
             ),
           ),
@@ -4032,10 +4046,12 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
                 l10n.queuePendingPlayAfterCurrentSection,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: fgSoft,
+                style: PlatformTypography.merge(
+                  TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: fgSoft,
+                  ),
                 ),
               ),
             ),
@@ -4078,9 +4094,11 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                       s.title ?? l10n.pageUnknownTitle,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: primary.withValues(alpha: 0.95),
+                                      style: PlatformTypography.merge(
+                                        TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: primary.withValues(alpha: 0.95),
+                                        ),
                                       ),
                                     ),
                                     Text(
@@ -4150,11 +4168,13 @@ class _PlaybackQueueSheetState extends State<_PlaybackQueueSheet> {
                                   children: [
                                     SongListMarqueeWhenCurrentLine(
                                       text: s.title ?? l10n.pageUnknownTitle,
-                                      style: TextStyle(
-                                        fontWeight: isCurrent
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                        color: isCurrent ? primary : fg,
+                                      style: PlatformTypography.merge(
+                                        TextStyle(
+                                          fontWeight: isCurrent
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                          color: isCurrent ? primary : fg,
+                                        ),
                                       ),
                                       isCurrentTrack: isCurrent,
                                     ),
@@ -4259,10 +4279,12 @@ class _CustomSleepTimerMinutesSheetState
                 children: [
                   Text(
                     l10n.sleepTimerCustom,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: context.gradFg(),
+                    style: PlatformTypography.merge(
+                      TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: context.gradFg(),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

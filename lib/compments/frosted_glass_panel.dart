@@ -16,6 +16,8 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 
 /// 与 [MiniPlayer] 条一致的毛玻璃：模糊、半透明、描边与阴影；抽屉 [FrostedGlassPanel.drawer]；
 /// 底栏 [FrostedGlassBottomSheet]；居中 [FrostedGlassDialog] / [showFrostedDialog]。
@@ -75,14 +77,16 @@ class FrostedGlassPanel extends StatelessWidget {
     // 抽屉：x 正；吸顶条：x=0, y=3；底栏：y 负
     final border = (frostedKind == FrostedSurfaceKind.drawerOrPinned)
         ? (shadowOffset.dx > 0
-            ? Border(right: BorderSide(color: FrostedPalette.edgeLine(context)))
-            : Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? kGradLightInk.withValues(alpha: 0.14)
-                      : Colors.white.withValues(alpha: 0.18),
-                ),
-              ))
+              ? Border(
+                  right: BorderSide(color: FrostedPalette.edgeLine(context)),
+                )
+              : Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? kGradLightInk.withValues(alpha: 0.14)
+                        : Colors.white.withValues(alpha: 0.18),
+                  ),
+                ))
         : Border(top: BorderSide(color: FrostedPalette.edgeLine(context)));
     return ClipRect(
       child: BackdropFilter(
@@ -102,7 +106,23 @@ class FrostedGlassPanel extends StatelessWidget {
             ],
           ),
           child: FrostedDeepTintChromeScope(
-            child: child,
+            child: Builder(
+              builder: (ctx) {
+                return Theme(
+                  data: themeForFrostedDeepChrome(ctx),
+                  child: DefaultTextStyle(
+                    style: PlatformTypography.merge(
+                      const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        height: 1.3,
+                      ),
+                    ),
+                    child: child,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -139,9 +159,7 @@ class FrostedGlassBottomSheet extends StatelessWidget {
           decoration: BoxDecoration(
             color: FrostedPalette.fill(context, FrostedSurfaceKind.sheet),
             borderRadius: r,
-            border: Border(
-              top: BorderSide(color: e),
-            ),
+            border: Border(top: BorderSide(color: e)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.12),
@@ -174,9 +192,7 @@ class FrostedGlassBottomSheet extends StatelessWidget {
                 fit: FlexFit.loose,
                 child: Theme(
                   data: frostedBottomSheetContentTheme(context),
-                  child: FrostedSheetForegroundScope(
-                    child: child,
-                  ),
+                  child: FrostedSheetForegroundScope(child: child),
                 ),
               ),
             ],
@@ -193,36 +209,23 @@ ThemeData frostedBottomSheetContentTheme(BuildContext context) {
   if (t.brightness == Brightness.light) {
     const ink = Color(0xFF000000);
     const inkMuted = Color(0xFF424242);
-    return t.copyWith(
+    return themeForGradientForeground(
+      context,
+      onSurface: ink,
+      onSurfaceVariant: inkMuted,
+    ).copyWith(
       scaffoldBackgroundColor: Colors.white,
       colorScheme: t.colorScheme.copyWith(
         surface: Colors.white,
         onSurface: ink,
         onSurfaceVariant: inkMuted,
       ),
-      textTheme: t.textTheme.apply(
-        bodyColor: ink,
-        displayColor: ink,
-        decorationColor: ink,
-      ),
-      iconTheme: const IconThemeData(color: ink, opacity: 1),
-      listTileTheme: t.listTileTheme.copyWith(
-        textColor: ink,
-        iconColor: ink,
-      ),
-      dividerTheme: const DividerThemeData(color: Color(0x1F000000)),
     );
   }
-  return t.copyWith(
-    colorScheme: t.colorScheme.copyWith(
-      onSurface: Colors.white,
-      onSurfaceVariant: const Color(0xCCFFFFFF),
-    ),
-    listTileTheme: t.listTileTheme.copyWith(
-      textColor: Colors.white,
-      iconColor: Colors.white,
-    ),
-    dividerTheme: const DividerThemeData(color: Color(0x3FFFFFFF)),
+  return themeForGradientForeground(
+    context,
+    onSurface: Colors.white,
+    onSurfaceVariant: const Color(0xCCFFFFFF),
   );
 }
 
@@ -253,10 +256,7 @@ class FrostedGlassDialog extends StatelessWidget {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: FrostedPalette.fill(
-                context,
-                FrostedSurfaceKind.dialog,
-              ),
+              color: FrostedPalette.fill(context, FrostedSurfaceKind.dialog),
               borderRadius: r,
               border: Border.all(color: FrostedPalette.edgeLine(context)),
               boxShadow: [
@@ -284,32 +284,31 @@ ThemeData frostedDialogContentTheme(BuildContext context) {
   if (t.brightness == Brightness.light) {
     const ink = Color(0xFF000000);
     const inkMuted = Color(0xFF424242);
-    return t.copyWith(
+    return themeForGradientForeground(
+      context,
+      onSurface: ink,
+      onSurfaceVariant: inkMuted,
+    ).copyWith(
       scaffoldBackgroundColor: Colors.white,
       colorScheme: t.colorScheme.copyWith(
         surface: Colors.white,
         onSurface: ink,
         onSurfaceVariant: inkMuted,
       ),
-      textTheme: t.textTheme.apply(
-        bodyColor: ink,
-        displayColor: ink,
-        decorationColor: ink,
-      ),
       iconTheme: const IconThemeData(color: ink, opacity: 1),
     );
   }
-  return t.copyWith(
-    colorScheme: t.colorScheme.copyWith(
-      onSurface: Colors.white,
-      onSurfaceVariant: const Color(0xCCFFFFFF),
-    ),
+  return themeForGradientForeground(
+    context,
+    onSurface: Colors.white,
+    onSurfaceVariant: const Color(0xCCFFFFFF),
   );
 }
 
 /// 与 [Material Dialog] 默认水平 inset（约每侧 40）对齐，用于卡片可用宽度。
 double _frostedDialogCardWidth(BuildContext context, double maxWidth) {
-  final inset = DialogTheme.of(context).insetPadding ??
+  final inset =
+      DialogTheme.of(context).insetPadding ??
       const EdgeInsets.symmetric(horizontal: 40, vertical: 24);
   final screenW = MediaQuery.sizeOf(context).width;
   final avail = screenW - inset.horizontal;
@@ -333,10 +332,7 @@ Future<T?> showFrostedDialog<T>({
         backgroundColor: Colors.transparent,
         child: SizedBox(
           width: cardW,
-          child: FrostedGlassDialog(
-            maxWidth: cardW,
-            child: child,
-          ),
+          child: FrostedGlassDialog(maxWidth: cardW, child: child),
         ),
       );
     },

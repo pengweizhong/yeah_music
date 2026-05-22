@@ -25,6 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
 import 'package:yeah_music/themes/wallpaper_readable_scope.dart';
 import 'package:yeah_music/themes/user_theme_gradient_foreground_scope.dart';
@@ -36,13 +37,13 @@ class ThemeConfigProvider extends ChangeNotifier {
   /// 壁纸自适应字色首帧猜色（采样完成前）：亮系统偏墨、暗系统偏白，减轻首屏闪动。
   static Color _wallpaperInitialFg() =>
       PlatformDispatcher.instance.platformBrightness == Brightness.light
-          ? kGradLightInk
-          : Colors.white;
+      ? kGradLightInk
+      : Colors.white;
 
   static Color _wallpaperInitialFgMuted() =>
       PlatformDispatcher.instance.platformBrightness == Brightness.light
-          ? kGradLightInkMuted
-          : const Color(0xFFD2DEEE);
+      ? kGradLightInkMuted
+      : const Color(0xFFD2DEEE);
 
   /// 仅主色已持久化、辅色缺失时：按全局亮/暗补足辅色。
   static const Color _kDefaultGradientSecondaryLight = Color(0xFFDCE4F0);
@@ -86,18 +87,22 @@ class ThemeConfigProvider extends ChangeNotifier {
   // 主题类型
   ThemeType _themeType = ThemeType.solidColor;
   Color _primaryColor = ThemeConfigProvider.presetColors.first;
-  Color _secondaryColor =
-      ThemeConfigProvider.secondaryFromPresetPrimary(
-          ThemeConfigProvider.presetColors.first);
+  Color _secondaryColor = ThemeConfigProvider.secondaryFromPresetPrimary(
+    ThemeConfigProvider.presetColors.first,
+  );
+
   /// 与早期版本一致：主对角线 ↘（左上→右下）。
   PlaylistCoverGradientDirection _gradientDirection =
       PlaylistCoverGradientDirection.diagonalTlBr;
   String? _backgroundImagePath;
+
   /// 背景图模式：0~1，控制虚化和压暗程度，越大字越易读（默认 0.45）；壁纸下仍保留底衬压暗与渐晕
   double _backgroundImageEffect = 0.45;
+
   /// 根据壁纸缩略图 WCAG 对比度在「高亮白 / 深墨」间自动择一（及对应次级色）
   Color _wallpaperAdaptiveFg = ThemeConfigProvider._wallpaperInitialFg();
-  Color _wallpaperAdaptiveFgMuted = ThemeConfigProvider._wallpaperInitialFgMuted();
+  Color _wallpaperAdaptiveFgMuted =
+      ThemeConfigProvider._wallpaperInitialFgMuted();
 
   Timer? _wallpaperReadableSampleDebounce;
 
@@ -182,7 +187,9 @@ class ThemeConfigProvider extends ChangeNotifier {
     try {
       final support = await getApplicationSupportDirectory();
       final ext = _themeImageExtension(raw);
-      final dest = File(p.join(support.path, '$themeBackgroundSupportBaseName$ext'));
+      final dest = File(
+        p.join(support.path, '$themeBackgroundSupportBaseName$ext'),
+      );
       await f.copy(dest.path);
       _backgroundImagePath = dest.path;
       final prefs = await SharedPreferences.getInstance();
@@ -233,10 +240,9 @@ class ThemeConfigProvider extends ChangeNotifier {
     final typeIndex = prefs.getInt('theme_type') ?? 0;
     _themeType = ThemeType.values[typeIndex];
 
-    final globalAppearance =
-        AppThemeModeProvider.themeModeFromStorage(
-          prefs.getInt(AppThemeModeProvider.prefsKey),
-        );
+    final globalAppearance = AppThemeModeProvider.themeModeFromStorage(
+      prefs.getInt(AppThemeModeProvider.prefsKey),
+    );
 
     // 加载颜色（无持久化键时按全局亮/暗主题取默认，改善浅色模式首次进入可读性）
     final primaryColorValue = prefs.getInt('primary_color');
@@ -262,8 +268,7 @@ class ThemeConfigProvider extends ChangeNotifier {
 
     // 加载背景图片路径
     _backgroundImagePath = prefs.getString('background_image_path');
-    _backgroundImageEffect =
-        prefs.getDouble('background_image_effect') ?? 0.45;
+    _backgroundImageEffect = prefs.getDouble('background_image_effect') ?? 0.45;
 
     await _ensureBackgroundCacheOrClear();
     if (_backgroundImagePath == null &&
@@ -344,7 +349,10 @@ class ThemeConfigProvider extends ChangeNotifier {
       await _removeOldThemeCacheFiles();
       final support = await getApplicationSupportDirectory();
       final ext = _themeImageExtension(path);
-      final destPath = p.join(support.path, '$themeBackgroundSupportBaseName$ext');
+      final destPath = p.join(
+        support.path,
+        '$themeBackgroundSupportBaseName$ext',
+      );
       // 不用 File.copy：覆盖固定缓存路径时部分环境下解码缓存不易失效；读出再写入并 bump frame。
       final rawBytes = await source.readAsBytes();
       await File(destPath).writeAsBytes(rawBytes, flush: true);
@@ -371,7 +379,10 @@ class ThemeConfigProvider extends ChangeNotifier {
     _evictThemeBackgroundImageCache(previousPath);
     await _removeOldThemeCacheFiles();
     final support = await getApplicationSupportDirectory();
-    final destPath = p.join(support.path, '$themeBackgroundSupportBaseName.png');
+    final destPath = p.join(
+      support.path,
+      '$themeBackgroundSupportBaseName.png',
+    );
     await File(destPath).writeAsBytes(normalized, flush: true);
     _backgroundImagePath = destPath;
     await prefs.setString('background_image_path', destPath);
@@ -413,7 +424,9 @@ class ThemeConfigProvider extends ChangeNotifier {
           pth,
           sampleLumaScale: lumaScale,
         );
-        if (_themeType != ThemeType.backgroundImage || _backgroundImagePath != pth) return;
+        if (_themeType != ThemeType.backgroundImage ||
+            _backgroundImagePath != pth)
+          return;
         if (sample == null) return;
         if (_wallpaperAdaptiveFg == sample.foreground &&
             _wallpaperAdaptiveFgMuted == sample.foregroundMuted) {
@@ -427,7 +440,10 @@ class ThemeConfigProvider extends ChangeNotifier {
 
     if (debounce) {
       _wallpaperReadableSampleDebounce?.cancel();
-      _wallpaperReadableSampleDebounce = Timer(const Duration(milliseconds: 280), runMicro);
+      _wallpaperReadableSampleDebounce = Timer(
+        const Duration(milliseconds: 280),
+        runMicro,
+      );
       return;
     }
     runMicro();
@@ -462,8 +478,10 @@ class ThemeConfigProvider extends ChangeNotifier {
                 builder: (ctx) {
                   final sz = MediaQuery.sizeOf(ctx);
                   final dpr = MediaQuery.devicePixelRatioOf(ctx);
-                  final cacheW =
-                      (sz.width * dpr).round().clamp(1, kWallpaperImageMaxSide);
+                  final cacheW = (sz.width * dpr).round().clamp(
+                    1,
+                    kWallpaperImageMaxSide,
+                  );
                   return Image.file(
                     File(_backgroundImagePath!),
                     key: ValueKey<String>(
@@ -535,7 +553,8 @@ class ThemeConfigProvider extends ChangeNotifier {
         ],
       );
     }
-    final useLightUserGradientFg = isLight &&
+    final useLightUserGradientFg =
+        isLight &&
         !(_themeType == ThemeType.backgroundImage &&
             _backgroundImagePath != null &&
             File(_backgroundImagePath!).existsSync());
@@ -557,16 +576,14 @@ class ThemeConfigProvider extends ChangeNotifier {
       }
     }
 
-    return Container(
-      decoration: getBackgroundDecoration(),
-      child: tree,
-    );
+    return Container(decoration: getBackgroundDecoration(), child: tree);
   }
 
-  LinearGradient _themeBackgroundLinearGradient() => playlistCoverLinearGradient(
-        [_primaryColor, _secondaryColor],
-        direction: _gradientDirection,
-      );
+  LinearGradient _themeBackgroundLinearGradient() =>
+      playlistCoverLinearGradient([
+        _primaryColor,
+        _secondaryColor,
+      ], direction: _gradientDirection);
 
   /// 获取背景装饰
   BoxDecoration getBackgroundDecoration() {
@@ -576,7 +593,8 @@ class ThemeConfigProvider extends ChangeNotifier {
       case ThemeType.customColor:
         return BoxDecoration(gradient: _themeBackgroundLinearGradient());
       case ThemeType.backgroundImage:
-        if (_backgroundImagePath != null && File(_backgroundImagePath!).existsSync()) {
+        if (_backgroundImagePath != null &&
+            File(_backgroundImagePath!).existsSync()) {
           // 实际渲染见 [buildThemedBackground]
           return const BoxDecoration(color: Colors.transparent);
         }
@@ -604,12 +622,22 @@ class _ThemedOnGradientContent extends StatelessWidget {
           ? kGradLightInk
           : Colors.white;
     }
+    final muted = wp != null
+        ? wp.foregroundMuted
+        : (UserThemeGradientForegroundScope.maybeOf(context) != null
+              ? Colors.white.withValues(alpha: 0.72)
+              : (Theme.of(context).brightness == Brightness.light
+                    ? kGradLightInkMuted.withValues(alpha: 0.88)
+                    : Colors.white.withValues(alpha: 0.72)));
     return Theme(
-      data: Theme.of(context).copyWith(
-        switchTheme: gradOnBackgroundSwitchTheme(context),
+      data: themeForGradientForeground(
+        context,
+        onSurface: c,
+        onSurfaceVariant: muted,
       ),
-      child: DefaultTextStyle(
-        style: TextStyle(color: c, height: 1.3),
+      child: PlatformTypography.desktopFontScope(
+        context: context,
+        defaultColor: c,
         child: IconTheme(
           data: IconThemeData(color: c),
           child: child,
@@ -621,7 +649,7 @@ class _ThemedOnGradientContent extends StatelessWidget {
 
 /// 主题类型枚举
 enum ThemeType {
-  solidColor,      // 纯色
-  customColor,     // 自定义颜色
+  solidColor, // 纯色
+  customColor, // 自定义颜色
   backgroundImage, // 背景图片
 }

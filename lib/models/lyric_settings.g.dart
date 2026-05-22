@@ -17,31 +17,46 @@ class LyricSettingsAdapter extends TypeAdapter<LyricSettings> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return LyricSettings()
-      ..showOriginal = fields[0] as bool
-      ..showTranslations = fields[1] as bool
-      ..originalFontSize = fields[2] as double
-      ..translationFontSize = fields[3] as double
-      ..activeOriginalColor = fields[4] as int
-      ..activeTranslationColor = fields[5] as int
-      ..playedOriginalColor = fields[6] as int
-      ..playedTranslationColor = fields[7] as int
-      ..upcomingOriginalColor = fields[8] as int
-      ..upcomingTranslationColor = fields[9] as int
-      ..lyricDisplayModeList = (fields[10] as List).cast<String>()
-      ..lyricLineSpacing = fields[11] as double
-      ..lyricTextAlignIndex = fields[12] as int
-      ..activeLyricUseGradient = fields[13] as bool
-      ..activeLyricGradientStart = fields[14] as int
-      ..activeLyricGradientEnd = fields[15] as int
-      ..activeLyricGradientDirectionIndex = fields[16] as int
-      ..playedLyricUseGradient = fields[17] as bool
-      ..playedLyricGradientStart = fields[18] as int
-      ..playedLyricGradientEnd = fields[19] as int
-      ..playedLyricGradientDirectionIndex = fields[20] as int
-      ..upcomingLyricUseGradient = fields[21] as bool
-      ..upcomingLyricGradientStart = fields[22] as int
-      ..upcomingLyricGradientEnd = fields[23] as int
-      ..upcomingLyricGradientDirectionIndex = fields[24] as int;
+      ..showOriginal = fields[0] == null ? true : fields[0] as bool
+      ..showTranslations = fields[1] == null ? true : fields[1] as bool
+      ..originalFontSize = fields[2] == null ? 20.0 : fields[2] as double
+      ..translationFontSize = fields[3] == null ? 14.0 : fields[3] as double
+      ..activeOriginalColor = fields[4] == null ? 4294967295 : fields[4] as int
+      ..activeTranslationColor =
+          fields[5] == null ? 4291875024 : fields[5] as int
+      ..playedOriginalColor = fields[6] == null ? 4289769648 : fields[6] as int
+      ..playedTranslationColor =
+          fields[7] == null ? 4287664272 : fields[7] as int
+      ..upcomingOriginalColor =
+          fields[8] == null ? 4286216826 : fields[8] as int
+      ..upcomingTranslationColor =
+          fields[9] == null ? 4285164138 : fields[9] as int
+      ..lyricDisplayModeList =
+          fields[10] == null ? [] : (fields[10] as List).cast<String>()
+      ..lyricLineSpacing = fields[11] == null ? 12.0 : fields[11] as double
+      ..lyricTextAlignIndex = fields[12] == null ? 1 : fields[12] as int
+      ..activeLyricUseGradient = fields[13] == null ? false : fields[13] as bool
+      ..activeLyricGradientStart =
+          fields[14] == null ? 4294967295 : fields[14] as int
+      ..activeLyricGradientEnd =
+          fields[15] == null ? 4294948685 : fields[15] as int
+      ..activeLyricGradientDirectionIndex =
+          fields[16] == null ? 0 : fields[16] as int
+      ..playedLyricUseGradient = fields[17] == null ? false : fields[17] as bool
+      ..playedLyricGradientStart =
+          fields[18] == null ? 4286695300 : fields[18] as int
+      ..playedLyricGradientEnd =
+          fields[19] == null ? 4291356361 : fields[19] as int
+      ..playedLyricGradientDirectionIndex =
+          fields[20] == null ? 0 : fields[20] as int
+      ..upcomingLyricUseGradient =
+          fields[21] == null ? false : fields[21] as bool
+      ..upcomingLyricGradientStart =
+          fields[22] == null ? 4284790262 : fields[22] as int
+      ..upcomingLyricGradientEnd =
+          fields[23] == null ? 4290502395 : fields[23] as int
+      ..upcomingLyricGradientDirectionIndex =
+          fields[24] == null ? 0 : fields[24] as int;
   }
 
   @override

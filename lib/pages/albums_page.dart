@@ -224,7 +224,7 @@ class _AlbumsBrowserPageState extends State<AlbumsBrowserPage> {
                   ),
                   title: Text(
                     row.title,
-                    style: TextStyle(color: context.gradFg()),
+                    style: context.gradTileTitleStyle(),
                   ),
                   subtitle: Text(
                     l10n.oneDriveTracksCount(row.count),
@@ -396,7 +396,7 @@ class _AlbumsBrowserSearchPageState extends State<AlbumsBrowserSearchPage> {
             fallbackIcon: Icons.album_rounded,
             iconColor: context.gradFg(),
           ),
-          title: Text(row.title, style: TextStyle(color: context.gradFg())),
+          title: Text(row.title, style: context.gradTileTitleStyle()),
           subtitle: Text(
             l10n.oneDriveTracksCount(row.count),
             style: TextStyle(color: context.gradFg(0.55)),

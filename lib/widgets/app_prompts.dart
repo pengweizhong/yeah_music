@@ -28,7 +28,10 @@ import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/config/app_product_info.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/services/github_release_update_checker.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_themed_branding_logo.dart';
+
+TextStyle _promptMerged(TextStyle style) => PlatformTypography.merge(style);
 
 /// 全局 Snackbar 气质：浮动、圆角、与磨砂弹层同系的深色壳层。
 enum AppSnackKind {
@@ -77,11 +80,13 @@ void _presentAppSnackBar(
       elevation: 10,
       content: Text(
         message,
-        style: TextStyle(
-          color: foregroundColor,
-          height: 1.38,
-          fontSize: 14.5,
-          fontWeight: FontWeight.w500,
+        style: _promptMerged(
+          TextStyle(
+            color: foregroundColor,
+            height: 1.38,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       backgroundColor: backgroundColor,
@@ -197,14 +202,18 @@ Future<bool?> showAppConfirmDialog({
         if (customMessage != null) {
           body = DefaultTextStyle.merge(
             textAlign: TextAlign.center,
-            style: TextStyle(color: muted, height: 1.48, fontSize: 14.5),
+            style: _promptMerged(
+              TextStyle(color: muted, height: 1.48, fontSize: 14.5),
+            ),
             child: customMessage,
           );
         } else if (message != null) {
           body = Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(color: muted, height: 1.48, fontSize: 14.5),
+            style: _promptMerged(
+              TextStyle(color: muted, height: 1.48, fontSize: 14.5),
+            ),
           );
         } else {
           body = const SizedBox.shrink();
@@ -247,11 +256,13 @@ Future<bool?> showAppConfirmDialog({
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: onSurface,
-                    height: 1.25,
+                  style: _promptMerged(
+                    TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: onSurface,
+                      height: 1.25,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -330,20 +341,24 @@ Future<String?> showAppTextPromptDialog({
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+                  style: _promptMerged(
+                    TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
                 if (sub != null) ...[
                   const SizedBox(height: 10),
                   DefaultTextStyle.merge(
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.45,
-                      fontSize: 14.5,
+                    style: _promptMerged(
+                      TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.45,
+                        fontSize: 14.5,
+                      ),
                     ),
                     child: sub,
                   ),
@@ -353,7 +368,7 @@ Future<String?> showAppTextPromptDialog({
                   controller: ctrl,
                   autofocus: true,
                   maxLines: maxLines,
-                  style: TextStyle(color: scheme.onSurface),
+                  style: _promptMerged(TextStyle(color: scheme.onSurface)),
                   decoration: InputDecoration(
                     labelText: fieldLabel,
                     hintText: hintText,
@@ -431,21 +446,25 @@ Future<T?> showAppCustomDialog<T>({
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: onSurface,
-                    height: 1.25,
+                  style: _promptMerged(
+                    TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: onSurface,
+                      height: 1.25,
+                    ),
                   ),
                 ),
                 if (bodyChildren.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   DefaultTextStyle.merge(
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: muted,
-                      fontSize: 14.5,
-                      height: 1.48,
+                    style: _promptMerged(
+                      TextStyle(
+                        color: muted,
+                        fontSize: 14.5,
+                        height: 1.48,
+                      ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -500,10 +519,12 @@ void showAppBlockingProgressDialog({
                   Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurface,
+                    style: _promptMerged(
+                      TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -527,9 +548,11 @@ void showAppBlockingProgressDialog({
                     Text(
                       msg,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.3,
+                      style: _promptMerged(
+                        TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          height: 1.3,
+                        ),
                       ),
                     ),
                   ],
@@ -569,10 +592,12 @@ Future<void> showAppScrollMessageDialog({
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+                  style: _promptMerged(
+                    TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -581,10 +606,12 @@ Future<void> showAppScrollMessageDialog({
                   child: SingleChildScrollView(
                     child: Text.rich(
                       TextSpan(children: _appBoldTextSpans(body)),
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.48,
-                        fontSize: 14.5,
+                      style: _promptMerged(
+                        TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          height: 1.48,
+                          fontSize: 14.5,
+                        ),
                       ),
                     ),
                   ),
@@ -621,7 +648,7 @@ List<InlineSpan> _appBoldTextSpans(String text) {
     spans.add(
       TextSpan(
         text: text.substring(start + 2, end),
-        style: const TextStyle(fontWeight: FontWeight.w700),
+        style: _promptMerged(const TextStyle(fontWeight: FontWeight.w700)),
       ),
     );
     cursor = end + 2;
@@ -670,10 +697,12 @@ Future<void> _showAboutUpdateCheckFinishedDialog({
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+                  style: _promptMerged(
+                    TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
                 if (sub != null && sub.isNotEmpty) ...[
@@ -681,10 +710,12 @@ Future<void> _showAboutUpdateCheckFinishedDialog({
                   Text(
                     sub,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.48,
-                      fontSize: 14.5,
+                    style: _promptMerged(
+                      TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.48,
+                        fontSize: 14.5,
+                      ),
                     ),
                   ),
                 ],
@@ -845,10 +876,12 @@ void showAppAboutDialog(BuildContext context) {
                     Text(
                       AppProductInfo.displayName,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: onSurface,
+                      style: _promptMerged(
+                        TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: onSurface,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -883,10 +916,12 @@ void showAppAboutDialog(BuildContext context) {
                                     l10n.settingsAboutDialogVersionLabel(
                                       AppProductInfo.version,
                                     ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: scheme.primary,
-                                      fontWeight: FontWeight.w500,
+                                    style: _promptMerged(
+                                      TextStyle(
+                                        fontSize: 14,
+                                        color: scheme.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -902,7 +937,9 @@ void showAppAboutDialog(BuildContext context) {
                         AppProductInfo.buildNumber,
                       ),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: muted),
+                      style: _promptMerged(
+                        TextStyle(fontSize: 12, color: muted),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Divider(color: scheme.outline.withValues(alpha: 0.35)),
@@ -991,14 +1028,21 @@ Widget _aboutDialogActionRow(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 12, color: muted)),
+                  Text(
+                    label,
+                    style: _promptMerged(
+                      TextStyle(fontSize: 12, color: muted),
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     value,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: onSurface,
+                    style: _promptMerged(
+                      TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: onSurface,
+                      ),
                     ),
                   ),
                 ],
@@ -1029,14 +1073,19 @@ Widget _aboutDialogInfoRow(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(fontSize: 12, color: muted)),
+            Text(
+              label,
+              style: _promptMerged(TextStyle(fontSize: 12, color: muted)),
+            ),
             const SizedBox(height: 2),
             SelectableText(
               value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: onSurface,
+              style: _promptMerged(
+                TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: onSurface,
+                ),
               ),
             ),
           ],

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -18,6 +18,7 @@ import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 
 /// 首页问候：自定义句子列表与顺序 / 随机轮播。
@@ -122,7 +123,7 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
             width: 28,
             child: Text(
               '${rowIndex + 1}.',
-              style: TextStyle(
+              style: context.gradTextStyle(
                 color: context.gradFg(0.42),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -135,10 +136,10 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
             controller: c,
             minLines: 1,
             maxLines: 4,
-            style: TextStyle(color: context.gradFg(), height: 1.35),
+            style: context.gradTextStyle(height: 1.35),
             decoration: InputDecoration(
               hintText: l10n.settingsHomeGreetingLineHint,
-              hintStyle: TextStyle(color: context.gradFg(0.38)),
+              hintStyle: context.gradTextStyle(color: context.gradFg(0.38)),
               filled: true,
               fillColor: context.gradBorder(0.06),
               border: OutlineInputBorder(
@@ -172,14 +173,17 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
       builder: (context, themeConfig, _) {
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: context.gradFg(),
+            child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               title: Text(
                 l10n.settingsHomeGreetingTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradAppBarTitleStyle(fontSize: 18),
               ),
               leading: IconButton(
                 icon: Icon(
@@ -194,7 +198,7 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
                   onPressed: _save,
                   child: Text(
                     l10n.settingsHomeGreetingSave,
-                    style: TextStyle(color: context.gradFg(0.95)),
+                    style: context.gradTextStyle(color: context.gradFg(0.95)),
                   ),
                 ),
               ],
@@ -204,7 +208,7 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
               children: [
                 Text(
                   l10n.settingsHomeGreetingHelp,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: context.gradFg(0.6),
                     fontSize: 13,
                     height: 1.35,
@@ -213,7 +217,7 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
                 const SizedBox(height: 20),
                 Text(
                   l10n.settingsHomeGreetingRotationTitle,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: context.gradFg(0.88),
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -227,7 +231,7 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
                       l10n.settingsHomeGreetingEmptyHint,
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: context.gradFg(0.48),
                         fontSize: 14,
                       ),
@@ -242,10 +246,11 @@ class _HomeGreetingSettingsPageState extends State<HomeGreetingSettingsPage> {
                   icon: Icon(Icons.add_rounded, color: context.gradFg(0.85)),
                   label: Text(
                     l10n.settingsHomeGreetingAddLine,
-                    style: TextStyle(color: context.gradFg(0.9)),
+                    style: context.gradTextStyle(color: context.gradFg(0.9)),
                   ),
                 ),
               ],
+            ),
             ),
           ),
         );

@@ -33,34 +33,34 @@ bool _hiveOpenLikelyOutOfMemory(Object error) {
 }
 
 class AppInit {
-  ///初始化JustAudio 音频播放插件
+  /// 桌面端（Linux / Windows）无 just_audio 原生实现，须用 media_kit 绑定。
   void initJustAudioKit() {
-    if (!Platform.isLinux) {
+    final useLinux = Platform.isLinux;
+    final useWindows = Platform.isWindows;
+    if (!useLinux && !useWindows) {
       return;
     }
-    appLog.d('Linux: 初始化 setlocale C');
-    // 强制设置 locale
-    ffi.DynamicLibrary.process();
-    // 仅在 Linux 桌面需要
-    // 很多 Linux 系统（尤其是中文环境，LANG=zh_CN.UTF-8 之类）会把小数点当作逗号 ，而 FFmpeg 只认 .
-    try {
-      ffi.DynamicLibrary.open("libc.so.6").lookupFunction<
-        ffi.Pointer<ffi.Int8> Function(ffi.Int32, ffi.Pointer<ffi.Int8>),
-        ffi.Pointer<ffi.Int8> Function(int, ffi.Pointer<ffi.Int8>)
-      >("setlocale")(6, "C".toNativeUtf8().cast()); // 6 = LC_NUMERIC
-    } catch (_) {}
-    appLog.d('just_audio_media_kit 已初始化');
-    //初始化AudioPlayer
+    if (useLinux) {
+      appLog.d('Linux: 初始化 setlocale C');
+      // 强制设置 locale
+      ffi.DynamicLibrary.process();
+      // 很多 Linux 系统（尤其是中文环境）会把小数点当作逗号，而 FFmpeg 只认 .
+      try {
+        ffi.DynamicLibrary.open("libc.so.6").lookupFunction<
+          ffi.Pointer<ffi.Int8> Function(ffi.Int32, ffi.Pointer<ffi.Int8>),
+          ffi.Pointer<ffi.Int8> Function(int, ffi.Pointer<ffi.Int8>)
+        >("setlocale")(6, "C".toNativeUtf8().cast()); // 6 = LC_NUMERIC
+      } catch (_) {}
+    }
+    appLog.d(
+      '${useLinux ? "Linux" : "Windows"}: 初始化 just_audio_media_kit',
+    );
     JustAudioMediaKit.ensureInitialized(
-      linux: true,
-      // default: true  - dependency: media_kit_libs_linux
-      windows: true,
-      // default: true  - dependency: media_kit_libs_windows_audio
-      android: true,
-      // default: false - dependency: media_kit_libs_android_audio
-      iOS: true,
-      // default: false - dependency: media_kit_libs_ios_audio
-      macOS: false, // default: false - dependency: media_kit_libs_macos_audio
+      linux: useLinux,
+      windows: useWindows,
+      android: false,
+      iOS: false,
+      macOS: false,
     );
   }
 

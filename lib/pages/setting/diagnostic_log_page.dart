@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Yeah Music
+﻿// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
@@ -26,6 +26,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/diagnostic_log_store.dart';
 import 'package:yeah_music/platform/wire_remote_native.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 
 class DiagnosticLogPage extends StatefulWidget {
@@ -135,7 +136,10 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
       builder: (context, themeConfig, _) {
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: context.gradFg(),
+            child: Scaffold(
             extendBody: true,
             backgroundColor: Colors.transparent,
             appBar: AppBar(
@@ -144,7 +148,7 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
               iconTheme: IconThemeData(color: context.gradFg()),
               title: Text(
                 l10n.diagnosticLogTitle,
-                style: TextStyle(color: context.gradFg()),
+                style: context.gradAppBarTitleStyle(fontSize: 18),
               ),
               actions: [
                 IconButton(
@@ -187,11 +191,11 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                         onChanged: _setEnabled,
                         title: Text(
                           l10n.diagnosticLogEnableTitle,
-                          style: TextStyle(color: context.gradFg()),
+                          style: context.gradTileTitleStyle(),
                         ),
                         subtitle: Text(
                           l10n.diagnosticLogEnableSubtitle,
-                          style: TextStyle(
+                          style: context.gradTextStyle(
                             color: context.gradFg(0.6),
                             fontSize: 13,
                             height: 1.35,
@@ -201,7 +205,7 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                       const SizedBox(height: 8),
                       Text(
                         l10n.diagnosticLogDescription,
-                        style: TextStyle(
+                        style: context.gradTextStyle(
                           color: context.gradFg(0.6),
                           fontSize: 13,
                           height: 1.4,
@@ -214,7 +218,7 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                           child: Text(
                             l10n.diagnosticLogEmpty,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: context.gradTextStyle(
                               color: context.gradFg(0.55),
                               height: 1.4,
                             ),
@@ -223,16 +227,19 @@ class _DiagnosticLogPageState extends State<DiagnosticLogPage> {
                       else
                         SelectableText(
                           _log,
-                          style: TextStyle(
-                            color: context.gradFg(0.9),
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                            height: 1.35,
+                          style: PlatformTypography.merge(
+                            TextStyle(
+                              color: context.gradFg(0.9),
+                              fontFamily: 'Consolas',
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
                           ),
                         ),
                     ],
                   ),
             bottomNavigationBar: const MiniPlayer(),
+            ),
           ),
         );
       },

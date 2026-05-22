@@ -34,6 +34,7 @@ import 'package:yeah_music/models/quick_entry_config.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/models/user_playlist_cover_style.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
+import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/pages/music_recognition_page.dart';
 import 'package:yeah_music/pages/menu_page.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_browser_page.dart';
@@ -403,88 +404,95 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       builder: (context, themeConfig, child) {
         return themeConfig.buildThemedBackground(
           context: context,
-          child: Scaffold(
-            key: _scaffoldKey,
-            extendBodyBehindAppBar: false,
-            extendBody: true,
-            backgroundColor: Colors.transparent,
-            drawer: MenuPage(),
-            appBar: AppBar(
-              centerTitle: false,
-              title: Text(
-                l10n.appTitle,
-                style: TextStyle(
-                  color: context.gradFg(0.95),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
+          child: PlatformTypography.desktopFontScope(
+            context: context,
+            defaultColor: context.gradFg(),
+            child: Scaffold(
+              key: _scaffoldKey,
+              extendBodyBehindAppBar: false,
+              extendBody: true,
               backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: IconThemeData(color: context.gradFg()),
-              leading: IconButton(
-                icon: const Icon(Icons.menu_rounded, size: 26),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                tooltip: l10n.homeMenuTooltip,
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.search_rounded, size: 26),
-                  onPressed: () => _goLibrary(openSearch: true),
-                  tooltip: l10n.homeSearchTooltip,
-                ),
-                const SizedBox(width: 4),
-              ],
-            ),
-            body: Consumer2<PlayListProvider, UserPlaylistProvider>(
-              builder: (context, play, user, _) {
-                final recentSongs = play.resolveRecentSongsFromPaths(
-                  _recentPaths,
-                  maxSongs: 8,
-                );
-                final mostPlayedItems = play.resolveTopPlayedFromPathCounts(
-                  _mostPlayedRaw,
-                  maxSongs: 8,
-                );
-                final showMini =
-                    play.initialized &&
-                    play.currentSong != null &&
-                    play.playList.isNotEmpty;
-                final miniBottom = showMini ? MiniPlayer.barHeight : 0.0;
-                return SizedBox.expand(
-                  child: _HomeScrollBody(
-                    scrollController: _homeScrollController,
-                    quickEntry: _quickEntry,
-                    safeBottom:
-                        MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
-                    greeting: _greeting(context),
-                    greetingSub:
-                        _greetingSubLine ??
-                        AppLocalizations.of(context).homeGreetingSub,
-                    play: play,
-                    user: user,
-                    recentSongs: recentSongs,
-                    mostPlayedItems: mostPlayedItems,
-                    mostPlayedRaw: _mostPlayedRaw,
-                    showRecentList: _recentReady,
-                    onOpenLibrary: () => _goLibrary(),
-                    onOpenSearch: () => _goLibrary(openSearch: true),
-                    onOpenStorage: _goStoragePlaylists,
-                    onOpenRecent: _goRecentPlays,
-                    onOpenMostPlayed: _goMostPlayed,
-                    onOpenCloudLibrary: _goCloudLibrary,
-                    onOpenOneDrive: _goOneDrive,
-                    onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
-                    onOpenOneDriveTransferQueue: _goOneDriveTransferQueue,
-                    onOpenMusicRecognition: _goMusicRecognition,
-                    onManageQuickEntry: _goQuickEntrySettings,
-                    onOpenUserPlaylist: _goUserPlaylist,
-                    songSubtitle: _songSecondaryLine,
+              drawer: MenuPage(),
+              appBar: AppBar(
+                centerTitle: false,
+                titleSpacing: 0,
+                title: Text(
+                  l10n.appTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: PlatformTypography.merge(
+                    context
+                        .gradAppBarTitleStyle(alpha: 0.95, fontSize: 18)
+                        .copyWith(letterSpacing: 0.3),
                   ),
-                );
-              },
+                ),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: IconThemeData(color: context.gradFg()),
+                leading: IconButton(
+                  icon: const Icon(Icons.menu_rounded, size: 26),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  tooltip: l10n.homeMenuTooltip,
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.search_rounded, size: 26),
+                    onPressed: () => _goLibrary(openSearch: true),
+                    tooltip: l10n.homeSearchTooltip,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+              body: Consumer2<PlayListProvider, UserPlaylistProvider>(
+                builder: (context, play, user, _) {
+                  final recentSongs = play.resolveRecentSongsFromPaths(
+                    _recentPaths,
+                    maxSongs: 8,
+                  );
+                  final mostPlayedItems = play.resolveTopPlayedFromPathCounts(
+                    _mostPlayedRaw,
+                    maxSongs: 8,
+                  );
+                  final showMini =
+                      play.initialized &&
+                      play.currentSong != null &&
+                      play.playList.isNotEmpty;
+                  final miniBottom = showMini ? MiniPlayer.barHeight : 0.0;
+                  return SizedBox.expand(
+                    child: _HomeScrollBody(
+                      scrollController: _homeScrollController,
+                      quickEntry: _quickEntry,
+                      safeBottom:
+                          MediaQuery.paddingOf(context).bottom + 8 + miniBottom,
+                      greeting: _greeting(context),
+                      greetingSub:
+                          _greetingSubLine ??
+                          AppLocalizations.of(context).homeGreetingSub,
+                      play: play,
+                      user: user,
+                      recentSongs: recentSongs,
+                      mostPlayedItems: mostPlayedItems,
+                      mostPlayedRaw: _mostPlayedRaw,
+                      showRecentList: _recentReady,
+                      onOpenLibrary: () => _goLibrary(),
+                      onOpenSearch: () => _goLibrary(openSearch: true),
+                      onOpenStorage: _goStoragePlaylists,
+                      onOpenRecent: _goRecentPlays,
+                      onOpenMostPlayed: _goMostPlayed,
+                      onOpenCloudLibrary: _goCloudLibrary,
+                      onOpenOneDrive: _goOneDrive,
+                      onOpenOneDriveCachedPlaylist: _goOneDriveCachedPlaylist,
+                      onOpenOneDriveTransferQueue: _goOneDriveTransferQueue,
+                      onOpenMusicRecognition: _goMusicRecognition,
+                      onManageQuickEntry: _goQuickEntrySettings,
+                      onOpenUserPlaylist: _goUserPlaylist,
+                      songSubtitle: _songSecondaryLine,
+                    ),
+                  );
+                },
+              ),
+              bottomNavigationBar: const MiniPlayer(),
             ),
-            bottomNavigationBar: const MiniPlayer(),
           ),
         );
       },
@@ -639,7 +647,7 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
     if (ids.isEmpty) {
       return Text(
         l10n.homeQuickEntryEmpty,
-        style: TextStyle(
+        style: context.gradTextStyle(
           color: context.gradFg(0.45),
           fontSize: 14,
           height: 1.35,
@@ -893,7 +901,10 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                 child: Center(
                   child: Text(
                     l10n.homeLoadingLibrary,
-                    style: TextStyle(color: context.gradFg(0.5), fontSize: 14),
+                    style: context.gradTileSubtitleStyle(
+                      alpha: 0.5,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
@@ -920,7 +931,10 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                 padding: const EdgeInsets.fromLTRB(_hPad, 8, _hPad, 0),
                 child: Text(
                   l10n.homeRecentEmpty,
-                  style: TextStyle(color: context.gradFg(0.45), fontSize: 14),
+                  style: context.gradTileSubtitleStyle(
+                    alpha: 0.45,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             )
@@ -985,7 +999,10 @@ class _HomeScrollBodyState extends State<_HomeScrollBody> {
                     widget.mostPlayedRaw.isNotEmpty
                         ? l10n.homeMostPlayedPathMismatch
                         : l10n.homeMostPlayedEmpty,
-                    style: TextStyle(color: context.gradFg(0.45), fontSize: 14),
+                    style: context.gradTileSubtitleStyle(
+                      alpha: 0.45,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               )
@@ -1199,7 +1216,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                   children: [
                     Text(
                       l10n.homeNothingPlaying,
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: context.gradFg(0.9),
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -1208,7 +1225,7 @@ class _ContinueEmptyCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       l10n.homeOpenLibraryToPlay,
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: context.gradFg(0.45),
                         fontSize: 13,
                       ),
@@ -1397,7 +1414,7 @@ class _GreetingBlock extends StatelessWidget {
         children: [
           Text(
             l10n.homeGreetingLine(greeting),
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: context.gradFg(0.95),
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -1409,7 +1426,7 @@ class _GreetingBlock extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: context.gradFg(0.45),
               fontSize: 13,
               height: 1.35,
@@ -1449,7 +1466,10 @@ class _SearchPill extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.homeSearchHint,
-                  style: TextStyle(color: context.gradFg(0.45), fontSize: 15),
+                  style: context.gradTileSubtitleStyle(
+                    alpha: 0.45,
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ],
@@ -1482,7 +1502,7 @@ class _SectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: context.gradFg(0.95),
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -1502,7 +1522,7 @@ class _SectionTitle extends StatelessWidget {
             ),
             child: Text(
               actionLabel!,
-              style: TextStyle(
+              style: context.gradTextStyle(
                 color: context.gradFg(0.45),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -1627,7 +1647,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
                 ),
                 child: Text(
                   l10n.homeContinuePlaying,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: context.gradFg(0.9),
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1657,7 +1677,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
             widget.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: context.gradTextStyle(
               color: context.gradFg(),
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -1668,7 +1688,7 @@ class _ContinuePlayCardState extends State<_ContinuePlayCard> {
             widget.subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: context.gradFg(0.8), fontSize: 14),
+            style: context.gradTileSubtitleStyle(alpha: 0.8, fontSize: 14),
           ),
         ],
       ),
@@ -1945,7 +1965,7 @@ class _QuickEntryTile extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: context.gradTextStyle(
                     color: context.gradFg(0.9),
                     fontSize: labelSize,
                     fontWeight: FontWeight.w600,
@@ -2000,7 +2020,7 @@ class _MixCard extends StatelessWidget {
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: context.gradFg(),
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -2012,7 +2032,7 @@ class _MixCard extends StatelessWidget {
                       subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: context.gradTextStyle(
                         color: context.gradFg(0.8),
                         fontSize: 11,
                       ),

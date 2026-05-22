@@ -25,86 +25,86 @@ class LyricSettings extends HiveObject {
   static const double minLineSpacing = 0;
   static const double maxLineSpacing = 50;
 
-  @HiveField(0)
+  @HiveField(0, defaultValue: true)
   bool showOriginal = true;
 
-  @HiveField(1)
+  @HiveField(1, defaultValue: true)
   bool showTranslations = true;
 
-  @HiveField(2)
+  @HiveField(2, defaultValue: 20.0)
   double originalFontSize = 20.0;
 
-  @HiveField(3)
+  @HiveField(3, defaultValue: 14.0)
   double translationFontSize = 14.0;
 
-  @HiveField(4)
+  @HiveField(4, defaultValue: 0xFFFFFFFF)
   int activeOriginalColor = 0xFFFFFFFF; // Colors.white
 
-  @HiveField(5)
+  @HiveField(5, defaultValue: 0xFFD0D0D0)
   int activeTranslationColor = 0xFFD0D0D0;
 
-  @HiveField(6)
+  @HiveField(6, defaultValue: 0xFFB0B0B0)
   int playedOriginalColor = 0xFFB0B0B0;
 
-  @HiveField(7)
+  @HiveField(7, defaultValue: 0xFF909090)
   int playedTranslationColor = 0xFF909090;
 
-  @HiveField(8)
+  @HiveField(8, defaultValue: 0xFF7A7A7A)
   int upcomingOriginalColor = 0xFF7A7A7A;
 
-  @HiveField(9)
+  @HiveField(9, defaultValue: 0xFF6A6A6A)
   int upcomingTranslationColor = 0xFF6A6A6A;
 
   // Note: Hive doesn't support Map directly, so we'll store as List<String> with format "key:value"
-  @HiveField(10)
+  @HiveField(10, defaultValue: <String>[])
   List<String> lyricDisplayModeList = []; // stored as "key:value" strings
 
-  @HiveField(11)
+  @HiveField(11, defaultValue: 12.0)
   double lyricLineSpacing = 12.0; // 歌词行间距
 
   /// 0=靠左, 1=居中, 2=靠右（与 [lyricTextAlign] 一致）
-  @HiveField(12)
+  @HiveField(12, defaultValue: 1)
   int lyricTextAlignIndex = 1;
 
   /// 为 true 时「正在播放」高亮行（原文与译文）使用下方渐变，而非 [activeOriginalColor] / [activeTranslationColor]。
-  @HiveField(13)
+  @HiveField(13, defaultValue: false)
   bool activeLyricUseGradient = false;
 
   /// 渐变起始色 ARGB（与 [PlaylistCoverGradientDirection] 搭配）。
-  @HiveField(14)
+  @HiveField(14, defaultValue: 0xFFFFFFFF)
   int activeLyricGradientStart = 0xFFFFFFFF;
 
-  @HiveField(15)
+  @HiveField(15, defaultValue: 0xFFFFB74D)
   int activeLyricGradientEnd = 0xFFFFB74D;
 
   /// [PlaylistCoverGradientDirection.index]，持久化与歌单封面渐变方向一致。
-  @HiveField(16)
+  @HiveField(16, defaultValue: 0)
   int activeLyricGradientDirectionIndex = 0;
 
   /// 「已播过」行：开启时原文/译文共用下方渐变，优先于 [playedOriginalColor] / [playedTranslationColor]。
-  @HiveField(17)
+  @HiveField(17, defaultValue: false)
   bool playedLyricUseGradient = false;
 
-  @HiveField(18)
+  @HiveField(18, defaultValue: 0xFF81C784)
   int playedLyricGradientStart = 0xFF81C784;
 
-  @HiveField(19)
+  @HiveField(19, defaultValue: 0xFFC8E6C9)
   int playedLyricGradientEnd = 0xFFC8E6C9;
 
-  @HiveField(20)
+  @HiveField(20, defaultValue: 0)
   int playedLyricGradientDirectionIndex = 0;
 
   /// 「未播到」行：同上，优先于 upcoming 纯色。
-  @HiveField(21)
+  @HiveField(21, defaultValue: false)
   bool upcomingLyricUseGradient = false;
 
-  @HiveField(22)
+  @HiveField(22, defaultValue: 0xFF64B5F6)
   int upcomingLyricGradientStart = 0xFF64B5F6;
 
-  @HiveField(23)
+  @HiveField(23, defaultValue: 0xFFBBDEFB)
   int upcomingLyricGradientEnd = 0xFFBBDEFB;
 
-  @HiveField(24)
+  @HiveField(24, defaultValue: 0)
   int upcomingLyricGradientDirectionIndex = 0;
 
   LyricSettings();
