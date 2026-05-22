@@ -12,11 +12,14 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
+import 'package:yeah_music/config/app_config.dart';
+
 /// Microsoft 身份与 Graph 配置。
 ///
 /// **正式发布**：在 Azure 注册「公共客户端 / 移动和桌面」应用，将应用程序（客户端）ID 填入
 /// [embeddedApplicationClientId]（可嵌入应用，与常见消费级 App 一致）；或通过 CI 传入
 /// `--dart-define=ONEDRIVE_CLIENT_ID=...` 覆盖。
+///
 /// **`Azure`**
 /// 1. 「身份验证」平台：**移动和桌面应用程序**，重定向 URI 与 [redirectUrl] **逐字一致**。
 /// 2. 「API 权限」Microsoft Graph 委托：`offline_access`、`User.Read`、`Files.Read.All`、
@@ -69,13 +72,13 @@ abstract final class OneDriveConfig {
   static const String tokenEndpoint =
       'https://login.microsoftonline.com/common/oauth2/v2.0/token';
 
+  /// 云端列表/点播/缓存识别；曲库扫描格式见 [AppConfig.supportedFormats]，另含常见流媒体扩展。
   static bool isAudioFileName(String name) {
     final lower = name.toLowerCase();
-    return lower.endsWith('.mp3') ||
-        lower.endsWith('.flac') ||
-        lower.endsWith('.m4a') ||
-        lower.endsWith('.aac') ||
-        lower.endsWith('.wav') ||
+    if (AppConfig.supportedFormats.any((ext) => lower.endsWith(ext))) {
+      return true;
+    }
+    return lower.endsWith('.aac') ||
         lower.endsWith('.ogg') ||
         lower.endsWith('.opus') ||
         lower.endsWith('.wma');

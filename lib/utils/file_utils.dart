@@ -29,6 +29,11 @@ import 'package:yeah_music/utils/wav_metadata_reader.dart';
 
 import '../models/song.dart';
 
+bool pathIsDsdAudio(String path) {
+  final ext = p.extension(path).toLowerCase();
+  return ext == '.dsf' || ext == '.dff';
+}
+
 /// 读取内嵌元数据；WAV 使用项目内修复实现（库内 RIFF 解析易错位导致标签全空）。
 ///
 /// [repairLyrics] 为 false 时跳过对整文件的二次扫描（音乐源批量入库应关闭，否则极慢）。
@@ -100,14 +105,20 @@ class FileUtils {
     /// Android 11+ 首次读盘遇 errno 13 时尝试请求「所有文件访问」后整体重试一次（避免通知/封面补载死循环）。
     bool storageUnlockRetryDone = false,
   }) async {
-    String filename = song.path.split('/').last;
+    final basename = p.basename(song.path);
     if (!kIsWeb && Platform.isMacOS) {
       await MacOsFileAccess.ensureForSongPath(song.path);
+    }
+    if (pathIsDsdAudio(song.path)) {
+      song.title = p.basenameWithoutExtension(song.path);
+      await loadFileStat(song);
+      return;
     }
     File file = File(song.path);
     late final AudioMetadata metadata;
     var resolvedEmbedImages = loadEmbeddedAlbumArt;
     final repairLyrics = storeLyricsWithTrack;
+    final filename = basename;
 
     Future<AudioMetadata> readMeta(bool image) async {
       if (!kIsWeb && image) {

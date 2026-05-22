@@ -33,11 +33,12 @@ bool _hiveOpenLikelyOutOfMemory(Object error) {
 }
 
 class AppInit {
-  /// 桌面端（Linux / Windows）无 just_audio 原生实现，须用 media_kit 绑定。
+  /// 桌面端播放：Linux/Windows 无 just_audio 原生实现；macOS 为 DSD（.dsf/.dff）等格式走 media_kit/mpv。
   void initJustAudioKit() {
     final useLinux = Platform.isLinux;
     final useWindows = Platform.isWindows;
-    if (!useLinux && !useWindows) {
+    final useMacOS = Platform.isMacOS;
+    if (!useLinux && !useWindows && !useMacOS) {
       return;
     }
     if (useLinux) {
@@ -52,15 +53,18 @@ class AppInit {
         >("setlocale")(6, "C".toNativeUtf8().cast()); // 6 = LC_NUMERIC
       } catch (_) {}
     }
-    appLog.d(
-      '${useLinux ? "Linux" : "Windows"}: 初始化 just_audio_media_kit',
-    );
+    final platform = useLinux
+        ? 'Linux'
+        : useWindows
+            ? 'Windows'
+            : 'macOS';
+    appLog.d('$platform: 初始化 just_audio_media_kit');
     JustAudioMediaKit.ensureInitialized(
       linux: useLinux,
       windows: useWindows,
+      macOS: useMacOS,
       android: false,
       iOS: false,
-      macOS: false,
     );
   }
 

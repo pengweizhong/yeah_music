@@ -15,9 +15,10 @@ dependencies:
   just_audio: 0.10.5
   just_audio_background: 0.0.1-beta.17
   audio_service: 0.18.18
-  just_audio_media_kit: 2.1.0 # Linux / Windows 桌面播放（绑定 media_kit）
+  just_audio_media_kit: 2.1.0 # 桌面播放（Linux/Windows；macOS 含 DSD 等走 mpv）
   media_kit_libs_linux: any
   media_kit_libs_windows_audio: any
+  media_kit_libs_macos_audio: any
   audio_session: 0.2.2
   permission_handler: 12.0.1
   file_picker: 10.3.2  # 用来选择目录或文件
