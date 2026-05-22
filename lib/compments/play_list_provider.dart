@@ -851,10 +851,10 @@ class PlayListProvider extends ChangeNotifier {
     try {
       if (_playbackMode == PlaybackMode.singleLoop) {
         await AudioService.setRepeatMode(AudioServiceRepeatMode.one);
-      } else if (_playbackMode == PlaybackMode.playOnce) {
-        await AudioService.setRepeatMode(AudioServiceRepeatMode.none);
-      } else {
+      } else if (_playbackMode.loopsList) {
         await AudioService.setRepeatMode(AudioServiceRepeatMode.all);
+      } else {
+        await AudioService.setRepeatMode(AudioServiceRepeatMode.none);
       }
     } catch (_) {}
   }
@@ -872,6 +872,16 @@ class PlayListProvider extends ChangeNotifier {
 
       if (_playbackNavDepth > 0) {
         _applyAndroidPlayerIndexToProviderIndex(i);
+        return;
+      }
+
+      // 顺序播放：最后一首结束后 ExoPlayer 偶发仍上报 index=0，应停播并留在末曲。
+      if (!_playbackMode.loopsList &&
+          prev != null &&
+          playList.length > 1 &&
+          prev >= playList.length - 1 &&
+          i == 0) {
+        unawaited(_pauseAtNonLoopingQueueEnd());
         return;
       }
 
@@ -910,8 +920,35 @@ class PlayListProvider extends ChangeNotifier {
     if (newPlayerIndex == prevPlayerIndex) return false;
     final len = playList.length;
     if (len <= 1) return false;
+    if (!_playbackMode.loopsList) {
+      if (prevPlayerIndex >= len - 1) return false;
+      return newPlayerIndex == prevPlayerIndex + 1;
+    }
     final expectedNext = (prevPlayerIndex + 1) % len;
     return newPlayerIndex == expectedNext;
+  }
+
+  bool _atEndOfNonLoopingQueue() {
+    final list = playList;
+    if (list.isEmpty) return false;
+    if (_currentIndex >= list.length - 1) return true;
+    if (!kIsWeb && Platform.isAndroid && MusicService.androidCarQueueActive) {
+      final pi = MusicService.currentIndex;
+      if (pi != null && pi >= list.length - 1) return true;
+    }
+    return false;
+  }
+
+  Future<void> _pauseAtNonLoopingQueueEnd() async {
+    final list = playList;
+    if (list.isNotEmpty) {
+      _currentIndex = list.length - 1;
+    }
+    try {
+      await MusicService().pause();
+    } catch (_) {}
+    notifyListeners();
+    unawaited(_saveCurrentPlaybackSnapshot());
   }
 
   Future<void> _consumeDeferredPlayNextAfterAndroidConcatAdvance({
@@ -1068,6 +1105,17 @@ class PlayListProvider extends ChangeNotifier {
       return;
     }
 
+    if (!_playbackMode.loopsList && _atEndOfNonLoopingQueue()) {
+      if (await _tryConsumeDeferredPlayNext()) return;
+      final resume = _takeResumeAfterDeferredIfApplicable();
+      if (resume != null) {
+        await playAt(resume);
+        return;
+      }
+      await _pauseAtNonLoopingQueueEnd();
+      return;
+    }
+
     if (await _tryConsumeDeferredPlayNext()) return;
 
     final resume = _takeResumeAfterDeferredIfApplicable();
@@ -1082,6 +1130,9 @@ class PlayListProvider extends ChangeNotifier {
         MusicService.androidCarQueueActive &&
         playList.length > 1;
     if (concatAndroid) {
+      if (!_playbackMode.loopsList && _atEndOfNonLoopingQueue()) {
+        await _pauseAtNonLoopingQueueEnd();
+      }
       return;
     }
 
@@ -1459,11 +1510,15 @@ class PlayListProvider extends ChangeNotifier {
         return;
       case PlaybackMode.sequential:
       case PlaybackMode.timerShutdown:
-        var idx = _currentIndex;
-        for (var i = 0; i < steps; i++) {
-          idx = (idx + 1) % list.length;
+        final nextIdx = _advanceIndexInOrder(list.length, steps, wrap: false);
+        if (nextIdx == _currentIndex && _currentIndex >= list.length - 1) {
+          await _pauseAtNonLoopingQueueEnd();
+          return;
         }
-        await _playAtImpl(idx);
+        await _playAtImpl(nextIdx);
+        return;
+      case PlaybackMode.listLoop:
+        await _playAtImpl(_advanceIndexInOrder(list.length, steps, wrap: true));
         return;
       case PlaybackMode.shuffle:
         var idx = _currentIndex;
@@ -1473,6 +1528,30 @@ class PlayListProvider extends ChangeNotifier {
         await _playAtImpl(idx);
         return;
     }
+  }
+
+  int _advanceIndexInOrder(int listLength, int steps, {required bool wrap}) {
+    var idx = _currentIndex;
+    for (var i = 0; i < steps; i++) {
+      if (wrap) {
+        idx = (idx + 1) % listLength;
+      } else if (idx < listLength - 1) {
+        idx++;
+      }
+    }
+    return idx.clamp(0, listLength - 1);
+  }
+
+  int _retreatIndexInOrder(int listLength, int steps, {required bool wrap}) {
+    var idx = _currentIndex;
+    for (var i = 0; i < steps; i++) {
+      if (wrap) {
+        idx = (idx - 1 + listLength) % listLength;
+      } else if (idx > 0) {
+        idx--;
+      }
+    }
+    return idx.clamp(0, listLength - 1);
   }
 
   /// 连续「上一曲」合并。
@@ -1489,11 +1568,10 @@ class PlayListProvider extends ChangeNotifier {
       case PlaybackMode.sequential:
       case PlaybackMode.timerShutdown:
       case PlaybackMode.playOnce:
-        var idx = _currentIndex;
-        for (var i = 0; i < steps; i++) {
-          idx = (idx - 1 + list.length) % list.length;
-        }
-        await _playAtImpl(idx);
+        await _playAtImpl(_retreatIndexInOrder(list.length, steps, wrap: false));
+        return;
+      case PlaybackMode.listLoop:
+        await _playAtImpl(_retreatIndexInOrder(list.length, steps, wrap: true));
         return;
       case PlaybackMode.shuffle:
         var idx = _currentIndex;

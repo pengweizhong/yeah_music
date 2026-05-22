@@ -1125,6 +1125,7 @@
   "playbackModeTitle": "Playback mode",
   "playbackSequential": "Play in order",
   "playbackShuffle": "Shuffle",
+  "playbackListLoop": "Repeat list",
   "playbackSingleLoop": "Repeat one",
   "playbackOnce": "Play once and stop",
   "playbackTimer": "Stop after timer",

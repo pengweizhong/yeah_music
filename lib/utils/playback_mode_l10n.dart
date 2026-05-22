@@ -21,6 +21,8 @@ String playbackModeLabel(PlaybackMode mode, AppLocalizations l10n) {
       return l10n.playbackSequential;
     case PlaybackMode.shuffle:
       return l10n.playbackShuffle;
+    case PlaybackMode.listLoop:
+      return l10n.playbackListLoop;
     case PlaybackMode.singleLoop:
       return l10n.playbackSingleLoop;
     case PlaybackMode.playOnce:

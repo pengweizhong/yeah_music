@@ -54,6 +54,7 @@ class SettingsService {
 
   static const String _lyricSettingsKey = 'lyric_settings';
   static const String _playbackModeKey = 'playback_mode';
+  static const String _playbackModeSchemaV2Key = 'playback_mode_schema_v2';
   static const String _timerDurationKey = 'timer_duration';
   static const String _quickEntryOrderKey = 'quick_entry_order';
   static const String _quickEntryHiddenKey = 'quick_entry_hidden';
@@ -223,11 +224,13 @@ class SettingsService {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
       await box.put(_playbackModeKey, mode.value);
+      await box.put(_playbackModeSchemaV2Key, true);
     } catch (e) {
       try {
         await HiveUtils.closeBox(Constant.hiveRootPath);
         final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
         await box.put(_playbackModeKey, mode.value);
+        await box.put(_playbackModeSchemaV2Key, true);
       } catch (_) {}
     }
   }
@@ -236,8 +239,15 @@ class SettingsService {
   static Future<PlaybackMode> loadPlaybackMode() async {
     try {
       final box = await HiveUtils.openBox<dynamic>(Constant.hiveRootPath);
-      final value = box.get(_playbackModeKey, defaultValue: 0) as int?;
-      return PlaybackModeExtension.fromValue(value ?? 0);
+      if (box.get(_playbackModeSchemaV2Key) == true) {
+        final value = box.get(_playbackModeKey, defaultValue: 0) as int?;
+        return PlaybackModeExtension.fromValue(value ?? 0);
+      }
+      final legacy = box.get(_playbackModeKey, defaultValue: 0) as int? ?? 0;
+      final mode = PlaybackModeExtension.fromLegacyStoredValue(legacy);
+      await box.put(_playbackModeKey, mode.value);
+      await box.put(_playbackModeSchemaV2Key, true);
+      return mode;
     } catch (e) {
       return PlaybackMode.sequential;
     }

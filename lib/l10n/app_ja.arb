@@ -1094,6 +1094,7 @@
   "playbackModeTitle": "再生モード",
   "playbackSequential": "順番に再生",
   "playbackShuffle": "シャッフル",
+  "playbackListLoop": "リストリピート",
   "playbackSingleLoop": "1曲リピート",
   "playbackOnce": "1回だけ再生",
   "playbackTimer": "タイマー停止",

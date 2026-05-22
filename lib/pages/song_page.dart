@@ -1198,6 +1198,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
         return Icons.queue_music_rounded;
       case PlaybackMode.shuffle:
         return Icons.shuffle_rounded;
+      case PlaybackMode.listLoop:
+        return Icons.repeat_rounded;
       case PlaybackMode.singleLoop:
         return Icons.repeat_one_rounded;
       case PlaybackMode.playOnce:

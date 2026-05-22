@@ -2437,6 +2437,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playbackShuffle => '随机播放';
 
   @override
+  String get playbackListLoop => '列表循环';
+
+  @override
   String get playbackSingleLoop => '单曲循环';
 
   @override
@@ -5431,6 +5434,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get playbackShuffle => '随机播放';
+
+  @override
+  String get playbackListLoop => '列表循环';
 
   @override
   String get playbackSingleLoop => '单曲循环';
@@ -8428,6 +8434,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playbackShuffle => '隨機播放';
+
+  @override
+  String get playbackListLoop => '列表循環';
 
   @override
   String get playbackSingleLoop => '單曲循環';

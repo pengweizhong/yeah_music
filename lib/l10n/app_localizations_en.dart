@@ -2556,6 +2556,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackShuffle => 'Shuffle';
 
   @override
+  String get playbackListLoop => 'Repeat list';
+
+  @override
   String get playbackSingleLoop => 'Repeat one';
 
   @override

@@ -4635,6 +4635,12 @@ abstract class AppLocalizations {
   /// **'Shuffle'**
   String get playbackShuffle;
 
+  /// No description provided for @playbackListLoop.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat list'**
+  String get playbackListLoop;
+
   /// No description provided for @playbackSingleLoop.
   ///
   /// In en, this message translates to:

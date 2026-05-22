@@ -1094,6 +1094,7 @@
   "playbackModeTitle": "播放模式",
   "playbackSequential": "循序播放",
   "playbackShuffle": "隨機播放",
+  "playbackListLoop": "列表循環",
   "playbackSingleLoop": "單曲循環",
   "playbackOnce": "僅播放一次",
   "playbackTimer": "定時關閉",

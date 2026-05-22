@@ -2469,6 +2469,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackShuffle => 'シャッフル';
 
   @override
+  String get playbackListLoop => 'リストリピート';
+
+  @override
   String get playbackSingleLoop => '1曲リピート';
 
   @override
