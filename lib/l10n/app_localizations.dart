@@ -3072,7 +3072,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search songs, artists, playlists'**
+  /// **'Search songs, artists, albums, or quality'**
   String get homeSearchHint;
 
   /// No description provided for @homeContinuePlaying.
@@ -4166,12 +4166,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show on home'**
   String get quickEntryShowOnHome;
-
-  /// No description provided for @playlistSearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search songs, artists, or file names…'**
-  String get playlistSearchHint;
 
   /// No description provided for @searchNoMatchingSongs.
   ///

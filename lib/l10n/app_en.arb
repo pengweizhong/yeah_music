@@ -735,7 +735,7 @@
     }
   },
   "homeGreetingSub": "Pick up below or start from a playlist.",
-  "homeSearchHint": "Search songs, artists, playlists",
+  "homeSearchHint": "Search songs, artists, albums, or quality",
   "homeContinuePlaying": "Continue",
   "homeUnknownTitle": "Unknown",
   "homeNowPlayingAlbum": "Now playing",
@@ -998,7 +998,6 @@
   "recentPlaysEmptyTitle": "No play history",
   "quickEntryReorderHint": "Drag the handle to reorder. Turn off “Show on home” to hide an entry from the home screen.",
   "quickEntryShowOnHome": "Show on home",
-  "playlistSearchHint": "Search songs, artists, or file names…",
   "searchNoMatchingSongs": "No matching songs",
   "playlistRenameTitle": "Rename playlist",
   "playlistCoverStyleTitle": "Cover color",

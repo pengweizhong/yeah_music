@@ -442,7 +442,7 @@ class _ArtistSongsPageState extends State<ArtistSongsPage> with RouteAware {
         playbackQueueSession: PlaybackSessionSurface.libraryByArtist,
         playbackQueueRecordRecent: true,
         playbackQueueBumpPlayCount: true,
-        searchFieldLabelText: l10n.playlistSearchHint,
+        searchFieldLabelText: l10n.homeSearchHint,
         onSongMore: (ctx, song) {
           showLibrarySongMoreActionsSheet(
             ctx,

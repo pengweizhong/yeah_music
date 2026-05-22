@@ -705,7 +705,7 @@
     }
   },
   "homeGreetingSub": "从下面继续上次的歌，或选一张歌单开始",
-  "homeSearchHint": "搜索歌曲、歌手、歌单",
+  "homeSearchHint": "搜索歌曲、歌手、专辑或音质",
   "homeContinuePlaying": "继续播放",
   "homeUnknownTitle": "未知",
   "homeNowPlayingAlbum": "正在播放",
@@ -967,7 +967,6 @@
   "recentPlaysEmptyTitle": "还没有播放记录",
   "quickEntryReorderHint": "拖动手柄可调整顺序。关闭「在首页显示」后该入口在首页隐藏。",
   "quickEntryShowOnHome": "在首页显示",
-  "playlistSearchHint": "搜索歌曲、艺术家或文件名…",
   "searchNoMatchingSongs": "未找到匹配的歌曲",
   "playlistRenameTitle": "重命名歌单",
   "playlistCoverStyleTitle": "歌单封面颜色",

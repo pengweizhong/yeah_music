@@ -1601,7 +1601,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeGreetingSub => '从下面继续上次的歌，或选一张歌单开始';
 
   @override
-  String get homeSearchHint => '搜索歌曲、歌手、歌单';
+  String get homeSearchHint => '搜索歌曲、歌手、专辑或音质';
 
   @override
   String get homeContinuePlaying => '继续播放';
@@ -2185,9 +2185,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get quickEntryShowOnHome => '在首页显示';
-
-  @override
-  String get playlistSearchHint => '搜索歌曲、艺术家或文件名…';
 
   @override
   String get searchNoMatchingSongs => '未找到匹配的歌曲';
@@ -4600,7 +4597,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get homeGreetingSub => '从下面继续上次的歌，或选一张歌单开始';
 
   @override
-  String get homeSearchHint => '搜索歌曲、歌手、歌单';
+  String get homeSearchHint => '搜索歌曲、歌手、专辑或音质';
 
   @override
   String get homeContinuePlaying => '继续播放';
@@ -5184,9 +5181,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get quickEntryShowOnHome => '在首页显示';
-
-  @override
-  String get playlistSearchHint => '搜索歌曲、艺术家或文件名…';
 
   @override
   String get searchNoMatchingSongs => '未找到匹配的歌曲';
@@ -7600,7 +7594,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeGreetingSub => '從下面接續上次，或選一張歌單開始';
 
   @override
-  String get homeSearchHint => '搜尋歌曲、歌手、歌單';
+  String get homeSearchHint => '搜尋歌曲、歌手、專輯或音質';
 
   @override
   String get homeContinuePlaying => '繼續播放';
@@ -8184,9 +8178,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get quickEntryShowOnHome => '在首頁顯示';
-
-  @override
-  String get playlistSearchHint => '搜尋歌曲、演出者或檔名…';
 
   @override
   String get searchNoMatchingSongs => '找不到符合的歌曲';

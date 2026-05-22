@@ -339,7 +339,7 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
         playbackQueueSession: PlaybackSessionSurface.recentList,
         playbackQueueRecordRecent: false,
         playbackQueueBumpPlayCount: true,
-        searchFieldLabelText: l10n.playlistSearchHint,
+        searchFieldLabelText: l10n.homeSearchHint,
         onSongMore: (ctx, song) {
           showLibrarySongMoreActionsSheet(
             ctx,

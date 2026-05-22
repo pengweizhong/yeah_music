@@ -310,7 +310,7 @@ class _OneDriveCachedPlaylistPageState
         ordered,
         context.read<PlayListProvider>(),
         playbackContextQueue: ordered,
-        searchFieldLabelText: l10n.playlistSearchHint,
+        searchFieldLabelText: l10n.homeSearchHint,
         onSongMore: (ctx, song) => showLibrarySongMoreActionsSheet(
           ctx,
           song,

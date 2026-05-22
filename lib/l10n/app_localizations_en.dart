@@ -1696,7 +1696,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreetingSub => 'Pick up below or start from a playlist.';
 
   @override
-  String get homeSearchHint => 'Search songs, artists, playlists';
+  String get homeSearchHint => 'Search songs, artists, albums, or quality';
 
   @override
   String get homeContinuePlaying => 'Continue';
@@ -2298,9 +2298,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickEntryShowOnHome => 'Show on home';
-
-  @override
-  String get playlistSearchHint => 'Search songs, artists, or file names…';
 
   @override
   String get searchNoMatchingSongs => 'No matching songs';

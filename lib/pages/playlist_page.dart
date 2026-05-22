@@ -39,6 +39,7 @@ import '../models/playback_session_surface.dart';
 import '../navigation/app_route_observer.dart';
 import '../utils/scroll_list_to_current_song.dart';
 import '../utils/song_display_lines.dart';
+import '../utils/song_list_search.dart';
 import '../utils/song_list_sort.dart';
 import '../utils/song_path_utils.dart';
 import '../utils/user_playlist_backup_io.dart';
@@ -672,7 +673,7 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
                         delegate: SongSearchDelegate(
                           _filteredSongs,
                           playListProvider,
-                          searchFieldLabelText: l10n.playlistSearchHint,
+                          searchFieldLabelText: l10n.homeSearchHint,
                           onSongMore: showLibrarySongMoreActionsSheet,
                         ),
                       );
@@ -1039,13 +1040,7 @@ class SongSearchDelegate extends SearchDelegate<Song?> {
   }
 
   Widget _buildSearchResultsContent(BuildContext context) {
-    final results = allSongs.where((song) {
-      final q = query.toLowerCase();
-      final title = (song.title ?? '').toLowerCase();
-      final artist = (song.artist ?? '').toLowerCase();
-      final fileName = song.path.split('/').last.toLowerCase();
-      return title.contains(q) || artist.contains(q) || fileName.contains(q);
-    }).toList();
+    final results = filterSongsByListSearchQuery(allSongs, query);
 
     if (results.isEmpty) {
       final l10n = AppLocalizations.of(context);
@@ -1162,7 +1157,7 @@ Future<void> showLibrarySearch(BuildContext context) async {
     delegate: SongSearchDelegate(
       sorted,
       playListProvider,
-      searchFieldLabelText: l10n.playlistSearchHint,
+      searchFieldLabelText: l10n.homeSearchHint,
       onSongMore: showLibrarySongMoreActionsSheet,
     ),
   );

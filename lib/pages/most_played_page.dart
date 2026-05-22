@@ -354,7 +354,7 @@ class _MostPlayedPageState extends State<MostPlayedPage> with RouteAware {
         playbackQueueSession: PlaybackSessionSurface.mostPlayedList,
         playbackQueueRecordRecent: true,
         playbackQueueBumpPlayCount: false,
-        searchFieldLabelText: l10n.playlistSearchHint,
+        searchFieldLabelText: l10n.homeSearchHint,
         onSongMore: (ctx, song) {
           showLibrarySongMoreActionsSheet(
             ctx,

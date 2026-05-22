@@ -1627,7 +1627,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeGreetingSub => '下の続きから、またはプレイリストから';
 
   @override
-  String get homeSearchHint => '曲・アーティスト・プレイリストを検索';
+  String get homeSearchHint => '曲・アーティスト、アルバム、音質を検索';
 
   @override
   String get homeContinuePlaying => '続きを再生';
@@ -2217,9 +2217,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get quickEntryShowOnHome => 'ホームに表示';
-
-  @override
-  String get playlistSearchHint => '曲、アーティスト、ファイル名で検索…';
 
   @override
   String get searchNoMatchingSongs => '該当する曲がありません';

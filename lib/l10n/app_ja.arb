@@ -705,7 +705,7 @@
     }
   },
   "homeGreetingSub": "下の続きから、またはプレイリストから",
-  "homeSearchHint": "曲・アーティスト・プレイリストを検索",
+  "homeSearchHint": "曲・アーティスト、アルバム、音質を検索",
   "homeContinuePlaying": "続きを再生",
   "homeUnknownTitle": "不明",
   "homeNowPlayingAlbum": "再生中",
@@ -967,7 +967,6 @@
   "recentPlaysEmptyTitle": "再生履歴はまだありません",
   "quickEntryReorderHint": "ハンドルをドラッグして並べ替え。「ホームに表示」をオフにするとホームから非表示になります。",
   "quickEntryShowOnHome": "ホームに表示",
-  "playlistSearchHint": "曲、アーティスト、ファイル名で検索…",
   "searchNoMatchingSongs": "該当する曲がありません",
   "playlistRenameTitle": "名前を変更",
   "playlistCoverStyleTitle": "カバー色",

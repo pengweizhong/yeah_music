@@ -699,7 +699,7 @@ class _UserPlaylistDetailPageState extends State<UserPlaylistDetailPage>
                                     playbackContextQueue: orderedSongs,
                                     userPlaylistIdForContext: pl.id,
                                     searchFieldLabelText:
-                                        l10n.playlistSearchHint,
+                                        l10n.homeSearchHint,
                                     onSongMore: (ctx, song) {
                                       showLibrarySongMoreActionsSheet(
                                         ctx,
