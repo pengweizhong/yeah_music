@@ -42,6 +42,12 @@ import 'folder_provider.dart';
 import 'onedrive_controller.dart';
 import 'user_playlist_provider.dart';
 
+/// Linux / macOS / Windows 桌面端经 [just_audio_media_kit]（mpv）播放。
+bool _desktopUsesMediaKitPlayback() {
+  if (kIsWeb) return false;
+  return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+}
+
 /// Hive：上次播放曲目路径（冷启动优先按路径恢复迷你条，避免仅索引在合并顺序变化后错位）。
 const String _kHiveLastPlayedPathKey = 'last_played_path';
 
@@ -1033,11 +1039,11 @@ class PlayListProvider extends ChangeNotifier {
     });
   }
 
-  /// Linux/mpv: 解码异常时自动跳到下一曲，避免整队列卡在坏帧。
+  /// 桌面 mpv：解码异常时自动跳到下一曲，避免坏帧/损坏 FLAC 导致队列卡住。
   void _attachPlaybackErrorListener() {
     _playerErrorSubscription?.cancel();
     _playerErrorSubscription = MusicService.errorStream.listen((error) {
-      if (kIsWeb || !Platform.isLinux) return;
+      if (!_desktopUsesMediaKitPlayback()) return;
       if (_errorSkipHandlerRunning) return;
       final now = DateTime.now();
       if (now.difference(_lastErrorSkipAt) <
@@ -1048,11 +1054,18 @@ class PlayListProvider extends ChangeNotifier {
       if (playList.isEmpty) return;
       _lastErrorSkipAt = now;
       _errorSkipHandlerRunning = true;
+      appLog.w('mpv 解码异常，尝试自动下一曲', error: error);
       Future<void>.delayed(const Duration(milliseconds: 120), () async {
         try {
           if (_playbackMode == PlaybackMode.playOnce) {
             await MusicService().pause();
             return;
+          }
+          if (_desktopUsesMediaKitPlayback()) {
+            try {
+              await MusicService().stop();
+            } catch (_) {}
+            await Future<void>.delayed(const Duration(milliseconds: 80));
           }
           if (await _tryConsumeDeferredPlayNext()) return;
           final resume = _takeResumeAfterDeferredIfApplicable();
@@ -1062,7 +1075,7 @@ class PlayListProvider extends ChangeNotifier {
           }
           await _enqueuePlaybackNav(() async => _applyPlayNextSteps(1));
         } catch (e, st) {
-          appLog.e('Linux 解码异常自动跳过失败', error: e, stackTrace: st);
+          appLog.e('mpv 解码异常自动跳过失败', error: e, stackTrace: st);
         } finally {
           _errorSkipHandlerRunning = false;
         }
@@ -1071,9 +1084,9 @@ class PlayListProvider extends ChangeNotifier {
   }
 
   Future<void> _onPlaybackTrackCompleted() async {
-    // Linux (media_kit/mpv): 在 completed 边界立刻换源，偶发触发 ffmpeg flac
+    // 桌面 media_kit/mpv：在 completed 边界立刻换源，偶发触发 ffmpeg flac
     // 帧头/同步码异常。短暂让出事件循环后再切下一首可显著降低该竞态。
-    if (!kIsWeb && Platform.isLinux) {
+    if (_desktopUsesMediaKitPlayback()) {
       await Future<void>.delayed(const Duration(milliseconds: 180));
       try {
         // 强制结束上一首后端状态，避免自动切歌时解码器仍卡在尾帧。
