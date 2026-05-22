@@ -54,8 +54,36 @@ const String _kHiveLastPlaybackUserPlaylistIdKey = 'last_playback_user_playlist_
 const String _kHiveLastPlaybackRecordRecentKey = 'last_playback_record_recent';
 const String _kHiveLastPlaybackBumpPlayCountKey = 'last_playback_bump_play_count';
 
-/// Hive：艺术家 / 专辑等子队列的曲目路径顺序（与 [PlaybackSessionSurface.libraryByArtist] 等配合）。
+/// Hive：子队列（最近播放、最多播放、艺术家/专辑等）的曲目路径顺序。
 const String _kHiveLastOverridePathsKey = 'last_playback_override_paths';
+
+bool _sessionPersistsOverridePathOrder(PlaybackSessionSurface surface) {
+  switch (surface) {
+    case PlaybackSessionSurface.recentList:
+    case PlaybackSessionSurface.mostPlayedList:
+    case PlaybackSessionSurface.libraryByArtist:
+    case PlaybackSessionSurface.libraryByAlbum:
+    case PlaybackSessionSurface.adHoc:
+      return true;
+    case PlaybackSessionSurface.library:
+    case PlaybackSessionSurface.userPlaylist:
+      return false;
+  }
+}
+
+Future<List<String>> _fallbackOverridePathsForSession(
+  PlaybackSessionSurface surface,
+) async {
+  switch (surface) {
+    case PlaybackSessionSurface.recentList:
+      return RecentPlayService.getPaths(limit: 0);
+    case PlaybackSessionSurface.mostPlayedList:
+      final top = await RecentPlayService.getTopByPlayCount(limit: 0);
+      return [for (final e in top) e.path];
+    default:
+      return [];
+  }
+}
 
 List<String> _parseOverridePathListFromHive(dynamic raw) {
   if (raw is! List) return [];
@@ -1137,11 +1165,13 @@ class PlayListProvider extends ChangeNotifier {
         _applyPlaybackSession(surface);
       }
 
-      if (surface == PlaybackSessionSurface.libraryByArtist ||
-          surface == PlaybackSessionSurface.libraryByAlbum) {
-        final paths = _parseOverridePathListFromHive(
+      if (_sessionPersistsOverridePathOrder(surface)) {
+        var paths = _parseOverridePathListFromHive(
           box.get(_kHiveLastOverridePathsKey),
         );
+        if (paths.isEmpty) {
+          paths = await _fallbackOverridePathsForSession(surface);
+        }
         final merged = libraryMergedSongs;
         final resolved = _resolveSongsFromOrderedPaths(paths, merged);
         if (resolved.isNotEmpty) {
@@ -1227,8 +1257,7 @@ class PlayListProvider extends ChangeNotifier {
       }
       await box.put(_kHiveLastPlaybackRecordRecentKey, _statsRecordRecent);
       await box.put(_kHiveLastPlaybackBumpPlayCountKey, _statsBumpPlayCount);
-      if (_playbackSessionSurface == PlaybackSessionSurface.libraryByArtist ||
-          _playbackSessionSurface == PlaybackSessionSurface.libraryByAlbum) {
+      if (_sessionPersistsOverridePathOrder(_playbackSessionSurface)) {
         await box.put(
           _kHiveLastOverridePathsKey,
           list.map((s) => s.path).toList(),
