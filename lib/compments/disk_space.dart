@@ -211,7 +211,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
               SystemUtils.formatCapacityDescription(systemInfo?.total),
             ),
             _buildInfoTile(
-              Icons.storage,
+              Icons.data_usage_outlined,
               l10n.settingsSysinfoUsedSpace,
               SystemUtils.formatCapacityDescription(systemInfo?.used),
               subtitle: systemInfo?.total != null && systemInfo?.used != null
@@ -219,7 +219,7 @@ class _DiskSpaceViewState extends State<DiskSpaceView> {
                   : null,
             ),
             _buildInfoTile(
-              Icons.memory,
+              Icons.data_saver_off_sharp,
               l10n.settingsSysinfoFreeSpace,
               SystemUtils.formatCapacityDescription(systemInfo?.free),
               subtitle: systemInfo?.total != null && systemInfo?.free != null
