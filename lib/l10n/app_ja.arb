@@ -294,6 +294,7 @@
   "settingsCarLyricsSyncLyricsDesc": "オンにすると、Android の通知タイトルが再生位置に合わせて現在の歌詞行に更新されます（再生画面と同じルール）。オフのときは曲名を表示します。",
   "settingsCarLyricsOnlyAndroidHint": "Android でのみ変更・反映できます。この端末ではスイッチは読み取り専用で、保存済みの内容を表示します。",
   "settingsCarLyricsApplyRestartHint": "すぐに反映できませんでした。再生を再開するか、アプリを再起動してお試しください。",
+  "settingsCarLyricsNotificationPermissionHint": "メディア通知には通知権限が必要です。システム設定で Yeah Music の通知を許可してから再度お試しください。",
   "menuBarLyricsIdle": "Yeah Music · 再生していません",
   "menuBarLyricsNoLyrics": "歌詞がありません",
   "menuBarContextPlay": "再生",

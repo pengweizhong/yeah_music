@@ -1410,6 +1410,12 @@ abstract class AppLocalizations {
   /// **'Could not apply immediately. Resume playback or restart the app and try again.'**
   String get settingsCarLyricsApplyRestartHint;
 
+  /// No description provided for @settingsCarLyricsNotificationPermissionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission is required for the media notification. Allow Yeah Music to send notifications in system settings, then try again.'**
+  String get settingsCarLyricsNotificationPermissionHint;
+
   /// No description provided for @menuBarLyricsIdle.
   ///
   /// In en, this message translates to:

@@ -26,6 +26,7 @@ import 'package:yeah_music/compments/mini_player.dart';
 import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
+import 'package:yeah_music/utils/android_notification_permission.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/constants.dart';
 import 'package:yeah_music/pages/setting/diagnostic_log_page.dart';
@@ -210,6 +211,22 @@ class _AndroidCarLyricsSettingsSectionState
   }
 
   Future<void> _onEnabled(bool v) async {
+  final interactive =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    if (v && interactive) {
+      final granted = await ensureAndroidPostNotificationsPermissionIfNeeded();
+      if (!mounted) return;
+      if (!granted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).settingsCarLyricsNotificationPermissionHint,
+            ),
+          ),
+        );
+        return;
+      }
+    }
     setState(() => _enabled = v);
     await SettingsService.saveAndroidCarLyricsEnabled(v);
     if (!mounted) return;

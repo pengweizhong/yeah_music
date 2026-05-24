@@ -748,6 +748,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not apply immediately. Resume playback or restart the app and try again.';
 
   @override
+  String get settingsCarLyricsNotificationPermissionHint =>
+      'Notification permission is required for the media notification. Allow Yeah Music to send notifications in system settings, then try again.';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · Not playing';
 
   @override

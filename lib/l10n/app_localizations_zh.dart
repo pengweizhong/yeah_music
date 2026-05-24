@@ -707,6 +707,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCarLyricsApplyRestartHint => '未能立即生效，请重新播放当前歌曲或重启应用后再试。';
 
   @override
+  String get settingsCarLyricsNotificationPermissionHint =>
+      '需要系统通知权限才能显示媒体通知。请在系统设置中允许 Yeah Music 发送通知后重试。';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
 
   @override
@@ -3771,6 +3775,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsCarLyricsApplyRestartHint => '未能立即生效，请重新播放当前歌曲或重启应用后再试。';
 
   @override
+  String get settingsCarLyricsNotificationPermissionHint =>
+      '需要系统通知权限才能显示媒体通知。请在系统设置中允许 Yeah Music 发送通知后重试。';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';
 
   @override
@@ -6833,6 +6841,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsCarLyricsApplyRestartHint => '未能立即生效，請重新播放目前歌曲或重新啟動應用後再試。';
+
+  @override
+  String get settingsCarLyricsNotificationPermissionHint =>
+      '需要系統通知權限才能顯示媒體通知。請在系統設定中允許 Yeah Music 傳送通知後重試。';
 
   @override
   String get menuBarLyricsIdle => 'Yeah Music · 未在播放';

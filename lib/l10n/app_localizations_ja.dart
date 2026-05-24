@@ -716,6 +716,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'すぐに反映できませんでした。再生を再開するか、アプリを再起動してお試しください。';
 
   @override
+  String get settingsCarLyricsNotificationPermissionHint =>
+      'メディア通知には通知権限が必要です。システム設定で Yeah Music の通知を許可してから再度お試しください。';
+
+  @override
   String get menuBarLyricsIdle => 'Yeah Music · 再生していません';
 
   @override

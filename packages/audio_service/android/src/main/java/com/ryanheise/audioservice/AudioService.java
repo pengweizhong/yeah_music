@@ -28,6 +28,7 @@ import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import android.util.LruCache;
 import android.util.Size;
 import android.view.KeyEvent;
@@ -941,9 +942,13 @@ public class AudioService extends MediaBrowserServiceCompat {
                 return;
             }
         }
-        getNotificationManager().notify(NOTIFICATION_ID, buildNotification());
-        yeahLastPublishedNotifyTitle = publishTitle;
-        yeahLastPublishedNotifySubtitle = publishSubtitle;
+        try {
+            getNotificationManager().notify(NOTIFICATION_ID, buildNotification());
+            yeahLastPublishedNotifyTitle = publishTitle;
+            yeahLastPublishedNotifySubtitle = publishSubtitle;
+        } catch (Throwable t) {
+            Log.w(TAG, "notify failed", t);
+        }
     }
 
     private void postNotificationUpdate() {
@@ -990,9 +995,16 @@ public class AudioService extends MediaBrowserServiceCompat {
         releaseWakeLock();
     }
 
+  private static final String TAG = "AudioService";
+
     private void internalStartForeground() {
-        startForeground(NOTIFICATION_ID, buildNotification());
-        notificationCreated = true;
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification());
+            notificationCreated = true;
+        } catch (Throwable t) {
+            Log.w(TAG, "startForeground failed (notification permission or OEM policy?)", t);
+            notificationCreated = false;
+        }
     }
 
     private void acquireWakeLock() {
@@ -1054,21 +1066,29 @@ public class AudioService extends MediaBrowserServiceCompat {
         yeahCarMediaNotificationEnabled = enabled;
         if (instance == null) return;
         instance.handler.post(() -> {
-            if (enabled) {
-                if (!instance.mediaSession.isActive()) {
-                    instance.mediaSession.setActive(true);
+            try {
+                if (enabled) {
+                    if (!instance.mediaSession.isActive()) {
+                        instance.mediaSession.setActive(true);
+                    }
+                    if (instance.playing
+                            && instance.processingState != AudioProcessingState.idle) {
+                        try {
+                            ContextCompat.startForegroundService(
+                                    instance, new Intent(instance, AudioService.class));
+                        } catch (Throwable t) {
+                            Log.w(TAG, "startForegroundService failed", t);
+                        }
+                        instance.internalStartForeground();
+                        instance.yeahRepublishSessionMetadataIfNeeded();
+                        instance.updateNotification();
+                    }
+                } else {
+                    instance.dismissYeahCarNotification();
+                    instance.mediaSession.setActive(false);
                 }
-                if (instance.playing
-                        && instance.processingState != AudioProcessingState.idle) {
-                    ContextCompat.startForegroundService(
-                            instance, new Intent(instance, AudioService.class));
-                    instance.internalStartForeground();
-                    instance.yeahRepublishSessionMetadataIfNeeded();
-                    instance.updateNotification();
-                }
-            } else {
-                instance.dismissYeahCarNotification();
-                instance.mediaSession.setActive(false);
+            } catch (Throwable t) {
+                Log.w(TAG, "setYeahCarMediaNotificationEnabled failed", t);
             }
         });
     }

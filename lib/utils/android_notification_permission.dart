@@ -20,9 +20,12 @@ import 'package:permission_handler/permission_handler.dart';
 ///
 /// 未声明 [POST_NOTIFICATIONS] 或未授权时，部分机型「设置 → 应用 → 通知」入口会呈灰色、不可操作；
 /// 播放器的媒体通知也无法正常展示。
-Future<void> ensureAndroidPostNotificationsPermissionIfNeeded() async {
-  if (!Platform.isAndroid) return;
-  final s = await Permission.notification.status;
-  if (s.isGranted || s.isLimited || s.isPermanentlyDenied) return;
-  await Permission.notification.request();
+/// 返回 `true` 表示已具备发通知权限（含 limited）；`false` 表示用户拒绝或未授权。
+Future<bool> ensureAndroidPostNotificationsPermissionIfNeeded() async {
+  if (!Platform.isAndroid) return true;
+  var s = await Permission.notification.status;
+  if (s.isGranted || s.isLimited) return true;
+  if (s.isPermanentlyDenied) return false;
+  s = await Permission.notification.request();
+  return s.isGranted || s.isLimited;
 }
