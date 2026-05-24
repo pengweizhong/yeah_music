@@ -41,6 +41,7 @@ Future<void> showLibrarySongMoreActionsSheet(
   BuildContext context,
   Song song, {
   VoidCallback? afterMutation,
+  String? removeFromUserPlaylistId,
 }) async {
   final l10n = AppLocalizations.of(context);
   await showModalBottomSheet<void>(
@@ -88,6 +89,27 @@ Future<void> showLibrarySongMoreActionsSheet(
                         await showAddToUserPlaylistsSheet(context, song);
                       },
                     ),
+                    if (removeFromUserPlaylistId != null)
+                      ListTile(
+                        leading: const Icon(Icons.playlist_remove_outlined),
+                        title: Text(l10n.userPlaylistRemoveFromPlaylist),
+                        onTap: () async {
+                          Navigator.pop(sheetContext);
+                          final userPl = context.read<UserPlaylistProvider>();
+                          if (!userPl.initialized) await userPl.init();
+                          await userPl.removeSongFromPlaylist(
+                            removeFromUserPlaylistId,
+                            song,
+                          );
+                          if (!context.mounted) return;
+                          showAppSnackBar(
+                            context,
+                            l10n.userPlaylistRemovedFromPlaylistOne,
+                            kind: AppSnackKind.success,
+                          );
+                          afterMutation?.call();
+                        },
+                      ),
                     ListTile(
                       leading: const Icon(Icons.queue_play_next_outlined),
                       title: Text(l10n.menuPlayNextAfterCurrent),

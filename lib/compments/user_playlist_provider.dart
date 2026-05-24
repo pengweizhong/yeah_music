@@ -876,10 +876,23 @@ class UserPlaylistProvider extends ChangeNotifier {
   }
 
   Future<void> removeSongFromPlaylist(String playlistId, Song song) async {
+    await removeSongsFromPlaylist(playlistId, [song]);
+  }
+
+  Future<void> removeSongsFromPlaylist(
+    String playlistId,
+    Iterable<Song> songs,
+  ) async {
     final playlist = _playlistById(playlistId);
     if (playlist == null) return;
-    final n = normSongPath(song.path);
-    playlist.songPaths.removeWhere((p) => normSongPath(p) == n);
+    final norms = <String>{
+      for (final s in songs)
+        if (s.path.trim().isNotEmpty) normSongPath(s.path),
+    };
+    if (norms.isEmpty) return;
+    final before = playlist.songPaths.length;
+    playlist.songPaths.removeWhere((p) => norms.contains(normSongPath(p)));
+    if (playlist.songPaths.length == before) return;
     evictPlaylistDetailResolveCache(playlistId);
     await _save();
     notifyListeners();

@@ -1252,6 +1252,19 @@
   "libraryBatchAddToPlaylistSheetTitle": "將 {count} 首歌新增至使用者播放清單",
   "libraryBatchAddToPlaylistSheetHelp": "已勾選的播放清單為「目前所選曲目均已於其中」的清單；確定後為所選每一首歌同步勾選狀態。",
   "libraryBatchAddToPlaylistDone": "播放清單歸屬已更新",
+  "userPlaylistRemoveFromPlaylist": "從歌單移除",
+  "userPlaylistBatchRemoveFromPlaylist": "從歌單移除",
+  "userPlaylistBatchRemoveConfirmTitle": "從歌單移除所選歌曲？",
+  "userPlaylistBatchRemoveConfirmMessage": "僅從目前歌單中移除參考，不會刪除裝置上的音訊檔案。",
+  "@userPlaylistRemovedFromPlaylistN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "userPlaylistRemovedFromPlaylistN": "已從歌單移除 {n} 首",
+  "userPlaylistRemovedFromPlaylistOne": "已從歌單移除",
   "libraryReloadMetadata": "重新載入中繼資料",
   "libraryReloadMetadataDone": "已從檔案重新載入中繼資料",
   "oneDriveUploadStatusUploading": "上傳中",

@@ -2779,6 +2779,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryBatchAddToPlaylistDone => 'プレイリストを更新しました';
 
   @override
+  String get userPlaylistRemoveFromPlaylist => 'プレイリストから削除';
+
+  @override
+  String get userPlaylistBatchRemoveFromPlaylist => 'プレイリストから削除';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmTitle => '選択した曲をプレイリストから削除しますか？';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmMessage =>
+      'プレイリスト内の参照のみ削除されます。端末上のファイルは削除されません。';
+
+  @override
+  String userPlaylistRemovedFromPlaylistN(int n) {
+    return 'プレイリストから $n 曲を削除しました';
+  }
+
+  @override
+  String get userPlaylistRemovedFromPlaylistOne => 'プレイリストから削除しました';
+
+  @override
   String get libraryReloadMetadata => '埋め込みメタデータを再読み込み';
 
   @override

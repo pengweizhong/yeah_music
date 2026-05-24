@@ -1283,6 +1283,19 @@
   "libraryBatchAddToPlaylistSheetTitle": "Add {count} tracks to playlists",
   "libraryBatchAddToPlaylistSheetHelp": "Checked playlists already contain every selected track. Confirm applies these memberships to all selected tracks.",
   "libraryBatchAddToPlaylistDone": "Playlists updated",
+  "userPlaylistRemoveFromPlaylist": "Remove from playlist",
+  "userPlaylistBatchRemoveFromPlaylist": "Remove from playlist",
+  "userPlaylistBatchRemoveConfirmTitle": "Remove selected songs from playlist?",
+  "userPlaylistBatchRemoveConfirmMessage": "Only playlist references will be removed. Files on your device are not deleted.",
+  "@userPlaylistRemovedFromPlaylistN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "userPlaylistRemovedFromPlaylistN": "Removed {n} from playlist",
+  "userPlaylistRemovedFromPlaylistOne": "Removed from playlist",
   "libraryReloadMetadata": "Reload embedded metadata",
   "libraryReloadMetadataDone": "Metadata reloaded from file",
   "oneDriveUploadStatusUploading": "Uploading",

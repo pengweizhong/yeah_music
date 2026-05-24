@@ -38,6 +38,7 @@ import 'package:yeah_music/utils/toggle_current_row_playback.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
+import 'package:yeah_music/widgets/library_batch_action_bar.dart';
 import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
@@ -277,50 +278,12 @@ class _RecentPlaysPageState extends State<RecentPlaysPage> with RouteAware {
     AppLocalizations l10n,
     List<Song> ordered,
   ) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      elevation: 8,
-      color: scheme.surface.withValues(alpha: 0.92),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: [
-              TextButton(
-                onPressed: () => _selectAllRecent(ordered),
-                child: Text(l10n.libraryBatchSelectAll),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  '${_selectedNormPaths.length}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.libraryBatchUploadOneDrive,
-                icon: const Icon(Icons.cloud_upload_outlined),
-                onPressed: () => _batchUploadOneDrive(context, ordered),
-              ),
-              IconButton(
-                tooltip: l10n.libraryBatchAddToPlaylist,
-                icon: const Icon(Icons.playlist_add),
-                onPressed: () => _batchAddToPlaylists(context, ordered),
-              ),
-              IconButton(
-                tooltip: l10n.libraryBatchDelete,
-                icon: Icon(Icons.delete_outline, color: scheme.error),
-                onPressed: () => _confirmBatchDelete(context, ordered),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return LibraryBatchActionBar(
+      selectedCount: _selectedNormPaths.length,
+      onSelectAll: () => _selectAllRecent(ordered),
+      onUploadOneDrive: () => _batchUploadOneDrive(context, ordered),
+      onAddToPlaylist: () => _batchAddToPlaylists(context, ordered),
+      onDelete: () => _confirmBatchDelete(context, ordered),
     );
   }
 

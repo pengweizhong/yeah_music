@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_multi_window
   file_selector_linux
   flutter_secure_storage_linux
+  media_kit_libs_linux
   record_linux
   screen_retriever_linux
   tray_manager

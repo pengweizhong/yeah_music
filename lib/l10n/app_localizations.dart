@@ -5211,6 +5211,42 @@ abstract class AppLocalizations {
   /// **'Playlists updated'**
   String get libraryBatchAddToPlaylistDone;
 
+  /// No description provided for @userPlaylistRemoveFromPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get userPlaylistRemoveFromPlaylist;
+
+  /// No description provided for @userPlaylistBatchRemoveFromPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get userPlaylistBatchRemoveFromPlaylist;
+
+  /// No description provided for @userPlaylistBatchRemoveConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove selected songs from playlist?'**
+  String get userPlaylistBatchRemoveConfirmTitle;
+
+  /// No description provided for @userPlaylistBatchRemoveConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only playlist references will be removed. Files on your device are not deleted.'**
+  String get userPlaylistBatchRemoveConfirmMessage;
+
+  /// No description provided for @userPlaylistRemovedFromPlaylistN.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {n} from playlist'**
+  String userPlaylistRemovedFromPlaylistN(int n);
+
+  /// No description provided for @userPlaylistRemovedFromPlaylistOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from playlist'**
+  String get userPlaylistRemovedFromPlaylistOne;
+
   /// No description provided for @libraryReloadMetadata.
   ///
   /// In en, this message translates to:

@@ -2743,6 +2743,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get libraryBatchAddToPlaylistDone => '歌单归属已更新';
 
   @override
+  String get userPlaylistRemoveFromPlaylist => '从歌单移除';
+
+  @override
+  String get userPlaylistBatchRemoveFromPlaylist => '从歌单移除';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmTitle => '从歌单移除所选歌曲？';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmMessage =>
+      '仅从当前歌单中移除引用，不会删除设备上的音频文件。';
+
+  @override
+  String userPlaylistRemovedFromPlaylistN(int n) {
+    return '已从歌单移除 $n 首';
+  }
+
+  @override
+  String get userPlaylistRemovedFromPlaylistOne => '已从歌单移除';
+
+  @override
   String get libraryReloadMetadata => '重新加载元信息';
 
   @override
@@ -5737,6 +5758,27 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get libraryBatchAddToPlaylistDone => '歌单归属已更新';
+
+  @override
+  String get userPlaylistRemoveFromPlaylist => '从歌单移除';
+
+  @override
+  String get userPlaylistBatchRemoveFromPlaylist => '从歌单移除';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmTitle => '从歌单移除所选歌曲？';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmMessage =>
+      '仅从当前歌单中移除引用，不会删除设备上的音频文件。';
+
+  @override
+  String userPlaylistRemovedFromPlaylistN(int n) {
+    return '已从歌单移除 $n 首';
+  }
+
+  @override
+  String get userPlaylistRemovedFromPlaylistOne => '已从歌单移除';
 
   @override
   String get libraryReloadMetadata => '重新加载元信息';
@@ -8734,6 +8776,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get libraryBatchAddToPlaylistDone => '播放清單歸屬已更新';
+
+  @override
+  String get userPlaylistRemoveFromPlaylist => '從歌單移除';
+
+  @override
+  String get userPlaylistBatchRemoveFromPlaylist => '從歌單移除';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmTitle => '從歌單移除所選歌曲？';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmMessage =>
+      '僅從目前歌單中移除參考，不會刪除裝置上的音訊檔案。';
+
+  @override
+  String userPlaylistRemovedFromPlaylistN(int n) {
+    return '已從歌單移除 $n 首';
+  }
+
+  @override
+  String get userPlaylistRemovedFromPlaylistOne => '已從歌單移除';
 
   @override
   String get libraryReloadMetadata => '重新載入中繼資料';

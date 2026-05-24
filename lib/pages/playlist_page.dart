@@ -46,6 +46,7 @@ import '../utils/user_playlist_backup_io.dart';
 import '../widgets/add_to_user_playlists_sheet.dart';
 import '../widgets/app_prompts.dart';
 import '../widgets/compact_song_list_row.dart';
+import '../widgets/library_batch_action_bar.dart';
 import '../widgets/library_song_more_actions_sheet.dart';
 import '../widgets/playlist_cover_style_sheet.dart';
 import '../widgets/scroll_aware_list_frame.dart';
@@ -482,50 +483,12 @@ class _PlayListProviderState extends State<PlayListPage> with RouteAware {
   }
 
   Widget _libraryBatchActionBar(BuildContext context, AppLocalizations l10n) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      elevation: 8,
-      color: scheme.surface.withValues(alpha: 0.92),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: [
-              TextButton(
-                onPressed: () => _selectAllFiltered(_filteredSongs),
-                child: Text(l10n.libraryBatchSelectAll),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  '${_selectedNormPaths.length}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.libraryBatchUploadOneDrive,
-                icon: const Icon(Icons.cloud_upload_outlined),
-                onPressed: () => _batchUploadOneDrive(context),
-              ),
-              IconButton(
-                tooltip: l10n.libraryBatchAddToPlaylist,
-                icon: const Icon(Icons.playlist_add),
-                onPressed: () => _batchAddToPlaylists(context),
-              ),
-              IconButton(
-                tooltip: l10n.libraryBatchDelete,
-                icon: Icon(Icons.delete_outline, color: scheme.error),
-                onPressed: () => _confirmBatchDelete(context),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return LibraryBatchActionBar(
+      selectedCount: _selectedNormPaths.length,
+      onSelectAll: () => _selectAllFiltered(_filteredSongs),
+      onUploadOneDrive: () => _batchUploadOneDrive(context),
+      onAddToPlaylist: () => _batchAddToPlaylists(context),
+      onDelete: () => _confirmBatchDelete(context),
     );
   }
 

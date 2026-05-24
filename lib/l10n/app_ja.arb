@@ -1252,6 +1252,19 @@
   "libraryBatchAddToPlaylistSheetTitle": "{count} 曲をユーザープレイリストに追加",
   "libraryBatchAddToPlaylistSheetHelp": "チェック済みは、選択したすべての曲がすでに含まれているプレイリストです。確定すると選択した各曲に対して反映されます。",
   "libraryBatchAddToPlaylistDone": "プレイリストを更新しました",
+  "userPlaylistRemoveFromPlaylist": "プレイリストから削除",
+  "userPlaylistBatchRemoveFromPlaylist": "プレイリストから削除",
+  "userPlaylistBatchRemoveConfirmTitle": "選択した曲をプレイリストから削除しますか？",
+  "userPlaylistBatchRemoveConfirmMessage": "プレイリスト内の参照のみ削除されます。端末上のファイルは削除されません。",
+  "@userPlaylistRemovedFromPlaylistN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "userPlaylistRemovedFromPlaylistN": "プレイリストから {n} 曲を削除しました",
+  "userPlaylistRemovedFromPlaylistOne": "プレイリストから削除しました",
   "libraryReloadMetadata": "埋め込みメタデータを再読み込み",
   "libraryReloadMetadataDone": "ファイルからメタデータを再読み込みしました",
   "oneDriveUploadStatusUploading": "アップロード中",

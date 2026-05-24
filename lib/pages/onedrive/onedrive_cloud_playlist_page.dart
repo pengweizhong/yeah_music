@@ -31,6 +31,7 @@ import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/widgets/cloud_track_search_delegate.dart';
 import 'package:yeah_music/widgets/cloud_track_sort_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
+import 'package:yeah_music/widgets/library_batch_action_bar.dart';
 import 'package:yeah_music/widgets/song_playlist_page_shell.dart';
 
 /// OneDrive：索引目录下的云端曲目；纯列表，支持搜索 / 排序；点播按需下载并读本地缓存。
@@ -124,44 +125,14 @@ class _OneDriveCloudPlaylistPageState extends State<OneDriveCloudPlaylistPage> {
     AppLocalizations l10n,
     List<OneDriveCloudTrack> ordered,
   ) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      elevation: 8,
-      color: scheme.surface.withValues(alpha: 0.92),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: [
-              TextButton(
-                onPressed: () => _toggleSelectAllVisible(ordered),
-                child: Text(
-                  _allVisibleSelected(ordered)
-                      ? l10n.deselectAll
-                      : l10n.libraryBatchSelectAll,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  '${_selectedItemIds.length}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.oneDriveDownloadQueueTooltip,
-                icon: const Icon(Icons.download_for_offline_outlined),
-                onPressed: () => _batchEnqueueDownload(context, ordered),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return LibraryBatchActionBar(
+      selectedCount: _selectedItemIds.length,
+      selectAllLabel: _allVisibleSelected(ordered)
+          ? l10n.deselectAll
+          : l10n.libraryBatchSelectAll,
+      onSelectAll: () => _toggleSelectAllVisible(ordered),
+      onDownload: () => _batchEnqueueDownload(context, ordered),
+      downloadTooltip: l10n.oneDriveDownloadQueueTooltip,
     );
   }
 

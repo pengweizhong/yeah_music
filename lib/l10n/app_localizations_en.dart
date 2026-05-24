@@ -2876,6 +2876,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryBatchAddToPlaylistDone => 'Playlists updated';
 
   @override
+  String get userPlaylistRemoveFromPlaylist => 'Remove from playlist';
+
+  @override
+  String get userPlaylistBatchRemoveFromPlaylist => 'Remove from playlist';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmTitle =>
+      'Remove selected songs from playlist?';
+
+  @override
+  String get userPlaylistBatchRemoveConfirmMessage =>
+      'Only playlist references will be removed. Files on your device are not deleted.';
+
+  @override
+  String userPlaylistRemovedFromPlaylistN(int n) {
+    return 'Removed $n from playlist';
+  }
+
+  @override
+  String get userPlaylistRemovedFromPlaylistOne => 'Removed from playlist';
+
+  @override
   String get libraryReloadMetadata => 'Reload embedded metadata';
 
   @override

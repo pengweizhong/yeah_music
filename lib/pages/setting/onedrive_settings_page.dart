@@ -32,7 +32,6 @@ import 'package:yeah_music/models/onedrive_restore_selection.dart';
 import 'package:yeah_music/themes/app_locale_provider.dart';
 import 'package:yeah_music/themes/app_theme_mode_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
-import 'package:yeah_music/themes/light_user_gradient_content_theme.dart';
 import 'package:yeah_music/themes/platform_typography.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_sync_settings.dart';
@@ -1478,7 +1477,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: context.gradTextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: context.gradFgMuted(),
           fontSize: 13,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.2,
@@ -1535,7 +1534,7 @@ class _SyncCard extends StatelessWidget {
             label,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
-            style: context.gradTextStyle(color: Colors.white, fontSize: 14),
+            style: context.gradTextStyle(fontSize: 14),
           ),
         ),
       ],
@@ -1556,20 +1555,20 @@ class _SyncCard extends StatelessWidget {
       fontSize: 12,
     );
     final buttonLabel = context.gradTextStyle(
-      color: Colors.white,
       fontSize: 14,
       fontWeight: FontWeight.w500,
     );
+    final light = Theme.of(context).brightness == Brightness.light;
 
     return Theme(
-      data: themeForFrostedDeepChrome(context),
-      child: DefaultTextStyle(
-        style: context.gradTextStyle(color: Colors.white, fontSize: 14),
-        child: DecoratedBox(
+      data: Theme.of(context).copyWith(
+        switchTheme: gradOnBackgroundSwitchTheme(context),
+      ),
+      child: DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
+        color: context.gradBorder(0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: context.gradBorder(0.14)),
       ),
       child: Column(
         children: [
@@ -1596,7 +1595,7 @@ class _SyncCard extends StatelessWidget {
                 children: [
                   Divider(
                     height: 1,
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: context.gradBorder(0.08),
                   ),
                   SwitchListTile(
                     value: s.syncUserPlaylists,
@@ -1718,9 +1717,11 @@ class _SyncCard extends StatelessWidget {
                         DropdownButton<OneDriveSyncFrequency>(
                             value: s.frequency,
                             underline: const SizedBox.shrink(),
-                            dropdownColor: const Color(0xFF2C2C2C),
+                            dropdownColor: light
+                                ? Theme.of(context).colorScheme.surface
+                                : const Color(0xFF2C2C2C),
                             style: buttonLabel,
-                            iconEnabledColor: Colors.white70,
+                            iconEnabledColor: context.gradFg(0.72),
                             items: OneDriveSyncFrequency.values
                                 .map(
                                   (e) => DropdownMenuItem(
@@ -1745,7 +1746,7 @@ class _SyncCard extends StatelessWidget {
               ),
             ),
           ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+          Divider(height: 1, color: context.gradBorder(0.08)),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             child: Column(
@@ -1754,7 +1755,7 @@ class _SyncCard extends StatelessWidget {
                 Text(
                   l10n.oneDriveSyncNowDescription,
                   style: context.gradTextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: context.gradFgMuted(),
                     fontSize: 12,
                     height: 1.35,
                   ),
@@ -1763,7 +1764,7 @@ class _SyncCard extends StatelessWidget {
                 Text(
                   l10n.oneDriveRestoreSubtitle,
                   style: context.gradTextStyle(
-                    color: Colors.white.withValues(alpha: 0.45),
+                    color: context.gradFg(0.45),
                     fontSize: 12,
                     height: 1.35,
                   ),
@@ -1772,51 +1773,49 @@ class _SyncCard extends StatelessWidget {
                 FilledButton.tonal(
                   onPressed: operationsLocked ? null : onSyncNow,
                   style: FilledButton.styleFrom(
+                    foregroundColor: context.gradFg(),
+                    backgroundColor: context.gradBorder(0.1),
                     textStyle: buttonLabel,
                     minimumSize: const Size.fromHeight(46),
                   ),
                   child: syncShowsProgress
                       ? _busyLabelRow(
                           context,
-                          indicator: const CircularProgressIndicator(
+                          indicator: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white70,
+                            color: context.gradFg(0.72),
                           ),
                           label: l10n.oneDriveSyncNowInProgress,
                         )
-                      : Text(l10n.oneDriveSyncNow, style: buttonLabel),
+                      : Text(l10n.oneDriveSyncNow),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton(
                   onPressed: operationsLocked ? null : onRestoreFromCloud,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
+                    foregroundColor: context.gradFg(),
                     textStyle: buttonLabel,
                     side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: context.gradBorder(0.22),
                     ),
                     minimumSize: const Size.fromHeight(46),
                   ),
                   child: restoreShowsProgress
                       ? _busyLabelRow(
                           context,
-                          indicator: const CircularProgressIndicator(
+                          indicator: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white70,
+                            color: context.gradFg(0.72),
                           ),
                           label: l10n.oneDriveRestoreInProgress,
                         )
-                      : Text(
-                          l10n.oneDriveRestoreFromCloud,
-                          style: buttonLabel,
-                        ),
+                      : Text(l10n.oneDriveRestoreFromCloud),
                 ),
               ],
             ),
           ),
         ],
       ),
-        ),
       ),
     );
   }
@@ -1998,7 +1997,6 @@ class _PathsCard extends StatelessWidget {
                         Text(
                           title,
                           style: context.gradTextStyle(
-                            color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
@@ -2007,7 +2005,7 @@ class _PathsCard extends StatelessWidget {
                         Text(
                           subtitle,
                           style: context.gradTextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.gradFgMuted(),
                             fontSize: 12,
                             height: 1.3,
                           ),
@@ -2016,7 +2014,7 @@ class _PathsCard extends StatelessWidget {
                         Text(
                           valueLine,
                           style: context.gradTextStyle(
-                            color: Colors.white.withValues(alpha: 0.72),
+                            color: context.gradFg(0.72),
                             fontSize: 13,
                           ),
                         ),
@@ -2026,7 +2024,7 @@ class _PathsCard extends StatelessWidget {
                   if (onTapRow != null)
                     Icon(
                       Icons.edit_outlined,
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: context.gradFg(0.4),
                       size: 20,
                     ),
                 ],
@@ -2040,19 +2038,20 @@ class _PathsCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 FilledButton.tonal(
-                  onPressed: onPrimary,
-                  child: Text(
-                    primaryLabel,
-                    style: context.gradTextStyle(color: Colors.white),
+                  style: FilledButton.styleFrom(
+                    foregroundColor: context.gradFg(),
+                    backgroundColor: context.gradBorder(0.1),
                   ),
+                  onPressed: onPrimary,
+                  child: Text(primaryLabel),
                 ),
                 if (clearLabel != null && onClear != null)
                   TextButton(
-                    onPressed: onClear,
-                    child: Text(
-                      clearLabel,
-                      style: context.gradTextStyle(color: Colors.white),
+                    style: TextButton.styleFrom(
+                      foregroundColor: context.gradFg(0.72),
                     ),
+                    onPressed: onClear,
+                    child: Text(clearLabel),
                   ),
               ],
             ),
@@ -2064,18 +2063,24 @@ class _PathsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final light = Theme.of(context).brightness == Brightness.light;
+    final cloudAppIcon =
+        light ? Colors.lightBlue.shade700 : Colors.lightBlue.shade200;
+    final uploadIcon = light ? Colors.cyan.shade700 : Colors.cyan.shade200;
+    final downloadIcon = light ? Colors.green.shade700 : Colors.green.shade200;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
+        color: context.gradBorder(0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: context.gradBorder(0.14)),
       ),
       child: Column(
         children: [
           _pathBlock(
             context,
             icon: Icons.folder_special_outlined,
-            iconColor: Colors.lightBlue.shade200,
+            iconColor: cloudAppIcon,
             title: l10n.oneDriveCloudAppDataTitle,
             subtitle: l10n.oneDriveCloudAppDataSubtitle,
             valueLine: _cloudAppSummary(),
@@ -2092,11 +2097,11 @@ class _PathsCard extends StatelessWidget {
                 ? onClearCloudAppFolder
                 : null,
           ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+          Divider(height: 1, color: context.gradBorder(0.08)),
           _pathBlock(
             context,
             icon: Icons.cloud_upload_outlined,
-            iconColor: Colors.cyan.shade200,
+            iconColor: uploadIcon,
             title: l10n.oneDriveMusicUploadFolderTitle,
             subtitle: l10n.oneDriveMusicUploadFolderSubtitle,
             valueLine: _musicUploadSummary(),
@@ -2113,11 +2118,11 @@ class _PathsCard extends StatelessWidget {
                 ? onClearMusicUploadFolder
                 : null,
           ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+          Divider(height: 1, color: context.gradBorder(0.08)),
           _pathBlock(
             context,
             icon: Icons.download_for_offline_outlined,
-            iconColor: Colors.green.shade200,
+            iconColor: downloadIcon,
             title: l10n.oneDriveLocalDownloadTitle,
             subtitle: l10n.oneDriveLocalDownloadSubtitle,
             valueLine: od.localDownloadDir ?? l10n.oneDriveLocalDownloadUnset,
