@@ -27,11 +27,41 @@ List<OneDriveCloudTrack> sortCloudTracksCopy(
         return a.fileName.toLowerCase().compareTo(b.fileName.toLowerCase());
       case CloudTrackSortType.fullPath:
         return a.displayPath.toLowerCase().compareTo(b.displayPath.toLowerCase());
+      case CloudTrackSortType.createdDate:
+        return _compareCloudTrackDate(
+          a.createdAt,
+          b.createdAt,
+          a.fileName,
+          b.fileName,
+        );
+      case CloudTrackSortType.modifiedDate:
+        return _compareCloudTrackDate(
+          a.modifiedAt,
+          b.modifiedAt,
+          a.fileName,
+          b.fileName,
+        );
     }
   }
 
   copy.sort((a, b) => ascending ? compare(a, b) : compare(b, a));
   return copy;
+}
+
+int _compareCloudTrackDate(
+  DateTime? a,
+  DateTime? b,
+  String fileNameA,
+  String fileNameB,
+) {
+  if (a == null && b == null) {
+    return fileNameA.toLowerCase().compareTo(fileNameB.toLowerCase());
+  }
+  if (a == null) return 1;
+  if (b == null) return -1;
+  final byDate = a.compareTo(b);
+  if (byDate != 0) return byDate;
+  return fileNameA.toLowerCase().compareTo(fileNameB.toLowerCase());
 }
 
 /// 按关键词过滤（文件名或展示路径）。

@@ -333,6 +333,8 @@ class OneDriveController extends ChangeNotifier {
               itemId: child.id,
               fileName: child.name,
               displayPath: display,
+              createdAt: child.createdDateTime,
+              modifiedAt: child.lastModifiedDateTime,
             ),
           );
         }

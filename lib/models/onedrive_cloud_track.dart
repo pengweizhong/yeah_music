@@ -19,6 +19,12 @@ enum CloudTrackSortType {
 
   /// 比较展示路径（根标签/子路径/文件名）
   fullPath,
+
+  /// [OneDriveCloudTrack.createdAt]（Graph `createdDateTime`）
+  createdDate,
+
+  /// [OneDriveCloudTrack.modifiedAt]（Graph `lastModifiedDateTime`）
+  modifiedDate,
 }
 
 /// 云端索引中的一条曲目（仅存 Graph item id 与路径展示，不包含音频字节）。
@@ -43,6 +49,8 @@ class OneDriveCloudTrack {
     required this.itemId,
     required this.fileName,
     required this.displayPath,
+    this.createdAt,
+    this.modifiedAt,
   });
 
   /// OneDrive driveItem id
@@ -54,6 +62,12 @@ class OneDriveCloudTrack {
   /// 便于列表展示：`根标签/子路径/文件名`
   final String displayPath;
 
+  /// Graph `createdDateTime`（UTC）；旧索引或未返回时为 null。
+  final DateTime? createdAt;
+
+  /// Graph `lastModifiedDateTime`（UTC）；旧索引或未返回时为 null。
+  final DateTime? modifiedAt;
+
   String get sortKey => displayPath.toLowerCase();
 
   factory OneDriveCloudTrack.fromMap(Map<dynamic, dynamic> m) {
@@ -61,12 +75,21 @@ class OneDriveCloudTrack {
       itemId: (m['itemId'] as String? ?? '').trim(),
       fileName: (m['fileName'] as String? ?? '').trim(),
       displayPath: (m['displayPath'] as String? ?? '').trim(),
+      createdAt: _dateFromStored(m['createdAt']),
+      modifiedAt: _dateFromStored(m['modifiedAt']),
     );
+  }
+
+  static DateTime? _dateFromStored(dynamic raw) {
+    if (raw is! String || raw.trim().isEmpty) return null;
+    return DateTime.tryParse(raw.trim())?.toUtc();
   }
 
   Map<String, dynamic> toMap() => {
         'itemId': itemId,
         'fileName': fileName,
         'displayPath': displayPath,
+        if (createdAt != null) 'createdAt': createdAt!.toUtc().toIso8601String(),
+        if (modifiedAt != null) 'modifiedAt': modifiedAt!.toUtc().toIso8601String(),
       };
 }

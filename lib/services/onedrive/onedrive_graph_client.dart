@@ -35,12 +35,21 @@ class OneDriveGraphItem {
     required this.name,
     required this.isFolder,
     this.downloadUrl,
+    this.createdDateTime,
+    this.lastModifiedDateTime,
   });
 
   final String id;
   final String name;
   final bool isFolder;
   final String? downloadUrl;
+  final DateTime? createdDateTime;
+  final DateTime? lastModifiedDateTime;
+
+  static DateTime? _parseGraphDateTime(dynamic raw) {
+    if (raw is! String || raw.trim().isEmpty) return null;
+    return DateTime.tryParse(raw.trim())?.toUtc();
+  }
 
   static OneDriveGraphItem? fromJson(Map<String, dynamic> m) {
     final id = m['id'] as String?;
@@ -53,6 +62,8 @@ class OneDriveGraphItem {
       name: name,
       isFolder: isFolder,
       downloadUrl: dl,
+      createdDateTime: _parseGraphDateTime(m['createdDateTime']),
+      lastModifiedDateTime: _parseGraphDateTime(m['lastModifiedDateTime']),
     );
   }
 }

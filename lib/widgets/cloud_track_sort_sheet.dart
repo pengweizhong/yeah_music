@@ -31,6 +31,39 @@ Future<void> showCloudTrackSortBottomSheet(
     backgroundColor: Colors.transparent,
     builder: (ctx) {
       final l10n = AppLocalizations.of(ctx);
+      Widget sortTile({
+        required IconData icon,
+        required String title,
+        required CloudTrackSortType type,
+      }) {
+        final selected = sortType == type;
+        return ListTile(
+          leading: Icon(icon),
+          title: Text(title),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selected)
+                Icon(
+                  isAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                  size: 20,
+                  color: primary,
+                ),
+              if (selected) const SizedBox(width: 8),
+              if (selected) Icon(Icons.check, color: primary),
+            ],
+          ),
+          onTap: () {
+            if (selected) {
+              onApply(type, !isAscending);
+            } else {
+              onApply(type, true);
+            }
+            Navigator.pop(ctx);
+          },
+        );
+      }
+
       return Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
         child: FrostedGlassBottomSheet(
@@ -48,63 +81,25 @@ Future<void> showCloudTrackSortBottomSheet(
                     ),
                   ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.sort_by_alpha),
-                  title: Text(l10n.sortByName),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (sortType == CloudTrackSortType.fileName)
-                        Icon(
-                          isAscending
-                              ? Icons.arrow_upward
-                              : Icons.arrow_downward,
-                          size: 20,
-                          color: primary,
-                        ),
-                      if (sortType == CloudTrackSortType.fileName)
-                        const SizedBox(width: 8),
-                      if (sortType == CloudTrackSortType.fileName)
-                        Icon(Icons.check, color: primary),
-                    ],
-                  ),
-                  onTap: () {
-                    if (sortType == CloudTrackSortType.fileName) {
-                      onApply(CloudTrackSortType.fileName, !isAscending);
-                    } else {
-                      onApply(CloudTrackSortType.fileName, true);
-                    }
-                    Navigator.pop(ctx);
-                  },
+                sortTile(
+                  icon: Icons.sort_by_alpha,
+                  title: l10n.sortByName,
+                  type: CloudTrackSortType.fileName,
                 ),
-                ListTile(
-                  leading: const Icon(Icons.folder_open_outlined),
-                  title: Text(l10n.sortByPath),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (sortType == CloudTrackSortType.fullPath)
-                        Icon(
-                          isAscending
-                              ? Icons.arrow_upward
-                              : Icons.arrow_downward,
-                          size: 20,
-                          color: primary,
-                        ),
-                      if (sortType == CloudTrackSortType.fullPath)
-                        const SizedBox(width: 8),
-                      if (sortType == CloudTrackSortType.fullPath)
-                        Icon(Icons.check, color: primary),
-                    ],
-                  ),
-                  onTap: () {
-                    if (sortType == CloudTrackSortType.fullPath) {
-                      onApply(CloudTrackSortType.fullPath, !isAscending);
-                    } else {
-                      onApply(CloudTrackSortType.fullPath, true);
-                    }
-                    Navigator.pop(ctx);
-                  },
+                sortTile(
+                  icon: Icons.folder_open_outlined,
+                  title: l10n.sortByPath,
+                  type: CloudTrackSortType.fullPath,
+                ),
+                sortTile(
+                  icon: Icons.schedule_outlined,
+                  title: l10n.sortByCreated,
+                  type: CloudTrackSortType.createdDate,
+                ),
+                sortTile(
+                  icon: Icons.update_outlined,
+                  title: l10n.sortByUpdated,
+                  type: CloudTrackSortType.modifiedDate,
                 ),
                 const SizedBox(height: 8),
               ],
