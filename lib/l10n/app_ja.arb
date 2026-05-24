@@ -485,6 +485,38 @@
       }
     }
   },
+  "oneDriveCloudBatchDelete": "OneDrive から削除",
+  "oneDriveCloudBatchDeleteConfirmTitle": "選択した曲を OneDrive から削除しますか？",
+  "@oneDriveCloudBatchDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteConfirmMessage": "OneDrive 上の選択した {count} 件のファイルを完全に削除します。元に戻せません。",
+  "@oneDriveCloudBatchDeleteDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteDone": "OneDrive から {count} 曲を削除しました",
+  "@oneDriveCloudBatchDeletePartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeletePartial": "{deleted} 曲を削除、{failed} 曲は失敗しました。",
+  "oneDriveCloudBatchDeleteFailed": "選択したファイルを OneDrive から削除できませんでした。",
+  "oneDriveCloudBatchDeleteProgressTitle": "削除中",
+  "oneDriveCloudBatchDeleteProgressMessage": "OneDrive から選択したファイルを削除しています…",
   "oneDriveDownloadViewQueue": "キューを開く",
   "oneDriveDownloadClearHistory": "履歴を消去",
   "oneDriveTransferClearDownloadsList": "ダウンロード一覧をクリア",
@@ -498,7 +530,7 @@
     }
   },
   "oneDriveUp": "上へ",
-  "oneDriveCloudLibraryTitle": "OneDrive · クラウドライブラリ",
+  "oneDriveCloudLibraryTitle": "クラウドライブラリ",
   "oneDriveCloudLibrarySubtitle": "追加したフォルダーを再帰的にスキャンしてリスト化。タップでオンデマンド取得（カスタム保存先があるときはそこへ、なければ既定キャッシュ）。取得済みはオフライン再生可能。",
   "oneDriveCloudLibraryEmpty": "まだありません。\nOneDrive でフォルダーを選んでから「再スキャン」してください。",
   "oneDriveCachedPlaylistTitle": "OneDrive · キャッシュ",
@@ -520,6 +552,16 @@
   },
   "oneDriveAddFolderTooltip": "クラウドライブラリに追加",
   "oneDriveIndexingEllipsis": "スキャン中…",
+  "oneDriveCloudIndexRescanProgressTitle": "クラウドライブラリをスキャン中",
+  "oneDriveCloudIndexRescanProgressMessage": "インデックス対象フォルダーを再帰的にスキャンしています…",
+  "@oneDriveCloudIndexRescanDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudIndexRescanDone": "スキャン完了 — {count} 曲",
   "oneDriveLastIndexed": "最終スキャン: {time}",
   "@oneDriveLastIndexed": {
     "placeholders": {
@@ -538,6 +580,8 @@
     }
   },
   "oneDriveCloudSearchHint": "ファイル名やパスを検索…",
+  "oneDriveCloudLocateInList": "クラウド曲庫で表示",
+  "oneDriveCloudLocateNotInList": "この曲はクラウド曲庫の一覧にありません",
   "oneDriveNoIndexRoots": "フォルダーが未設定です。先に「フォルダーを選ぶ」から設定してください。",
   "oneDriveLastIndexedNever": "最終スキャン: —",
   "oneDriveIndexFoldersRecursiveHint": "スキャンはサブフォルダーを含みます。追加したフォルダー配下の音声ファイルがすべて一覧に含まれます。",

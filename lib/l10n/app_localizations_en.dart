@@ -1247,6 +1247,39 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get oneDriveCloudBatchDelete => 'Delete from OneDrive';
+
+  @override
+  String get oneDriveCloudBatchDeleteConfirmTitle =>
+      'Delete selected tracks from OneDrive?';
+
+  @override
+  String oneDriveCloudBatchDeleteConfirmMessage(int count) {
+    return 'Permanently delete $count selected files from OneDrive? This cannot be undone.';
+  }
+
+  @override
+  String oneDriveCloudBatchDeleteDone(int count) {
+    return 'Deleted $count from OneDrive';
+  }
+
+  @override
+  String oneDriveCloudBatchDeletePartial(int deleted, int failed) {
+    return 'Deleted $deleted, failed $failed.';
+  }
+
+  @override
+  String get oneDriveCloudBatchDeleteFailed =>
+      'Could not delete the selected files from OneDrive.';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressTitle => 'Deleting';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressMessage =>
+      'Removing selected files from OneDrive…';
+
+  @override
   String get oneDriveDownloadViewQueue => 'View queue';
 
   @override
@@ -1267,7 +1300,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveUp => 'Up';
 
   @override
-  String get oneDriveCloudLibraryTitle => 'OneDrive · Cloud library';
+  String get oneDriveCloudLibraryTitle => 'Cloud library';
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
@@ -1319,6 +1352,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneDriveIndexingEllipsis => 'Scanning folders…';
 
   @override
+  String get oneDriveCloudIndexRescanProgressTitle => 'Scanning cloud library';
+
+  @override
+  String get oneDriveCloudIndexRescanProgressMessage =>
+      'Recursively scanning indexed folders…';
+
+  @override
+  String oneDriveCloudIndexRescanDone(int count) {
+    return 'Scan complete — $count songs';
+  }
+
+  @override
   String oneDriveLastIndexed(String time) {
     return 'Last scanned: $time';
   }
@@ -1333,6 +1378,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oneDriveCloudSearchHint => 'Search file names or paths…';
+
+  @override
+  String get oneDriveCloudLocateInList => 'Locate in cloud library';
+
+  @override
+  String get oneDriveCloudLocateNotInList =>
+      'This track is no longer in the cloud library list';
 
   @override
   String get oneDriveNoIndexRoots =>

@@ -12,7 +12,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/user_playlist_provider.dart';
@@ -27,7 +28,9 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
+import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
+import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
 import 'package:yeah_music/utils/song_metadata_reload_utils.dart';
 import 'package:yeah_music/widgets/add_to_user_playlists_sheet.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
@@ -35,6 +38,60 @@ import 'package:yeah_music/widgets/song_inline_tags_editor_sheet.dart';
 import 'package:yeah_music/widgets/song_metadata_dialog.dart';
 
 const int _kLibraryReloadMetaMaxEmbeddedArtBytes = 512 * 1024;
+
+/// 将单首本地曲目加入 OneDrive 上传队列（曲库列表「更多」与播放页共用）。
+Future<void> uploadLibrarySongToOneDrive(BuildContext context, Song song) async {
+  final l10n = AppLocalizations.of(context);
+  final path = song.path.trim();
+  if (path.isEmpty) {
+    showAppSnackBar(
+      context,
+      l10n.songPageMusicTagEditorFileNotFound,
+      kind: AppSnackKind.error,
+    );
+    return;
+  }
+  final file = File(path);
+  if (!await file.exists()) {
+    if (!context.mounted) return;
+    showAppSnackBar(
+      context,
+      l10n.songPageMusicTagEditorFileNotFound,
+      kind: AppSnackKind.error,
+    );
+    return;
+  }
+  try {
+    await context
+        .read<OneDriveDownloadQueueController>()
+        .enqueueLibraryUploads([song]);
+    if (!context.mounted) return;
+    showAppSnackBar(
+      context,
+      l10n.libraryBatchUploadQueued,
+      kind: AppSnackKind.success,
+      action: SnackBarAction(
+        label: l10n.libraryBatchOpenQueue,
+        onPressed: () => openOneDriveTransferQueue(
+          initialTab: OneDriveTransferQueueTab.upload,
+        ),
+      ),
+    );
+  } on StateError catch (e) {
+    final msg = '$e';
+    if (!context.mounted) return;
+    final text = msg.contains('not signed')
+        ? l10n.libraryBatchUploadNeedSignIn
+        : msg.contains('upload folder unset')
+        ? l10n.libraryBatchUploadNeedCloudFolder
+        : '$e';
+    showAppSnackBar(context, text, kind: AppSnackKind.error);
+  } catch (e) {
+    if (context.mounted) {
+      showAppSnackBar(context, '$e', kind: AppSnackKind.error);
+    }
+  }
+}
 
 /// 曲库 / 本地缓存曲目共用的「更多」底部菜单（重命名、加入歌单、标签、删除等）。
 Future<void> showLibrarySongMoreActionsSheet(
@@ -177,6 +234,17 @@ Future<void> showLibrarySongMoreActionsSheet(
                         if (song.path.trim().isEmpty) return;
                         await _reloadSongMetadataFromDisk(context, song);
                         afterMutation?.call();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.cloud_upload_outlined),
+                      title: Text(l10n.songPageMoreUploadOneDrive),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          if (!context.mounted) return;
+                          await uploadLibrarySongToOneDrive(context, song);
+                        });
                       },
                     ),
                     ListTile(

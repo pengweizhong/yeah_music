@@ -26,7 +26,6 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
-import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/compments/theme_config_provider.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
@@ -50,8 +49,6 @@ import 'package:yeah_music/utils/song_path_utils.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
-import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
-import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/playback_mode_l10n.dart';
 import 'package:yeah_music/utils/hive_utils.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
@@ -63,6 +60,7 @@ import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/auto_marquee_single_line_text.dart';
 import 'package:yeah_music/widgets/compact_song_list_row.dart';
 import 'package:yeah_music/widgets/desktop_floating_lyrics_host.dart';
+import 'package:yeah_music/widgets/library_song_more_actions_sheet.dart';
 import 'package:yeah_music/widgets/lyric_style_settings_panel.dart';
 import 'package:yeah_music/widgets/playback_sound_preset_sheet.dart';
 import 'package:yeah_music/widgets/playback_speed_sheet.dart';
@@ -1367,40 +1365,6 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _uploadCurrentToOneDrive(BuildContext context, Song song) async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      await context
-          .read<OneDriveDownloadQueueController>()
-          .enqueueLibraryUploads([song]);
-      if (!context.mounted) return;
-      showAppSnackBar(
-        context,
-        l10n.libraryBatchUploadQueued,
-        kind: AppSnackKind.success,
-        action: SnackBarAction(
-          label: l10n.libraryBatchOpenQueue,
-          onPressed: () => openOneDriveTransferQueue(
-            initialTab: OneDriveTransferQueueTab.upload,
-          ),
-        ),
-      );
-    } on StateError catch (e) {
-      final msg = '$e';
-      if (!context.mounted) return;
-      final text = msg.contains('not signed')
-          ? l10n.libraryBatchUploadNeedSignIn
-          : msg.contains('upload folder unset')
-          ? l10n.libraryBatchUploadNeedCloudFolder
-          : '$e';
-      showAppSnackBar(context, text, kind: AppSnackKind.error);
-    } catch (e) {
-      if (context.mounted) {
-        showAppSnackBar(context, '$e', kind: AppSnackKind.error);
-      }
-    }
-  }
-
   Future<void> _openMusicTagEditorExternal(
     BuildContext context,
     Song song,
@@ -1630,7 +1594,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                             Navigator.pop(sheetContext);
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (!mounted) return;
-                              _uploadCurrentToOneDrive(navigatorContext, song);
+                              uploadLibrarySongToOneDrive(navigatorContext, song);
                             });
                           },
                         ),

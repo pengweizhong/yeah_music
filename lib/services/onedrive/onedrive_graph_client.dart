@@ -113,6 +113,25 @@ class OneDriveGraphClient {
     return OneDriveGraphItem.fromJson(res);
   }
 
+  /// 永久删除云盘中的文件或文件夹（Graph `DELETE /me/drive/items/{id}`）。
+  Future<void> deleteDriveItem({
+    required String accessToken,
+    required String itemId,
+  }) async {
+    final id = itemId.trim();
+    if (id.isEmpty) {
+      throw OneDriveApiException('empty item id');
+    }
+    final u = Uri.parse('${OneDriveConfig.graphBase}/me/drive/items/$id');
+    final r = await _client.delete(
+      u,
+      headers: {HttpHeaders.authorizationHeader: 'Bearer $accessToken'},
+    );
+    if (r.statusCode != 204 && (r.statusCode < 200 || r.statusCode >= 300)) {
+      throw OneDriveApiException('DELETE $u → ${r.statusCode}: ${r.body}');
+    }
+  }
+
   /// 读取云盘文件内容为 UTF-8 文本（小到中等 JSON）；优先匿名 [downloadUrl]，否则 Bearer GET `/content`。
   Future<String> downloadDriveItemUtf8({
     required String accessToken,
@@ -161,13 +180,15 @@ class OneDriveGraphClient {
 
   Future<Map<String, dynamic>> _getJson(String url, String accessToken) async {
     final u = Uri.parse(url);
-    final r = await _client.get(
-      u,
-      headers: {
-        HttpHeaders.authorizationHeader: 'Bearer $accessToken',
-        HttpHeaders.acceptHeader: 'application/json',
-      },
-    );
+    final r = await _client
+        .get(
+          u,
+          headers: {
+            HttpHeaders.authorizationHeader: 'Bearer $accessToken',
+            HttpHeaders.acceptHeader: 'application/json',
+          },
+        )
+        .timeout(const Duration(seconds: 90));
     if (r.statusCode < 200 || r.statusCode >= 300) {
       throw OneDriveApiException('GET $url → ${r.statusCode}: ${r.body}');
     }

@@ -485,6 +485,38 @@
       }
     }
   },
+  "oneDriveCloudBatchDelete": "從 OneDrive 刪除",
+  "oneDriveCloudBatchDeleteConfirmTitle": "從 OneDrive 刪除所選曲目？",
+  "@oneDriveCloudBatchDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteConfirmMessage": "將永久刪除 OneDrive 上選中的 {count} 個檔案，此操作無法復原。",
+  "@oneDriveCloudBatchDeleteDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteDone": "已從 OneDrive 刪除 {count} 首",
+  "@oneDriveCloudBatchDeletePartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeletePartial": "已刪除 {deleted} 首，失敗 {failed} 首。",
+  "oneDriveCloudBatchDeleteFailed": "無法從 OneDrive 刪除所選檔案。",
+  "oneDriveCloudBatchDeleteProgressTitle": "正在刪除",
+  "oneDriveCloudBatchDeleteProgressMessage": "正在從 OneDrive 刪除所選檔案…",
   "oneDriveDownloadViewQueue": "檢視佇列",
   "oneDriveDownloadClearHistory": "清空紀錄",
   "oneDriveTransferClearDownloadsList": "清空下載列表",
@@ -498,7 +530,7 @@
     }
   },
   "oneDriveUp": "上層",
-  "oneDriveCloudLibraryTitle": "OneDrive · 雲端曲庫",
+  "oneDriveCloudLibraryTitle": "雲端曲庫",
   "oneDriveCloudLibrarySubtitle": "加入的資料夾會遞迴掃描出音訊清單；點曲目按需下載（自訂目錄存在則用該目錄，否則用預設快取），已下載者可離線播放。",
   "oneDriveCloudLibraryEmpty": "尚未建立索引。\n請先點「在網路磁碟選擇資料夾」，選好音樂目錄後再點「重新掃描」。",
   "oneDriveCachedPlaylistTitle": "OneDrive · 快取下載",
@@ -520,6 +552,16 @@
   },
   "oneDriveAddFolderTooltip": "加入雲端曲庫",
   "oneDriveIndexingEllipsis": "正在掃描目錄…",
+  "oneDriveCloudIndexRescanProgressTitle": "正在掃描雲端曲庫",
+  "oneDriveCloudIndexRescanProgressMessage": "正在遞迴掃描已索引目錄…",
+  "@oneDriveCloudIndexRescanDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudIndexRescanDone": "掃描完成，共 {count} 首",
   "oneDriveLastIndexed": "上次掃描：{time}",
   "@oneDriveLastIndexed": {
     "placeholders": {
@@ -538,6 +580,8 @@
     }
   },
   "oneDriveCloudSearchHint": "搜尋檔名或路徑…",
+  "oneDriveCloudLocateInList": "在雲端曲庫中定位",
+  "oneDriveCloudLocateNotInList": "該曲目已不在雲端曲庫清單中",
   "oneDriveNoIndexRoots": "尚未設定目錄，請先用「在網路磁碟選擇資料夾」。",
   "oneDriveLastIndexedNever": "上次掃描：—",
   "oneDriveIndexFoldersRecursiveHint": "掃描會遞迴包含各資料夾及其子目錄下的所有音訊檔案。",

@@ -2271,6 +2271,54 @@ abstract class AppLocalizations {
   /// **'Added {count} tracks to the download queue.'**
   String oneDriveEnqueueAddedMany(int count);
 
+  /// No description provided for @oneDriveCloudBatchDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete from OneDrive'**
+  String get oneDriveCloudBatchDelete;
+
+  /// No description provided for @oneDriveCloudBatchDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected tracks from OneDrive?'**
+  String get oneDriveCloudBatchDeleteConfirmTitle;
+
+  /// No description provided for @oneDriveCloudBatchDeleteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete {count} selected files from OneDrive? This cannot be undone.'**
+  String oneDriveCloudBatchDeleteConfirmMessage(int count);
+
+  /// No description provided for @oneDriveCloudBatchDeleteDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} from OneDrive'**
+  String oneDriveCloudBatchDeleteDone(int count);
+
+  /// No description provided for @oneDriveCloudBatchDeletePartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {deleted}, failed {failed}.'**
+  String oneDriveCloudBatchDeletePartial(int deleted, int failed);
+
+  /// No description provided for @oneDriveCloudBatchDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the selected files from OneDrive.'**
+  String get oneDriveCloudBatchDeleteFailed;
+
+  /// No description provided for @oneDriveCloudBatchDeleteProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting'**
+  String get oneDriveCloudBatchDeleteProgressTitle;
+
+  /// No description provided for @oneDriveCloudBatchDeleteProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing selected files from OneDrive…'**
+  String get oneDriveCloudBatchDeleteProgressMessage;
+
   /// No description provided for @oneDriveDownloadViewQueue.
   ///
   /// In en, this message translates to:
@@ -2310,7 +2358,7 @@ abstract class AppLocalizations {
   /// No description provided for @oneDriveCloudLibraryTitle.
   ///
   /// In en, this message translates to:
-  /// **'OneDrive · Cloud library'**
+  /// **'Cloud library'**
   String get oneDriveCloudLibraryTitle;
 
   /// No description provided for @oneDriveCloudLibrarySubtitle.
@@ -2397,6 +2445,24 @@ abstract class AppLocalizations {
   /// **'Scanning folders…'**
   String get oneDriveIndexingEllipsis;
 
+  /// No description provided for @oneDriveCloudIndexRescanProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning cloud library'**
+  String get oneDriveCloudIndexRescanProgressTitle;
+
+  /// No description provided for @oneDriveCloudIndexRescanProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Recursively scanning indexed folders…'**
+  String get oneDriveCloudIndexRescanProgressMessage;
+
+  /// No description provided for @oneDriveCloudIndexRescanDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan complete — {count} songs'**
+  String oneDriveCloudIndexRescanDone(int count);
+
   /// No description provided for @oneDriveLastIndexed.
   ///
   /// In en, this message translates to:
@@ -2420,6 +2486,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search file names or paths…'**
   String get oneDriveCloudSearchHint;
+
+  /// No description provided for @oneDriveCloudLocateInList.
+  ///
+  /// In en, this message translates to:
+  /// **'Locate in cloud library'**
+  String get oneDriveCloudLocateInList;
+
+  /// No description provided for @oneDriveCloudLocateNotInList.
+  ///
+  /// In en, this message translates to:
+  /// **'This track is no longer in the cloud library list'**
+  String get oneDriveCloudLocateNotInList;
 
   /// No description provided for @oneDriveNoIndexRoots.
   ///

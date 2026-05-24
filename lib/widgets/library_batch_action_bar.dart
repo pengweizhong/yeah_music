@@ -27,6 +27,8 @@ class LibraryBatchActionBar extends StatelessWidget {
     this.onAddToPlaylist,
     this.onRemoveFromPlaylist,
     this.onDelete,
+    this.onDeleteRemote,
+    this.deleteRemoteTooltip,
     this.onDownload,
     this.downloadTooltip,
   });
@@ -38,6 +40,8 @@ class LibraryBatchActionBar extends StatelessWidget {
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onRemoveFromPlaylist;
   final VoidCallback? onDelete;
+  final VoidCallback? onDeleteRemote;
+  final String? deleteRemoteTooltip;
   final VoidCallback? onDownload;
   final String? downloadTooltip;
 
@@ -71,6 +75,12 @@ class LibraryBatchActionBar extends StatelessWidget {
                   ),
                 ),
               ),
+              if (onDeleteRemote != null)
+                IconButton(
+                  tooltip: deleteRemoteTooltip ?? l10n.libraryBatchDelete,
+                  icon: Icon(Icons.delete_outline, color: scheme.error),
+                  onPressed: onDeleteRemote,
+                ),
               if (onDownload != null)
                 IconButton(
                   tooltip: downloadTooltip,

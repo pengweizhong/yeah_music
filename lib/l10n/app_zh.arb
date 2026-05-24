@@ -485,6 +485,38 @@
       }
     }
   },
+  "oneDriveCloudBatchDelete": "从 OneDrive 删除",
+  "oneDriveCloudBatchDeleteConfirmTitle": "从 OneDrive 删除所选曲目？",
+  "@oneDriveCloudBatchDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteConfirmMessage": "将永久删除 OneDrive 上选中的 {count} 个文件，此操作不可撤销。",
+  "@oneDriveCloudBatchDeleteDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteDone": "已从 OneDrive 删除 {count} 首",
+  "@oneDriveCloudBatchDeletePartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeletePartial": "已删除 {deleted} 首，失败 {failed} 首。",
+  "oneDriveCloudBatchDeleteFailed": "无法从 OneDrive 删除所选文件。",
+  "oneDriveCloudBatchDeleteProgressTitle": "正在删除",
+  "oneDriveCloudBatchDeleteProgressMessage": "正在从 OneDrive 删除所选文件…",
   "oneDriveDownloadViewQueue": "查看队列",
   "oneDriveDownloadClearHistory": "清空记录",
   "oneDriveTransferClearDownloadsList": "清空下载列表",
@@ -498,7 +530,7 @@
     }
   },
   "oneDriveUp": "上级",
-  "oneDriveCloudLibraryTitle": "OneDrive · 云端曲库",
+  "oneDriveCloudLibraryTitle": "云端曲库",
   "oneDriveCloudLibrarySubtitle": "添加的文件夹会递归扫描出音频列表；点曲目按需下载（自定义目录存在则用该目录，否则用默认缓存），已下载的可离线播放。",
   "oneDriveCloudLibraryEmpty": "还没有索引。\n请先点「在网盘中选择文件夹」，选好一个或多个音乐目录后，再点「重新扫描」。",
   "oneDriveCachedPlaylistTitle": "OneDrive · 缓存下载",
@@ -520,6 +552,16 @@
   },
   "oneDriveAddFolderTooltip": "加入云端曲库",
   "oneDriveIndexingEllipsis": "正在扫描目录…",
+  "oneDriveCloudIndexRescanProgressTitle": "正在扫描云端曲库",
+  "oneDriveCloudIndexRescanProgressMessage": "正在递归扫描已索引目录…",
+  "@oneDriveCloudIndexRescanDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudIndexRescanDone": "扫描完成，共 {count} 首",
   "oneDriveLastIndexed": "上次扫描：{time}",
   "@oneDriveLastIndexed": {
     "placeholders": {
@@ -538,6 +580,8 @@
     }
   },
   "oneDriveCloudSearchHint": "搜索文件名或路径…",
+  "oneDriveCloudLocateInList": "在云端曲库中定位",
+  "oneDriveCloudLocateNotInList": "该曲目已不在云端曲库列表中",
   "oneDriveNoIndexRoots": "尚未配置目录，请先「在网盘中选择文件夹」。",
   "oneDriveLastIndexedNever": "上次扫描：—",
   "oneDriveIndexFoldersRecursiveHint": "扫描会递归包含各文件夹及其子目录下的所有音频文件。",

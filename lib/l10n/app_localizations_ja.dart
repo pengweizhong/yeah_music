@@ -1192,6 +1192,39 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get oneDriveCloudBatchDelete => 'OneDrive から削除';
+
+  @override
+  String get oneDriveCloudBatchDeleteConfirmTitle =>
+      '選択した曲を OneDrive から削除しますか？';
+
+  @override
+  String oneDriveCloudBatchDeleteConfirmMessage(int count) {
+    return 'OneDrive 上の選択した $count 件のファイルを完全に削除します。元に戻せません。';
+  }
+
+  @override
+  String oneDriveCloudBatchDeleteDone(int count) {
+    return 'OneDrive から $count 曲を削除しました';
+  }
+
+  @override
+  String oneDriveCloudBatchDeletePartial(int deleted, int failed) {
+    return '$deleted 曲を削除、$failed 曲は失敗しました。';
+  }
+
+  @override
+  String get oneDriveCloudBatchDeleteFailed =>
+      '選択したファイルを OneDrive から削除できませんでした。';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressTitle => '削除中';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressMessage =>
+      'OneDrive から選択したファイルを削除しています…';
+
+  @override
   String get oneDriveDownloadViewQueue => 'キューを開く';
 
   @override
@@ -1212,7 +1245,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveUp => '上へ';
 
   @override
-  String get oneDriveCloudLibraryTitle => 'OneDrive · クラウドライブラリ';
+  String get oneDriveCloudLibraryTitle => 'クラウドライブラリ';
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
@@ -1264,6 +1297,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveIndexingEllipsis => 'スキャン中…';
 
   @override
+  String get oneDriveCloudIndexRescanProgressTitle => 'クラウドライブラリをスキャン中';
+
+  @override
+  String get oneDriveCloudIndexRescanProgressMessage =>
+      'インデックス対象フォルダーを再帰的にスキャンしています…';
+
+  @override
+  String oneDriveCloudIndexRescanDone(int count) {
+    return 'スキャン完了 — $count 曲';
+  }
+
+  @override
   String oneDriveLastIndexed(String time) {
     return '最終スキャン: $time';
   }
@@ -1278,6 +1323,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get oneDriveCloudSearchHint => 'ファイル名やパスを検索…';
+
+  @override
+  String get oneDriveCloudLocateInList => 'クラウド曲庫で表示';
+
+  @override
+  String get oneDriveCloudLocateNotInList => 'この曲はクラウド曲庫の一覧にありません';
 
   @override
   String get oneDriveNoIndexRoots => 'フォルダーが未設定です。先に「フォルダーを選ぶ」から設定してください。';

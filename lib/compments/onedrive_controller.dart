@@ -12,6 +12,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -84,6 +85,8 @@ class OneDriveController extends ChangeNotifier {
   DateTime? _cloudIndexAt;
   bool _cloudIndexBuilding = false;
   String? _cloudIndexError;
+  bool _cloudIndexRebuildQueued = false;
+  Future<void>? _cloudIndexRebuildInFlight;
 
   OneDriveSyncSettings _syncSettings = OneDriveSyncSettings.defaults;
 
@@ -228,7 +231,35 @@ class OneDriveController extends ChangeNotifier {
   }
 
   /// 递归扫描 [indexFolders] 下所有音频，写入 [cloudTracks] 并持久化。
-  Future<void> rebuildCloudIndex() async {
+  Future<void> rebuildCloudIndex() {
+    if (_cloudIndexRebuildInFlight != null) {
+      _cloudIndexRebuildQueued = true;
+      return _cloudIndexRebuildInFlight!;
+    }
+    final run = _rebuildCloudIndexOnce().whenComplete(() {
+      _cloudIndexRebuildInFlight = null;
+      if (_cloudIndexRebuildQueued) {
+        _cloudIndexRebuildQueued = false;
+        unawaited(rebuildCloudIndex());
+      }
+    });
+    _cloudIndexRebuildInFlight = run;
+    return run;
+  }
+
+  /// 上传完成后延迟合并索引，避免批量上传时反复全量扫描。
+  void scheduleCloudIndexRebuildAfterUpload() {
+    if (_indexFolders.isEmpty) return;
+    _uploadIndexRebuildDebounce?.cancel();
+    _uploadIndexRebuildDebounce = Timer(
+      const Duration(milliseconds: 800),
+      () => unawaited(rebuildCloudIndex()),
+    );
+  }
+
+  Timer? _uploadIndexRebuildDebounce;
+
+  Future<void> _rebuildCloudIndexOnce() async {
     if (_indexFolders.isEmpty) {
       _cloudTracks = [];
       _cloudIndexAt = null;
@@ -237,14 +268,15 @@ class OneDriveController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final token = await getAccessToken();
-    if (token == null) {
-      throw StateError('not signed in');
-    }
     _cloudIndexBuilding = true;
     _cloudIndexError = null;
     notifyListeners();
     try {
+      final token = await getAccessToken();
+      if (token == null) {
+        throw StateError('not signed in');
+      }
+      clearBrowseChildrenCache();
       final dedupe = <String>{};
       final collected = <OneDriveCloudTrack>[];
       for (final root in _indexFolders) {
@@ -261,7 +293,8 @@ class OneDriveController extends ChangeNotifier {
       _cloudTracks = collected;
       _cloudIndexAt = DateTime.now();
       await _persistCloudIndex();
-    } catch (e) {
+    } catch (e, st) {
+      appLog.e('OneDrive 云端曲库扫描失败', error: e, stackTrace: st);
       _cloudIndexError = '$e';
     } finally {
       _cloudIndexBuilding = false;
@@ -315,6 +348,48 @@ class OneDriveController extends ChangeNotifier {
       isFolder: false,
       downloadUrl: null,
     );
+  }
+
+  /// 从 OneDrive 云盘永久删除曲目，并更新本地索引；已下载的本地缓存文件会一并删除。
+  Future<({int deleted, int failed})> deleteCloudTracksRemote(
+    Iterable<OneDriveCloudTrack> tracks,
+  ) async {
+    final token = await getAccessToken();
+    if (token == null) {
+      throw StateError('not signed in');
+    }
+    var deleted = 0;
+    var failed = 0;
+    for (final track in tracks) {
+      final id = track.itemId.trim();
+      if (id.isEmpty) {
+        failed++;
+        continue;
+      }
+      try {
+        await _graph.deleteDriveItem(accessToken: token, itemId: id);
+        _cloudTracks.removeWhere((e) => e.itemId == id);
+        await _deleteLocalCacheForItem(id, track.fileName);
+        deleted++;
+      } catch (e, st) {
+        appLog.e('OneDrive 删除云端曲目失败: ${track.displayPath}', error: e, stackTrace: st);
+        failed++;
+      }
+    }
+    if (deleted > 0) {
+      await _persistCloudIndex();
+      notifyListeners();
+    }
+    return (deleted: deleted, failed: failed);
+  }
+
+  Future<void> _deleteLocalCacheForItem(String itemId, String fileName) async {
+    try {
+      final f = await _localFileForPlayback(itemId, fileName);
+      if (await f.exists()) {
+        await f.delete();
+      }
+    } catch (_) {}
   }
 
   Future<void> _touchPlaybackRootForScanHistory() async {
@@ -1386,6 +1461,7 @@ class OneDriveController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _uploadIndexRebuildDebounce?.cancel();
     _graph.close();
     super.dispose();
   }

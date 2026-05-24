@@ -1172,6 +1172,36 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get oneDriveCloudBatchDelete => '从 OneDrive 删除';
+
+  @override
+  String get oneDriveCloudBatchDeleteConfirmTitle => '从 OneDrive 删除所选曲目？';
+
+  @override
+  String oneDriveCloudBatchDeleteConfirmMessage(int count) {
+    return '将永久删除 OneDrive 上选中的 $count 个文件，此操作不可撤销。';
+  }
+
+  @override
+  String oneDriveCloudBatchDeleteDone(int count) {
+    return '已从 OneDrive 删除 $count 首';
+  }
+
+  @override
+  String oneDriveCloudBatchDeletePartial(int deleted, int failed) {
+    return '已删除 $deleted 首，失败 $failed 首。';
+  }
+
+  @override
+  String get oneDriveCloudBatchDeleteFailed => '无法从 OneDrive 删除所选文件。';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressTitle => '正在删除';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressMessage => '正在从 OneDrive 删除所选文件…';
+
+  @override
   String get oneDriveDownloadViewQueue => '查看队列';
 
   @override
@@ -1192,7 +1222,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveUp => '上级';
 
   @override
-  String get oneDriveCloudLibraryTitle => 'OneDrive · 云端曲库';
+  String get oneDriveCloudLibraryTitle => '云端曲库';
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
@@ -1242,6 +1272,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveIndexingEllipsis => '正在扫描目录…';
 
   @override
+  String get oneDriveCloudIndexRescanProgressTitle => '正在扫描云端曲库';
+
+  @override
+  String get oneDriveCloudIndexRescanProgressMessage => '正在递归扫描已索引目录…';
+
+  @override
+  String oneDriveCloudIndexRescanDone(int count) {
+    return '扫描完成，共 $count 首';
+  }
+
+  @override
   String oneDriveLastIndexed(String time) {
     return '上次扫描：$time';
   }
@@ -1256,6 +1297,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oneDriveCloudSearchHint => '搜索文件名或路径…';
+
+  @override
+  String get oneDriveCloudLocateInList => '在云端曲库中定位';
+
+  @override
+  String get oneDriveCloudLocateNotInList => '该曲目已不在云端曲库列表中';
 
   @override
   String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
@@ -4189,6 +4236,36 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get oneDriveCloudBatchDelete => '从 OneDrive 删除';
+
+  @override
+  String get oneDriveCloudBatchDeleteConfirmTitle => '从 OneDrive 删除所选曲目？';
+
+  @override
+  String oneDriveCloudBatchDeleteConfirmMessage(int count) {
+    return '将永久删除 OneDrive 上选中的 $count 个文件，此操作不可撤销。';
+  }
+
+  @override
+  String oneDriveCloudBatchDeleteDone(int count) {
+    return '已从 OneDrive 删除 $count 首';
+  }
+
+  @override
+  String oneDriveCloudBatchDeletePartial(int deleted, int failed) {
+    return '已删除 $deleted 首，失败 $failed 首。';
+  }
+
+  @override
+  String get oneDriveCloudBatchDeleteFailed => '无法从 OneDrive 删除所选文件。';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressTitle => '正在删除';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressMessage => '正在从 OneDrive 删除所选文件…';
+
+  @override
   String get oneDriveDownloadViewQueue => '查看队列';
 
   @override
@@ -4209,7 +4286,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveUp => '上级';
 
   @override
-  String get oneDriveCloudLibraryTitle => 'OneDrive · 云端曲库';
+  String get oneDriveCloudLibraryTitle => '云端曲库';
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
@@ -4259,6 +4336,17 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveIndexingEllipsis => '正在扫描目录…';
 
   @override
+  String get oneDriveCloudIndexRescanProgressTitle => '正在扫描云端曲库';
+
+  @override
+  String get oneDriveCloudIndexRescanProgressMessage => '正在递归扫描已索引目录…';
+
+  @override
+  String oneDriveCloudIndexRescanDone(int count) {
+    return '扫描完成，共 $count 首';
+  }
+
+  @override
   String oneDriveLastIndexed(String time) {
     return '上次扫描：$time';
   }
@@ -4273,6 +4361,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get oneDriveCloudSearchHint => '搜索文件名或路径…';
+
+  @override
+  String get oneDriveCloudLocateInList => '在云端曲库中定位';
+
+  @override
+  String get oneDriveCloudLocateNotInList => '该曲目已不在云端曲库列表中';
 
   @override
   String get oneDriveNoIndexRoots => '尚未配置目录，请先「在网盘中选择文件夹」。';
@@ -7206,6 +7300,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String get oneDriveCloudBatchDelete => '從 OneDrive 刪除';
+
+  @override
+  String get oneDriveCloudBatchDeleteConfirmTitle => '從 OneDrive 刪除所選曲目？';
+
+  @override
+  String oneDriveCloudBatchDeleteConfirmMessage(int count) {
+    return '將永久刪除 OneDrive 上選中的 $count 個檔案，此操作無法復原。';
+  }
+
+  @override
+  String oneDriveCloudBatchDeleteDone(int count) {
+    return '已從 OneDrive 刪除 $count 首';
+  }
+
+  @override
+  String oneDriveCloudBatchDeletePartial(int deleted, int failed) {
+    return '已刪除 $deleted 首，失敗 $failed 首。';
+  }
+
+  @override
+  String get oneDriveCloudBatchDeleteFailed => '無法從 OneDrive 刪除所選檔案。';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressTitle => '正在刪除';
+
+  @override
+  String get oneDriveCloudBatchDeleteProgressMessage => '正在從 OneDrive 刪除所選檔案…';
+
+  @override
   String get oneDriveDownloadViewQueue => '檢視佇列';
 
   @override
@@ -7226,7 +7350,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveUp => '上層';
 
   @override
-  String get oneDriveCloudLibraryTitle => 'OneDrive · 雲端曲庫';
+  String get oneDriveCloudLibraryTitle => '雲端曲庫';
 
   @override
   String get oneDriveCloudLibrarySubtitle =>
@@ -7276,6 +7400,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get oneDriveIndexingEllipsis => '正在掃描目錄…';
 
   @override
+  String get oneDriveCloudIndexRescanProgressTitle => '正在掃描雲端曲庫';
+
+  @override
+  String get oneDriveCloudIndexRescanProgressMessage => '正在遞迴掃描已索引目錄…';
+
+  @override
+  String oneDriveCloudIndexRescanDone(int count) {
+    return '掃描完成，共 $count 首';
+  }
+
+  @override
   String oneDriveLastIndexed(String time) {
     return '上次掃描：$time';
   }
@@ -7290,6 +7425,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveCloudSearchHint => '搜尋檔名或路徑…';
+
+  @override
+  String get oneDriveCloudLocateInList => '在雲端曲庫中定位';
+
+  @override
+  String get oneDriveCloudLocateNotInList => '該曲目已不在雲端曲庫清單中';
 
   @override
   String get oneDriveNoIndexRoots => '尚未設定目錄，請先用「在網路磁碟選擇資料夾」。';

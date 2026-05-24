@@ -458,6 +458,17 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     _ensureWorkerRunning();
   }
 
+  /// 移除与云端 item id 对应的队列任务（删除云端文件后清理）。
+  Future<void> removeTasksForGraphItemIds(Iterable<String> itemIds) async {
+    final ids = itemIds.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+    if (ids.isEmpty) return;
+    final toRemove =
+        _tasks.where((t) => ids.contains(t.graphItem.id)).toList(growable: false);
+    for (final task in toRemove) {
+      await removeTask(task);
+    }
+  }
+
   /// 后台追加云端曲目。
   Future<void> enqueueCloudTracks(List<OneDriveCloudTrack> tracks) async {
     if (tracks.isEmpty) return;
@@ -830,6 +841,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       task.totalBytes = len;
       task.song = Song(local);
       task.error = null;
+      _od.scheduleCloudIndexRebuildAfterUpload();
     } on OneDriveDownloadCancelledException {
       _markCancelledFrom(i);
     } catch (e, st) {

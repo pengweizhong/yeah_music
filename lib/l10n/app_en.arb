@@ -515,6 +515,38 @@
       }
     }
   },
+  "oneDriveCloudBatchDelete": "Delete from OneDrive",
+  "oneDriveCloudBatchDeleteConfirmTitle": "Delete selected tracks from OneDrive?",
+  "@oneDriveCloudBatchDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteConfirmMessage": "Permanently delete {count} selected files from OneDrive? This cannot be undone.",
+  "@oneDriveCloudBatchDeleteDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeleteDone": "Deleted {count} from OneDrive",
+  "@oneDriveCloudBatchDeletePartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudBatchDeletePartial": "Deleted {deleted}, failed {failed}.",
+  "oneDriveCloudBatchDeleteFailed": "Could not delete the selected files from OneDrive.",
+  "oneDriveCloudBatchDeleteProgressTitle": "Deleting",
+  "oneDriveCloudBatchDeleteProgressMessage": "Removing selected files from OneDrive…",
   "oneDriveDownloadViewQueue": "View queue",
   "oneDriveDownloadClearHistory": "Clear history",
   "oneDriveTransferClearDownloadsList": "Clear download list",
@@ -528,7 +560,7 @@
     }
   },
   "oneDriveUp": "Up",
-  "oneDriveCloudLibraryTitle": "OneDrive · Cloud library",
+  "oneDriveCloudLibraryTitle": "Cloud library",
   "oneDriveCloudLibrarySubtitle": "Folders you add are scanned recursively. Tap a song to fetch on demand (to your chosen download folder if it exists, otherwise the default cache); already-downloaded files play offline.",
   "oneDriveCloudLibraryEmpty": "No tracks indexed yet.\nTap “Choose folders”, pick one or more music folders in OneDrive, then “Rescan”.",
   "oneDriveCachedPlaylistTitle": "OneDrive · Cached downloads",
@@ -550,6 +582,16 @@
   },
   "oneDriveAddFolderTooltip": "Add folder to cloud library",
   "oneDriveIndexingEllipsis": "Scanning folders…",
+  "oneDriveCloudIndexRescanProgressTitle": "Scanning cloud library",
+  "oneDriveCloudIndexRescanProgressMessage": "Recursively scanning indexed folders…",
+  "@oneDriveCloudIndexRescanDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "oneDriveCloudIndexRescanDone": "Scan complete — {count} songs",
   "oneDriveLastIndexed": "Last scanned: {time}",
   "@oneDriveLastIndexed": {
     "placeholders": {
@@ -568,6 +610,8 @@
     }
   },
   "oneDriveCloudSearchHint": "Search file names or paths…",
+  "oneDriveCloudLocateInList": "Locate in cloud library",
+  "oneDriveCloudLocateNotInList": "This track is no longer in the cloud library list",
   "oneDriveNoIndexRoots": "No folders configured. Tap “Choose folders” first.",
   "oneDriveLastIndexedNever": "Last scanned: —",
   "oneDriveIndexFoldersRecursiveHint": "Scan includes all subfolders; every audio file under each bound folder is listed.",
