@@ -47,7 +47,12 @@ Future<void> reloadAllSongInstancesAfterFileMetadataChanged(
       storeLyricsWithTrack: true,
       maxEmbeddedArtBytes: maxEmbeddedArtBytes,
     );
-    ApplicationUtils.evictSongCoverProvidersForPath(s.path);
+    final fp = ApplicationUtils.coverBytesFingerprint(s.imageBytes);
+    ApplicationUtils.evictSongCoverProvidersForPath(
+      s.path,
+      keepFingerprint: fp > 0 ? fp : null,
+    );
+    ApplicationUtils.notifySongCoverChanged(s.path);
   }
 
   final pending = <Song>[];

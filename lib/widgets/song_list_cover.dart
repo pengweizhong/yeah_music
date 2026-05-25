@@ -13,8 +13,10 @@
 // GNU General Public License for more details.
 
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/utils/application_utils.dart';
+import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/widgets/song_cover_image.dart';
 
 export 'package:yeah_music/widgets/song_cover_image.dart'
@@ -54,26 +56,74 @@ class SongListCoverStaticShell extends StatelessWidget {
 }
 
 /// 列表/迷你播放条用封面；实现见 [SongCoverImage]。
-class SongListCover extends StatelessWidget {
+class SongListCover extends StatefulWidget {
   const SongListCover({
     super.key,
     required this.song,
     this.size = 48,
     this.borderRadius,
+    this.eagerHydrate = true,
   });
 
   final Song song;
   final double size;
   final BorderRadius? borderRadius;
+  final bool eagerHydrate;
+
+  @override
+  State<SongListCover> createState() => _SongListCoverState();
+}
+
+class _SongListCoverState extends State<SongListCover> {
+  Future<bool>? _ongoingHydrate;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.eagerHydrate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateWhenVisible());
+    }
+  }
+
+  @override
+  void didUpdateWidget(SongListCover oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.song.path != widget.song.path) {
+      _ongoingHydrate = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateWhenVisible());
+    }
+  }
+
+  void _onVisibilityChanged(VisibilityInfo info) {
+    if (!mounted || info.visibleFraction < 0.06) return;
+    _hydrateWhenVisible();
+  }
+
+  void _hydrateWhenVisible() {
+    if (!mounted) return;
+    final fut = _ongoingHydrate ??=
+        SongLibraryMetadataHydrator.hydrateIfNeeded(widget.song).whenComplete(() {
+      _ongoingHydrate = null;
+    });
+    fut.then((changed) {
+      if (!mounted || !changed) return;
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SongCoverImage(
-      song: song,
-      decodeSize: size,
-      width: size,
-      height: size,
-      borderRadius: borderRadius,
+    return VisibilityDetector(
+      key: ValueKey<String>('song_list_cover_vis_${widget.song.path}'),
+      onVisibilityChanged: _onVisibilityChanged,
+      child: SongCoverImage(
+        song: widget.song,
+        decodeSize: widget.size,
+        width: widget.size,
+        height: widget.size,
+        borderRadius: widget.borderRadius,
+        eagerHydrate: widget.eagerHydrate,
+      ),
     );
   }
 }

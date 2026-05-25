@@ -158,6 +158,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   Duration? _lastSeekTarget;
   DateTime? _ignoreStalePositionUntil;
   Duration _seekPreview = Duration.zero;
+  Timer? _sliderSeekReleaseTimer;
 
   late final PageController _pageController;
   // 0=封皮，1=全屏歌词，2=分屏，3=宽屏剧院（沉浸式：无底部全局控制条）
@@ -450,6 +451,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     _desktopTheaterCoverScrollController.dispose();
     _pageController.dispose();
     _scrollTimer?.cancel();
+    _sliderSeekReleaseTimer?.cancel();
     // 延迟保存设置，避免在dispose时访问已关闭的box
     Future.microtask(() => _saveSettings());
     WidgetsBinding.instance.removeObserver(this);
@@ -658,26 +660,40 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
   void _listenToPlayer() {
     // 监听播放位置
-    _positionSubscription = MusicService.positionStream.listen((position) {
-      if (mounted) {
-        if (!_isSeeking && !_isJumpingPosition) {
-          final target = _lastSeekTarget;
-          final ignoreUntil = _ignoreStalePositionUntil;
-          // 仅丢弃 seek 后仍明显落后于目标的陈旧位置，避免 abs 误拦合法进度导致进度条卡住
-          if (target != null &&
-              ignoreUntil != null &&
-              DateTime.now().isBefore(ignoreUntil) &&
-              position + const Duration(seconds: 2) < target) {
-            return;
-          }
-          if (ignoreUntil != null && !DateTime.now().isBefore(ignoreUntil)) {
-            _lastSeekTarget = null;
-            _ignoreStalePositionUntil = null;
-          }
-          _currentPosition = position;
-          _updateCurrentLyric(position, instantScroll: false);
-          setState(() {});
+    _positionSubscription = MusicService.songPagePositionStream.listen((position) {
+      if (!mounted) return;
+
+      var acceptPosition = true;
+      if (!_isJumpingPosition) {
+        final target = _lastSeekTarget;
+        final ignoreUntil = _ignoreStalePositionUntil;
+        if (target != null &&
+            ignoreUntil != null &&
+            DateTime.now().isBefore(ignoreUntil) &&
+            position + const Duration(seconds: 2) < target) {
+          acceptPosition = false;
         }
+        if (ignoreUntil != null && !DateTime.now().isBefore(ignoreUntil)) {
+          _lastSeekTarget = null;
+          _ignoreStalePositionUntil = null;
+        }
+      }
+
+      if (acceptPosition) {
+        _currentPosition = position;
+      }
+
+      // Linux 桌面偶发 onChangeEnd 未触发会导致 _isSeeking 一直为 true、进度条冻结
+      if (_isSeeking &&
+          acceptPosition &&
+          MusicService.isPlaying &&
+          (position - _seekPreview).inMilliseconds.abs() > 900) {
+        _releaseSliderSeeking();
+      }
+
+      if (!_isSeeking && !_isJumpingPosition && acceptPosition) {
+        _updateCurrentLyric(position, instantScroll: false);
+        setState(() {});
       }
     });
 
@@ -1789,6 +1805,45 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
 
   Duration _effectivePosition() => _isSeeking ? _seekPreview : _currentPosition;
 
+  /// 用实时进度（优先 [MusicService.playerPosition]）计算 UI 展示位置。
+  Duration _displayPosition(Duration live) {
+    if (_isSeeking) return _seekPreview;
+    if (_isJumpingPosition) return _currentPosition;
+    return live;
+  }
+
+  void _beginSliderSeek(Duration preview) {
+    _sliderSeekReleaseTimer?.cancel();
+    _isSeeking = true;
+    _seekPreview = preview;
+    _sliderSeekReleaseTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) _releaseSliderSeeking();
+    });
+    setState(() {});
+  }
+
+  void _releaseSliderSeeking() {
+    _sliderSeekReleaseTimer?.cancel();
+    _sliderSeekReleaseTimer = null;
+    if (!_isSeeking) return;
+    _isSeeking = false;
+    if (mounted) setState(() {});
+  }
+
+  /// 剧院进度条 / 歌词列表直接订阅进度流，避免 PageView 子页未随 setState 刷新。
+  Widget _buildLivePositionScope(
+    Widget Function(BuildContext context, Duration effectivePos) builder,
+  ) {
+    return StreamBuilder<Duration>(
+      stream: MusicService.songPagePositionStream,
+      initialData: MusicService.playerPosition,
+      builder: (context, snapshot) {
+        final live = snapshot.data ?? MusicService.playerPosition;
+        return builder(context, _displayPosition(live));
+      },
+    );
+  }
+
   Future<void> _seekTo(Duration target) async {
     if (_totalDuration.inMilliseconds > 0 && target > _totalDuration) {
       target = _totalDuration;
@@ -1853,6 +1908,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     } catch (e) {
       appLog.e('跳转播放位置失败', error: e);
     } finally {
+      _releaseSliderSeeking();
       if (mounted && requestId == _seekRequestId) {
         Future.delayed(const Duration(milliseconds: 250), () {
           if (!mounted || requestId != _seekRequestId) return;
@@ -1865,14 +1921,20 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     }
   }
 
-  /// 与第一页相同封面资源；[side] 有值时按第三页分屏区计算出的边长，否则为全屏第一页布局
-  Widget _buildCoverArt(Song song, {double? side}) {
+  /// 与第一页相同封面资源；[side] 有值时按第三页分屏区计算出的边长，否则为全屏第一页布局。
+  /// [eagerHydrate] 为 false 时不在后台读内嵌图（由当前可见页的实例 hydrate），减轻 PageView 多页重复 IO/解码。
+  Widget _buildCoverArt(
+    Song song, {
+    double? side,
+    bool eagerHydrate = true,
+  }) {
     final cover = SongCoverImage(
       song: song,
       decodeSize: side ?? 400,
       width: side,
       height: side,
       borderRadius: BorderRadius.circular(16),
+      eagerHydrate: eagerHydrate,
     );
     if (side != null) {
       return cover;
@@ -1888,11 +1950,16 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
   }
 
   /// 与第二页全屏歌词列表行完全一致的单元（显示模式/翻译/高亮/点击 seek）
-  Widget _lyricListItem(int index, Duration effectivePos, GlobalKey? lineKey) {
+  Widget _lyricListItem(
+    int index,
+    Duration effectivePos,
+    GlobalKey? lineKey, {
+    required int highlightIndex,
+  }) {
     final line = _lyrics[index];
     final ts = line.timestamp;
     final played = ts != null && ts <= effectivePos;
-    final active = line.isActive;
+    final active = highlightIndex >= 0 && index == highlightIndex;
     final lineSpecificMode = _lyricDisplayMode[index];
     final displayMode = lineSpecificMode ?? _globalDisplayMode;
     final linesToShow = <String>[];
@@ -2033,7 +2100,27 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
     required EdgeInsets listPadding,
     required int pageIndexForFab,
   }) {
+    return _buildLivePositionScope((context, livePos) {
+      return _buildLyricsScrollStackBody(
+        livePos,
+        controller: controller,
+        keys: keys,
+        listPadding: listPadding,
+        pageIndexForFab: pageIndexForFab,
+      );
+    });
+  }
+
+  Widget _buildLyricsScrollStackBody(
+    Duration effectivePos, {
+    required ScrollController controller,
+    required List<GlobalKey> keys,
+    required EdgeInsets listPadding,
+    required int pageIndexForFab,
+  }) {
     final l10n = AppLocalizations.of(context);
+    final highlightIndex =
+        LyricsUtils.findCurrentLyricIndex(_lyrics, effectivePos);
     final layer = ScrollToCurrentLocateLayer(
       onManualScroll: _onUserScroll,
       isManual: _isManualScrolling,
@@ -2057,7 +2144,12 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
           itemCount: _lyrics.length,
           itemBuilder: (context, index) {
             final key = keys.length == _lyrics.length ? keys[index] : null;
-            return _lyricListItem(index, effectivePos, key);
+            return _lyricListItem(
+              index,
+              effectivePos,
+              key,
+              highlightIndex: highlightIndex,
+            );
           },
         ),
       ),
@@ -2259,6 +2351,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
               },
               child: ListView.builder(
                 controller: _desktopTheaterCoverScrollController,
+                cacheExtent: sideMain * 2.5,
                 padding: const EdgeInsets.fromLTRB(
                   2,
                   _kTheaterCoverListPadY,
@@ -2273,16 +2366,23 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                   final s = list[i];
                   final isCur = i == ci;
                   final hSlot = isCur ? sideMain + 22.0 : sideSmall + 18.0;
-                  final cover = isCur
-                      ? _buildCoverArt(s, side: sideMain)
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: SongListCover(
-                            song: s,
-                            size: sideSmall,
+                  final cover = RepaintBoundary(
+                    child: isCur
+                        ? _buildCoverArt(
+                            s,
+                            side: sideMain,
+                            eagerHydrate: true,
+                          )
+                        : ClipRRect(
                             borderRadius: BorderRadius.circular(16),
+                            child: SongListCover(
+                              song: s,
+                              size: sideSmall,
+                              borderRadius: BorderRadius.circular(16),
+                              eagerHydrate: false,
+                            ),
                           ),
-                        );
+                  );
                   return Tooltip(
                     message: songTitleArtistTooltip(s),
                     waitDuration: const Duration(milliseconds: 450),
@@ -2295,6 +2395,10 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       onTap: isCur
                           ? null
                           : () async {
+                              try {
+                                await SongLibraryMetadataHydrator
+                                    .hydrateForPlayback(s);
+                              } catch (_) {}
                               await playListProvider.playAt(i);
                               if (!mounted) return;
                               _initLyrics();
@@ -2542,95 +2646,100 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
               ),
             ],
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Text(
-                  LyricsUtils.formatDuration(effectivePos),
-                  style: PlatformTypography.merge(
-                    TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: fg(0.5),
-                      fontFeatures: const [FontFeature.tabularFigures()],
+            _buildLivePositionScope((context, livePos) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        LyricsUtils.formatDuration(livePos),
+                        style: PlatformTypography.merge(
+                          TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: fg(0.5),
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        LyricsUtils.formatDuration(_totalDuration),
+                        style: PlatformTypography.merge(
+                          TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: fg(0.5),
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 6,
+                      ),
+                      trackHeight: 3,
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 16,
+                      ),
+                    ),
+                    child: Slider(
+                      value: _totalDuration.inMilliseconds > 0
+                          ? (livePos.inMilliseconds /
+                                    _totalDuration.inMilliseconds)
+                                .clamp(0.0, 1.0)
+                          : 0.0,
+                      min: 0,
+                      max: 1,
+                      activeColor: scheme.primary,
+                      inactiveColor: fg(0.18),
+                      onChangeStart: (_) => _beginSliderSeek(livePos),
+                      onChanged: (value) {
+                        if (_totalDuration.inMilliseconds <= 0) return;
+                        final newPosition = Duration(
+                          milliseconds:
+                              (value * _totalDuration.inMilliseconds).toInt(),
+                        );
+                        _seekPreview = newPosition;
+                        _updateCurrentLyric(_seekPreview);
+                        setState(() {});
+                      },
+                      onChangeEnd: (value) async {
+                        try {
+                          if (_totalDuration.inMilliseconds > 0) {
+                            final newPosition = Duration(
+                              milliseconds:
+                                  ((value.clamp(0.0, 1.0)) *
+                                          _totalDuration.inMilliseconds)
+                                      .toInt(),
+                            );
+                            await _seekTo(newPosition);
+                          }
+                        } finally {
+                          _releaseSliderSeeking();
+                        }
+                      },
                     ),
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  LyricsUtils.formatDuration(_totalDuration),
-                  style: PlatformTypography.merge(
-                    TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: fg(0.5),
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                trackHeight: 3,
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: _totalDuration.inMilliseconds > 0
-                    ? (effectivePos.inMilliseconds /
-                              _totalDuration.inMilliseconds)
-                          .clamp(0.0, 1.0)
-                    : 0.0,
-                min: 0,
-                max: 1,
-                activeColor: scheme.primary,
-                inactiveColor: fg(0.18),
-                onChangeStart: (_) {
-                  _isSeeking = true;
-                  _seekPreview = effectivePos;
-                  setState(() {});
-                },
-                onChanged: (value) {
-                  if (_totalDuration.inMilliseconds <= 0) return;
-                  final newPosition = Duration(
-                    milliseconds: (value * _totalDuration.inMilliseconds)
-                        .toInt(),
-                  );
-                  _seekPreview = newPosition;
-                  _updateCurrentLyric(_seekPreview);
-                  setState(() {});
-                },
-                onChangeEnd: (value) async {
-                  if (_totalDuration.inMilliseconds > 0) {
-                    final newPosition = Duration(
-                      milliseconds:
-                          ((value.clamp(0.0, 1.0)) *
-                                  _totalDuration.inMilliseconds)
-                              .toInt(),
-                    );
-                    await _seekTo(newPosition);
-                  } else {
-                    _isSeeking = false;
-                    setState(() {});
-                  }
-                },
-              ),
-            ),
+                ],
+              );
+            }),
             const SizedBox(height: 12),
             Center(
               child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: fg(0.07),
-                  border: Border.all(color: fg(0.16)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                  color: Colors.transparent,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -2828,8 +2937,12 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                 flex: 8,
                 child: Align(
                   alignment: const Alignment(0.32, 0.0),
-                  child: _DesktopHoverMagnifyCover(
-                    child: _buildCoverArt(song, side: coverSide),
+                    child: _DesktopHoverMagnifyCover(
+                    child: _buildCoverArt(
+                      song,
+                      side: coverSide,
+                      eagerHydrate: _currentPage == 2,
+                    ),
                   ),
                 ),
               ),
@@ -3071,6 +3184,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                           child: _buildCoverArt(
                                             song,
                                             side: side,
+                                            eagerHydrate: _currentPage == 0,
                                           ),
                                         ),
                                       ),
@@ -3209,11 +3323,8 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                             context,
                                           ).colorScheme.primary,
                                           inactiveColor: context.gradFg(0.25),
-                                          onChangeStart: (_) {
-                                            _isSeeking = true;
-                                            _seekPreview = effectivePos;
-                                            setState(() {});
-                                          },
+                                          onChangeStart: (_) =>
+                                              _beginSliderSeek(effectivePos),
                                           onChanged: (value) {
                                             if (_totalDuration.inMilliseconds >
                                                 0) {
@@ -3230,19 +3341,21 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                                             }
                                           },
                                           onChangeEnd: (value) async {
-                                            if (_totalDuration.inMilliseconds >
-                                                0) {
-                                              final newPosition = Duration(
-                                                milliseconds:
-                                                    ((value.clamp(0.0, 1.0)) *
-                                                            _totalDuration
-                                                                .inMilliseconds)
-                                                        .toInt(),
-                                              );
-                                              await _seekTo(newPosition);
-                                            } else {
-                                              _isSeeking = false;
-                                              setState(() {});
+                                            try {
+                                              if (_totalDuration
+                                                      .inMilliseconds >
+                                                  0) {
+                                                final newPosition = Duration(
+                                                  milliseconds:
+                                                      ((value.clamp(0.0, 1.0)) *
+                                                              _totalDuration
+                                                                  .inMilliseconds)
+                                                          .toInt(),
+                                                );
+                                                await _seekTo(newPosition);
+                                              }
+                                            } finally {
+                                              _releaseSliderSeeking();
                                             }
                                           },
                                         ),

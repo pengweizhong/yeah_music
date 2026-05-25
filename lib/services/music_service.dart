@@ -101,6 +101,7 @@ class MusicService {
     _positionCache = Duration.zero;
     _androidLyricPositionStream = null;
     _desktopLyricPositionStream = null;
+    _positionBroadcastStream = null;
     _player = _createAudioPlayer();
     attachListeningTimeTracker();
     await applyStoredPlaybackSpeed();
@@ -1216,7 +1217,13 @@ class MusicService {
             maxEmbeddedArtBytes:
                 SongLibraryMetadataHydrator.maxEmbeddedArtBytes,
           );
-          ApplicationUtils.evictSongCoverProvidersForPath(song.path);
+          ApplicationUtils.evictSongCoverProvidersForPath(
+            song.path,
+            keepFingerprint: ApplicationUtils.coverBytesFingerprint(
+              song.imageBytes,
+            ),
+          );
+          ApplicationUtils.notifySongCoverChanged(song.path);
           scheduleEmbeddedSongMetadataPersist(song);
           _logAndroidNotifyArt(
             'after loadSongMeta art ${sw.elapsedMilliseconds}ms ${_artDiag(song)}',
@@ -1475,7 +1482,8 @@ class MusicService {
         .map((d) {
           _positionCache = d;
           return d;
-        });
+        })
+        .asBroadcastStream();
   }
 
   /// 供 Android 通知歌词同步：最高约 16ms 采样，与播放页 [positionStream] 同源于 just_audio，
@@ -1493,11 +1501,23 @@ class MusicService {
         });
   }
 
+  static Stream<Duration>? _positionBroadcastStream;
+
   static Stream<Duration> get positionStream {
-    return _player.positionStream.map((d) {
-      _positionCache = d;
-      return d;
-    });
+    return _positionBroadcastStream ??= _player.positionStream
+        .map((d) {
+          _positionCache = d;
+          return d;
+        })
+        .asBroadcastStream();
+  }
+
+  /// 播放页进度/歌词：桌面 media_kit 用 16ms 采样，避免默认 [positionStream] 过疏导致进度条与行高亮卡住。
+  static Stream<Duration> get songPagePositionStream {
+    if (usesDesktopMediaKitPlayback) {
+      return desktopLyricPositionStream;
+    }
+    return positionStream;
   }
 
   static Stream<int?> get currentMediaIndexStream => _player.currentIndexStream;

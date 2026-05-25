@@ -395,13 +395,7 @@ class PlayListProvider extends ChangeNotifier {
 
   /// [playAt] / [setPlaybackQueueAndPlay] / 合并后的上下曲均经此排队执行。
   Future<void> _enqueuePlaybackNav(Future<void> Function() job) async {
-    if (_desktopUsesMediaKitPlayback() && _playbackNavDepth > 0) {
-      appLog.w('播放导航链卡住，强制复位后执行新操作');
-      resetStuckPlaybackNavigation();
-      unawaited(
-        MusicService.recoverDesktopPlaybackEngine(reason: 'stuck playback nav'),
-      );
-    }
+    // 勿在 _playbackNavDepth>0 时 recover：正常切歌时 depth 恒为 1，误 recover 会 dispose 播放器导致 UI 已换曲但仍在播旧源。
     final f = _playbackNavChain
         .catchError((Object? e) {
           appLog.d('playback nav 前序(可忽略): $e');
@@ -440,20 +434,27 @@ class PlayListProvider extends ChangeNotifier {
     if (_playbackQueueOverride != null) return;
     final lib = _computeMergedLibrarySongs();
     _cachedMergedLibrary = lib;
+    _syncCurrentIndexToDecoderOr(_currentIndex);
+  }
+
+  /// 换源失败时让 UI 索引与解码器实际在播曲目一致，避免「界面是新曲、声音是旧曲」。
+  void _syncCurrentIndexToDecoderOr(int fallbackIndex) {
     final path = MusicService.tryCurrentPlayingPath();
     if (path != null && path.trim().isNotEmpty) {
       final wanted = _libraryPathKey(path);
-      final i = lib.indexWhere((s) => _libraryPathKey(s.path) == wanted);
+      final list = playList;
+      final i = list.indexWhere((s) => _libraryPathKey(s.path) == wanted);
       if (i >= 0) {
         _currentIndex = i;
         return;
       }
     }
-    if (lib.isEmpty) {
+    final list = playList;
+    if (list.isEmpty) {
       _currentIndex = 0;
-    } else {
-      _currentIndex = _currentIndex.clamp(0, lib.length - 1);
+      return;
     }
+    _currentIndex = fallbackIndex.clamp(0, list.length - 1);
   }
 
   /// Android 队列索引通知：在「全库合并」会话下优先按正在解码的文件路径对齐，避免与 ExoPlayer 队列顺序暂时不一致时错位。
@@ -1490,13 +1491,6 @@ class PlayListProvider extends ChangeNotifier {
     PlaybackSessionSurface? listSession,
     bool clearDeferredResume = true,
   }) async {
-    if (_playbackNavDepth > 0) {
-      appLog.w('上一首换源未结束(depth=$_playbackNavDepth)，复位播放导航');
-      resetStuckPlaybackNavigation();
-      unawaited(
-        MusicService.recoverDesktopPlaybackEngine(reason: 'stale playback nav'),
-      );
-    }
     _playbackNavDepth++;
     try {
       if (clearDeferredResume) {
@@ -1511,10 +1505,12 @@ class PlayListProvider extends ChangeNotifier {
         );
         _applyPlaybackSession(listSession);
       }
-      _currentIndex = index.clamp(0, list.length - 1);
+      final targetIndex = index.clamp(0, list.length - 1);
+      final previousIndex = _currentIndex;
+      _currentIndex = targetIndex;
       final playing = list[_currentIndex];
       try {
-        await SongLibraryMetadataHydrator.hydrateIfNeeded(playing);
+        await SongLibraryMetadataHydrator.hydrateForPlayback(playing);
       } catch (_) {}
       if (list.length > 1) {
         final nextIdx = (_currentIndex + 1) % list.length;
@@ -1537,6 +1533,8 @@ class PlayListProvider extends ChangeNotifier {
         useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
       );
       if (!ok) {
+        _syncCurrentIndexToDecoderOr(previousIndex);
+        notifyListeners();
         if (_desktopUsesMediaKitPlayback()) {
           resetStuckPlaybackNavigation();
           unawaited(

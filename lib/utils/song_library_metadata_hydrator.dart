@@ -54,7 +54,10 @@ class SongLibraryMetadataHydrator {
   static final Map<String, Future<void>> _pending = {};
   /// 插入序即 LRU 序（Dart [Map] 默认 [LinkedHashMap]）；[_cacheTouch] / [_cachePut] 维护。
   static final Map<String, _MetaSnapshot> _cache = <String, _MetaSnapshot>{};
-  static final ConcurrentLimiter _ioLimiter = ConcurrentLimiter(3);
+  static final ConcurrentLimiter _ioLimiter = ConcurrentLimiter(5);
+
+  /// 切歌前补全元数据专用，避免被列表封面批量 hydrate 堵在队列后。
+  static final ConcurrentLimiter _playbackIoLimiter = ConcurrentLimiter(2);
 
   /// 路径条数上限；单条可含大图与歌词，不宜过大。
   static const int maxCacheEntries = 384;
@@ -68,7 +71,11 @@ class SongLibraryMetadataHydrator {
     snap.applyTo(song);
     final afterFp = ApplicationUtils.coverBytesFingerprint(song.imageBytes);
     if (beforeFp != afterFp) {
-      ApplicationUtils.evictSongCoverProvidersForPath(song.path);
+      ApplicationUtils.evictSongCoverProvidersForPath(
+        song.path,
+        keepFingerprint: afterFp > 0 ? afterFp : null,
+      );
+      ApplicationUtils.notifySongCoverChanged(song.path);
       onCoverFingerprintChanged?.call(song);
     }
     scheduleEmbeddedSongMetadataPersist(song);
@@ -93,10 +100,18 @@ class SongLibraryMetadataHydrator {
   /// 列表展示经 [ResizeImage] 已降采样；过小会丢弃内嵌图导致大量「无封面」。
   static const int maxEmbeddedArtBytes = 1920 * 1024;
 
+  /// 切歌前优先读元数据（独立 IO 限额，与列表滚动补封面并行）。
+  static Future<bool> hydrateForPlayback(Song song) {
+    return hydrateIfNeeded(song, forPlayback: true);
+  }
+
   /// 若 [Song] 已与缓存一致则返回 false；否则写入并返回 true（便于列表仅在真有变更时 [setState]）。
   ///
   /// Hive 已持久化曲名/封面等且内存中已有封面时，会先用快照预热 [_cache]，避免冷启动重复读音频文件。
-  static Future<bool> hydrateIfNeeded(Song song) async {
+  static Future<bool> hydrateIfNeeded(
+    Song song, {
+    bool forPlayback = false,
+  }) async {
     final p = song.path;
     if (p.isEmpty) return false;
 
@@ -111,7 +126,7 @@ class SongLibraryMetadataHydrator {
       return true;
     }
 
-    final fut = _pending[p] ??= _loadPath(p);
+    final fut = _pending[p] ??= _loadPath(p, forPlayback: forPlayback);
     await fut;
     final snap = _cacheTouch(p);
     if (snap == null) return false;
@@ -150,8 +165,9 @@ class SongLibraryMetadataHydrator {
     _cachePut(p, _MetaSnapshot.fromSong(song));
   }
 
-  static Future<void> _loadPath(String path) async {
-    await _ioLimiter.acquire();
+  static Future<void> _loadPath(String path, {bool forPlayback = false}) async {
+    final limiter = forPlayback ? _playbackIoLimiter : _ioLimiter;
+    await limiter.acquire();
     try {
       await Future<void>.delayed(Duration.zero);
       try {
@@ -167,7 +183,7 @@ class SongLibraryMetadataHydrator {
         appLog.w('后台补全曲目元数据失败: $path', error: e, stackTrace: st);
       }
     } finally {
-      _ioLimiter.release();
+      limiter.release();
       _pending.remove(path);
     }
   }

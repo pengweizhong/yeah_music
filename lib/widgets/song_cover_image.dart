@@ -31,6 +31,8 @@ class SongCoverImage extends StatefulWidget {
     this.fit = BoxFit.cover,
     this.borderRadius,
     this.filterQuality = FilterQuality.low,
+    /// 为 false 时不主动读文件（由其它可见实例 hydrate）；仍监听路径级封面更新。
+    this.eagerHydrate = true,
   });
 
   final Song song;
@@ -40,6 +42,7 @@ class SongCoverImage extends StatefulWidget {
   final BoxFit fit;
   final BorderRadius? borderRadius;
   final FilterQuality filterQuality;
+  final bool eagerHydrate;
 
   @override
   State<SongCoverImage> createState() => _SongCoverImageState();
@@ -48,18 +51,62 @@ class SongCoverImage extends StatefulWidget {
 class _SongCoverImageState extends State<SongCoverImage> {
   int _displayFp = 0;
   ImageProvider? _holdProvider;
+  VoidCallback? _coverListener;
+  String _listenedPath = '';
 
   @override
   void initState() {
     super.initState();
     _displayFp = ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
+    _attachCoverListener(widget.song.path);
+    if (widget.eagerHydrate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
+    }
+  }
+
+  @override
+  void dispose() {
+    _detachCoverListener();
+    super.dispose();
+  }
+
+  void _attachCoverListener(String path) {
+    if (path.isEmpty) return;
+    _listenedPath = path;
+    _coverListener = _onSongCoverChanged;
+    ApplicationUtils.songCoverListenable(path).addListener(_coverListener!);
+  }
+
+  void _detachCoverListener() {
+    if (_listenedPath.isEmpty || _coverListener == null) return;
+    ApplicationUtils.songCoverListenable(
+      _listenedPath,
+    ).removeListener(_coverListener!);
+    _coverListener = null;
+    _listenedPath = '';
+  }
+
+  void _onSongCoverChanged() {
+    if (!mounted) return;
+    final nextFp =
+        ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
+    if (nextFp == _displayFp && _holdProvider == null) return;
+    setState(() {
+      if (nextFp > 0) {
+        _displayFp = nextFp;
+        _holdProvider = null;
+      } else if (_holdProvider == null) {
+        _displayFp = 0;
+      }
+    });
   }
 
   @override
   void didUpdateWidget(SongCoverImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.song.path != widget.song.path) {
+      _detachCoverListener();
+      _attachCoverListener(widget.song.path);
       final newFp =
           ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
       final oldFp =
@@ -74,23 +121,26 @@ class _SongCoverImageState extends State<SongCoverImage> {
           size: widget.decodeSize,
           devicePixelRatio: dpr,
         );
+        _displayFp = oldFp;
       } else {
         _displayFp = 0;
         _holdProvider = null;
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
+      if (widget.eagerHydrate) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
+      }
       return;
+    }
+    if (!oldWidget.eagerHydrate && widget.eagerHydrate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCoverReady());
     }
     final nextFp =
         ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
-    if (nextFp != _displayFp) {
-      if (nextFp > 0) {
-        ApplicationUtils.evictSongCoverProvidersForPath(widget.song.path);
-        setState(() {
-          _displayFp = nextFp;
-          _holdProvider = null;
-        });
-      }
+    if (nextFp != _displayFp && nextFp > 0) {
+      setState(() {
+        _displayFp = nextFp;
+        _holdProvider = null;
+      });
     }
   }
 
@@ -101,9 +151,7 @@ class _SongCoverImageState extends State<SongCoverImage> {
     if (!mounted) return;
     final after =
         ApplicationUtils.coverBytesFingerprint(widget.song.imageBytes);
-    if (before != after && after > 0) {
-      ApplicationUtils.evictSongCoverProvidersForPath(widget.song.path);
-    }
+    // 指纹变更时的 evict / 广播由 [SongLibraryMetadataHydrator] 统一处理。
     if (after > 0) {
       if (after != _displayFp || _holdProvider != null) {
         setState(() {
@@ -113,6 +161,7 @@ class _SongCoverImageState extends State<SongCoverImage> {
       }
       return;
     }
+    if (before == after && _holdProvider == null) return;
     if (_holdProvider != null) {
       setState(() {
         _holdProvider = null;

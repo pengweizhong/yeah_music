@@ -14,10 +14,27 @@
 
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:yeah_music/widgets/app_prompts.dart';
 
 import '../models/song.dart';
+
+/// 同一路径封面 [imageBytes] 更新时通知各 [SongCoverImage]，避免多实例各自 evict + setState 闪烁。
+final class _SongCoverPathListenable extends ChangeNotifier {}
+
+/// 空路径占位，兼容无 [NeverListenable] 的 Flutter 版本。
+final class _InertListenable implements Listenable {
+  const _InertListenable();
+  @override
+  void addListener(VoidCallback listener) {}
+  @override
+  void removeListener(VoidCallback listener) {}
+}
+
+const _inertListenable = _InertListenable();
+
+final Map<String, _SongCoverPathListenable> _songCoverPathListenables = {};
 
 class ApplicationUtils {
   /// 弹出软件的「关于」对话框（文案随界面语言）。
@@ -44,11 +61,39 @@ class ApplicationUtils {
   static final Map<String, ImageProvider> _coverProviderCache = {};
   static const int _coverProviderMax = 500;
 
-  /// 按需写入 [Song.imageBytes] 后调用，丢弃该曲路径下各尺寸缓存条目，避免继续用占位 [AssetImage]。
-  static void evictSongCoverProvidersForPath(String songPath) {
+  /// 同路径 [SongCoverImage] 共用；封面指纹变化时由 [notifySongCoverChanged] 广播。
+  static Listenable songCoverListenable(String songPath) {
+    if (songPath.isEmpty) {
+      return _inertListenable;
+    }
+    return _songCoverPathListenables.putIfAbsent(
+      songPath,
+      () => _SongCoverPathListenable(),
+    );
+  }
+
+  /// [Song.imageBytes] 指纹变化后调用，各封面 widget 同步 [_displayFp] 而无需重复 evict。
+  static void notifySongCoverChanged(String songPath) {
+    if (songPath.isEmpty) return;
+    _songCoverPathListenables[songPath]?.notifyListeners();
+  }
+
+  /// 按需写入 [Song.imageBytes] 后调用。
+  /// [keepFingerprint] 非空时仅丢弃其它指纹的缓存，保留已解码条目，减轻多尺寸同时重解码闪烁。
+  static void evictSongCoverProvidersForPath(
+    String songPath, {
+    int? keepFingerprint,
+  }) {
     if (songPath.isEmpty) return;
     final prefix = '$songPath#';
-    _coverProviderCache.removeWhere((k, _) => k.startsWith(prefix));
+    if (keepFingerprint == null || keepFingerprint == 0) {
+      _coverProviderCache.removeWhere((k, _) => k.startsWith(prefix));
+      return;
+    }
+    final fpSuffix = '#$keepFingerprint';
+    _coverProviderCache.removeWhere(
+      (k, _) => k.startsWith(prefix) && !k.endsWith(fpSuffix),
+    );
   }
 
   /// [Uint8List.hashCode] 按对象身份变化，不能用于区分「内容相同的新缓冲区」。
@@ -87,6 +132,27 @@ class ApplicationUtils {
     final existing = _coverProviderCache[key];
     if (existing != null) {
       return existing;
+    }
+    final pathPrefix = '${song.path}#';
+    final fpSuffix = '#$fp';
+    ImageProvider? reuse;
+    var reuseDim = dim + 1;
+    for (final e in _coverProviderCache.entries) {
+      final k = e.key;
+      if (!k.startsWith(pathPrefix) || !k.endsWith(fpSuffix)) continue;
+      final dimStr = k.substring(
+        pathPrefix.length,
+        k.length - fpSuffix.length,
+      );
+      final cachedDim = int.tryParse(dimStr);
+      if (cachedDim == null || cachedDim < dim) continue;
+      if (cachedDim < reuseDim) {
+        reuseDim = cachedDim;
+        reuse = e.value;
+      }
+    }
+    if (reuse != null) {
+      return reuse;
     }
     if (_coverProviderCache.length >= _coverProviderMax) {
       _coverProviderCache.remove(_coverProviderCache.keys.first);
