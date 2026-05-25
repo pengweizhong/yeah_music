@@ -1,0 +1,31 @@
+name: just_audio_media_kit_example
+description: "Demonstrates how to use the just_audio_media_kit addon with just_audio."
+publish_to: "none"
+
+environment:
+  sdk: ">=3.4.3 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  audio_session: ^0.1.25
+  rxdart: ^0.28.0
+  just_audio: ^0.9.46
+
+  just_audio_media_kit:
+    path: ../
+  # Libs needed for playback
+  media_kit_libs_linux: any
+  media_kit_libs_windows_audio: any
+  logging: ^1.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - audio/

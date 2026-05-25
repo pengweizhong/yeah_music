@@ -17,17 +17,20 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
-    show Picture, PictureType, readAllMetadata;
+    show Picture, PictureType;
 import 'package:audio_metadata_reader/src/metadata/base.dart'
     show Mp3Metadata, Mp4Metadata, ParserTag, RiffMetadata, VorbisMetadata;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/song_embedded_metadata_writer.dart';
+import 'package:yeah_music/utils/wav_riff_metadata_bridge.dart'
+    show readAllMetadataForWrite;
 import 'package:yeah_music/widgets/app_prompts.dart';
 import 'package:yeah_music/widgets/image_pick_crop_flow.dart';
 
@@ -179,7 +182,7 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
 
   Future<void> _loadEmbeddedCoverPreview() async {
     try {
-      final meta = readAllMetadata(File(widget.song.path.trim()));
+      final meta = readAllMetadataForWrite(File(widget.song.path.trim()));
       final pic = _primaryEmbeddedPicture(meta);
       if (!mounted) return;
       setState(() {
@@ -355,7 +358,12 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
         l10n.songPageInlineTagsSaved,
         kind: AppSnackKind.success,
       );
-    } catch (e) {
+    } catch (e, st) {
+      appLog.e(
+        'inline tags save failed path=$path ext=${p.extension(path)}',
+        error: e,
+        stackTrace: st,
+      );
       if (!mounted) return;
       final msg = _shortError(e);
       showAppSnackBar(

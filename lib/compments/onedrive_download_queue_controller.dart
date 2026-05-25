@@ -26,6 +26,7 @@ import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/onedrive/onedrive_graph_client.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/local_audio_file_resolver.dart';
 import 'package:yeah_music/utils/song_display_lines.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
 
@@ -567,14 +568,22 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     }
     _stopRequested = false;
     _sessionPaused = false;
+    final searchRoots = await _od.localPlaybackSearchRoots();
     var changed = false;
     for (final s in songs) {
       final path = s.path.trim();
       if (path.isEmpty) continue;
-      final remote = p.basename(path);
-      if (!_hasActiveUpload(path, parentId, remote)) {
-        final f = File(path);
-        if (!await f.exists()) continue;
+      final resolved = await resolveExistingLocalAudioFile(
+        path,
+        extraSearchRoots: searchRoots,
+      );
+      if (resolved == null) continue;
+      final uploadPath = resolved.path;
+      if (uploadPath != path) {
+        s.path = uploadPath;
+      }
+      final remote = p.basename(uploadPath);
+      if (!_hasActiveUpload(uploadPath, parentId, remote)) {
         final secondary = songListSecondaryLine(s).trim();
         _tasks.add(
           OneDriveDownloadTask(
@@ -584,8 +593,8 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
               isFolder: false,
             ),
             title: songListPrimaryTitle(s),
-            subtitle: secondary.isEmpty ? path : secondary,
-            uploadLocalPath: path,
+            subtitle: secondary.isEmpty ? uploadPath : secondary,
+            uploadLocalPath: uploadPath,
             uploadParentItemId: parentId,
             uploadRemoteFileName: remote,
           ),
@@ -593,7 +602,13 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         changed = true;
       }
     }
-    if (!changed) return;
+    if (!changed) {
+      final anyPath = songs.any((s) => s.path.trim().isNotEmpty);
+      if (anyPath) {
+        throw StateError('local audio file not found');
+      }
+      return;
+    }
     notifyListeners();
     _schedulePersist();
     _ensureWorkerRunning();
@@ -806,17 +821,23 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     if (!task.isUpload) return;
     final local = task.uploadLocalPath!.trim();
     final parent = task.uploadParentItemId!.trim();
-    final remote = (task.uploadRemoteFileName?.trim().isNotEmpty ?? false)
-        ? task.uploadRemoteFileName!.trim()
-        : p.basename(local);
-    final file = File(local);
-    if (!await file.exists()) {
+    final searchRoots = await _od.localPlaybackSearchRoots();
+    final resolved = await resolveExistingLocalAudioFile(
+      local,
+      extraSearchRoots: searchRoots,
+    );
+    if (resolved == null) {
       task.status = OneDriveDownloadStatus.failed;
       task.error = 'file missing';
       notifyListeners();
       _schedulePersist();
       return;
     }
+    final file = resolved;
+    final uploadPath = file.path;
+    final remote = (task.uploadRemoteFileName?.trim().isNotEmpty ?? false)
+        ? task.uploadRemoteFileName!.trim()
+        : p.basename(uploadPath);
     final len = await file.length();
     task.totalBytes = len;
     task.receivedBytes = 0;

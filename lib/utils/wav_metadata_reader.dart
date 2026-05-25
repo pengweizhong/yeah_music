@@ -18,6 +18,8 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:audio_metadata_reader/src/metadata/base.dart'
+    show getPictureTypeEnum;
 import 'package:charset/charset.dart';
 import 'package:path/path.dart' as p;
 
@@ -26,7 +28,8 @@ bool pathLooksLikeWav(String filepath) =>
 
 /// WAV：RIFF chunk 整块与偶对齐；
 /// LIST/INFO 文本：UTF‑8（严格）→ GBK → Latin‑1；
-/// 歌词：**LIST** 中带歌词语义的 INFO 子块、**末尾 ID3v1** 注释、[USLT] 嵌入式 **ID3v2**。
+/// 歌词：**LIST** 中带歌词语义的 INFO 子块、**末尾 ID3v1** 注释、[USLT] 嵌入式 **ID3v2**；
+/// 封面：**LIST/INFO DISP**、内嵌图 sniff、**ID3v2 APIC**（`id3 ` chunk / 文件尾 / 其它 chunk 内嵌）。
 AudioMetadata readWavMetadataYep(File file, {bool getImage = false}) {
   final raf = file.openSync(mode: FileMode.read);
   try {
@@ -198,8 +201,21 @@ AudioMetadata readWavMetadataYep(File file, {bool getImage = false}) {
           dataChunkSizeSum += chunkSize;
         case 'bext':
           applyBext(body);
+        case 'id3 ':
+        case 'ID3 ':
+          extractEmbeddedId3FromHaystack(
+            body,
+            lyricChunks: lyricChunks,
+            pictures: pictures,
+          );
         default:
-          extractUsLtFromId3Haystack(body, lyricChunks);
+          // PCM data 块内几乎不会出现 ID3；跳过对数百 MB 的字节扫描。
+          if (chunkId == 'data' && body.length > 1024 * 1024) break;
+          extractEmbeddedId3FromHaystack(
+            body,
+            lyricChunks: lyricChunks,
+            pictures: pictures,
+          );
       }
 
       final next = chunkStart + 8 + chunkSize + (chunkSize.isOdd ? 1 : 0);
@@ -211,7 +227,19 @@ AudioMetadata readWavMetadataYep(File file, {bool getImage = false}) {
       raf,
       fileLen: len,
       lyricChunks: lyricChunks,
+      pictures: pictures,
     );
+
+    if (getImage && pictures.isEmpty && len > 12) {
+      final headSz = math.min(len, 512 * 1024);
+      raf.setPositionSync(12);
+      final headHay = raf.readSync(headSz - 12);
+      extractEmbeddedId3FromHaystack(
+        headHay,
+        lyricChunks: const [],
+        pictures: pictures,
+      );
+    }
 
     if (len >= 128) {
       raf.setPositionSync(len - 128);
@@ -774,6 +802,79 @@ Picture? _trySniffImage(Uint8List data) {
 Picture? _tryPictureFromDispOrRaw(Uint8List raw) =>
     raw.length < 8 ? null : _trySniffImage(raw);
 
+void _considerEmbeddedPicture(List<Picture> pictures, Picture pic) {
+  if (pic.bytes.isEmpty || pictures.length >= 4) return;
+  final dup = pictures.any(
+    (p) =>
+        p.bytes.length == pic.bytes.length &&
+        p.mimetype == pic.mimetype &&
+        p.bytes.isNotEmpty &&
+        p.bytes[0] == pic.bytes[0] &&
+        p.bytes[p.bytes.length - 1] == pic.bytes[pic.bytes.length - 1],
+  );
+  if (dup) return;
+  if (pictures.isEmpty) {
+    pictures.add(pic);
+    return;
+  }
+  final hasFront =
+      pictures.any((p) => p.pictureType == PictureType.coverFront);
+  if (pic.pictureType == PictureType.coverFront && !hasFront) {
+    pictures.insert(0, pic);
+    return;
+  }
+  pictures.add(pic);
+}
+
+/// ID3v2 APIC 帧正文 → [Picture]（mime 为空时按 JPEG/PNG 嗅探）。
+Picture? _pictureFromApicPayload(Uint8List payload) {
+  if (payload.length < 6) return null;
+  final reader = ByteData.sublistView(payload);
+  var offset = 0;
+  final encoding = reader.getUint8(offset++);
+
+  final mimeBytes = <int>[];
+  while (offset < payload.length) {
+    final b = reader.getUint8(offset++);
+    if (b == 0) break;
+    mimeBytes.add(b);
+  }
+  if (offset >= payload.length) return null;
+
+  final pictureType = reader.getUint8(offset++);
+
+  if (encoding == 1 || encoding == 2) {
+    while (offset + 1 < payload.length) {
+      if (payload[offset] == 0 && payload[offset + 1] == 0) {
+        offset += 2;
+        break;
+      }
+      offset += 2;
+    }
+  } else {
+    while (offset < payload.length && payload[offset] != 0) {
+      offset++;
+    }
+    if (offset < payload.length) offset++;
+  }
+
+  if (offset >= payload.length) return null;
+  final imageBytes = Uint8List.sublistView(payload, offset);
+  if (imageBytes.length < 64) return null;
+
+  var mime = latin1.decode(mimeBytes, allowInvalid: true).trim().toLowerCase();
+  if (mime.isEmpty || mime == '-->') {
+    final sniffed = _trySniffImage(imageBytes);
+    if (sniffed == null) return null;
+    return Picture(
+      sniffed.bytes,
+      sniffed.mimetype,
+      getPictureTypeEnum(pictureType),
+    );
+  }
+  return Picture(imageBytes, mime, getPictureTypeEnum(pictureType));
+}
+
 void mergeId3v1TailAscii(
   Uint8List tag, {
   required void Function(String) considerTitle,
@@ -872,7 +973,12 @@ String? id3GenreName(int id) {
   return null;
 }
 
-void extractUsLtFromId3Haystack(Uint8List hay, List<String> out) {
+/// 在任意字节块中扫描完整 ID3v2 标签，提取 [USLT] 与 [APIC]。
+void extractEmbeddedId3FromHaystack(
+  Uint8List hay, {
+  required List<String> lyricChunks,
+  required List<Picture> pictures,
+}) {
   if (hay.length < 10) return;
 
   void loopWindow(Uint8List w) {
@@ -894,7 +1000,13 @@ void extractUsLtFromId3Haystack(Uint8List hay, List<String> out) {
         i++;
         continue;
       }
-      consumeOneFullId3v2ToLyrics(w, i, tagSpan, out);
+      consumeOneFullId3v2Frames(
+        w,
+        i,
+        tagSpan,
+        lyricChunks: lyricChunks,
+        pictures: pictures,
+      );
       i += tagSpan;
     }
   }
@@ -902,17 +1014,31 @@ void extractUsLtFromId3Haystack(Uint8List hay, List<String> out) {
   loopWindow(hay);
 }
 
+/// 仅提取 USLT（供 MP3 歌词修复等复用）。
+void extractUsLtFromId3Haystack(Uint8List hay, List<String> out) {
+  extractEmbeddedId3FromHaystack(
+    hay,
+    lyricChunks: out,
+    pictures: [],
+  );
+}
+
 void _pullTailHaystackEmbeddedId3(
   RandomAccessFile raf, {
   required int fileLen,
   required List<String> lyricChunks,
+  required List<Picture> pictures,
 }) {
   if (fileLen < 10) return;
   const maxHay = 2 * 1024 * 1024;
   final sz = math.min(maxHay, fileLen);
   raf.setPositionSync(fileLen - sz);
   final hay = raf.readSync(sz);
-  extractUsLtFromId3Haystack(hay, lyricChunks);
+  extractEmbeddedId3FromHaystack(
+    hay,
+    lyricChunks: lyricChunks,
+    pictures: pictures,
+  );
 }
 
 int synchsafeFour(int a, int b, int c, int d) =>
@@ -921,12 +1047,13 @@ int synchsafeFour(int a, int b, int c, int d) =>
     ((c & 127) << 7) |
     (d & 127);
 
-void consumeOneFullId3v2ToLyrics(
+void consumeOneFullId3v2Frames(
   Uint8List buf,
   int offset,
-  int tagSpan,
-  List<String> out,
-) {
+  int tagSpan, {
+  required List<String> lyricChunks,
+  required List<Picture> pictures,
+}) {
   final endExclusive = math.min(offset + tagSpan, buf.length);
   if (offset + 10 > endExclusive) return;
 
@@ -977,11 +1104,15 @@ void consumeOneFullId3v2ToLyrics(
 
     if (sz <= 0 || pos + sz > endExclusive) break;
 
+    final frameBody = Uint8List.sublistView(buf, pos, pos + sz);
     if (frameId == 'USLT') {
-      final txt = lyricFromUlstPayload(
-        Uint8List.sublistView(buf, pos, pos + sz),
-      );
-      if (txt.isNotEmpty && !out.contains(txt)) out.add(txt);
+      final txt = lyricFromUlstPayload(frameBody);
+      if (txt.isNotEmpty && !lyricChunks.contains(txt)) {
+        lyricChunks.add(txt);
+      }
+    } else if (frameId == 'APIC') {
+      final pic = _pictureFromApicPayload(frameBody);
+      if (pic != null) _considerEmbeddedPicture(pictures, pic);
     }
 
     pos += sz;

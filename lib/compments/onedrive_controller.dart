@@ -1293,10 +1293,14 @@ class OneDriveController extends ChangeNotifier {
     return File(p.join(root.path, '${itemId}_$safe'));
   }
 
+  /// 点播落地目录集合（默认 `onedrive_cache`、用户下载目录、历史扫描根等），供上传前解析真实路径。
+  Future<List<Directory>> localPlaybackSearchRoots() =>
+      _onedriveLocalPlaybackRoots();
+
   /// 扫描点播落地目录（默认 `onedrive_cache` + 互不重叠的用户目录）：列出其中的音频文件并装载元数据。
   ///
   /// 不要求当前已登录 OneDrive；仅读本地磁盘。
-  /// 使用 [recursive: true] 以包含子目录中的文件（例如用户整理的下载目录结构）。
+  /// 使用 [recursive: true] 以包含子目录与以 `.` 开头的隐藏子目录中的文件。
   Future<List<Song>> loadLocallyCachedOneDriveSongs() async {
     final roots = await _onedriveLocalPlaybackRoots();
     final seenPaths = <String>{};

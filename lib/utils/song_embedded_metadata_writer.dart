@@ -16,7 +16,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
-    show MetadataParserException, Picture, PictureType, readAllMetadata;
+    show MetadataParserException, Picture, PictureType;
 import 'package:audio_metadata_reader/src/metadata/base.dart'
     show
         CommonMetadataSetters,
@@ -25,7 +25,13 @@ import 'package:audio_metadata_reader/src/metadata/base.dart'
         ParserTag,
         RiffMetadata,
         VorbisMetadata;
+import 'package:path/path.dart' as p;
+import 'package:yeah_music/logging/app_log.dart';
+import 'package:yeah_music/third_party/audio_metadata_reader/riff_writer_fixed.dart';
 import 'package:yeah_music/third_party/audio_metadata_reader/write_metadata_with_lyrics.dart';
+import 'package:yeah_music/utils/wav_metadata_reader.dart' show pathLooksLikeWav;
+import 'package:yeah_music/utils/wav_riff_metadata_bridge.dart'
+    show readAllMetadataForWrite;
 
 /// 内嵌封面在保存时的语义（其余图片帧在非 replace 时尽量保留）。
 enum EmbeddedCoverEditKind {
@@ -42,7 +48,7 @@ enum EmbeddedCoverEditKind {
 /// 使用 [audio_metadata_reader] 将常见字段写回音频文件内嵌标签。
 /// MP3 / FLAC 会通过补丁写入 USLT / Vorbis LYRICS，便于再次读取歌词。
 ///
-/// - 先 [readAllMetadata] 完整读入再改字段，尽量保留流派、作曲、自定义帧等库能解析的内容。
+/// - 先 [readAllMetadataForWrite] 完整读入再改字段（WAV 用项目内 RIFF 读取），尽量保留库能解析的内容。
 /// - MP3 写入时会剔除文件原有 ID3v2 后再 prepend（见 [Id3v4WriterWithUslt]），避免叠标签损坏文件。
 /// - MP4/M4A 使用修正后的写入器写回原路径（上游曾错误写入 `a_new.mp4`）。
 Future<void> writeEmbeddedTagsForPath({
@@ -64,7 +70,19 @@ Future<void> writeEmbeddedTagsForPath({
     throw FileSystemException('file not found', path);
   }
 
-  final meta = readAllMetadata(file);
+  final ext = p.extension(file.path).toLowerCase();
+  final isWav = pathLooksLikeWav(file.path);
+  late final ParserTag meta;
+  try {
+    meta = readAllMetadataForWrite(file, getImage: true);
+  } catch (e, st) {
+    appLog.e(
+      'writeEmbeddedTags read failed path=${file.path} ext=$ext',
+      error: e,
+      stackTrace: st,
+    );
+    rethrow;
+  }
   final nt = title.trim();
   meta.setTitle(nt.isEmpty ? null : nt);
   _applyArtistForRoundTrip(meta, artist);
@@ -76,7 +94,25 @@ Future<void> writeEmbeddedTagsForPath({
   meta.setLyrics(_trimOrNull(lyrics));
   _applyCoverEdit(meta, coverEdit, replacementCoverBytes);
 
-  writeMetadataWithLyricsFix(file, meta);
+  try {
+    if (isWav && meta is RiffMetadata) {
+      RiffWriterFixed().write(
+        file,
+        meta,
+        trackTotal: trackTotal,
+        lyrics: _trimOrNull(lyrics),
+      );
+      return;
+    }
+    writeMetadataWithLyricsFix(file, meta);
+  } catch (e, st) {
+    appLog.e(
+      'writeEmbeddedTags write failed path=${file.path} ext=$ext meta=${meta.runtimeType}',
+      error: e,
+      stackTrace: st,
+    );
+    rethrow;
+  }
 }
 
 String? _trimOrNull(String? s) {

@@ -221,6 +221,8 @@ class _OneDriveCachedPlaylistPageState
           ? l10n.libraryBatchUploadNeedSignIn
           : msg.contains('upload folder unset')
           ? l10n.libraryBatchUploadNeedCloudFolder
+          : msg.contains('local audio file not found')
+          ? l10n.songPageMusicTagEditorFileNotFound
           : '$e';
       showAppSnackBar(context, text, kind: AppSnackKind.error);
     } catch (e) {
