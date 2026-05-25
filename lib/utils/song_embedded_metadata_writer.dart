@@ -25,6 +25,8 @@ import 'package:audio_metadata_reader/src/metadata/base.dart'
         ParserTag,
         RiffMetadata,
         VorbisMetadata;
+import 'package:path/path.dart' as p;
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/third_party/audio_metadata_reader/write_metadata_with_lyrics.dart';
 
 /// 内嵌封面在保存时的语义（其余图片帧在非 replace 时尽量保留）。
@@ -64,7 +66,18 @@ Future<void> writeEmbeddedTagsForPath({
     throw FileSystemException('file not found', path);
   }
 
-  final meta = readAllMetadata(file);
+  final ext = p.extension(file.path).toLowerCase();
+  late final ParserTag meta;
+  try {
+    meta = readAllMetadata(file);
+  } catch (e, st) {
+    appLog.e(
+      'writeEmbeddedTags readAllMetadata failed path=${file.path} ext=$ext',
+      error: e,
+      stackTrace: st,
+    );
+    rethrow;
+  }
   final nt = title.trim();
   meta.setTitle(nt.isEmpty ? null : nt);
   _applyArtistForRoundTrip(meta, artist);
@@ -76,7 +89,16 @@ Future<void> writeEmbeddedTagsForPath({
   meta.setLyrics(_trimOrNull(lyrics));
   _applyCoverEdit(meta, coverEdit, replacementCoverBytes);
 
-  writeMetadataWithLyricsFix(file, meta);
+  try {
+    writeMetadataWithLyricsFix(file, meta);
+  } catch (e, st) {
+    appLog.e(
+      'writeEmbeddedTags write failed path=${file.path} ext=$ext meta=${meta.runtimeType}',
+      error: e,
+      stackTrace: st,
+    );
+    rethrow;
+  }
 }
 
 String? _trimOrNull(String? s) {

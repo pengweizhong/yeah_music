@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
@@ -355,7 +356,12 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
         l10n.songPageInlineTagsSaved,
         kind: AppSnackKind.success,
       );
-    } catch (e) {
+    } catch (e, st) {
+      appLog.e(
+        'inline tags save failed path=$path ext=${p.extension(path)}',
+        error: e,
+        stackTrace: st,
+      );
       if (!mounted) return;
       final msg = _shortError(e);
       showAppSnackBar(
