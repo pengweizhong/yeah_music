@@ -42,14 +42,13 @@ class LinuxTrayHost extends StatefulWidget {
 
 class _LinuxTrayHostState extends State<LinuxTrayHost>
     with TrayListener, WindowListener {
-  static const String _kLinuxIconPath = 'assets/icons/yeah_music1.png';
-  static const String _kWindowsIconPath = 'assets/icons/yeah_music_tray.ico';
+  /// Linux / Windows 托盘主图标均用同一透明 PNG（Windows 由 tray_manager GDI+ 缩放）。
+  static const String _kTrayIconPath = 'assets/icons/yeah_music1.png';
 
   static bool get _traySupported =>
       !kIsWeb && (Platform.isLinux || Platform.isWindows);
 
-  String get _iconPath =>
-      Platform.isWindows ? _kWindowsIconPath : _kLinuxIconPath;
+  String get _iconPath => _kTrayIconPath;
 
   final Map<int, String> _menuIconPathCache = {};
   static const String _kMenuShowHideWindow = 'show_hide_window';

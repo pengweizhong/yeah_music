@@ -11,6 +11,8 @@
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 
+#include <gdiplus.h>
+
 #include <algorithm>
 #include <codecvt>
 #include <map>
@@ -18,12 +20,104 @@
 #include <sstream>
 #include <vector>
 
+#pragma comment(lib, "Gdiplus.lib")
+
 #define WM_MYMESSAGE (WM_USER + 1)
 
 namespace {
 
 std::vector<HBITMAP> g_menu_bitmaps;
 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> g_menu_converter;
+
+ULONG_PTR g_gdiplus_token = 0;
+bool g_gdiplus_ready = false;
+
+void EnsureGdiplus() {
+  if (!g_gdiplus_ready) {
+    Gdiplus::GdiplusStartupInput input;
+    if (Gdiplus::GdiplusStartup(&g_gdiplus_token, &input, nullptr) == Gdiplus::Ok) {
+      g_gdiplus_ready = true;
+    }
+  }
+}
+
+bool PathEndsWithIgnoreCase(const std::wstring& path, const wchar_t* suffix) {
+  const size_t suffix_len = wcslen(suffix);
+  if (path.length() < suffix_len) {
+    return false;
+  }
+  return _wcsicmp(path.c_str() + path.length() - suffix_len, suffix) == 0;
+}
+
+int GetMenuIconPixelSize() {
+  HMODULE user32 = GetModuleHandleW(L"user32.dll");
+  if (user32) {
+    typedef UINT(WINAPI * GetDpiForSystemFn)();
+    auto get_dpi_for_system = reinterpret_cast<GetDpiForSystemFn>(
+        GetProcAddress(user32, "GetDpiForSystem"));
+    if (get_dpi_for_system) {
+      const UINT dpi = get_dpi_for_system();
+      if (dpi > 0) {
+        return GetSystemMetricsForDpi(SM_CXSMICON, dpi);
+      }
+    }
+  }
+  return GetSystemMetrics(SM_CXSMICON);
+}
+
+HBITMAP LoadMenuBitmapFromPng(const std::wstring& path, int size) {
+  EnsureGdiplus();
+  if (!g_gdiplus_ready || size <= 0) {
+    return nullptr;
+  }
+  std::unique_ptr<Gdiplus::Bitmap> src(Gdiplus::Bitmap::FromFile(path.c_str()));
+  if (!src || src->GetLastStatus() != Gdiplus::Ok) {
+    return nullptr;
+  }
+  std::unique_ptr<Gdiplus::Bitmap> dst(
+      new Gdiplus::Bitmap(size, size, PixelFormat32bppARGB));
+  if (!dst || dst->GetLastStatus() != Gdiplus::Ok) {
+    return nullptr;
+  }
+  Gdiplus::Graphics graphics(dst.get());
+  graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+  graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+  graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+  graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
+  graphics.DrawImage(src.get(), Gdiplus::Rect(0, 0, size, size));
+  HBITMAP hbmp = nullptr;
+  if (dst->GetHBITMAP(Gdiplus::Color(0, 0, 0, 0), &hbmp) != Gdiplus::Ok) {
+    return nullptr;
+  }
+  return hbmp;
+}
+
+HICON LoadTrayIconFromPng(const std::wstring& path, int size) {
+  EnsureGdiplus();
+  if (!g_gdiplus_ready || size <= 0) {
+    return nullptr;
+  }
+  std::unique_ptr<Gdiplus::Bitmap> src(Gdiplus::Bitmap::FromFile(path.c_str()));
+  if (!src || src->GetLastStatus() != Gdiplus::Ok) {
+    return nullptr;
+  }
+  std::unique_ptr<Gdiplus::Bitmap> dst(
+      new Gdiplus::Bitmap(size, size, PixelFormat32bppARGB));
+  if (!dst || dst->GetLastStatus() != Gdiplus::Ok) {
+    return nullptr;
+  }
+  Gdiplus::Graphics graphics(dst.get());
+  graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+  graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+  graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+  graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
+  graphics.DrawImage(src.get(), Gdiplus::Rect(0, 0, size, size));
+  HICON icon = nullptr;
+  if (dst->GetHICON(&icon) != Gdiplus::Ok || !icon) {
+    return nullptr;
+  }
+  return icon;
+}
 
 void ClearMenuBitmaps() {
   for (HBITMAP bmp : g_menu_bitmaps) {
@@ -79,7 +173,13 @@ HBITMAP ScaleBitmapToSize(HBITMAP src, int src_w, int src_h, int dst_w,
 }
 
 HBITMAP LoadMenuBitmapFromFile(const std::wstring& path) {
-  const int size = GetSystemMetrics(SM_CXSMICON);
+  const int size = GetMenuIconPixelSize();
+  if (PathEndsWithIgnoreCase(path, L".png")) {
+    HBITMAP png_bmp = LoadMenuBitmapFromPng(path, size);
+    if (png_bmp) {
+      return png_bmp;
+    }
+  }
   HICON icon = static_cast<HICON>(LoadImageW(
       nullptr, path.c_str(), IMAGE_ICON, size, size, LR_LOADFROMFILE));
   if (icon) {
@@ -112,6 +212,13 @@ HBITMAP LoadMenuBitmapFromFile(const std::wstring& path) {
 }
 
 HICON LoadTrayIconFromFile(const std::wstring& path) {
+  const int size = GetMenuIconPixelSize();
+  if (PathEndsWithIgnoreCase(path, L".png")) {
+    HICON png_icon = LoadTrayIconFromPng(path, size);
+    if (png_icon) {
+      return png_icon;
+    }
+  }
   const int cx = GetSystemMetrics(SM_CXSMICON);
   const int cy = GetSystemMetrics(SM_CYSMICON);
   HICON icon = static_cast<HICON>(LoadImageW(
@@ -452,6 +559,10 @@ void TrayManagerPlugin::PopUpContextMenu(
       std::get<bool>(args.at(flutter::EncodableValue("bringAppToFront")));
 
   HWND hWnd = GetMainWindow();
+  if (!hWnd) {
+    result->Success(flutter::EncodableValue(false));
+    return;
+  }
 
   double x, y;
 
@@ -466,11 +577,17 @@ void TrayManagerPlugin::PopUpContextMenu(
   x = cursorPos.x;
   y = cursorPos.y;
 
+  // Shell notification area: without foreground + WM_NULL, the popup menu
+  // stays open until a menu item is chosen.
+  SetForegroundWindow(hWnd);
   if (bringAppToFront) {
-    SetForegroundWindow(hWnd);
+    ShowWindow(hWnd, SW_RESTORE);
+    BringWindowToTop(hWnd);
   }
-  TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, static_cast<int>(x),
-                 static_cast<int>(y), 0, hWnd, NULL);
+  const UINT menu_flags = TPM_RIGHTBUTTON | TPM_BOTTOMALIGN | TPM_LEFTALIGN;
+  TrackPopupMenu(hMenu, menu_flags, static_cast<int>(x), static_cast<int>(y),
+                 0, hWnd, nullptr);
+  PostMessage(hWnd, WM_NULL, 0, 0);
   result->Success(flutter::EncodableValue(true));
 }
 

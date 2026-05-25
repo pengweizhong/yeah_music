@@ -52,8 +52,13 @@ Future<void> requestLinuxDesktopQuit() async {
   } catch (_) {}
 
   try {
-    await DesktopFloatingLyricsGlue.shutdownBeforeQuit();
-  } catch (_) {}
+    await DesktopFloatingLyricsGlue.shutdownBeforeQuit()
+        .timeout(const Duration(seconds: 6));
+  } catch (_) {
+    try {
+      await DesktopFloatingLyricsGlue.forceCloseAllLyricsWindows();
+    } catch (_) {}
+  }
 
   try {
     await trayManager.destroy();

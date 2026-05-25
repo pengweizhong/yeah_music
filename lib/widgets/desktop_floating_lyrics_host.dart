@@ -100,8 +100,17 @@ final class DesktopFloatingLyricsGlue {
   static Future<void> shutdownBeforeQuit() async {
     if (!desktopFloatingLyricsSupported) return;
     final fn = _instance?._shutdown;
-    if (fn != null) await fn();
+    if (fn != null) {
+      try {
+        await fn().timeout(const Duration(seconds: 4));
+      } catch (_) {}
+    }
+    await forceCloseAllLyricsWindows();
   }
+
+  /// 供 [requestLinuxDesktopQuit] 超时兜底。
+  static Future<void> forceCloseAllLyricsWindows() =>
+      _DesktopFloatingLyricsHostState.forceCloseAllLyricsWindows();
 
   static Future<void> reloadFromHive() async {
     if (!desktopFloatingLyricsSupported) return;
@@ -126,8 +135,11 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
 
   bool _registered = false;
   bool _enabled = false;
+  bool _shuttingDown = false;
   WindowController? _lyricsWindow;
   Future<void>? _ensureWindowInFlight;
+
+  static const Duration _kLyricsInvokeTimeout = Duration(seconds: 2);
 
   LyricSettings _lyricStyle = LyricSettings();
   double _desktopBgOpacity =
@@ -212,17 +224,40 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
     var w = _lyricsWindow;
     if (w == null) {
       w = await _adoptExistingLyricsWindow();
-      if (w != null && _enabled && mounted) {
+      if (w != null && (_enabled || _shuttingDown) && mounted) {
         _lyricsWindow = w;
       }
     }
     if (w == null) return null;
     try {
-      return await w.invokeMethod(method, arguments);
+      return await w
+          .invokeMethod(method, arguments)
+          .timeout(_kLyricsInvokeTimeout);
     } catch (e, st) {
       appLog.d('桌面歌词窗 $method 失败', error: e, stackTrace: st);
       return null;
     }
+  }
+
+  /// 退出时兜底：关闭所有歌词子引擎，避免 [invokeMethod] 挂起导致进程无法结束。
+  static Future<void> forceCloseAllLyricsWindows() async {
+    if (!desktopFloatingLyricsSupported) return;
+    try {
+      final all = await WindowController.getAll()
+          .timeout(_DesktopFloatingLyricsHostState._kLyricsInvokeTimeout);
+      for (final c in all) {
+        if (!_isDesktopLyricsWindow(c)) continue;
+        try {
+          await c
+              .invokeMethod(DesktopLyricsPayloadBuilder.shutdownMethod, null)
+              .timeout(_DesktopFloatingLyricsHostState._kLyricsInvokeTimeout);
+        } catch (_) {
+          try {
+            await c.hide();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
   }
 
   Future<String> _lyricsWindowCreateArguments() async {
@@ -310,7 +345,10 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
   }
 
   Future<void> _ensureLyricsWindowImpl() async {
-    if (!desktopFloatingLyricsSupported || _lyricsWindow != null || !_enabled) {
+    if (_shuttingDown ||
+        !desktopFloatingLyricsSupported ||
+        _lyricsWindow != null ||
+        !_enabled) {
       return;
     }
 
@@ -359,21 +397,42 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
     }
   }
 
-  Future<void> _hideLyricsWindow() async {
+  Future<void> _hideLyricsWindow({bool forQuit = false}) async {
+    if (forQuit) {
+      _shuttingDown = true;
+      _enabled = false;
+    }
+
     if (_ensureWindowInFlight != null) {
       try {
-        await _ensureWindowInFlight;
+        await _ensureWindowInFlight!.timeout(_kLyricsInvokeTimeout);
       } catch (_) {}
     }
-    await _persistLyricsGeometryFromSubWindow();
-    await _invokeLyricsWindow('persistGeometry', null);
+
+    final w = _lyricsWindow ?? await _adoptExistingLyricsWindow();
+
+    if (!forQuit) {
+      await _persistLyricsGeometryFromSubWindow();
+      await _invokeLyricsWindow('persistGeometry', null);
+    }
+
+    if (w != null) {
+      _lyricsWindow = w;
+      await _invokeLyricsWindow(DesktopLyricsPayloadBuilder.shutdownMethod, null);
+    }
+
     _lyricsWindow = null;
-    await _invokeLyricsWindow(DesktopLyricsPayloadBuilder.shutdownMethod, null);
+    await forceCloseAllLyricsWindows();
     await _hideExtraDesktopLyricsWindows();
   }
 
   Future<void> _syncPayload() async {
-    if (!desktopFloatingLyricsSupported || !_enabled || !mounted) return;
+    if (_shuttingDown ||
+        !desktopFloatingLyricsSupported ||
+        !_enabled ||
+        !mounted) {
+      return;
+    }
 
     await _ensureLyricsWindow();
 
@@ -495,7 +554,7 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
 
     DesktopFloatingLyricsGlue.register(
       _glueRefresh,
-      onShutdown: _hideLyricsWindow,
+      onShutdown: () => _hideLyricsWindow(forQuit: true),
       onChromePatch: _applyChromePatch,
       onLyricStyleSync: _applyLyricStyleFromPanel,
     );

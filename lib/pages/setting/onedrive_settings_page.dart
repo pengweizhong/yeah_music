@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Yeah Music
+// Copyright (c) 2025 Yeah Music
 //
 // This file is part of Yeah Music.
 //
