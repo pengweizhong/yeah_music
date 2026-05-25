@@ -70,6 +70,19 @@ set_target_properties(${BINARY_NAME}
 )
 
 
+# 歌词子窗：在 gtk_widget_realize 之前启用 RGBA（修复背景透明度无效）。
+set(_yeah_music_dmw_patch
+    "${CMAKE_CURRENT_SOURCE_DIR}/../patches/desktop_multi_window/multi_window_manager.cc")
+set(_yeah_music_dmw_link
+    "${CMAKE_CURRENT_SOURCE_DIR}/flutter/ephemeral/.plugin_symlinks/desktop_multi_window/linux/multi_window_manager.cc")
+if(EXISTS "${_yeah_music_dmw_patch}" AND EXISTS "${_yeah_music_dmw_link}")
+  configure_file(
+    "${_yeah_music_dmw_patch}"
+    "${_yeah_music_dmw_link}"
+    COPYONLY)
+  message(STATUS "Yeah Music: desktop_multi_window 歌词窗透明补丁已应用")
+endif()
+
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)

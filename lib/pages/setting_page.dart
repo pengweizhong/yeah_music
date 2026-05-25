@@ -814,7 +814,8 @@ class _DesktopLyricsSettingsSection extends StatefulWidget {
 class _DesktopLyricsSettingsSectionState
     extends State<_DesktopLyricsSettingsSection> {
   static const double _kBgOpacityMin = 0.0;
-  static const double _kBgOpacityMax = 0.92;
+  static const double _kBgOpacityMax = 1.0;
+  static const int _kBgOpacityDivisions = 100;
   static const int _kLinesMax = 20;
 
   bool _floating = false;
@@ -864,6 +865,7 @@ class _DesktopLyricsSettingsSectionState
 
   Future<void> _onDragLockedChanged(bool v) async {
     setState(() => _dragLocked = v);
+    DesktopFloatingLyricsGlue.applyChrome(dragLocked: v);
     await SettingsService.saveDesktopFloatingLyricsDragLocked(v);
     await DesktopFloatingLyricsGlue.reloadFromHive();
   }
@@ -1010,8 +1012,12 @@ class _DesktopLyricsSettingsSectionState
             value: _bgOpacity,
             min: _kBgOpacityMin,
             max: _kBgOpacityMax,
+            divisions: _kBgOpacityDivisions,
             labelFor: (v) => '${(v * 100).round()}%',
-            onChanged: (v) => setState(() => _bgOpacity = v),
+            onChanged: (v) {
+              setState(() => _bgOpacity = v);
+              DesktopFloatingLyricsGlue.applyChrome(bgOpacity: v);
+            },
             onChangeEnd: (v) async {
               await SettingsService.saveDesktopFloatingLyricsBgOpacity(v);
               await DesktopFloatingLyricsGlue.reloadFromHive();

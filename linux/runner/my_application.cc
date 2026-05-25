@@ -15,6 +15,7 @@
 
 #include "my_application.h"
 
+#include <cairo.h>
 #include <flutter_linux/flutter_linux.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gio/gio.h>
@@ -23,6 +24,178 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
+
+#include "desktop_multi_window/desktop_multi_window_plugin.h"
+
+static GtkCssProvider* g_lyrics_transparent_css = nullptr;
+
+static gboolean yeah_music_linux_has_rgba_visual(GtkWindow* window) {
+  GdkScreen* screen = gtk_window_get_screen(window);
+  if (screen == nullptr) {
+    return FALSE;
+  }
+  return gdk_screen_get_rgba_visual(screen) != nullptr;
+}
+
+/// 覆盖 window_manager 等可能写入的不透明 window 背景 CSS。
+static void yeah_music_linux_apply_transparent_window_css(GtkWidget* window) {
+  if (g_lyrics_transparent_css == nullptr) {
+    g_lyrics_transparent_css = gtk_css_provider_new();
+  }
+  gtk_css_provider_load_from_data(
+      g_lyrics_transparent_css,
+      "window { background-color: rgba(0,0,0,0); }", -1, nullptr);
+  GtkStyleContext* ctx = gtk_widget_get_style_context(window);
+  gtk_style_context_add_provider(
+      ctx, GTK_STYLE_PROVIDER(g_lyrics_transparent_css),
+      GTK_STYLE_PROVIDER_PRIORITY_USER + 200);
+}
+
+/// 子窗口启用 RGBA 合成，否则 Flutter 半透明层叠在 GTK 不透明黑底上，透明度调节无效。
+static void yeah_music_linux_configure_lyrics_subwindow(FlView* view) {
+  GdkRGBA transparent;
+  gdk_rgba_parse(&transparent, "#00000000");
+  fl_view_set_background_color(view, &transparent);
+
+  GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(view));
+  if (!GTK_IS_WINDOW(toplevel)) {
+    return;
+  }
+
+  GdkScreen* screen = gtk_window_get_screen(GTK_WINDOW(toplevel));
+  GdkVisual* rgba_visual =
+      screen != nullptr ? gdk_screen_get_rgba_visual(screen) : nullptr;
+  if (rgba_visual != nullptr) {
+    gtk_widget_set_visual(toplevel, rgba_visual);
+    gtk_widget_set_visual(GTK_WIDGET(view), rgba_visual);
+  }
+
+  gtk_widget_set_app_paintable(toplevel, TRUE);
+  gtk_widget_set_app_paintable(GTK_WIDGET(view), TRUE);
+
+  yeah_music_linux_apply_transparent_window_css(toplevel);
+}
+
+static void yeah_music_linux_apply_input_shape(GdkWindow* gdk, gboolean pass) {
+  if (gdk == nullptr) {
+    return;
+  }
+  if (pass) {
+    cairo_region_t* empty = cairo_region_create();
+    gdk_window_input_shape_combine_region(gdk, empty, 0, 0);
+    cairo_region_destroy(empty);
+  } else {
+    gdk_window_input_shape_combine_region(gdk, nullptr, 0, 0);
+  }
+}
+
+static void yeah_music_linux_set_pass_through(FlView* view, gboolean pass) {
+  GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(view));
+  if (GTK_IS_WINDOW(toplevel) && !gtk_widget_get_realized(toplevel)) {
+    gtk_widget_realize(toplevel);
+  }
+  GdkWindow* top_gdk = gtk_widget_get_window(toplevel);
+  if (top_gdk != nullptr) {
+    gdk_window_set_pass_through(top_gdk, pass);
+    yeah_music_linux_apply_input_shape(top_gdk, pass);
+  }
+  if (!gtk_widget_get_realized(GTK_WIDGET(view))) {
+    gtk_widget_realize(GTK_WIDGET(view));
+  }
+  GdkWindow* view_gdk = gtk_widget_get_window(GTK_WIDGET(view));
+  if (view_gdk != nullptr) {
+    gdk_window_set_pass_through(view_gdk, pass);
+    yeah_music_linux_apply_input_shape(view_gdk, pass);
+  }
+}
+
+static void desktop_lyrics_shell_method_call_cb(FlMethodChannel* channel,
+                                              FlMethodCall* method_call,
+                                              gpointer user_data) {
+  FlView* view = FL_VIEW(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+  g_autoptr(FlMethodResponse) response = nullptr;
+  if (g_strcmp0(method, "ensureTransparent") == 0) {
+    yeah_music_linux_configure_lyrics_subwindow(view);
+    g_autoptr(FlValue) result = fl_value_new_bool(TRUE);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  } else if (g_strcmp0(method, "isCompositingAvailable") == 0) {
+    GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(view));
+    gboolean ok = GTK_IS_WINDOW(toplevel) &&
+                  yeah_music_linux_has_rgba_visual(GTK_WINDOW(toplevel));
+    g_autoptr(FlValue) result = fl_value_new_bool(ok);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  } else if (g_strcmp0(method, "setPassThrough") == 0) {
+    gboolean pass = FALSE;
+    FlValue* args = fl_method_call_get_args(method_call);
+    if (args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP) {
+      FlValue* v = fl_value_lookup_string(args, "passThrough");
+      if (v != nullptr && fl_value_get_type(v) == FL_VALUE_TYPE_BOOL) {
+        pass = fl_value_get_bool(v);
+      }
+    }
+    yeah_music_linux_set_pass_through(view, pass);
+    g_autoptr(FlValue) result = fl_value_new_bool(TRUE);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  } else if (g_strcmp0(method, "setWindowBounds") == 0) {
+    GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(view));
+    if (GTK_IS_WINDOW(toplevel)) {
+      if (!gtk_widget_get_realized(toplevel)) {
+        gtk_widget_realize(toplevel);
+      }
+      FlValue* args = fl_method_call_get_args(method_call);
+      if (args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP) {
+        FlValue* x_v = fl_value_lookup_string(args, "x");
+        FlValue* y_v = fl_value_lookup_string(args, "y");
+        FlValue* w_v = fl_value_lookup_string(args, "width");
+        FlValue* h_v = fl_value_lookup_string(args, "height");
+        if (x_v != nullptr && y_v != nullptr &&
+            fl_value_get_type(x_v) == FL_VALUE_TYPE_FLOAT &&
+            fl_value_get_type(y_v) == FL_VALUE_TYPE_FLOAT) {
+          gtk_window_move(GTK_WINDOW(toplevel),
+                          static_cast<gint>(fl_value_get_float(x_v)),
+                          static_cast<gint>(fl_value_get_float(y_v)));
+        }
+        if (w_v != nullptr && h_v != nullptr &&
+            fl_value_get_type(w_v) == FL_VALUE_TYPE_FLOAT &&
+            fl_value_get_type(h_v) == FL_VALUE_TYPE_FLOAT) {
+          gtk_window_resize(GTK_WINDOW(toplevel),
+                            static_cast<gint>(fl_value_get_float(w_v)),
+                            static_cast<gint>(fl_value_get_float(h_v)));
+        }
+      }
+    }
+    g_autoptr(FlValue) result = fl_value_new_bool(TRUE);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  } else {
+    response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+  fl_method_call_respond(method_call, response, nullptr);
+}
+
+static void setup_desktop_lyrics_shell_channel(FlView* view) {
+  FlBinaryMessenger* messenger =
+      fl_engine_get_binary_messenger(fl_view_get_engine(view));
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
+      messenger, "yeah_music/desktop_lyrics_shell", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+      channel, desktop_lyrics_shell_method_call_cb, g_object_ref(view),
+      g_object_unref);
+}
+
+/// 子窗口（桌面悬浮歌词）须注册 window_manager 等插件，否则 Dart 侧无法建窗/收 payload。
+static void yeah_music_linux_on_multi_window_created(FlPluginRegistry* registry) {
+  if (FL_IS_VIEW(registry)) {
+    yeah_music_linux_configure_lyrics_subwindow(FL_VIEW(registry));
+  }
+  fl_register_plugins(registry);
+  if (FL_IS_VIEW(registry)) {
+    FlView* view = FL_VIEW(registry);
+    yeah_music_linux_configure_lyrics_subwindow(view);
+    setup_desktop_lyrics_shell_channel(view);
+  }
+}
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -168,11 +341,11 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "yeah_music");
+    gtk_header_bar_set_title(header_bar, "Yeah Music");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "yeah_music");
+    gtk_window_set_title(window, "Yeah Music");
   }
 
   gtk_window_set_default_size(window, 1280, 720);
@@ -198,6 +371,8 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+  desktop_multi_window_plugin_set_window_created_callback(
+      yeah_music_linux_on_multi_window_created);
   setup_taskbar_progress_channel(self, view);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));

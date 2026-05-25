@@ -22,18 +22,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
+import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/lyric_entry.dart';
 import 'package:yeah_music/models/lyric_settings.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_service.dart';
 import 'package:yeah_music/services/settings_service.dart';
 import 'package:yeah_music/utils/desktop_lyrics_payload_builder.dart';
+import 'package:yeah_music/utils/desktop_lyrics_window_geometry_store.dart';
 import 'package:yeah_music/utils/lyrics_utils.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 
 /// 桌面端独立系统小窗歌词（非主窗口叠层）。
 bool get desktopFloatingLyricsSupported =>
     !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+
+/// 设置页拖动滑条时即时预览（不必等 [onChangeEnd] 写 Hive）。
+typedef DesktopLyricsChromePatch = void Function({
+  double? bgOpacity,
+  bool? dragLocked,
+  int? linesBefore,
+  int? linesAfter,
+});
 
 final class DesktopFloatingLyricsGlue {
   DesktopFloatingLyricsGlue._();
@@ -42,13 +52,31 @@ final class DesktopFloatingLyricsGlue {
   VoidCallback? _refresh;
   Future<void> Function()? _shutdown;
 
+  static DesktopLyricsChromePatch? _chromePatch;
+
   static void register(
     VoidCallback onRefresh, {
     Future<void> Function()? onShutdown,
+    DesktopLyricsChromePatch? onChromePatch,
   }) {
     _instance ??= DesktopFloatingLyricsGlue._();
     _instance!._refresh = onRefresh;
     _instance!._shutdown = onShutdown;
+    _chromePatch = onChromePatch;
+  }
+
+  static void applyChrome({
+    double? bgOpacity,
+    bool? dragLocked,
+    int? linesBefore,
+    int? linesAfter,
+  }) {
+    _chromePatch?.call(
+      bgOpacity: bgOpacity,
+      dragLocked: dragLocked,
+      linesBefore: linesBefore,
+      linesAfter: linesAfter,
+    );
   }
 
   static void unregister() {
@@ -57,6 +85,7 @@ final class DesktopFloatingLyricsGlue {
       i._refresh = null;
       i._shutdown = null;
     }
+    _chromePatch = null;
   }
 
   static Future<void> shutdownBeforeQuit() async {
@@ -83,17 +112,13 @@ class DesktopFloatingLyricsHost extends StatefulWidget {
 }
 
 class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
-  static const WindowMethodChannel _payloadChannel = WindowMethodChannel(
-    DesktopLyricsPayloadBuilder.channelName,
-    mode: ChannelMode.unidirectional,
-  );
-
   StreamSubscription<Duration>? _posSub;
   StreamSubscription<bool>? _playingSub;
 
   bool _registered = false;
   bool _enabled = false;
   WindowController? _lyricsWindow;
+  Future<void>? _ensureWindowInFlight;
 
   LyricSettings _lyricStyle = LyricSettings();
   double _desktopBgOpacity =
@@ -123,35 +148,212 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
     unawaited(_applyEnabledAndSync());
   }
 
+  void _applyChromePatch({
+    double? bgOpacity,
+    bool? dragLocked,
+    int? linesBefore,
+    int? linesAfter,
+  }) {
+    if (!mounted) return;
+    final onlyChrome =
+        linesBefore == null && linesAfter == null;
+    setState(() {
+      if (bgOpacity != null) {
+        _desktopBgOpacity = bgOpacity.clamp(0.0, 1.0);
+      }
+      if (dragLocked != null) _desktopDragLocked = dragLocked;
+      if (linesBefore != null) {
+        _desktopLinesBefore = linesBefore.clamp(0, 999);
+      }
+      if (linesAfter != null) {
+        _desktopLinesAfter = linesAfter.clamp(0, 999);
+      }
+    });
+    if (onlyChrome && _enabled) {
+      unawaited(_syncChromeOnly(bgOpacity: bgOpacity, dragLocked: dragLocked));
+      return;
+    }
+    unawaited(_syncPayload());
+  }
+
+  Future<void> _syncChromeOnly({
+    double? bgOpacity,
+    bool? dragLocked,
+  }) async {
+    if (!desktopFloatingLyricsSupported || !_enabled || !mounted) return;
+    if (_lyricsWindow == null) {
+      await _ensureLyricsWindow();
+    }
+    if (!mounted || _lyricsWindow == null) return;
+    final patch = <String, dynamic>{};
+    if (bgOpacity != null) patch['bgOpacity'] = bgOpacity.clamp(0.0, 1.0);
+    if (dragLocked != null) patch['dragLocked'] = dragLocked;
+    if (patch.isEmpty) return;
+    await _invokeLyricsWindow('updateChrome', patch);
+  }
+
+  Future<dynamic> _invokeLyricsWindow(String method, [dynamic arguments]) async {
+    var w = _lyricsWindow;
+    if (w == null) {
+      w = await _adoptExistingLyricsWindow();
+      if (w != null && _enabled && mounted) {
+        _lyricsWindow = w;
+      }
+    }
+    if (w == null) return null;
+    try {
+      return await w.invokeMethod(method, arguments);
+    } catch (e, st) {
+      appLog.d('桌面歌词窗 $method 失败', error: e, stackTrace: st);
+      return null;
+    }
+  }
+
+  Future<String> _lyricsWindowCreateArguments() async {
+    final args = <String, dynamic>{'role': 'desktop_lyrics'};
+    final saved = await DesktopLyricsWindowGeometryStore.load();
+    if (saved != null) {
+      args['geometry'] = <String, double>{
+        'x': saved.left,
+        'y': saved.top,
+        'width': saved.width,
+        'height': saved.height,
+      };
+    }
+    return jsonEncode(args);
+  }
+
+  /// 由主进程写入 canonical 路径，避免子引擎 path_provider 与主进程不一致。
+  Future<void> _persistLyricsGeometryFromSubWindow() async {
+    final result = await _invokeLyricsWindow('getGeometry', null);
+    if (result is! Map) return;
+    final rect = DesktopLyricsWindowGeometryStore.rectFromJsonMap(result);
+    if (rect != null) {
+      await DesktopLyricsWindowGeometryStore.save(rect);
+    }
+  }
+
+  static bool _isDesktopLyricsWindow(WindowController c) {
+    if (c.arguments.isEmpty) return false;
+    try {
+      final j = jsonDecode(c.arguments);
+      return j is Map && j['role'] == 'desktop_lyrics';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 关闭多余的歌词子窗，只保留 [keep]（为 null 则全部隐藏）。
+  Future<void> _hideExtraDesktopLyricsWindows({WindowController? keep}) async {
+    try {
+      final all = await WindowController.getAll();
+      for (final c in all) {
+        if (!_isDesktopLyricsWindow(c)) continue;
+        if (keep != null && c.windowId == keep.windowId) continue;
+        try {
+          await c.hide();
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  /// 热重载或并发创建后，复用已有歌词窗，避免叠多个弹窗。
+  Future<WindowController?> _adoptExistingLyricsWindow() async {
+    try {
+      final all = await WindowController.getAll();
+      WindowController? keeper;
+      for (final c in all) {
+        if (!_isDesktopLyricsWindow(c)) continue;
+        if (keeper == null) {
+          keeper = c;
+        } else {
+          try {
+            await c.hide();
+          } catch (_) {}
+        }
+      }
+      return keeper;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _ensureLyricsWindow() async {
-    if (!desktopFloatingLyricsSupported || _lyricsWindow != null) return;
+    if (!desktopFloatingLyricsSupported) return;
+    if (_lyricsWindow != null) return;
+    if (_ensureWindowInFlight != null) {
+      await _ensureWindowInFlight;
+      return;
+    }
+    _ensureWindowInFlight = _ensureLyricsWindowImpl();
+    try {
+      await _ensureWindowInFlight;
+    } finally {
+      _ensureWindowInFlight = null;
+    }
+  }
+
+  Future<void> _ensureLyricsWindowImpl() async {
+    if (!desktopFloatingLyricsSupported || _lyricsWindow != null || !_enabled) {
+      return;
+    }
+
+    final existing = await _adoptExistingLyricsWindow();
+    if (existing != null) {
+      _lyricsWindow = existing;
+      if (_enabled) {
+        try {
+          await existing.show();
+        } catch (_) {}
+        // 复用隐藏窗：GTK 已保留位置，勿 restoreGeometry（会用过期 arguments 覆盖）。
+        await _invokeLyricsWindow('ensureStacking', null);
+      }
+      await _hideExtraDesktopLyricsWindows(keep: existing);
+      return;
+    }
+
+    await _hideExtraDesktopLyricsWindows();
+
     try {
       final w = await WindowController.create(
         WindowConfiguration(
-          arguments: jsonEncode(<String, dynamic>{'role': 'desktop_lyrics'}),
-          hiddenAtLaunch: false,
+          arguments: await _lyricsWindowCreateArguments(),
+          // Linux：先隐藏，待子引擎注册插件并由 window_manager 配置后再 show
+          hiddenAtLaunch: Platform.isLinux,
         ),
       );
+      if (!_enabled || !mounted) {
+        try {
+          await w.hide();
+        } catch (_) {}
+        return;
+      }
       _lyricsWindow = w;
+      await _hideExtraDesktopLyricsWindows(keep: w);
       await w.show();
-    } catch (_) {
+      await _invokeLyricsWindow('ensureStacking', null);
+      if (Platform.isLinux) {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        await w.invokeMethod('restoreGeometry', null);
+        await _invokeLyricsWindow('ensureStacking', null);
+      }
+    } catch (e, st) {
+      appLog.w('创建桌面悬浮歌词窗口失败', error: e, stackTrace: st);
       _lyricsWindow = null;
     }
   }
 
   Future<void> _hideLyricsWindow() async {
-    final w = _lyricsWindow;
-    if (w == null) return;
+    if (_ensureWindowInFlight != null) {
+      try {
+        await _ensureWindowInFlight;
+      } catch (_) {}
+    }
+    await _persistLyricsGeometryFromSubWindow();
+    await _invokeLyricsWindow('persistGeometry', null);
     _lyricsWindow = null;
-    try {
-      await _payloadChannel.invokeMethod<void>(
-        DesktopLyricsPayloadBuilder.shutdownMethod,
-        null,
-      );
-    } catch (_) {}
-    try {
-      await w.hide();
-    } catch (_) {}
+    await _invokeLyricsWindow(DesktopLyricsPayloadBuilder.shutdownMethod, null);
+    await _hideExtraDesktopLyricsWindows();
   }
 
   Future<void> _syncPayload() async {
@@ -208,20 +410,19 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
       dragLocked: _desktopDragLocked,
     );
 
-    try {
-      await _payloadChannel.invokeMethod<void>('update', payload);
-    } catch (_) {}
+    await _invokeLyricsWindow('update', payload);
   }
 
   Future<void> _applyEnabledAndSync() async {
     if (!desktopFloatingLyricsSupported) return;
-    if (!_registered) {
-      _enabled = await SettingsService.loadDesktopFloatingLyricsEnabled();
-    }
+    final enabled = await SettingsService.loadDesktopFloatingLyricsEnabled();
+    if (!mounted) return;
+    setState(() => _enabled = enabled);
     if (!_enabled) {
       await _hideLyricsWindow();
       return;
     }
+    await _hideExtraDesktopLyricsWindows(keep: _lyricsWindow);
     final s = await SettingsService.loadLyricSettings();
     final bg = await SettingsService.loadDesktopFloatingLyricsBgOpacity();
     final lb = await SettingsService.loadDesktopFloatingLyricsLinesBefore();
@@ -279,6 +480,7 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
     DesktopFloatingLyricsGlue.register(
       _glueRefresh,
       onShutdown: _hideLyricsWindow,
+      onChromePatch: _applyChromePatch,
     );
     MusicService.addDesktopPlayerRecreatedListener(
       _reattachPlayerStreamSubscriptions,

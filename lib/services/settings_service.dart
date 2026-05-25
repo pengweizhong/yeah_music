@@ -148,7 +148,7 @@ class SettingsService {
   static const int playbackFadeOutDurationMsMax = 1000;
 
   static const double _desktopBgOpacityMin = 0.0;
-  static const double _desktopBgOpacityMax = 0.92;
+  static const double _desktopBgOpacityMax = 1.0;
   static const int _desktopLinesRangeMax = 20;
 
   /// OneDrive 云端曲库列表的排序偏好。
