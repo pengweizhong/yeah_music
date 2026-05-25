@@ -12,7 +12,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-import 'dart:io' show File, Platform;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:yeah_music/app_scaffold_messenger.dart';
 import 'package:yeah_music/compments/folder_provider.dart';
 import 'package:yeah_music/compments/frosted_glass_panel.dart';
+import 'package:yeah_music/compments/onedrive_controller.dart';
 import 'package:yeah_music/compments/onedrive_download_queue_controller.dart';
 import 'package:yeah_music/themes/gradient_ui_colors.dart';
 import 'package:yeah_music/compments/play_list_provider.dart';
@@ -28,6 +29,7 @@ import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/models/song.dart';
 import 'package:yeah_music/services/music_tag_editor_launcher.dart';
+import 'package:yeah_music/utils/local_audio_file_resolver.dart';
 import 'package:yeah_music/utils/onedrive_queue_navigation.dart';
 import 'package:yeah_music/utils/library_song_batch_ops.dart';
 import 'package:yeah_music/pages/onedrive/onedrive_download_queue_page.dart';
@@ -51,8 +53,16 @@ Future<void> uploadLibrarySongToOneDrive(BuildContext context, Song song) async 
     );
     return;
   }
-  final file = File(path);
-  if (!await file.exists()) {
+  final od = context.read<OneDriveController>();
+  List<Directory>? searchRoots;
+  try {
+    searchRoots = await od.localPlaybackSearchRoots();
+  } catch (_) {}
+  final file = await resolveExistingLocalAudioFile(
+    path,
+    extraSearchRoots: searchRoots,
+  );
+  if (file == null) {
     if (!context.mounted) return;
     showAppSnackBar(
       context,
@@ -60,6 +70,9 @@ Future<void> uploadLibrarySongToOneDrive(BuildContext context, Song song) async 
       kind: AppSnackKind.error,
     );
     return;
+  }
+  if (file.path != path) {
+    song.path = file.path;
   }
   try {
     await context
@@ -84,6 +97,8 @@ Future<void> uploadLibrarySongToOneDrive(BuildContext context, Song song) async 
         ? l10n.libraryBatchUploadNeedSignIn
         : msg.contains('upload folder unset')
         ? l10n.libraryBatchUploadNeedCloudFolder
+        : msg.contains('local audio file not found')
+        ? l10n.songPageMusicTagEditorFileNotFound
         : '$e';
     showAppSnackBar(context, text, kind: AppSnackKind.error);
   } catch (e) {
