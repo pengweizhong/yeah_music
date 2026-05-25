@@ -109,6 +109,41 @@ class LyricSettings extends HiveObject {
 
   LyricSettings();
 
+  /// 深拷贝（供桌面歌词/菜单栏等跨引擎同步，避免共用 Hive 实例）。
+  factory LyricSettings.cloneOf(LyricSettings other) {
+    final s = LyricSettings()
+      ..showOriginal = other.showOriginal
+      ..showTranslations = other.showTranslations
+      ..originalFontSize = other.originalFontSize
+      ..translationFontSize = other.translationFontSize
+      ..activeOriginalColor = other.activeOriginalColor
+      ..activeTranslationColor = other.activeTranslationColor
+      ..playedOriginalColor = other.playedOriginalColor
+      ..playedTranslationColor = other.playedTranslationColor
+      ..upcomingOriginalColor = other.upcomingOriginalColor
+      ..upcomingTranslationColor = other.upcomingTranslationColor
+      ..lyricLineSpacing = other.lyricLineSpacing
+      ..lyricTextAlignIndex = other.lyricTextAlignIndex
+      ..activeLyricUseGradient = other.activeLyricUseGradient
+      ..activeLyricGradientStart = other.activeLyricGradientStart
+      ..activeLyricGradientEnd = other.activeLyricGradientEnd
+      ..activeLyricGradientDirectionIndex =
+          other.activeLyricGradientDirectionIndex
+      ..playedLyricUseGradient = other.playedLyricUseGradient
+      ..playedLyricGradientStart = other.playedLyricGradientStart
+      ..playedLyricGradientEnd = other.playedLyricGradientEnd
+      ..playedLyricGradientDirectionIndex =
+          other.playedLyricGradientDirectionIndex
+      ..upcomingLyricUseGradient = other.upcomingLyricUseGradient
+      ..upcomingLyricGradientStart = other.upcomingLyricGradientStart
+      ..upcomingLyricGradientEnd = other.upcomingLyricGradientEnd
+      ..upcomingLyricGradientDirectionIndex =
+          other.upcomingLyricGradientDirectionIndex
+      ..lyricDisplayModeList = List<String>.from(other.lyricDisplayModeList);
+    s.normalizeLayoutFields();
+    return s;
+  }
+
   /// 将字号、行距限制在可编辑范围内（与 UI 滑条、历史存盘数据对齐）
   void normalizeLayoutFields() {
     originalFontSize = originalFontSize.clamp(minFontSize, maxFontSize);

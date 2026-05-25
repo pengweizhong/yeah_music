@@ -1113,6 +1113,7 @@ class _SongPageState extends State<SongPage> with WidgetsBindingObserver {
                       onUpdate: () {
                         setModalState(() {});
                         setState(() {});
+                        DesktopFloatingLyricsGlue.syncLyricStyle(_settings);
                       },
                       onPersist: _saveSettings,
                     );

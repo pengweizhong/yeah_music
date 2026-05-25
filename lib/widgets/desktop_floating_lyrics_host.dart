@@ -53,16 +53,19 @@ final class DesktopFloatingLyricsGlue {
   Future<void> Function()? _shutdown;
 
   static DesktopLyricsChromePatch? _chromePatch;
+  static void Function(LyricSettings settings)? _lyricStyleSync;
 
   static void register(
     VoidCallback onRefresh, {
     Future<void> Function()? onShutdown,
     DesktopLyricsChromePatch? onChromePatch,
+    void Function(LyricSettings settings)? onLyricStyleSync,
   }) {
     _instance ??= DesktopFloatingLyricsGlue._();
     _instance!._refresh = onRefresh;
     _instance!._shutdown = onShutdown;
     _chromePatch = onChromePatch;
+    _lyricStyleSync = onLyricStyleSync;
   }
 
   static void applyChrome({
@@ -86,6 +89,12 @@ final class DesktopFloatingLyricsGlue {
       i._shutdown = null;
     }
     _chromePatch = null;
+    _lyricStyleSync = null;
+  }
+
+  /// 播放页歌词样式面板拖动时即时同步到桌面悬浮歌词（不必等 Hive 落盘）。
+  static void syncLyricStyle(LyricSettings settings) {
+    _lyricStyleSync?.call(settings);
   }
 
   static Future<void> shutdownBeforeQuit() async {
@@ -146,6 +155,13 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
 
   void _glueRefresh() {
     unawaited(_applyEnabledAndSync());
+  }
+
+  void _applyLyricStyleFromPanel(LyricSettings settings) {
+    if (!mounted || !_enabled) return;
+    final copy = LyricSettings.cloneOf(settings);
+    setState(() => _lyricStyle = copy);
+    unawaited(_syncPayload());
   }
 
   void _applyChromePatch({
@@ -408,6 +424,7 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
       linesAfter: _desktopLinesAfter,
       bgOpacity: _desktopBgOpacity,
       dragLocked: _desktopDragLocked,
+      globalDisplayMode: _lyricStyle.resolvedGlobalLyricDisplayMode,
     );
 
     await _invokeLyricsWindow('update', payload);
@@ -431,8 +448,7 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
     if (!mounted) return;
     setState(() {
       if (s != null) {
-        s.normalizeLayoutFields();
-        _lyricStyle = s;
+        _lyricStyle = LyricSettings.cloneOf(s);
       }
       _desktopBgOpacity = bg;
       _desktopLinesBefore = lb;
@@ -481,6 +497,7 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
       _glueRefresh,
       onShutdown: _hideLyricsWindow,
       onChromePatch: _applyChromePatch,
+      onLyricStyleSync: _applyLyricStyleFromPanel,
     );
     MusicService.addDesktopPlayerRecreatedListener(
       _reattachPlayerStreamSubscriptions,
