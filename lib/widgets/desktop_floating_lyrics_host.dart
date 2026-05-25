@@ -215,7 +215,9 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
 
   Future<void> _applyEnabledAndSync() async {
     if (!desktopFloatingLyricsSupported) return;
-    _enabled = await SettingsService.loadDesktopFloatingLyricsEnabled();
+    if (!_registered) {
+      _enabled = await SettingsService.loadDesktopFloatingLyricsEnabled();
+    }
     if (!_enabled) {
       await _hideLyricsWindow();
       return;
@@ -250,6 +252,27 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
     }
   }
 
+  void _bindPlayerStreamSubscriptions() {
+    if (!desktopFloatingLyricsSupported) return;
+    _posSub?.cancel();
+    _playingSub?.cancel();
+    _posSub = MusicService.desktopLyricPositionStream.listen((_) {
+      if (!_enabled || !mounted) return;
+      unawaited(_syncPayload());
+    });
+    _playingSub = MusicService.playingStream.listen((_) {
+      if (!_enabled || !mounted) return;
+      unawaited(_syncPayload());
+    });
+  }
+
+  void _reattachPlayerStreamSubscriptions() {
+    _bindPlayerStreamSubscriptions();
+    if (_enabled && mounted) {
+      unawaited(_syncPayload());
+    }
+  }
+
   Future<void> _attachAsync() async {
     if (_registered || !desktopFloatingLyricsSupported) return;
 
@@ -257,33 +280,37 @@ class _DesktopFloatingLyricsHostState extends State<DesktopFloatingLyricsHost> {
       _glueRefresh,
       onShutdown: _hideLyricsWindow,
     );
+    MusicService.addDesktopPlayerRecreatedListener(
+      _reattachPlayerStreamSubscriptions,
+    );
+    _enabled = await SettingsService.loadDesktopFloatingLyricsEnabled();
+    _bindPlayerStreamSubscriptions();
 
     await _applyEnabledAndSync();
     if (!mounted) {
       DesktopFloatingLyricsGlue.unregister();
+      MusicService.removeDesktopPlayerRecreatedListener(
+        _reattachPlayerStreamSubscriptions,
+      );
+      _posSub?.cancel();
+      _playingSub?.cancel();
       return;
     }
-
-    _posSub = MusicService.positionStream.listen((_) {
-      if (!_enabled) return;
-      if (!mounted) return;
-      unawaited(_syncPayload());
-    });
-
-    _playingSub = MusicService.playingStream.listen((_) {
-      if (!_enabled) return;
-      if (!mounted) return;
-      unawaited(_syncPayload());
-    });
 
     Provider.of<PlayListProvider>(context, listen: false)
         .addListener(_playlistChanged);
     _registered = true;
+    if (_enabled && mounted) {
+      unawaited(_syncPayload());
+    }
   }
 
   @override
   void dispose() {
     if (_registered && desktopFloatingLyricsSupported) {
+      MusicService.removeDesktopPlayerRecreatedListener(
+        _reattachPlayerStreamSubscriptions,
+      );
       DesktopFloatingLyricsGlue.unregister();
       try {
         Provider.of<PlayListProvider>(context, listen: false)

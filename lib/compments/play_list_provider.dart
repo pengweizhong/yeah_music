@@ -136,6 +136,22 @@ class PlayListProvider extends ChangeNotifier {
   /// 串行切歌 / 换队列，避免连点下一曲时多次 [playAt] 与 [MusicService] 交错导致打断加载后不播放。
   Future<void> _playbackNavChain = Future<void>.value();
 
+  /// mpv 卡死后 [_playbackNavChain] / [_playbackNavDepth] 可能无法推进；换源前强制复位。
+  void resetStuckPlaybackNavigation() {
+    _playbackNavChain = Future<void>.value();
+    _playbackNavDepth = 0;
+    _errorSkipHandlerRunning = false;
+    _coalescedPlayNextSteps = 0;
+    _coalescedPlayPrevSteps = 0;
+    MusicService.abortPendingPlayChain();
+  }
+
+  void _reattachDesktopPlayerListeners() {
+    if (!_desktopUsesMediaKitPlayback()) return;
+    _attachPlaybackCompletionListener();
+    _attachPlaybackErrorListener();
+  }
+
   /// 连点「下一曲」合并为一次 [_applyPlayNextSteps]，避免每一步都完整 await 播放器。
   int _coalescedPlayNextSteps = 0;
 
@@ -379,6 +395,13 @@ class PlayListProvider extends ChangeNotifier {
 
   /// [playAt] / [setPlaybackQueueAndPlay] / 合并后的上下曲均经此排队执行。
   Future<void> _enqueuePlaybackNav(Future<void> Function() job) async {
+    if (_desktopUsesMediaKitPlayback() && _playbackNavDepth > 0) {
+      appLog.w('播放导航链卡住，强制复位后执行新操作');
+      resetStuckPlaybackNavigation();
+      unawaited(
+        MusicService.recoverDesktopPlaybackEngine(reason: 'stuck playback nav'),
+      );
+    }
     final f = _playbackNavChain
         .catchError((Object? e) {
           appLog.d('playback nav 前序(可忽略): $e');
@@ -592,6 +615,14 @@ class PlayListProvider extends ChangeNotifier {
       useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
     );
     if (!ok) {
+      if (_desktopUsesMediaKitPlayback()) {
+        resetStuckPlaybackNavigation();
+        unawaited(
+          MusicService.recoverDesktopPlaybackEngine(
+            reason: 'setPlaybackQueue failed',
+          ),
+        );
+      }
       reportPlaybackFailureToUser();
       return;
     }
@@ -791,6 +822,7 @@ class PlayListProvider extends ChangeNotifier {
     _attachPlaybackCompletionListener();
     _attachPlayerIndexListener();
     _attachPlaybackErrorListener();
+    MusicService.addDesktopPlayerRecreatedListener(_reattachDesktopPlayerListeners);
     if (!kIsWeb && Platform.isAndroid) {
       unawaited(_attachAndroidCarLyricsIfEnabled());
     }
@@ -1050,13 +1082,16 @@ class PlayListProvider extends ChangeNotifier {
           const Duration(milliseconds: 900)) {
         return;
       }
-      if (_playbackNavDepth > 0) return;
       if (playList.isEmpty) return;
       _lastErrorSkipAt = now;
       _errorSkipHandlerRunning = true;
       appLog.w('mpv 解码异常，尝试自动下一曲', error: error);
       Future<void>.delayed(const Duration(milliseconds: 120), () async {
         try {
+          resetStuckPlaybackNavigation();
+          await MusicService.recoverDesktopPlaybackEngine(
+            reason: 'decode error',
+          );
           if (_playbackMode == PlaybackMode.playOnce) {
             await MusicService().pause();
             return;
@@ -1154,6 +1189,9 @@ class PlayListProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    MusicService.removeDesktopPlayerRecreatedListener(
+      _reattachDesktopPlayerListeners,
+    );
     _sleepShutdownTimer?.cancel();
     _playerCompletionSubscription?.cancel();
     _playerIndexSubscription?.cancel();
@@ -1452,6 +1490,13 @@ class PlayListProvider extends ChangeNotifier {
     PlaybackSessionSurface? listSession,
     bool clearDeferredResume = true,
   }) async {
+    if (_playbackNavDepth > 0) {
+      appLog.w('上一首换源未结束(depth=$_playbackNavDepth)，复位播放导航');
+      resetStuckPlaybackNavigation();
+      unawaited(
+        MusicService.recoverDesktopPlaybackEngine(reason: 'stale playback nav'),
+      );
+    }
     _playbackNavDepth++;
     try {
       if (clearDeferredResume) {
@@ -1492,6 +1537,12 @@ class PlayListProvider extends ChangeNotifier {
         useAndroidConcatQueue: _playbackMode != PlaybackMode.playOnce,
       );
       if (!ok) {
+        if (_desktopUsesMediaKitPlayback()) {
+          resetStuckPlaybackNavigation();
+          unawaited(
+            MusicService.recoverDesktopPlaybackEngine(reason: 'playAt failed'),
+          );
+        }
         reportPlaybackFailureToUser();
         return;
       }
@@ -1659,6 +1710,12 @@ class PlayListProvider extends ChangeNotifier {
     final list = playList;
     if (list.isEmpty) return;
     if (_playbackMode == PlaybackMode.playOnce) return;
+    if (_desktopUsesMediaKitPlayback() && _playbackNavDepth > 0) {
+      resetStuckPlaybackNavigation();
+      unawaited(
+        MusicService.recoverDesktopPlaybackEngine(reason: 'playNext while stuck'),
+      );
+    }
 
     _coalescedPlayNextSteps++;
     final f = _playbackNavChain
@@ -1691,6 +1748,12 @@ class PlayListProvider extends ChangeNotifier {
   Future<void> playPrev() async {
     final list = playList;
     if (list.isEmpty) return;
+    if (_desktopUsesMediaKitPlayback() && _playbackNavDepth > 0) {
+      resetStuckPlaybackNavigation();
+      unawaited(
+        MusicService.recoverDesktopPlaybackEngine(reason: 'playPrev while stuck'),
+      );
+    }
 
     _coalescedPlayPrevSteps++;
     final f = _playbackNavChain

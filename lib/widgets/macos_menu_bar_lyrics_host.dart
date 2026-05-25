@@ -75,6 +75,35 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
     unawaited(_applyEnabledAndSync());
   }
 
+  Stream<Duration> get _lyricPositionStream =>
+      MusicService.desktopLyricPositionStream;
+
+  /// 订阅进度/播放状态；勿依赖 [_registered]（首次 attach 时尚未置 true）。
+  void _bindPlayerStreamSubscriptions() {
+    if (!MacosMenuBarLyrics.supported) return;
+    _posSub?.cancel();
+    _playingSub?.cancel();
+    _posSub = _lyricPositionStream.listen((_) {
+      if (!_enabled || !mounted) return;
+      final l10n = AppLocalizations.of(context);
+      unawaited(_syncToNative(l10n));
+    });
+    _playingSub = MusicService.playingStream.listen((_) {
+      if (!_enabled || !mounted) return;
+      final l10n = AppLocalizations.of(context);
+      unawaited(_syncToNative(l10n));
+    });
+  }
+
+  /// [recoverDesktopPlaybackEngine] 重建 [AudioPlayer] 后须重新订阅。
+  void _reattachPlayerStreamSubscriptions() {
+    _bindPlayerStreamSubscriptions();
+    if (_enabled && mounted) {
+      final l10n = AppLocalizations.of(context);
+      unawaited(_syncToNative(l10n));
+    }
+  }
+
   Future<void> _syncToNative(AppLocalizations? l10n) async {
     if (!MacosMenuBarLyrics.supported || !_enabled || !mounted) return;
 
@@ -139,7 +168,9 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
 
   Future<void> _applyEnabledAndSync() async {
     if (!MacosMenuBarLyrics.supported) return;
-    _enabled = await SettingsService.loadMacosMenuBarLyricsEnabled();
+    if (!_registered) {
+      _enabled = await SettingsService.loadMacosMenuBarLyricsEnabled();
+    }
     await MacosMenuBarLyrics.setVisible(_enabled);
     if (!_enabled) {
       _resetMenuBarNativeDedupe();
@@ -188,26 +219,23 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
     if (_registered || !MacosMenuBarLyrics.supported) return;
 
     MacosMenuBarLyricsGlue.register(_glueRefresh);
+    MusicService.addDesktopPlayerRecreatedListener(
+      _reattachPlayerStreamSubscriptions,
+    );
+    // 先读开关再绑进度流，避免恢复上次播放时进度事件因 !_enabled 被丢弃。
+    _enabled = await SettingsService.loadMacosMenuBarLyricsEnabled();
+    _bindPlayerStreamSubscriptions();
 
     await _applyEnabledAndSync();
     if (!mounted) {
       MacosMenuBarLyricsGlue.unregister();
+      MusicService.removeDesktopPlayerRecreatedListener(
+        _reattachPlayerStreamSubscriptions,
+      );
+      _posSub?.cancel();
+      _playingSub?.cancel();
       return;
     }
-
-    _posSub = MusicService.positionStream.listen((_) {
-      if (!_enabled) return;
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      unawaited(_syncToNative(l10n));
-    });
-
-    _playingSub = MusicService.playingStream.listen((_) {
-      if (!_enabled) return;
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      unawaited(_syncToNative(l10n));
-    });
 
     _lastSyncedLocale = Localizations.localeOf(context);
 
@@ -239,11 +267,18 @@ class _MacosMenuBarLyricsHostState extends State<MacosMenuBarLyricsHost> {
     Provider.of<PlayListProvider>(context, listen: false)
         .addListener(_playlistChanged);
     _registered = true;
+    if (_enabled && mounted) {
+      final l10n = AppLocalizations.of(context);
+      unawaited(_syncToNative(l10n));
+    }
   }
 
   @override
   void dispose() {
     if (_registered && MacosMenuBarLyrics.supported) {
+      MusicService.removeDesktopPlayerRecreatedListener(
+        _reattachPlayerStreamSubscriptions,
+      );
       MacosMenuBarLyricsGlue.unregister();
       try {
         Provider.of<PlayListProvider>(context, listen: false)

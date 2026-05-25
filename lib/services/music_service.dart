@@ -32,6 +32,7 @@ import 'package:yeah_music/utils/external_lyric_line_formatter.dart';
 import 'package:yeah_music/utils/app_ephemeral_storage.dart';
 import 'package:yeah_music/utils/application_utils.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/macos_file_access.dart';
 import 'package:yeah_music/utils/folder_song_hive_persistence.dart';
 import 'package:yeah_music/utils/song_library_metadata_hydrator.dart';
 import 'package:yeah_music/utils/song_path_utils.dart';
@@ -42,7 +43,125 @@ class MusicService {
   static AndroidLoudnessEnhancer? _androidLoudnessEnhancer;
   static AndroidEqualizer? _androidEqualizer;
 
-  static final AudioPlayer _player = _createAudioPlayer();
+  static AudioPlayer _player = _createAudioPlayer();
+
+  /// 桌面 [recoverDesktopPlaybackEngine] 重建 [AudioPlayer] 后需重新订阅 [_player] 的流（进度、播放状态等）。
+  static final List<void Function()> _desktopPlayerRecreatedListeners = [];
+
+  static void addDesktopPlayerRecreatedListener(void Function() listener) {
+    if (!_desktopPlayerRecreatedListeners.contains(listener)) {
+      _desktopPlayerRecreatedListeners.add(listener);
+    }
+  }
+
+  static void removeDesktopPlayerRecreatedListener(void Function() listener) {
+    _desktopPlayerRecreatedListeners.remove(listener);
+  }
+
+  static void _notifyDesktopPlayerRecreated() {
+    for (final listener
+        in List<void Function()>.from(_desktopPlayerRecreatedListeners)) {
+      try {
+        listener();
+      } catch (e, st) {
+        appLog.e('desktopPlayerRecreated listener', error: e, stackTrace: st);
+      }
+    }
+  }
+
+  static bool get usesDesktopMediaKitPlayback {
+    return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+  }
+
+  static const Duration _desktopStopTimeout = Duration(seconds: 4);
+  static const Duration _desktopSetSourceTimeout = Duration(seconds: 20);
+
+  /// 丢弃 [_playChain] 上可能已挂起的换源，使后续点歌不再排队等死。
+  static void abortPendingPlayChain() {
+    _playChain = Future.value();
+  }
+
+  /// mpv 解码失败后 [stop]/[setAudioSource] 可能永久挂起；重置串行链并重建播放器。
+  static Future<void> recoverDesktopPlaybackEngine({String? reason}) async {
+    if (!usesDesktopMediaKitPlayback) return;
+    abortPendingPlayChain();
+    appLog.w(
+      '桌面播放引擎恢复${reason != null ? ': $reason' : ''}',
+    );
+    _listeningPlayingSub?.cancel();
+    _listeningPlayingSub = null;
+    try {
+      await _player.dispose().timeout(const Duration(seconds: 3));
+    } catch (e) {
+      appLog.d('dispose 播放器(可忽略): $e');
+    }
+    isPlaying = false;
+    androidCarQueueActive = false;
+    _invalidateAndroidQueueReuse();
+    _positionCache = Duration.zero;
+    _androidLyricPositionStream = null;
+    _desktopLyricPositionStream = null;
+    _player = _createAudioPlayer();
+    attachListeningTimeTracker();
+    await applyStoredPlaybackSpeed();
+    _notifyDesktopPlayerRecreated();
+  }
+
+  static Future<void> _desktopStopBeforeSourceChange() async {
+    if (!usesDesktopMediaKitPlayback) {
+      await _player.stop();
+      return;
+    }
+    try {
+      await _player.stop().timeout(_desktopStopTimeout);
+    } on TimeoutException catch (e) {
+      appLog.w('desktop stop 超时，继续换源', error: e);
+      unawaited(_player.stop());
+    } catch (e) {
+      appLog.d('desktop stop(可忽略): $e');
+    }
+  }
+
+  static Future<void> _desktopSetAudioSource(
+    AudioSource source, {
+    List<AudioSource>? sources,
+    int? initialIndex,
+  }) async {
+    if (!usesDesktopMediaKitPlayback) {
+      if (sources != null && initialIndex != null) {
+        await _player.setAudioSources(
+          sources,
+          initialIndex: initialIndex,
+          initialPosition: Duration.zero,
+        );
+      } else {
+        await _player.setAudioSource(source);
+      }
+      return;
+    }
+    try {
+      if (sources != null && initialIndex != null) {
+        await _player
+            .setAudioSources(
+              sources,
+              initialIndex: initialIndex,
+              initialPosition: Duration.zero,
+            )
+            .timeout(_desktopSetSourceTimeout);
+      } else {
+        await _player.setAudioSource(source).timeout(_desktopSetSourceTimeout);
+      }
+    } on TimeoutException catch (e) {
+      appLog.e('desktop setAudioSource 超时', error: e);
+      await recoverDesktopPlaybackEngine(reason: 'setAudioSource timeout');
+      rethrow;
+    }
+  }
+
+  static Future<void> _ensureDesktopFileAccessForSong(Song song) async {
+    if (!Platform.isMacOS || song.path.isEmpty) return;
+    await MacOsFileAccess.ensureForSongPath(song.path);
+  }
 
   static double _playbackSpeed = kDefaultPlaybackSpeed;
 
@@ -671,7 +790,7 @@ class MusicService {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
         cancelPendingAndroidSoundPresetSessionReapply();
-        await _player.stop();
+        await _desktopStopBeforeSourceChange();
         if (Platform.isAndroid) {
           try {
             await _player.setVolume(0.0);
@@ -686,11 +805,12 @@ class MusicService {
         } else {
           await Future<void>.delayed(const Duration(milliseconds: 28));
         }
+        await _ensureDesktopFileAccessForSong(song);
         final tag = await _tagForSong(song);
         final androidPreset = Platform.isAndroid
             ? await SettingsService.loadPlaybackSoundPreset()
             : null;
-        await _player.setAudioSource(_buildAudioSource(song, tag: tag));
+        await _desktopSetAudioSource(_buildAudioSource(song, tag: tag));
         await _player.seek(Duration.zero);
         if (Platform.isAndroid) {
           await Future<void>.delayed(const Duration(milliseconds: 28));
@@ -746,6 +866,9 @@ class MusicService {
           continue;
         }
         appLog.e('设置音频并播放失败', error: e);
+        if (usesDesktopMediaKitPlayback) {
+          await recoverDesktopPlaybackEngine(reason: 'playSong');
+        }
         return false;
       }
     }
@@ -836,7 +959,7 @@ class MusicService {
           await Future<void>.delayed(const Duration(milliseconds: 90));
         }
         cancelPendingAndroidSoundPresetSessionReapply();
-        await _player.stop();
+        await _desktopStopBeforeSourceChange();
         if (Platform.isAndroid) {
           try {
             await _player.setVolume(0.0);
@@ -851,6 +974,7 @@ class MusicService {
         } else {
           await Future<void>.delayed(const Duration(milliseconds: 28));
         }
+        await _ensureDesktopFileAccessForSong(queue[idx]);
         final showCover = await SettingsService.loadAndroidCarLyricsShowCover();
         final lyricStyle = await SettingsService.loadLyricSettings();
         final androidPreset = Platform.isAndroid
@@ -879,10 +1003,10 @@ class MusicService {
           }
           children.add(_buildAudioSource(s, tag: tag));
         }
-        await _player.setAudioSources(
-          children,
+        await _desktopSetAudioSource(
+          children.first,
+          sources: children,
           initialIndex: idx,
-          initialPosition: Duration.zero,
         );
         androidCarQueueActive = true;
         _lastAndroidQueueRef = queue;
@@ -928,6 +1052,9 @@ class MusicService {
         }
         appLog.e('设置队列音频并播放失败', error: e);
         _invalidateAndroidQueueReuse();
+        if (usesDesktopMediaKitPlayback) {
+          await recoverDesktopPlaybackEngine(reason: 'playQueue');
+        }
         return false;
       }
     }
@@ -1286,7 +1413,7 @@ class MusicService {
       isPlaying = false;
       androidCarQueueActive = false;
       _invalidateAndroidQueueReuse();
-      await _player.stop();
+      await _desktopStopBeforeSourceChange();
     } finally {
       try {
         await _player.setVolume(1.0);
@@ -1332,6 +1459,24 @@ class MusicService {
   static Duration get playerPosition => _player.position;
 
   static Stream<Duration>? _androidLyricPositionStream;
+  static Stream<Duration>? _desktopLyricPositionStream;
+
+  /// 桌面菜单栏/悬浮歌词：16ms 采样，避免 media_kit 默认 [positionStream] 过疏导致歌词不跟拍。
+  static Stream<Duration> get desktopLyricPositionStream {
+    if (!usesDesktopMediaKitPlayback) {
+      return positionStream;
+    }
+    return _desktopLyricPositionStream ??= _player
+        .createPositionStream(
+          steps: 4000,
+          minPeriod: const Duration(milliseconds: 16),
+          maxPeriod: const Duration(milliseconds: 16),
+        )
+        .map((d) {
+          _positionCache = d;
+          return d;
+        });
+  }
 
   /// 供 Android 通知歌词同步：最高约 16ms 采样，与播放页 [positionStream] 同源于 just_audio，
   /// 但不受默认 maxPeriod 200ms 限制。

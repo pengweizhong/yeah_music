@@ -164,6 +164,11 @@ class MediaKitPlayer extends AudioPlayerPlatform {
           _processingState = ProcessingStateMessage.idle;
           _errorCode = kErrorCode;
           _errorMessage = error;
+          _mediaOpened = false;
+          final completer = _loadCompleter;
+          if (completer != null && !completer.isCompleted) {
+            completer.complete(_duration);
+          }
           _updatePlaybackEvent();
         }
         _logger.severe('ERROR OCCURRED: $error');
@@ -255,19 +260,35 @@ class MediaKitPlayer extends AudioPlayerPlatform {
     _errorMessage = null;
     _updatePlaybackEvent();
 
-    if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
-      final audioSource =
-          request.audioSourceMessage as ConcatenatingAudioSourceMessage;
-      final playable = Playlist(
-          audioSource.children.map(_convertAudioSourceIntoMediaKit).toList(),
-          index: _currentIndex);
+    Future<void> openPlayable() async {
+      if (request.audioSourceMessage is ConcatenatingAudioSourceMessage) {
+        final audioSource =
+            request.audioSourceMessage as ConcatenatingAudioSourceMessage;
+        final playable = Playlist(
+            audioSource.children.map(_convertAudioSourceIntoMediaKit).toList(),
+            index: _currentIndex);
+        await _player.open(playable, play: _playing);
+      } else {
+        final playable =
+            _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
+        _logger.finest('playable is ${playable.toString()}');
+        await _player.open(playable, play: _playing);
+      }
+    }
 
-      await _player.open(playable, play: _playing);
-    } else {
-      final playable =
-          _convertAudioSourceIntoMediaKit(request.audioSourceMessage);
-      _logger.finest('playable is ${playable.toString()}');
-      await _player.open(playable, play: _playing);
+    try {
+      await openPlayable().timeout(const Duration(seconds: 25));
+    } on TimeoutException {
+      _mediaOpened = false;
+      _processingState = ProcessingStateMessage.idle;
+      _errorCode = kErrorCode;
+      _errorMessage = 'mpv open timed out';
+      final completer = _loadCompleter;
+      if (completer != null && !completer.isCompleted) {
+        completer.complete(null);
+      }
+      _updatePlaybackEvent();
+      rethrow;
     }
     _mediaOpened = true;
     final override = _currentMedia?.extras?['overrideDuration'];
