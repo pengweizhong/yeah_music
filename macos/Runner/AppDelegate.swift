@@ -41,8 +41,7 @@ class AppDelegate: FlutterAppDelegate {
         return true
     }
 
-    /// 浏览器 / ASWebAuthenticationSession 完成 OAuth 后，系统通过 `application:openURLs:` 把自定义 scheme 交给应用。
-    /// 直接调用 `flutter_appauth` 的 `handleGetURLEvent:`，比依赖 `dispatchRawAppleEvent` 更可靠。
+    /// 访达「打开方式」、双击音频、OAuth 回跳均经 `application:openURLs:` 进入。
     override func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             if url.scheme?.caseInsensitiveCompare(Self.oauthRedirectScheme) == .orderedSame {
@@ -50,9 +49,27 @@ class AppDelegate: FlutterAppDelegate {
                 if !yeahMusicForwardOAuthRedirectAppleEvent(for: url) {
                     yeahMusicDispatchInternetGetUrlAppleEvent(for: url)
                 }
+                continue
+            }
+            if url.isFileURL {
+                let path = url.path.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !path.isEmpty else { continue }
+                _ = url.startAccessingSecurityScopedResource()
+                OpenWithChannel.enqueue(path: path)
+                NSLog("YeahMusic: openWith enqueued \(path)")
             }
         }
         super.application(application, open: urls)
+    }
+
+    /// 部分场景仍走 `openFile:`（如旧版「打开方式」）。
+    override func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+        let path = (filename as NSString).expandingTildeInPath
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else { return false }
+        OpenWithChannel.enqueue(path: path)
+        NSLog("YeahMusic: openFile enqueued \(path)")
+        return true
     }
 
     /// 主窗口 outlet 偶发为空时兜底查找引擎。**跳过**桌面歌词等无边框子窗口，避免拿到子引擎上错误的 `publish` 实例。
