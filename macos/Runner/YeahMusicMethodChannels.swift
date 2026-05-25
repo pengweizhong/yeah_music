@@ -42,6 +42,8 @@ enum YeahMusicMethodChannels {
     }
 
     static func registerAll(messenger: FlutterBinaryMessenger) {
+        OpenWithChannel.register(messenger: messenger)
+
         let bookmark = FlutterMethodChannel(name: "com.pengwz.yeah_music/bookmark",
                                             binaryMessenger: messenger)
         bookmark.setMethodCallHandler { call, result in
@@ -195,6 +197,35 @@ enum YeahMusicMethodChannels {
                 result(FlutterError(code: "ERROR",
                                 message: "Failed to get disk space: \(error.localizedDescription)",
                                 details: nil))
+        }
+    }
+}
+
+/// 访达「打开方式」入队的本地音频路径；Flutter 通过 `consumePending` 取出并播放。
+enum OpenWithChannel {
+    private static let channelName = "com.pengwz.yeah_music/open_with"
+    private static var pendingPaths: [String] = []
+    private static let lock = NSLock()
+
+    static func enqueue(path: String) {
+        let p = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !p.isEmpty else { return }
+        lock.lock()
+        pendingPaths.append(p)
+        lock.unlock()
+    }
+
+    static func register(messenger: FlutterBinaryMessenger) {
+        let ch = FlutterMethodChannel(name: channelName, binaryMessenger: messenger)
+        ch.setMethodCallHandler { call, result in
+            guard call.method == "consumePending" else {
+                result(FlutterMethodNotImplemented)
+                return
+            }
+            lock.lock()
+            let path = pendingPaths.isEmpty ? nil : pendingPaths.removeFirst()
+            lock.unlock()
+            result(path)
         }
     }
 }

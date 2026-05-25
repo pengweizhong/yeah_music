@@ -64,6 +64,7 @@ import 'package:yeah_music/services/wire_remote_gesture_handler.dart';
 import 'package:yeah_music/platform/wire_remote_native.dart';
 import 'package:yeah_music/utils/app_ephemeral_storage.dart';
 import 'package:yeah_music/utils/file_utils.dart';
+import 'package:yeah_music/utils/macos_file_access.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -338,7 +339,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _kickOneDriveAutoSyncCheck();
-      _tryConsumeAndroidOpenWith();
+      _tryConsumePendingOpenWith();
     });
   }
 
@@ -353,8 +354,8 @@ class _YeahMusicAppState extends State<YeahMusicApp>
     unawaited(_maybeRunOneDriveAutoSync());
   }
 
-  Future<void> _tryConsumeAndroidOpenWith() async {
-    if (kIsWeb || !Platform.isAndroid) return;
+  Future<void> _tryConsumePendingOpenWith() async {
+    if (kIsWeb || (!Platform.isAndroid && !Platform.isMacOS)) return;
     for (;;) {
       if (!mounted) return;
       final path = await OpenWithBridge.consumePendingPath();
@@ -371,6 +372,10 @@ class _YeahMusicAppState extends State<YeahMusicApp>
       try {
         if (!play.initialized) {
           await play.init(folder, oneDrive: od, userPlaylists: userPl);
+        }
+        if (!mounted) return;
+        if (Platform.isMacOS) {
+          await MacOsFileAccess.ensureForSongPath(path);
         }
         if (!mounted) return;
         final song = Song(path);
@@ -439,7 +444,7 @@ class _YeahMusicAppState extends State<YeahMusicApp>
       });
     }
     _kickOneDriveAutoSyncCheck();
-    _tryConsumeAndroidOpenWith();
+    _tryConsumePendingOpenWith();
   }
 
   @override
