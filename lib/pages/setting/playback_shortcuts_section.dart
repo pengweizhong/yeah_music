@@ -36,12 +36,12 @@ bool _isModifierOnlyKey(LogicalKeyboardKey k) {
 
 Future<SingleActivator?> _recordShortcut(BuildContext context) {
   final l10n = AppLocalizations.of(context);
-  final titleFg = context.gradFg();
-  final bodyFg = context.gradFg(0.6);
   return showFrostedDialog<SingleActivator>(
     context: context,
     child: Builder(
       builder: (ctx) {
+        final titleFg = ctx.gradFg();
+        final bodyFg = ctx.gradFgMuted();
         return Padding(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
           child: Column(
@@ -50,39 +50,52 @@ Future<SingleActivator?> _recordShortcut(BuildContext context) {
             children: [
               Text(
                 l10n.settingsPlaybackShortcutsPressKey,
-                style: context.gradTextStyle(
+                style: ctx.gradTextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: titleFg,
                 ),
               ),
               const SizedBox(height: 14),
-              Focus(
-                autofocus: true,
-                onKeyEvent: (node, event) {
-                  if (event is! KeyDownEvent) return KeyEventResult.ignored;
-                  if (event.logicalKey == LogicalKeyboardKey.escape) {
-                    Navigator.of(ctx).pop();
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: ctx.gradBorder(0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: ctx.gradBorder(0.16)),
+                ),
+                child: Focus(
+                  autofocus: true,
+                  onKeyEvent: (node, event) {
+                    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+                    if (event.logicalKey == LogicalKeyboardKey.escape) {
+                      Navigator.of(ctx).pop();
+                      return KeyEventResult.handled;
+                    }
+                    if (_isModifierOnlyKey(event.logicalKey)) {
+                      return KeyEventResult.ignored;
+                    }
+                    final a = SingleActivator(
+                      event.logicalKey,
+                      control: HardwareKeyboard.instance.isControlPressed,
+                      meta: HardwareKeyboard.instance.isMetaPressed,
+                      alt: HardwareKeyboard.instance.isAltPressed,
+                      shift: HardwareKeyboard.instance.isShiftPressed,
+                    );
+                    Navigator.of(ctx).pop(a);
                     return KeyEventResult.handled;
-                  }
-                  if (_isModifierOnlyKey(event.logicalKey)) {
-                    return KeyEventResult.ignored;
-                  }
-                  final a = SingleActivator(
-                    event.logicalKey,
-                    control: HardwareKeyboard.instance.isControlPressed,
-                    meta: HardwareKeyboard.instance.isMetaPressed,
-                    alt: HardwareKeyboard.instance.isAltPressed,
-                    shift: HardwareKeyboard.instance.isShiftPressed,
-                  );
-                  Navigator.of(ctx).pop(a);
-                  return KeyEventResult.handled;
-                },
-                child: Text(
-                  l10n.settingsPlaybackShortcutsPressKeyHint,
-                  style: context.gradTextStyle(
-                    color: bodyFg,
-                    height: 1.45,
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 16,
+                    ),
+                    child: Text(
+                      l10n.settingsPlaybackShortcutsPressKeyHint,
+                      style: ctx.gradTextStyle(
+                        color: bodyFg,
+                        height: 1.45,
+                      ),
+                    ),
                   ),
                 ),
               ),
