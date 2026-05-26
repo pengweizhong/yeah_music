@@ -2145,6 +2145,42 @@ abstract class AppLocalizations {
   /// **'Uploads'**
   String get oneDriveTransferTabUpload;
 
+  /// No description provided for @oneDriveTransferPathCloudSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud:'**
+  String get oneDriveTransferPathCloudSource;
+
+  /// No description provided for @oneDriveTransferPathDownloadDir.
+  ///
+  /// In en, this message translates to:
+  /// **'Download folder:'**
+  String get oneDriveTransferPathDownloadDir;
+
+  /// No description provided for @oneDriveTransferPathDownloadFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Local file:'**
+  String get oneDriveTransferPathDownloadFile;
+
+  /// No description provided for @oneDriveTransferPathDownloadTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Download to:'**
+  String get oneDriveTransferPathDownloadTo;
+
+  /// No description provided for @oneDriveTransferPathUploadTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload to:'**
+  String get oneDriveTransferPathUploadTo;
+
+  /// No description provided for @oneDriveTransferPathLocalSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Local:'**
+  String get oneDriveTransferPathLocalSource;
+
   /// No description provided for @oneDriveDownloadPause.
   ///
   /// In en, this message translates to:

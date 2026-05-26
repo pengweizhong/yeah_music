@@ -1121,6 +1121,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oneDriveTransferTabUpload => 'アップロード';
 
   @override
+  String get oneDriveTransferPathCloudSource => 'クラウド：';
+
+  @override
+  String get oneDriveTransferPathDownloadDir => '保存フォルダ：';
+
+  @override
+  String get oneDriveTransferPathDownloadFile => 'ローカルファイル：';
+
+  @override
+  String get oneDriveTransferPathDownloadTo => '保存先：';
+
+  @override
+  String get oneDriveTransferPathUploadTo => 'アップロード先：';
+
+  @override
+  String get oneDriveTransferPathLocalSource => 'ローカル：';
+
+  @override
   String get oneDriveDownloadPause => '一時停止';
 
   @override

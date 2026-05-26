@@ -1293,6 +1293,67 @@ class OneDriveController extends ChangeNotifier {
     return File(p.join(root.path, '${itemId}_$safe'));
   }
 
+  /// 当前点播/批量下载实际使用的本地根目录（与设置中「本地下载目录」一致；无效时退回 `onedrive_cache`）。
+  Future<String> activeLocalDownloadDirectoryPath() async {
+    return (await _playbackStorageDirectory()).path;
+  }
+
+  /// 队列展示：下载任务预计写入的本地完整路径（与 [_localFileForPlayback] / 下载逻辑一致）。
+  Future<String> expectedLocalDownloadPathForItem(OneDriveGraphItem item) async {
+    final f = await _localFileForPlayback(item.id, item.name);
+    return f.path;
+  }
+
+  /// 队列展示：上传目标在 OneDrive 上的真实路径（Graph 父路径 + 文件名）。
+  Future<String> resolveUploadDestinationDisplayPath({
+    required String parentFolderItemId,
+    required String remoteFileName,
+  }) async {
+    final remote = remoteFileName.trim();
+    if (remote.isEmpty) return '';
+    final parent = parentFolderItemId.trim();
+    final token = await getAccessToken();
+    if (token != null && parent.isNotEmpty) {
+      try {
+        final folderPath = await _graph.resolveDriveFolderDisplayPath(
+          accessToken: token,
+          folderItemId: parent,
+        );
+        if (folderPath != null && folderPath.trim().isNotEmpty) {
+          return '${folderPath.trim()}/$remote';
+        }
+      } catch (e, st) {
+        assert(() {
+          debugPrint('resolveUploadDestinationDisplayPath: $e\n$st');
+          return true;
+        }());
+      }
+    }
+    return uploadDestinationDisplayPathFallback(parent, remote);
+  }
+
+  /// 无法访问 Graph 时退回：与设置里保存的上传文件夹标签一致。
+  String uploadDestinationDisplayPathFallback(
+    String parentFolderItemId,
+    String remoteFileName,
+  ) {
+    final remote = remoteFileName.trim();
+    if (remote.isEmpty) return '';
+    final parent = parentFolderItemId.trim();
+    var folder = '';
+    if (parent.isNotEmpty) {
+      if (_musicUploadFolderId != null && parent == _musicUploadFolderId) {
+        folder = _musicUploadFolderLabel.trim();
+      } else if (_cloudAppDataFolderId != null && parent == _cloudAppDataFolderId) {
+        folder = _cloudAppDataFolderLabel.trim();
+      }
+    }
+    if (folder.isEmpty) {
+      folder = defaultMusicUploadFolderName;
+    }
+    return '$folder/$remote';
+  }
+
   /// 点播落地目录集合（默认 `onedrive_cache`、用户下载目录、历史扫描根等），供上传前解析真实路径。
   Future<List<Directory>> localPlaybackSearchRoots() =>
       _onedriveLocalPlaybackRoots();

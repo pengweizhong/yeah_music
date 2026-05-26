@@ -1103,6 +1103,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oneDriveTransferTabUpload => '上传';
 
   @override
+  String get oneDriveTransferPathCloudSource => '云端：';
+
+  @override
+  String get oneDriveTransferPathDownloadDir => '下载目录：';
+
+  @override
+  String get oneDriveTransferPathDownloadFile => '本地文件：';
+
+  @override
+  String get oneDriveTransferPathDownloadTo => '下载至：';
+
+  @override
+  String get oneDriveTransferPathUploadTo => '上传至：';
+
+  @override
+  String get oneDriveTransferPathLocalSource => '本地：';
+
+  @override
   String get oneDriveDownloadPause => '暂停';
 
   @override
@@ -4171,6 +4189,24 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get oneDriveTransferTabUpload => '上传';
 
   @override
+  String get oneDriveTransferPathCloudSource => '云端：';
+
+  @override
+  String get oneDriveTransferPathDownloadDir => '下载目录：';
+
+  @override
+  String get oneDriveTransferPathDownloadFile => '本地文件：';
+
+  @override
+  String get oneDriveTransferPathDownloadTo => '下载至：';
+
+  @override
+  String get oneDriveTransferPathUploadTo => '上传至：';
+
+  @override
+  String get oneDriveTransferPathLocalSource => '本地：';
+
+  @override
   String get oneDriveDownloadPause => '暂停';
 
   @override
@@ -7237,6 +7273,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get oneDriveTransferTabUpload => '上傳';
+
+  @override
+  String get oneDriveTransferPathCloudSource => '雲端：';
+
+  @override
+  String get oneDriveTransferPathDownloadDir => '下載目錄：';
+
+  @override
+  String get oneDriveTransferPathDownloadFile => '本機檔案：';
+
+  @override
+  String get oneDriveTransferPathDownloadTo => '下載至：';
+
+  @override
+  String get oneDriveTransferPathUploadTo => '上傳至：';
+
+  @override
+  String get oneDriveTransferPathLocalSource => '本機：';
 
   @override
   String get oneDriveDownloadPause => '暫停';

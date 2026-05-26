@@ -13,8 +13,10 @@
 // GNU General Public License for more details.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:yeah_music/l10n/app_localizations.dart';
 import 'package:yeah_music/models/onedrive_download_task.dart';
+import 'package:yeah_music/widgets/app_prompts.dart';
 
 class OneDriveDownloadTaskRow extends StatelessWidget {
   const OneDriveDownloadTaskRow({
@@ -72,13 +74,56 @@ class OneDriveDownloadTaskRow extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            task.subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 11),
-          ),
+          if (!task.isUpload && task.subtitle.trim().isNotEmpty)
+            _CopyableTransferPathLine(
+              label: l10n.oneDriveTransferPathCloudSource,
+              path: task.subtitle.trim(),
+              color: Colors.white.withValues(alpha: 0.35),
+              copiedMessage: l10n.diagnosticLogCopied,
+            ),
+          if (task.isUpload) ...[
+            if ((task.uploadCloudPath ?? '').trim().isNotEmpty)
+              _CopyableTransferPathLine(
+                label: l10n.oneDriveTransferPathUploadTo,
+                path: task.uploadCloudPath!.trim(),
+                color: Colors.white.withValues(alpha: 0.5),
+                copiedMessage: l10n.diagnosticLogCopied,
+              ),
+            if ((task.uploadLocalPath ?? '').trim().isNotEmpty)
+              _CopyableTransferPathLine(
+                label: l10n.oneDriveTransferPathLocalSource,
+                path: task.uploadLocalPath!.trim(),
+                color: Colors.white.withValues(alpha: 0.35),
+                copiedMessage: l10n.diagnosticLogCopied,
+              ),
+          ] else ...[
+            if ((task.localDownloadRootPath ?? '').trim().isNotEmpty)
+              _CopyableTransferPathLine(
+                label: l10n.oneDriveTransferPathDownloadDir,
+                path: task.localDownloadRootPath!.trim(),
+                color: Colors.white.withValues(alpha: 0.5),
+                copiedMessage: l10n.diagnosticLogCopied,
+              ),
+            if ((task.displayLocalDownloadPath ?? '').trim().isNotEmpty)
+              _CopyableTransferPathLine(
+                label: l10n.oneDriveTransferPathDownloadFile,
+                path: task.displayLocalDownloadPath!.trim(),
+                color: Colors.white.withValues(alpha: 0.45),
+                copiedMessage: l10n.diagnosticLogCopied,
+              ),
+          ],
+          if (task.isUpload && task.subtitle.trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              task.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.35),
+                fontSize: 11,
+              ),
+            ),
+          ],
           if (task.status == OneDriveDownloadStatus.downloading ||
               task.status == OneDriveDownloadStatus.completed) ...[
             const SizedBox(height: 6),
@@ -111,6 +156,76 @@ class OneDriveDownloadTaskRow extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// 传输队列路径行：点击整行或复制按钮将 [path] 写入剪贴板。
+class _CopyableTransferPathLine extends StatelessWidget {
+  const _CopyableTransferPathLine({
+    required this.label,
+    required this.path,
+    required this.color,
+    required this.copiedMessage,
+  });
+
+  final String label;
+  final String path;
+  final Color color;
+  final String copiedMessage;
+
+  Future<void> _copy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: path));
+    if (!context.mounted) return;
+    showAppSnackBar(context, copiedMessage, kind: AppSnackKind.neutral);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _copy(context),
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$label ',
+                          style: TextStyle(color: color, fontSize: 11),
+                        ),
+                        TextSpan(
+                          text: path,
+                          style: TextStyle(
+                            color: color.withValues(alpha: 0.92),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.copy_rounded,
+                  size: 15,
+                  color: color.withValues(alpha: 0.65),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

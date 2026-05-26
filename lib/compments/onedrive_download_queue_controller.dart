@@ -224,6 +224,22 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
     );
   }
 
+  Future<OneDriveDownloadTask> _newDownloadTask({
+    required OneDriveGraphItem graphItem,
+    required String title,
+    required String subtitle,
+  }) async {
+    final root = await _od.activeLocalDownloadDirectoryPath();
+    final filePath = await _od.expectedLocalDownloadPathForItem(graphItem);
+    return OneDriveDownloadTask(
+      graphItem: graphItem,
+      title: title,
+      subtitle: subtitle,
+      localDownloadRootPath: root,
+      localDownloadPath: filePath,
+    );
+  }
+
   bool _hasActiveUpload(String localPath, String parentId, String remoteName) {
     return _tasks.any((t) {
       if (!t.isUpload) return false;
@@ -267,10 +283,32 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
             : OneDriveGraphItem(id: id, name: name, isFolder: false);
         final eqMillis = m['enqueuedAt'];
         final sdMillis = m['startedDownloadingAt'];
+        final persistedLocalPath = (m['localPath'] as String?)?.trim();
+        final localDl = (m['localDownloadPath'] as String?)?.trim();
+        final localRoot = (m['localDownloadRootPath'] as String?)?.trim();
+        final uploadCloud = (m['uploadCloudPath'] as String?)?.trim();
         final task = OneDriveDownloadTask(
           graphItem: gi,
           title: title,
           subtitle: subtitle,
+          localDownloadRootPath: isUploadPersisted
+              ? null
+              : (localRoot != null && localRoot.isNotEmpty ? localRoot : null),
+          localDownloadPath: isUploadPersisted
+              ? null
+              : (localDl != null && localDl.isNotEmpty
+                  ? localDl
+                  : (persistedLocalPath != null && persistedLocalPath.isNotEmpty
+                      ? persistedLocalPath
+                      : null)),
+          uploadCloudPath: isUploadPersisted
+              ? ((uploadCloud != null && uploadCloud.isNotEmpty)
+                  ? uploadCloud
+                  : _od.uploadDestinationDisplayPathFallback(
+                      (m['uploadParentItemId'] as String?) ?? id,
+                      (m['uploadRemoteFileName'] as String?) ?? name,
+                    ))
+              : null,
           enqueuedAt: eqMillis is num
               ? DateTime.fromMillisecondsSinceEpoch(eqMillis.toInt())
               : null,
@@ -292,9 +330,8 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         );
         task.receivedBytes = (m['receivedBytes'] as num?)?.toInt() ?? 0;
         task.totalBytes = (m['totalBytes'] as num?)?.toInt();
-        final path = m['localPath'] as String?;
-        if (path != null && path.trim().isNotEmpty) {
-          final f = File(path.trim());
+        if (persistedLocalPath != null && persistedLocalPath.isNotEmpty) {
+          final f = File(persistedLocalPath);
           if (await f.exists() && await f.length() > 0) {
             final s = Song(f.path);
             await FileUtils.loadSongMeta(s, loadEmbeddedAlbumArt: false);
@@ -364,6 +401,10 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       'receivedBytes': t.receivedBytes,
       'totalBytes': t.totalBytes,
       'localPath': t.song?.path,
+      if (!t.isUpload) ...{
+        'localDownloadPath': t.displayLocalDownloadPath,
+        'localDownloadRootPath': t.localDownloadRootPath,
+      },
       'error': t.error?.toString(),
       'enqueuedAt': t.enqueuedAt.millisecondsSinceEpoch,
       'startedDownloadingAt': t.startedDownloadingAt?.millisecondsSinceEpoch,
@@ -373,6 +414,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       m['uploadLocalPath'] = t.uploadLocalPath;
       m['uploadParentItemId'] = t.uploadParentItemId;
       m['uploadRemoteFileName'] = t.uploadRemoteFileName;
+      m['uploadCloudPath'] = t.uploadCloudPath;
     }
     return m;
   }
@@ -482,7 +524,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       final cached = await _od.songFromLocalCacheIfExists(gi);
       if (cached != null) {
         final len = await File(cached.path).length();
-        final task = OneDriveDownloadTask(
+        final task = await _newDownloadTask(
           graphItem: gi,
           title: t.fileName,
           subtitle: t.displayPath,
@@ -496,7 +538,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         continue;
       }
       _tasks.add(
-        OneDriveDownloadTask(
+        await _newDownloadTask(
           graphItem: gi,
           title: t.fileName,
           subtitle: t.displayPath,
@@ -522,7 +564,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       final cached = await _od.songFromLocalCacheIfExists(e.item);
       if (cached != null) {
         final len = await File(cached.path).length();
-        final task = OneDriveDownloadTask(
+        final task = await _newDownloadTask(
           graphItem: e.item,
           title: e.title,
           subtitle: e.subtitle,
@@ -536,7 +578,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         continue;
       }
       _tasks.add(
-        OneDriveDownloadTask(
+        await _newDownloadTask(
           graphItem: e.item,
           title: e.title,
           subtitle: e.subtitle,
@@ -593,7 +635,11 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
               isFolder: false,
             ),
             title: songListPrimaryTitle(s),
-            subtitle: secondary.isEmpty ? uploadPath : secondary,
+            subtitle: secondary,
+            uploadCloudPath: await _od.resolveUploadDestinationDisplayPath(
+              parentFolderItemId: parentId,
+              remoteFileName: remote,
+            ),
             uploadLocalPath: uploadPath,
             uploadParentItemId: parentId,
             uploadRemoteFileName: remote,
@@ -624,7 +670,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       final cached = await _od.songFromLocalCacheIfExists(gi);
       if (cached != null) {
         final len = await File(cached.path).length();
-        final task = OneDriveDownloadTask(
+        final task = await _newDownloadTask(
           graphItem: gi,
           title: t.fileName,
           subtitle: t.displayPath,
@@ -636,7 +682,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         batchTasks.add(task);
       } else {
         batchTasks.add(
-          OneDriveDownloadTask(
+          await _newDownloadTask(
             graphItem: gi,
             title: t.fileName,
             subtitle: t.displayPath,
@@ -662,7 +708,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
       final cached = await _od.songFromLocalCacheIfExists(e.item);
       if (cached != null) {
         final len = await File(cached.path).length();
-        final task = OneDriveDownloadTask(
+        final task = await _newDownloadTask(
           graphItem: e.item,
           title: e.title,
           subtitle: e.subtitle,
@@ -674,7 +720,7 @@ class OneDriveDownloadQueueController extends ChangeNotifier {
         batchTasks.add(task);
       } else {
         batchTasks.add(
-          OneDriveDownloadTask(
+          await _newDownloadTask(
             graphItem: e.item,
             title: e.title,
             subtitle: e.subtitle,

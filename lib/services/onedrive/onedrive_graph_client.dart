@@ -170,6 +170,47 @@ class OneDriveGraphClient {
     return utf8.decode(r.bodyBytes);
   }
 
+  /// 将 Graph [parentReference.path]（如 `/drive/root:/Music/Sub`）转为展示用路径 `Music/Sub`。
+  static String? displayPathFromParentReference(Map<String, dynamic>? pref) {
+    if (pref == null) return null;
+    final raw = pref['path'];
+    if (raw is! String || raw.trim().isEmpty) return null;
+    final path = raw.trim();
+    const marker = ':/';
+    final i = path.indexOf(marker);
+    if (i >= 0) {
+      final tail = path.substring(i + marker.length);
+      final normalized = tail.replaceFirst(RegExp(r'^/+'), '');
+      return normalized.isEmpty ? null : normalized;
+    }
+    return path.replaceFirst(RegExp(r'^/+'), '');
+  }
+
+  /// 解析云盘文件夹在 OneDrive 中的展示路径（`父路径/文件夹名`）。
+  Future<String?> resolveDriveFolderDisplayPath({
+    required String accessToken,
+    required String folderItemId,
+  }) async {
+    final id = folderItemId.trim();
+    if (id.isEmpty) return null;
+    final u = Uri(
+      scheme: 'https',
+      host: 'graph.microsoft.com',
+      path: '/v1.0/me/drive/items/$id',
+      queryParameters: const {'\$select': 'name,parentReference'},
+    );
+    final decoded = await _getJson(u.toString(), accessToken);
+    final name = (decoded['name'] as String?)?.trim() ?? '';
+    final pref = decoded['parentReference'];
+    final parentPath = pref is Map<String, dynamic>
+        ? displayPathFromParentReference(pref)
+        : null;
+    if (parentPath != null && parentPath.isNotEmpty) {
+      return name.isEmpty ? parentPath : '$parentPath/$name';
+    }
+    return name.isEmpty ? null : name;
+  }
+
   /// 获取 drive item 的父文件夹 Graph id（用于与同目录下的封面文件配对）。
   Future<String?> driveItemParentFolderId({
     required String accessToken,

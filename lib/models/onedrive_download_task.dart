@@ -31,6 +31,9 @@ class OneDriveDownloadTask {
     required this.subtitle,
     DateTime? enqueuedAt,
     this.startedDownloadingAt,
+    this.localDownloadPath,
+    this.localDownloadRootPath,
+    this.uploadCloudPath,
     this.uploadLocalPath,
     this.uploadParentItemId,
     this.uploadRemoteFileName,
@@ -40,6 +43,15 @@ class OneDriveDownloadTask {
   final OneDriveGraphItem graphItem;
   final String title;
   final String subtitle;
+
+  /// 下载落地完整路径（入队时按点播缓存规则推算；完成后与 [song.path] 一致）。
+  final String? localDownloadPath;
+
+  /// 当前生效的本地下载根目录（设置项或默认 `onedrive_cache`）。
+  final String? localDownloadRootPath;
+
+  /// 上传目标云端展示路径（Graph 解析的 `文件夹路径/文件名`）。
+  final String? uploadCloudPath;
 
   /// 非 null 表示上传到 [uploadParentItemId]，云端文件名为 [uploadRemoteFileName]。
   final String? uploadLocalPath;
@@ -51,6 +63,15 @@ class OneDriveDownloadTask {
       uploadLocalPath!.isNotEmpty &&
       uploadParentItemId != null &&
       uploadParentItemId!.isNotEmpty;
+
+  /// 列表展示用：已完成时优先 [song.path]。
+  String? get displayLocalDownloadPath {
+    final done = song?.path.trim();
+    if (done != null && done.isNotEmpty) return done;
+    final planned = localDownloadPath?.trim();
+    if (planned != null && planned.isNotEmpty) return planned;
+    return null;
+  }
 
   /// 加入队列时刻（界面排序：同优先级内倒序）。
   final DateTime enqueuedAt;
