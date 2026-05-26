@@ -217,7 +217,6 @@
   "settingsLanguageDesc": "メニューや画面の言語を選びます。曲情報はファイルのタグに従います。",
   "settingsOneDrive": "OneDrive",
   "settingsOneDriveSubtitle": "Microsoft アカウントの同期、ディレクトリおよびダウンロード先",
-  "settingsOneDriveDesc": "Microsoft でサインイン（リリース版ではクライアント ID の入力は不要）。音楽の参照ルート、クラウドのアプリ用フォルダ、ローカルの保存先を設定できます。再生を始めるとき、保存先フォルダーが存在すればそこへ、なければアプリデータ内の既定キャッシュに保存します。",
   "settingsPlaybackShortcutsTitle": "キーボードショートカット",
   "settingsPlaybackShortcutsSubtitle": "再生・一時停止・前の曲・次の曲",
   "settingsPlaybackShortcutsPlayPause": "再生 / 一時停止",

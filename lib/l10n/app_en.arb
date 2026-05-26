@@ -216,7 +216,6 @@
   "settingsLanguageDesc": "Choose the language used for menus, settings, and in-app messages. Some content still follows track metadata language.",
   "settingsOneDrive": "OneDrive",
   "settingsOneDriveSubtitle": "Microsoft account sync, folders, downloads",
-  "settingsOneDriveDesc": "Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, and optionally a local folder for downloads while playing. If that folder is missing or unset, playback uses the default cache under app data.",
   "settingsPlaybackShortcutsTitle": "Keyboard shortcuts",
   "settingsPlaybackShortcutsSubtitle": "Play, pause, previous, and next track",
   "settingsPlaybackShortcutsPlayPause": "Play / pause",

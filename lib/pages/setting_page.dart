@@ -438,12 +438,6 @@ class SettingPage extends StatelessWidget {
                         Icons.cloud_outlined,
                         color: context.gradFg(),
                       ),
-                      trailing: _settingHelpButton(
-                        context,
-                        l10n: l10n,
-                        dialogTitle: l10n.settingsOneDrive,
-                        dialogBody: l10n.settingsOneDriveDesc,
-                      ),
                       onTap: () {
                         Navigator.push<void>(
                           context,

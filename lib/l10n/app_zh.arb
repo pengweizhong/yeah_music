@@ -217,7 +217,6 @@
   "settingsLanguageDesc": "设置菜单与界面文案语言；曲目信息仍以文件内嵌元数据为准。",
   "settingsOneDrive": "OneDrive",
   "settingsOneDriveSubtitle": "微软账号同步、目录与下载位置",
-  "settingsOneDriveDesc": "使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹与本地下载目录；点播时若自定义目录存在则写入该处，否则使用应用数据下的默认存储。",
   "settingsPlaybackShortcutsTitle": "快捷键",
   "settingsPlaybackShortcutsSubtitle": "播放、暂停、上一曲、下一曲",
   "settingsPlaybackShortcutsPlayPause": "播放 / 暂停",

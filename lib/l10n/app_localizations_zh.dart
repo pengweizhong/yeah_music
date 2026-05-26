@@ -481,10 +481,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsOneDriveSubtitle => '微软账号同步、目录与下载位置';
 
   @override
-  String get settingsOneDriveDesc =>
-      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹与本地下载目录；点播时若自定义目录存在则写入该处，否则使用应用数据下的默认存储。';
-
-  @override
   String get settingsPlaybackShortcutsTitle => '快捷键';
 
   @override
@@ -3567,10 +3563,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get settingsOneDriveSubtitle => '微软账号同步、目录与下载位置';
 
   @override
-  String get settingsOneDriveDesc =>
-      '使用 Microsoft 登录（正式版无需填写客户端 ID）。可选音乐浏览根目录、云端应用数据文件夹与本地下载目录；点播时若自定义目录存在则写入该处，否则使用应用数据下的默认存储。';
-
-  @override
   String get settingsPlaybackShortcutsTitle => '快捷键';
 
   @override
@@ -6651,10 +6643,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsOneDriveSubtitle => '微軟帳戶同步、目錄與下載位置';
-
-  @override
-  String get settingsOneDriveDesc =>
-      '使用 Microsoft 登入（正式版無需填寫用戶端 ID）。可選音樂瀏覽根目錄、雲端應用程式資料夾與本機下載目錄；點播時若自訂目錄存在則寫入該處，否則使用應用程式資料下的預設儲存。';
 
   @override
   String get settingsPlaybackShortcutsTitle => '快速鍵';

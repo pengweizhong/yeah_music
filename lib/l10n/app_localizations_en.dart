@@ -502,10 +502,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Microsoft account sync, folders, downloads';
 
   @override
-  String get settingsOneDriveDesc =>
-      'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, and optionally a local folder for downloads while playing. If that folder is missing or unset, playback uses the default cache under app data.';
-
-  @override
   String get settingsPlaybackShortcutsTitle => 'Keyboard shortcuts';
 
   @override

@@ -486,10 +486,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsOneDriveSubtitle => 'Microsoft アカウントの同期、ディレクトリおよびダウンロード先';
 
   @override
-  String get settingsOneDriveDesc =>
-      'Microsoft でサインイン（リリース版ではクライアント ID の入力は不要）。音楽の参照ルート、クラウドのアプリ用フォルダ、ローカルの保存先を設定できます。再生を始めるとき、保存先フォルダーが存在すればそこへ、なければアプリデータ内の既定キャッシュに保存します。';
-
-  @override
   String get settingsPlaybackShortcutsTitle => 'キーボードショートカット';
 
   @override

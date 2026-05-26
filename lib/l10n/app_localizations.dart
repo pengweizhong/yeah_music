@@ -990,12 +990,6 @@ abstract class AppLocalizations {
   /// **'Microsoft account sync, folders, downloads'**
   String get settingsOneDriveSubtitle;
 
-  /// No description provided for @settingsOneDriveDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in with Microsoft (no app ID to type in release builds). Pick music and app folders on OneDrive, and optionally a local folder for downloads while playing. If that folder is missing or unset, playback uses the default cache under app data.'**
-  String get settingsOneDriveDesc;
-
   /// No description provided for @settingsPlaybackShortcutsTitle.
   ///
   /// In en, this message translates to:
