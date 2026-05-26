@@ -25,6 +25,8 @@ import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/utils/android_storage_access.dart';
 import 'package:yeah_music/utils/macos_file_access.dart';
+import 'package:yeah_music/utils/mp3_metadata_bridge.dart'
+    show pathLooksLikeMp3, readMp3EmbeddedMetadata;
 import 'package:yeah_music/utils/wav_metadata_reader.dart';
 
 import '../models/song.dart';
@@ -52,6 +54,19 @@ AudioMetadata readEmbeddedAudioMetadata(
         stackTrace: st,
       );
     }
+  }
+  if (pathLooksLikeMp3(file.path)) {
+    final metadata = readMp3EmbeddedMetadata(file, getImage: getImage);
+    if (repairLyrics) {
+      final fixedLyrics = _repairPossiblyTruncatedEmbeddedLyrics(
+        file: file,
+        currentLyrics: metadata.lyrics,
+      );
+      if (fixedLyrics != null && fixedLyrics.trim().isNotEmpty) {
+        metadata.lyrics = fixedLyrics;
+      }
+    }
+    return metadata;
   }
   final metadata = readMetadata(file, getImage: getImage);
   if (repairLyrics) {

@@ -176,18 +176,53 @@ class _SongInlineTagsEditorBodyState extends State<_SongInlineTagsEditorBody> {
     _lyrics = TextEditingController(text: s.lyrics ?? '');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_loadEmbeddedCoverPreview());
+      unawaited(_loadEmbeddedTagsFromDisk());
     });
   }
 
-  Future<void> _loadEmbeddedCoverPreview() async {
+  void _setControllerIfNonEmpty(TextEditingController c, String? value) {
+    final t = value?.trim();
+    if (t != null && t.isNotEmpty) {
+      c.text = t;
+    }
+  }
+
+  Future<void> _loadEmbeddedTagsFromDisk() async {
     try {
       final meta = readAllMetadataForWrite(File(widget.song.path.trim()));
-      final pic = _primaryEmbeddedPicture(meta);
       if (!mounted) return;
+      final pic = _primaryEmbeddedPicture(meta);
       setState(() {
         _diskCoverPreviewBytes =
             pic != null ? Uint8List.fromList(pic.bytes) : null;
+        if (meta is Mp3Metadata) {
+          _setControllerIfNonEmpty(
+            _title,
+            meta.songName,
+          );
+          _setControllerIfNonEmpty(
+            _artist,
+            meta.leadPerformer ?? meta.bandOrOrchestra,
+          );
+          _setControllerIfNonEmpty(_album, meta.album);
+          final y = meta.year ?? meta.originalReleaseYear;
+          if (y != null && y > 0) {
+            _year.text = '$y';
+          }
+          if (meta.trackNumber != null) {
+            _trackNumber.text = '${meta.trackNumber}';
+          }
+          if (meta.trackTotal != null) {
+            _trackTotal.text = '${meta.trackTotal}';
+          }
+          if (meta.discNumber != null) {
+            _discNumber.text = '${meta.discNumber}';
+          }
+          if (meta.totalDics != null) {
+            _discTotal.text = '${meta.totalDics}';
+          }
+          _setControllerIfNonEmpty(_lyrics, meta.lyric);
+        }
       });
     } catch (_) {
       final fallback = _primaryFromSongPictures(widget.song.pictures);

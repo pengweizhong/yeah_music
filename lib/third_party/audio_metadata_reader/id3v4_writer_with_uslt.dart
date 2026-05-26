@@ -19,7 +19,7 @@ import 'dart:typed_data';
 import 'package:audio_metadata_reader/src/metadata/base.dart';
 import 'package:audio_metadata_reader/src/parsers/tag_parser.dart';
 import 'package:audio_metadata_reader/src/writers/base_writer.dart';
-
+import 'id3v1_writer_safe.dart';
 import 'mp3_strip_id3v2_prefix.dart';
 
 class TagHeader {
@@ -55,12 +55,29 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
       file.writeAsBytesSync(finalBuilder.toBytes());
     } else {
       final oldData = file.readAsBytesSync();
-      final audioPayload = stripLeadingId3v2Blocks(oldData);
+      final audioPayload =
+          stripTrailingId3v1(stripLeadingId3v2Blocks(oldData));
       file.writeAsBytesSync([
         ...finalBuilder.toBytes(),
         ...audioPayload,
       ]);
+      if (_shouldWriteId3v1Tail(metadata)) {
+        Id3v1WriterSafe().write(file, metadata);
+      }
     }
+  }
+
+  /// ID3v1 每字段仅 30 字节且常被当作 Latin-1；含中文时跳过，避免尾部标签乱码。
+  bool _shouldWriteId3v1Tail(Mp3Metadata metadata) {
+    bool asciiOnly(String? s) {
+      if (s == null || s.trim().isEmpty) return true;
+      final b = utf8.encode(s.trim());
+      return b.length <= 30 && b.every((x) => x < 0x80);
+    }
+
+    return asciiOnly(metadata.songName) &&
+        asciiOnly(metadata.album) &&
+        asciiOnly(metadata.bandOrOrchestra ?? metadata.leadPerformer);
   }
 
   void _writeFrames(BytesBuilder builder, Mp3Metadata metadata) {
@@ -189,7 +206,9 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
       _writeFrame(builder, "TSSE", metadata.encoderSoftware!);
     }
     if (metadata.year != null) {
-      _writeFrame(builder, "TYER", metadata.year!.toString());
+      final y = metadata.year!.toString();
+      _writeFrame(builder, "TYER", y);
+      _writeFrame(builder, "TDRC", y);
     }
     if (metadata.genres.isNotEmpty) {
       final genresString = metadata.genres.join('/');
@@ -199,7 +218,7 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
     }
 
     if (metadata.lyric != null && metadata.lyric!.trim().isNotEmpty) {
-      _writeFrameWithBytes(
+      _writeBinaryFrame(
         builder,
         'USLT',
         _buildUsltPayloadUtf8(metadata.lyric!.trim()),
@@ -217,25 +236,21 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
   }
 
   void _writeFrame(BytesBuilder builder, String frameId, String data) {
+    final textBytes = utf8.encode(data);
     builder.add(frameId.codeUnits);
-
-    builder.add(_encodeSynchsafeInteger(data.length + 1));
-    // flags
+    // 帧长须为 UTF-8 字节数 + 编码字节，不能用 String.length（中文会写短导致标签错位/乱码）。
+    builder.add(_encodeSynchsafeInteger(textBytes.length + 1));
     builder.add([0, 0]);
-
     builder.addByte(0x03);
-    builder.add(utf8.encode(data));
+    builder.add(textBytes);
   }
 
-  void _writeFrameWithBytes(
+  /// APIC / USLT 等：帧体已含编码字节，不再前置 UTF-8 文本编码字节。
+  void _writeBinaryFrame(
       BytesBuilder builder, String frameId, Uint8List data) {
     builder.add(frameId.codeUnits);
-
-    builder.add(_encodeSynchsafeInteger(data.length + 1));
-    // flags
+    builder.add(_encodeSynchsafeInteger(data.length));
     builder.add([0, 0]);
-
-    builder.addByte(0x03);
     builder.add(data);
   }
 
@@ -243,9 +258,8 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
     for (final picture in pictures) {
       final pictureBuilder = BytesBuilder();
 
-      // encoding
-      // pictureBuilder.addByte(4);
-      // mimetype
+      // 0 = ISO-8859-1（mime / 描述为 Latin-1），与 ID3v2 解析器 getPicture 一致。
+      pictureBuilder.addByte(0);
       pictureBuilder.add([...utf8.encode(picture.mimetype), 0x00]);
 
       // picture type
@@ -278,7 +292,7 @@ class Id3v4WriterWithUslt extends BaseMetadataWriter<Mp3Metadata> {
 
       pictureBuilder.add(picture.bytes);
 
-      _writeFrameWithBytes(builder, "APIC", pictureBuilder.toBytes());
+      _writeBinaryFrame(builder, "APIC", pictureBuilder.toBytes());
     }
   }
 

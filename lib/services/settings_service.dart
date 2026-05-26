@@ -143,7 +143,8 @@ class SettingsService {
   static const double desktopFloatingLyricsBgOpacityDefault = 0.42;
   static const int desktopFloatingLyricsLinesBeforeDefault = 2;
   static const int desktopFloatingLyricsLinesAfterDefault = 2;
-  static const int playbackFadeOutDurationMsDefault = 500;
+  //播放淡出时长，默认值0ms
+  static const int playbackFadeOutDurationMsDefault = 0;
   static const int playbackFadeOutDurationMsMin = 0;
   static const int playbackFadeOutDurationMsMax = 1000;
 

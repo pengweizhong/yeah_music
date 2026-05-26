@@ -827,6 +827,125 @@ void _considerEmbeddedPicture(List<Picture> pictures, Picture pic) {
 }
 
 /// ID3v2 APIC 帧正文 → [Picture]（mime 为空时按 JPEG/PNG 嗅探）。
+Picture? pictureFromApicPayload(Uint8List payload) =>
+    _pictureFromApicPayload(payload);
+
+/// T* / COMM 等文本帧：容错解码（非法 UTF-8、误标编码、GBK 内嵌标签）。
+String id3TextFromFramePayload(Uint8List payload) {
+  if (payload.isEmpty) return '';
+  final enc = payload[0];
+  final rest =
+      payload.length > 1 ? Uint8List.sublistView(payload, 1) : Uint8List(0);
+
+  switch (enc) {
+    case 0:
+      return _id3Latin1OrGbkText(rest);
+    case 1:
+      return _id3Utf16LeText(rest);
+    case 2:
+      return _id3Utf16BeText(rest);
+    case 3:
+      return _id3Utf8OrGbkText(rest);
+    default:
+      final asUtf8 = _id3Utf8OrGbkText(payload);
+      if (asUtf8.isNotEmpty) return asUtf8;
+      return latin1.decode(payload, allowInvalid: true).trim();
+  }
+}
+
+String _id3Latin1OrGbkText(Uint8List rest) {
+  if (rest.isEmpty) return '';
+  final z = rest.indexOf(0);
+  final bytes = z >= 0 ? rest.sublist(0, z) : rest;
+  if (bytes.isEmpty) return '';
+  final latin = latin1.decode(bytes, allowInvalid: true).trim();
+  if (_looksLikeMojibake(latin) || _hasHighBytes(bytes)) {
+    final gbk = _tryGbkDecode(bytes);
+    if (gbk.isNotEmpty) return gbk;
+  }
+  return latin;
+}
+
+String _id3Utf8OrGbkText(Uint8List rest) {
+  if (rest.isEmpty) return '';
+  var bytes = _id3TextBytesUntilZero(rest);
+  if (bytes.length >= 3 &&
+      bytes[0] == 0xef &&
+      bytes[1] == 0xbb &&
+      bytes[2] == 0xbf) {
+    bytes = bytes.sublist(3);
+  }
+  if (bytes.isEmpty) return '';
+  final utf8Text = utf8.decode(bytes, allowMalformed: true).trim();
+  if (utf8Text.contains('\uFFFD') || _looksLikeMojibake(utf8Text)) {
+    final gbk = _tryGbkDecode(bytes);
+    if (gbk.isNotEmpty) return gbk;
+  }
+  return utf8Text;
+}
+
+Uint8List _id3TextBytesUntilZero(Uint8List rest) {
+  final z = rest.indexOf(0);
+  return z >= 0 ? rest.sublist(0, z) : rest;
+}
+
+String _id3Utf16LeText(Uint8List rest) {
+  if (rest.isEmpty) return '';
+  var start = 0;
+  if (rest.length >= 2 && rest[0] == 0xff && rest[1] == 0xfe) {
+    start = 2;
+  }
+  var end = rest.length;
+  for (var i = start; i + 1 < rest.length; i += 2) {
+    if (rest[i] == 0 && rest[i + 1] == 0) {
+      end = i;
+      break;
+    }
+  }
+  return _decodeUtf16Le(
+    end < rest.length ? rest.sublist(0, end) : rest,
+    start: start,
+  ).trim();
+}
+
+String _id3Utf16BeText(Uint8List rest) {
+  if (rest.isEmpty) return '';
+  var start = 0;
+  if (rest.length >= 2 && rest[0] == 0xfe && rest[1] == 0xff) {
+    start = 2;
+  }
+  var end = rest.length;
+  for (var i = start; i + 1 < rest.length; i += 2) {
+    if (rest[i] == 0 && rest[i + 1] == 0) {
+      end = i;
+      break;
+    }
+  }
+  return _decodeUtf16Be(
+    end < rest.length ? rest.sublist(0, end) : rest,
+    start: start,
+  ).trim();
+}
+
+bool _hasHighBytes(Uint8List bytes) =>
+    bytes.any((b) => b >= 0x80);
+
+bool _looksLikeMojibake(String s) {
+  if (s.isEmpty) return false;
+  const bad = ['Ã', 'Â', 'æ', 'å', 'ç', 'è', 'é', 'ï¼'];
+  return bad.any(s.contains);
+}
+
+String _tryGbkDecode(Uint8List bytes) {
+  if (bytes.isEmpty) return '';
+  try {
+    return gbk.decode(bytes.toList()).trim();
+  } catch (_) {
+    return '';
+  }
+}
+
+/// ID3v2 APIC 帧正文 → [Picture]（mime 为空时按 JPEG/PNG 嗅探）。
 Picture? _pictureFromApicPayload(Uint8List payload) {
   if (payload.length < 6) return null;
   final reader = ByteData.sublistView(payload);
@@ -995,7 +1114,10 @@ void extractEmbeddedId3FromHaystack(
       }
       final payloadSize =
           synchsafeFour(w[i + 6], w[i + 7], w[i + 8], w[i + 9]);
-      final tagSpan = 10 + payloadSize;
+      var tagSpan = 10 + payloadSize;
+      if ((w[i + 5] & 0x10) != 0) {
+        tagSpan += 10;
+      }
       if (tagSpan < 10 || i + tagSpan > w.length) {
         i++;
         continue;

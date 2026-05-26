@@ -24,19 +24,36 @@ Uint8List stripLeadingId3v2Blocks(Uint8List fileBytes) {
         fileBytes[offset + 2] != 0x33) {
       break;
     }
+    final flags = fileBytes[offset + 5];
     final bodyLen = _synchsafe31(
       fileBytes[offset + 6],
       fileBytes[offset + 7],
       fileBytes[offset + 8],
       fileBytes[offset + 9],
     );
-    final tagTotal = 10 + bodyLen;
+    var tagTotal = 10 + bodyLen;
+    // ID3v2.4 footer：标签体后还有 10 字节 "3DI" 尾标，剥离时须一并去掉。
+    if ((flags & 0x10) != 0) {
+      tagTotal += 10;
+    }
     if (tagTotal <= 10 || offset + tagTotal > fileBytes.length) {
       break;
     }
     offset += tagTotal;
   }
   return fileBytes.sublist(offset);
+}
+
+/// 去掉文件末尾 128 字节 ID3v1（`TAG`），避免重写 ID3v2 后尾部残留旧标签。
+Uint8List stripTrailingId3v1(Uint8List fileBytes) {
+  if (fileBytes.length < 128) return fileBytes;
+  final start = fileBytes.length - 128;
+  if (fileBytes[start] == 0x54 &&
+      fileBytes[start + 1] == 0x41 &&
+      fileBytes[start + 2] == 0x47) {
+    return fileBytes.sublist(0, start);
+  }
+  return fileBytes;
 }
 
 int _synchsafe31(int a, int b, int c, int d) =>

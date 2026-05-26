@@ -29,6 +29,8 @@ import 'package:path/path.dart' as p;
 import 'package:yeah_music/logging/app_log.dart';
 import 'package:yeah_music/third_party/audio_metadata_reader/riff_writer_fixed.dart';
 import 'package:yeah_music/third_party/audio_metadata_reader/write_metadata_with_lyrics.dart';
+import 'package:yeah_music/utils/mp3_metadata_bridge.dart'
+    show pathLooksLikeMp3, verifyMp3MetadataReadableAfterWrite;
 import 'package:yeah_music/utils/wav_metadata_reader.dart' show pathLooksLikeWav;
 import 'package:yeah_music/utils/wav_riff_metadata_bridge.dart'
     show readAllMetadataForWrite;
@@ -72,7 +74,9 @@ Future<void> writeEmbeddedTagsForPath({
 
   final ext = p.extension(file.path).toLowerCase();
   final isWav = pathLooksLikeWav(file.path);
+  final isMp3 = pathLooksLikeMp3(file.path);
   late final ParserTag meta;
+  Uint8List? mp3PreWriteBackup;
   try {
     meta = readAllMetadataForWrite(file, getImage: true);
   } catch (e, st) {
@@ -95,6 +99,9 @@ Future<void> writeEmbeddedTagsForPath({
   _applyCoverEdit(meta, coverEdit, replacementCoverBytes);
 
   try {
+    if (isMp3) {
+      mp3PreWriteBackup = await file.readAsBytes();
+    }
     if (isWav && meta is RiffMetadata) {
       RiffWriterFixed().write(
         file,
@@ -105,7 +112,28 @@ Future<void> writeEmbeddedTagsForPath({
       return;
     }
     writeMetadataWithLyricsFix(file, meta);
+    if (isMp3) {
+      try {
+        verifyMp3MetadataReadableAfterWrite(file);
+      } catch (e, st) {
+        final backup = mp3PreWriteBackup;
+        if (backup != null) {
+          await file.writeAsBytes(backup, flush: true);
+        }
+        appLog.e(
+          'writeEmbeddedTags MP3 verify failed, restored backup path=${file.path}',
+          error: e,
+          stackTrace: st,
+        );
+        rethrow;
+      }
+    }
   } catch (e, st) {
+    if (isMp3 && mp3PreWriteBackup != null) {
+      try {
+        await file.writeAsBytes(mp3PreWriteBackup, flush: true);
+      } catch (_) {}
+    }
     appLog.e(
       'writeEmbeddedTags write failed path=${file.path} ext=$ext meta=${meta.runtimeType}',
       error: e,
