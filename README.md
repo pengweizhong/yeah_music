@@ -114,7 +114,7 @@
 
 安卓适配了横屏播放
 
-![image-20260507221145584](./README.assets/Screenshot_20260623-221501_Yeah Music.png)
+![image-20260507221145584](README.assets/Screenshot_20260623-221501_Yeah_Music.png)
 
 
 ### macOS
