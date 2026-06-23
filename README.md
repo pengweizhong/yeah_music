@@ -15,7 +15,7 @@
 ### 🎶 本地音乐入库
 
 - 多目录扫描，本地音频一键纳入曲库
-- 支持格式：`  mp3 / m4a  / wav / flac `
+- 支持格式：`  mp3 / m4a  / wav / flac / opus / ogg `
 - 支持多歌单，而且可以高度自定义
 - 现代化的曲库统计
 
@@ -63,22 +63,23 @@
 - Windows（绿色便携版）
 
 ## 📊 主要功能 & 各平台适配情况
-当前参照版本：`1.2.0`
+当前参照版本：`2.0.0`
 > 色标说明：
 >
 > - 🟢  功能支持，经测试基本稳定可用
 > - 🟡  包含此功能但是不稳定，可能无法达到预期状态
 > - 🔴  不可用
 
-| 功能 / 平台          | Android | macOS | Windows | Linux（KDE / GNOME） |
-| -------------------- | ------- | ----- | ------- | -------------------- |
-| 本地音乐管理         | 🟢       | 🟢     | 🟢       | 🟢                    |
-| Onedrive 云端        | 🟢       | 🟢     | 🔴       | 🔴                    |
-| 播放队列 / 播放模式  | 🟢       | 🟢     | 🟢       | 🟢                    |
-| 封面 / 歌词 / 菜单栏 | 🟢       | 🟢     | 🟢       | 🟡                    |
-| 全局 UI 定制         | 🟢       | 🟢     | 🟢       | 🟢                    |
-| 元信息管理           | 🟢       | 🟢     | 🟢       | 🟢                    |
-| 其他功能             | 🟢       | 🟡     | 🟡       | 🟡                    |
+| 功能 / 平台           | Android | macOS | Windows | Linux（KDE / GNOME） |
+| --------------------- | ------- | ----- | ------- | -------------------- |
+| 本地音乐              | 🟢       | 🟢     | 🟢       | 🟢                    |
+| 在线音乐              | 🟢       | 🟢     | 🟢       | 🟢                    |
+| Onedrive 云端         | 🟢       | 🟢     | 🔴       | 🔴                    |
+| 线控 / 键控           | 🟢       | 🟢     | 🟢       | 🟢                    |
+| 封面 / 歌词 / 菜单栏  | 🟢       | 🟢     | 🟢       | 🟢                    |
+| 全局 UI 定制 / 个性化 | 🟢       | 🟢     | 🟢       | 🟢                    |
+| 元信息管理            | 🟢       | 🟢     | 🟢       | 🟢                    |
+| 其他功能              | 🟢       | 🟢     | 🟡       | 🟡                    |
 
 ## ⭐ Star / Fork / Issue
 
@@ -99,34 +100,48 @@
 - 但所有衍生作品必须继续使用 **GPL-3.0** 协议开源
 - 必须保留原作者的版权声明与协议说明
 
-## APP 效果预览（基于1.0.0版本）
+## APP 效果预览（基于2.0.0版本）
 
 ### Andorid
 
 <div style="display: flex; overflow-x: auto; gap: 12px; padding: 10px 0;">
-  <img src="./README.assets/Screenshot_2026-05-06-01-50-43-28_44b6ca2b383a54e92fb8fa9ed598ec0d.jpg" height="420">
-  <img src="./README.assets/Screenshot_2026-05-06-01-51-40-08_44b6ca2b383a54e92fb8fa9ed598ec0d.jpg" height="420">
-  <img src="./README.assets/Screenshot_2026-05-06-01-51-13-63_44b6ca2b383a54e92fb8fa9ed598ec0d.jpg" height="420">
-  <img src="./README.assets/Screenshot_2026-05-06-01-51-44-40_44b6ca2b383a54e92fb8fa9ed598ec0d.jpg" height="420">
-  <img src="./README.assets/Screenshot_2026-05-06-01-51-49-49_44b6ca2b383a54e92fb8fa9ed598ec0d.jpg" height="420">
+  <img src="./README.assets/Screenshot_20260623-221321_Yeah Music.png" height="420">
+  <img src="./README.assets/Screenshot_20260623-221355_Yeah Music.png" height="420">
+  <img src="./README.assets/Screenshot_20260623-221433_Yeah Music.png" height="420">
+  <img src="./README.assets/Screenshot_20260623-222023_Yeah Music.png" height="420">
+  <img src="./README.assets/Screenshot_20260623-222226_系统界面.png" height="420">
 </div>
+
+安卓适配了横屏播放
+
+![image-20260507221145584](./README.assets/Screenshot_20260623-221501_Yeah Music.png)
 
 
 ### macOS
 
 电脑端支持拓展第三、第四播放页
 
-![image-20260507221145584](./README.assets/image-20260507221145584.png)
+![image-20260623223433744](./README.assets/image-20260623223433744.png)
 
-macOS适配了菜单栏歌词  
-<img src="./README.assets/image-20260506021848996.png" alt="image-20260506021848996" style="zoom:50%;" />
+![image-20260623223451376](./README.assets/image-20260623223451376.png)
+
+macOS额外适配了菜单栏歌词、桌面歌词和logo播放进度润色。  
+![image-20260623223552163](./README.assets/image-20260623223552163.png)
 
 支持切换多行歌词显示模式，最多支持切换10种语言（我认为够用了），切换后的歌词会实时同步到菜单栏歌词和桌面悬浮歌词。
 
 ![PixPin_2026-05-07_22-18-19](./README.assets/PixPin_2026-05-07_22-18-19.gif)
 
-### KDE
+### Linux
 
-Ubuntu/KDE 桌面下适配了托盘图标，其余的和macOS界面基本一致，但是无法使用Onedrive。
+Linux 桌面下适配了托盘图标，其余的和macOS界面基本一致，但是无法使用Onedrive。
 
-<img src="./README.assets/image-20260506211712098.png" alt="image-20260506021848996" style="zoom:90%;" />
+![image-20260623223946105](./README.assets/image-20260623223946105.png)
+
+Ubuntu / KDE 下额外适配了logo播放进度润色。
+
+![image-20260623224204643](./README.assets/image-20260623224204643.png)
+
+### Windows
+
+这个基本和Linux下是一样的，由于重点不在windows上面，没怎么测试，只是顺手打了个包
