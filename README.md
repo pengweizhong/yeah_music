@@ -42,7 +42,8 @@
 
 ### 🎛️ 主题与 UI 美化
 
-- 背景主题：纯色 / 自定义强调色 / 壁纸（把播放器变成你想要的界面）
+- 背景主题：纯色 / 自定义强调色 / 壁纸（把播放器变成你想要的界面，支持模块化）
+- 自定义字体
 - 支持渐变背景
 - 壁纸可雾化与压暗，提高界面UI辨识度
 
@@ -69,6 +70,8 @@
 > - 🟢  功能支持，经测试基本稳定可用
 > - 🟡  包含此功能但是不稳定，可能无法达到预期状态
 > - 🔴  不可用
+>
+> 对于不支持Onedrive的客户端，从 2.x 版本起，支持导入文件夹配置来实现间接同步的效果。
 
 | 功能 / 平台           | Android | macOS | Windows | Linux（KDE / GNOME） |
 | --------------------- | ------- | ----- | ------- | -------------------- |
@@ -112,9 +115,9 @@
   <img src="./README.assets/Screenshot_20260623-222226_系统界面.png" height="420">
 </div>
 
-安卓适配了横屏播放
+安卓额外适配了横屏播放效果
 
-![image-20260507221145584](README.assets/Screenshot_20260623-221501_Yeah_Music.png)
+![image-20260507221145584](./README.assets/Screenshot_20260623-221501_Yeah_Music.png)
 
 
 ### macOS
@@ -138,10 +141,13 @@ Linux 桌面下适配了托盘图标，其余的和macOS界面基本一致，但
 
 ![image-20260623223946105](./README.assets/image-20260623223946105.png)
 
-Ubuntu / KDE 下额外适配了logo播放进度润色。
+Ubuntu / KDE 下额外适配了logo播放进度润色和托盘区域。
 
-![image-20260623224204643](./README.assets/image-20260623224204643.png)
+<div style="display: flex; overflow-x: auto; gap: 12px; padding: 10px 0;">
+  <img src="./README.assets/image-20260623224204643.png" height="420">
+  <img src="./README.assets/linux_task.png" height="420">
+</div>
 
 ### Windows
 
-这个基本和Linux下是一样的，由于重点不在windows上面，没怎么测试，只是顺手打了个包
+这个基本和Linux下是一样的，由于重点不在windows上面，没怎么测试，只是顺手打了个包，目前来看可以满足基本的使用。
