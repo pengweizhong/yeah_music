@@ -10,6 +10,11 @@
 
 ---
 
+## 下载地址
+
+GitHub Release（推荐）：https://github.com/pengweizhong/yeah_music/releases  
+夸克网盘（备用）：https://pan.quark.cn/s/38af466474d0
+
 ## ✨ 功能特性
 
 ### 🎶 本地音乐入库
