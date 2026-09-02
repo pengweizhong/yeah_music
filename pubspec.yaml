@@ -1,7 +1,7 @@
 name: yeah_music
 description: "Modern cross-platform music app."
 publish_to: 'none'
-version: 3.0.0+3
+version: 5.0.0+5
 
 environment:
   sdk: ^3.9.0
