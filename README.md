@@ -161,14 +161,6 @@ Yeah Music 以 **本地曲库** 为中心：首页聚合入口，播放体验贯
 
 ---
 
-## ⭐ Star / Fork / Issue
-
-如果你喜欢这个项目：
-
-- **点个 Star ⭐**
-- **Fork 一份随便玩，实现自己的 DIY 风格**
-- **提 Issue 交流一下**
-
 ## 📄 许可证（License）
 
 **Yeah Music** 使用 **GPL‑3.0** 协议开源。
@@ -181,7 +173,7 @@ Yeah Music 以 **本地曲库** 为中心：首页聚合入口，播放体验贯
 和我之前的另一个项目 **[Dynamic‑SQL2](https://github.com/pengweizhong/dynamic-sql2)** 不一样，那是 MIT，这个不是。
 
 
-## APP 效果预览（基于较早桌面 / Android 截图）
+## APP 效果预览（基于较早桌面（2.0.0） / Android 截图）
 
 ### Android
 
@@ -236,7 +228,7 @@ Ubuntu / KDE 下额外适配了 logo 播放进度润色和托盘区域。
 
 ### QQ 交流群
 
-群号：**1131319907**（可复制搜索加群）
+群号：**1131319907**（欢迎加入）
 
 <p align="center">
   <img src="./README.assets/sponsor_qq_group.jpg" alt="QQ 交流群二维码" width="220"/>
