@@ -17,9 +17,11 @@
 ---
 
 ## 下载地址
+<a href="https://apps.microsoft.com/detail/9MWRTT2PQ0CX">**Yeah Music 现已登录 Microsoft Store, Windows 用户推荐微软商店直接下载 ~** </a>
 
-GitHub Release（推荐）：https://github.com/pengweizhong/yeah_music/releases  
-夸克网盘（备用）：https://pan.quark.cn/s/38af466474d0
+**GitHub Release（推荐）：** https://github.com/pengweizhong/yeah_music/releases  
+**Microsoft Store（推荐）：** https://apps.microsoft.com/detail/9MWRTT2PQ0CX  
+**夸克网盘（备用）：** https://pan.quark.cn/s/38af466474d0
 
 ---
 
@@ -232,7 +234,7 @@ YeahMusic 是一个人的长期项目。
 可以通过自愿赞助的方式表达你的认可。
 
 没有强制，没有诱导，没有付费墙。  
-你的每一份支持都会让我非常感激。  
+你的每一份支持都会让我非常感激。
 
 | 微信支付 | 支付宝 |
 | :---: | :---: |
