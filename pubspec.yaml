@@ -1,7 +1,7 @@
 name: yeah_music
 description: "A modern cross-platform music player"
 publish_to: 'none'
-version: 7.1.0+9
+version: 8.0.0+11
 
 environment:
   sdk: ^3.9.0
